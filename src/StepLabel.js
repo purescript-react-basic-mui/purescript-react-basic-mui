@@ -1,0 +1,1 @@
+exports._stepLabel = require("@material-ui/core/StepLabel")

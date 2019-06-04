@@ -1,0 +1,1 @@
+exports._appBar = require("@material-ui/core/AppBar")

@@ -1,0 +1,1 @@
+exports._bottomNavigationAction = require("@material-ui/core/BottomNavigationAction")

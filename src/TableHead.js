@@ -1,0 +1,1 @@
+exports._tableHead = require("@material-ui/core/TableHead")

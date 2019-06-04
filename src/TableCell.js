@@ -1,0 +1,1 @@
+exports._tableCell = require("@material-ui/core/TableCell")

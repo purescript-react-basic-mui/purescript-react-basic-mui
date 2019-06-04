@@ -1,0 +1,1 @@
+exports._switch = require("@material-ui/core/Switch")

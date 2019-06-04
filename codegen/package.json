@@ -1,0 +1,26 @@
+{
+  "name": "react-basic-native-codegen",
+  "version": "1.0.0",
+  "description": "",
+  "files": [
+    "lib"
+  ],
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf lib/*",
+    "build": "npx tsc",
+    "codegen": "rimraf ../src && mkdir -p ../src/styles && mkdir -p ../src/internal && mkdir -p ../src/transitions && mkdir -p ../src/colors &&  node lib/index.js"
+  },
+  "repository": {},
+  "license": "Apache2.0",
+  "dependencies": {
+    "@material-ui/core": "^4.0.1",
+    "tslib": "^1.9.3"
+  },
+  "devDependencies": {
+    "@types/node": "^12.0.4",
+    "rimraf": "^2.6.3",
+    "typescript": "^3.5.1"
+  }
+}

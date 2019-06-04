@@ -1,0 +1,1 @@
+exports._shape = require("@material-ui/core/Styles.Shape")

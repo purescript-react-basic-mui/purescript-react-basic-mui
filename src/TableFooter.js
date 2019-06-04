@@ -1,0 +1,1 @@
+exports._tableFooter = require("@material-ui/core/TableFooter")

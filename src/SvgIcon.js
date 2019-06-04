@@ -1,0 +1,1 @@
+exports._svgIcon = require("@material-ui/core/SvgIcon")

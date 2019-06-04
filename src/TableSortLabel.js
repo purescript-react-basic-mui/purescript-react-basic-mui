@@ -1,0 +1,1 @@
+exports._tableSortLabel = require("@material-ui/core/TableSortLabel")

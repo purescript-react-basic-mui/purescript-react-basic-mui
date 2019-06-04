@@ -1,0 +1,1 @@
+exports._outlinedInput = require("@material-ui/core/OutlinedInput")

@@ -1,0 +1,1 @@
+exports._index = require("@material-ui/core/Index")

@@ -1,0 +1,1 @@
+exports._listItemAvatar = require("@material-ui/core/ListItemAvatar")

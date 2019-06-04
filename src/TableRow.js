@@ -1,0 +1,1 @@
+exports._tableRow = require("@material-ui/core/TableRow")

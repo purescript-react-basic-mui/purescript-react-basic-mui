@@ -1,0 +1,1 @@
+exports._popper = require("@material-ui/core/Popper")

@@ -1,0 +1,1 @@
+exports._listItemIcon = require("@material-ui/core/ListItemIcon")

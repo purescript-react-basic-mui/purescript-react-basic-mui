@@ -1,0 +1,1 @@
+exports._checkbox = require("@material-ui/core/Checkbox")

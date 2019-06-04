@@ -1,0 +1,1 @@
+exports._transitions = require("@material-ui/core/Styles.Transitions")

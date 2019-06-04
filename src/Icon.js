@@ -1,0 +1,1 @@
+exports._icon = require("@material-ui/core/Icon")

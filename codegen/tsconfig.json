@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "outDir": "./lib",
+    "declaration": false,
+    "strict": true,
+    "noImplicitReturns": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+    "incremental": true,
+    "typeRoots": ["node_modules/@types"]
+  },
+  "types": ["node"],
+  "excluce": ["node_modules"],
+  "include": ["./src/**/*"]
+}
+

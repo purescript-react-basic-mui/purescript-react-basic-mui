@@ -1,0 +1,1 @@
+exports._slide = require("@material-ui/core/Slide")

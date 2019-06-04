@@ -1,0 +1,1 @@
+exports._dialogContent = require("@material-ui/core/DialogContent")

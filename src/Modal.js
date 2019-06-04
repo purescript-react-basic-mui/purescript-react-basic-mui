@@ -1,0 +1,1 @@
+exports._modal = require("@material-ui/core/Modal")
