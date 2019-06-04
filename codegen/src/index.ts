@@ -19,13 +19,20 @@ import { ignoreForeignDataList, additionalForeignData, importMatchers, additiona
 import { lowerCaseFirstLetter, capitalize } from "./utils";
 
 const getModuleName = (writtenProps: WrittenProps): string => {
-  const tokens: string[] = writtenProps.fileName.split("@material-ui/core/")[1].split("/")
-  if(tokens.length > 1){
-    return (tokens[0] && (tokens[0].toLowerCase()) === tokens[0]) 
-        ? `${capitalize(tokens[0])}.${capitalize(removeDeclaration(tokens[1]))}`
-        : `${capitalize(removeDeclaration(tokens[1]))}`
-  } else {
-    return `${capitalize(removeDeclaration(tokens[0]))}`
+  try{
+    const tokens: string[] = (writtenProps.fileName.split("@material-ui/core/").length > 1) 
+      ? writtenProps.fileName.split("@material-ui/core/")[1].split("/")
+      : writtenProps.fileName.split("@types")[1].split("/")
+    if(tokens.length > 1){
+      return (tokens[0] && (tokens[0].toLowerCase()) === tokens[0]) 
+          ? `${capitalize(tokens[0])}.${capitalize(removeDeclaration(tokens[1]))}`
+          : `${capitalize(removeDeclaration(tokens[1]))}`
+    } else {
+      return `${capitalize(removeDeclaration(tokens[0]))}`
+    }
+  } catch (e) {
+    console.log("Error in props", writtenProps)
+    throw e
   }
 }
 
@@ -33,20 +40,34 @@ const removeDeclaration = (str: string | undefined): string =>
   (str) ? str.replace(/\.d\.ts$/, "") : ""
 
 const getFunctionName = (writtenProps: WrittenProps): string => {
-  const tokens: string[] = writtenProps.fileName.split("@material-ui/core/")[1].split("/")
-  return (tokens.length > 1)
-    ? ("_" + lowerCaseFirstLetter(removeDeclaration(tokens[1])))
-    : ("_" + lowerCaseFirstLetter(removeDeclaration(tokens[0])))
+  try {
+    const tokens: string[] = (writtenProps.fileName.split("@material-ui/core/").length > 1) 
+      ? writtenProps.fileName.split("@material-ui/core/")[1].split("/")
+      : writtenProps.fileName.split("@types")[1].split("/")
+    return (tokens.length > 1)
+      ? ("_" + lowerCaseFirstLetter(removeDeclaration(tokens[1])))
+      : ("_" + lowerCaseFirstLetter(removeDeclaration(tokens[0])))
+  } catch (e) {
+    console.log("Error in props", writtenProps)
+    throw e
+  }
 }
 
 const getFileName = (writtenProps: WrittenProps, fileType: string): string => {
-  const tokens: string[] = writtenProps.fileName.split("@material-ui/core/")[1].split("/")
-  if(tokens.length > 1){
-    return (tokens[0] && (tokens[0].toLowerCase()) === tokens[0]) 
-      ? `../src/${tokens[0]}/${capitalize(tokens[1].replace(/\.d\.ts$/, fileType))}`
-      : `../src/${capitalize(tokens[1].replace(/\.d\.ts$/, fileType))}`
-  } else {
-    return `../src/${capitalize(tokens[0].replace(/\.d\.ts$/, fileType))}`
+  try {
+    const tokens: string[] = (writtenProps.fileName.split("@material-ui/core/").length > 1) 
+      ? writtenProps.fileName.split("@material-ui/core/")[1].split("/")
+      : writtenProps.fileName.split("@types")[1].split("/")
+    if(tokens.length > 1){
+      return (tokens[0] && (tokens[0].toLowerCase()) === tokens[0]) 
+        ? `../src/${tokens[0]}/${capitalize(tokens[1].replace(/\.d\.ts$/, fileType))}`
+        : `../src/${capitalize(tokens[1].replace(/\.d\.ts$/, fileType))}`
+    } else {
+      return `../src/${capitalize(tokens[0].replace(/\.d\.ts$/, fileType))}`
+    }
+  } catch (e) {
+    console.log("Error in props", writtenProps)
+    throw e
   }
 }
 
@@ -61,11 +82,13 @@ const printWrittenProps = (writtenProps: WrittenProps[]): void =>
   })
 
 const writeJS = (writtenProps: WrittenProps): void => {
-  const moduleName = getModuleName(writtenProps)
-  const fileName = getFileName(writtenProps, ".js")
-  if(writtenProps.fileName.indexOf("@material-ui/core") >= 0 && !fs.existsSync(fileName)){
-    const js = `exports.${getFunctionName(writtenProps)} = require("@material-ui/core/${moduleName}")`
-    fs.writeFileSync(fileName, js)
+  if(writtenProps.fileName.indexOf("@material-ui/core") >= 0){
+    const fileName = getFileName(writtenProps, ".js")
+    if(!fs.existsSync(fileName)){
+      const moduleName = getModuleName(writtenProps)
+      const js = `exports.${getFunctionName(writtenProps)} = require("@material-ui/core/${moduleName}")`
+      fs.writeFileSync(fileName, js)
+    }
   }
 }
 
@@ -94,13 +117,14 @@ const getImports = (foreignData: string, writtenProps: WrittenProps): string => 
 const missingProps: string[] = []
 
 const writePS = (writtenProps: WrittenProps) => (props: Props[]): void => {
-  const moduleName = getModuleName(writtenProps)
-  const fileName = getFileName(writtenProps, ".purs")
-  const functionName = moduleName[0].toLowerCase() + moduleName.slice(1)
-
-  const foreignData: string[] = additionalForeignData[moduleName] ? additionalForeignData[moduleName] : []
   let imports = ""
   if(writtenProps.fileName.indexOf("@material-ui/core") >= 0){
+
+    const moduleName = getModuleName(writtenProps)
+    const fileName = getFileName(writtenProps, ".purs")
+    const functionName = moduleName[0].toLowerCase() + moduleName.slice(1)
+    const foreignData: string[] = additionalForeignData[moduleName] ? additionalForeignData[moduleName] : []
+
     if(!fs.existsSync(fileName)){
       writtenProps.foreignData.forEach(name => {
         let referencedProps: undefined | Props = undefined
@@ -108,7 +132,6 @@ const writePS = (writtenProps: WrittenProps) => (props: Props[]): void => {
           if(prop.name === name){
             referencedProps = prop
             const foreignModuleName = capitalize(getModuleName(writeProps(prop)))
-            console.log("Found: " + name + " as  " + foreignModuleName + " for " + moduleName)
             if(moduleName !== "Global" && moduleName.toUpperCase() !== foreignModuleName.toUpperCase()) imports += `import MaterialUI.Basic.${foreignModuleName} (${name})\n`
           }
         })
@@ -144,7 +167,7 @@ ${writtenProps.fns.join("\n\n")}
 
 const options = ts.getDefaultCompilerOptions()
 const program = ts.createProgram(["./node_modules/@material-ui/core/index.d.ts"], options)
-const sources =program.getSourceFiles()
+const sources = program.getSourceFiles()
 
 const interfaces: InterfaceToFile[] = 
   sources.map(src => {
@@ -220,12 +243,14 @@ allProps.map(writeProps).forEach((prop: WrittenProps) => {
   writeJS(prop)  
   writePS(prop)(allProps)
 })
+
+
+Object.keys(interfaceMap).sort().forEach(key => {
+  console.log(key) 
+})
+
 //console.log("Props: " + allProps.length)
 //console.log("File Names: " + fileNames.length)
 //fileNames.sort().forEach(fileName => console.log(fileName))
 
-missingProps.sort().forEach(name => {
-  console.log(name)
-})
-
-
+//allProps.forEach(prop => console.log(prop.name))
