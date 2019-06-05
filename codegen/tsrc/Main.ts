@@ -1,6 +1,21 @@
 import * as ts from "typescript"
 
-export type Member = { name: string, type: TSType, optional: boolean }
+export type Interface = { 
+  readonly tag: "Interface",
+  readonly contents: {
+    readonly name: string,
+    members: Member[] 
+  }
+}
+
+export type Member = { 
+  readonly tag: "Member",
+  readonly contents: {
+    readonly name: string,
+    readonly type: TSType,
+    readonly optional: boolean 
+  }
+}
 
 export type TSType = 
   AnonymousObject |
@@ -141,9 +156,9 @@ export interface ExceptionType {
 }
 
 
-const readTypes = (): TSType[] => {
+const readTypes = (): Interface[] => {
   
-  const output: TSType[] = []
+  const output: Interface[] = []
 
   const getTSType = (type: ts.Type): TSType => {
     try{
@@ -204,7 +219,8 @@ const readTypes = (): TSType[] => {
       return { tag: "Unknown", contents: { name: checker.typeToString(type), flags: type.flags } }
   
     } catch (e) {
-      console.log(checker.typeToString(type))
+
+      console.log(type.flags, checker.typeToString(type))
       return { tag: "ExceptionType", contents: { e, type: checker.typeToString(type), flags: type.flags } }
     }
   
@@ -224,7 +240,7 @@ const readTypes = (): TSType[] => {
   const optionalMember = (sym: ts.Symbol, node?: ts.Node): Member => {
     const optional = ((sym.flags & ts.SymbolFlags.Optional) === ts.SymbolFlags.Optional)
     const type = getWithAliasProps(checker.getTypeOfSymbolAtLocation(sym, node ? node : sym.valueDeclaration))
-    return { name: sym.name, type, optional }
+    return { tag: "Member", contents: { name: sym.name, type, optional } }
   }
   
   const convertProperties = (nodeType: ts.Type, node?: ts.Node): Member[] => 
@@ -240,8 +256,10 @@ const readTypes = (): TSType[] => {
         const symbol = checker.getSymbolAtLocation(node.name)
         if(symbol){
           const nodeType = checker.getTypeAtLocation(node)
+          const name = checker.getFullyQualifiedName(nodeType.symbol)
           if(nodeType.isClassOrInterface()){
             let members = convertProperties(nodeType, node)
+            output.push({ tag: "Interface", contents: { name, members }})
           }
         }
       } else if(ts.isModuleDeclaration(node)){
@@ -259,6 +277,7 @@ const readTypes = (): TSType[] => {
     ts.forEachChild(source, visit)
   })
 
+  console.log("output", output.length)
   return output
 }
 

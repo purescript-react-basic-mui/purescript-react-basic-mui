@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "outDir": "./lib",
+    "outDir": "./src",
     "declaration": false,
     "strict": true,
     "noImplicitReturns": false,
@@ -14,6 +14,6 @@
   },
   "types": ["node"],
   "excluce": ["node_modules"],
-  "include": ["./src/**/*"]
+  "include": ["./tsrc/**/*"]
 }
 
