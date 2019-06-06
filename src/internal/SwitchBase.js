@@ -1,1 +1,0 @@
-exports._switchBase = require("@material-ui/core/Internal.SwitchBase")

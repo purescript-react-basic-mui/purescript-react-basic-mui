@@ -1,1 +1,0 @@
-exports._formControlLabel = require("@material-ui/core/FormControlLabel")

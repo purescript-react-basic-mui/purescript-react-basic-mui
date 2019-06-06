@@ -1,1 +1,0 @@
-exports._badge = require("@material-ui/core/Badge")

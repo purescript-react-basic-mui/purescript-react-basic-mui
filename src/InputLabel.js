@@ -1,1 +1,0 @@
-exports._inputLabel = require("@material-ui/core/InputLabel")

@@ -1,1 +1,0 @@
-exports._collapse = require("@material-ui/core/Collapse")

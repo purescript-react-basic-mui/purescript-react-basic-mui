@@ -1,1 +1,0 @@
-exports._card = require("@material-ui/core/Card")

@@ -1,1 +1,0 @@
-exports._stepIcon = require("@material-ui/core/StepIcon")

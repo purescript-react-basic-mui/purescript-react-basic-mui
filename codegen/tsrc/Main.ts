@@ -3,8 +3,18 @@ import * as ts from "typescript"
 export type Interface = { 
   readonly tag: "Interface",
   readonly contents: {
+    readonly fileName: string,
     readonly name: string,
     members: Member[] 
+  }
+}
+
+export type VariableStatement = {
+  readonly tag: "VariableStatement",
+  readonly contents: {
+    fileName: string,
+    name: string,
+    typeArguments: Member[]
   }
 }
 
@@ -38,48 +48,41 @@ export type TSType =
   UnknownObject |
   VoidType 
 
-export interface BooleanType { readonly tag: "Boolean" }
+export interface BooleanType { readonly tag: "BooleanType" }
 
-export interface StringType { readonly tag: "String" }
+export interface StringType { readonly tag: "StringType" }
 
-export interface NumberType { readonly tag: "Number" }
+export interface NumberType { readonly tag: "NumberType" }
 
-export interface NullType { readonly tag: "Null" }
+export interface NullType { readonly tag: "NullType" }
 
-export interface VoidType { readonly tag: "Unit" }
+export interface VoidType { readonly tag: "VoidType" }
 
-export interface AnyType { readonly tag: "Any" }
+export interface AnyType { readonly tag: "AnyType" }
 
 export interface UnionType {
-  readonly tag: "Union",
+  readonly tag: "UnionType",
   readonly contents: { 
     readonly types: TSType[] 
   } 
 }
 
-export interface StandardType { 
-  readonly tag: "Standard",
-  readonly contents: { 
-    readonly type: string 
-  } 
-}
-
 export interface StringLiteralType {
-  readonly tag: "StringLiteral",
+  readonly tag: "StringLiteralType",
   readonly contents: {
     readonly value: string
   }
 }
 
 export interface NumericLiteralType {
-  readonly tag: "NumericLiteral",
+  readonly tag: "NumericLiteralType",
   readonly contents: {
     readonly value: number
   }
 }
 
 export interface FunctionType {
-  readonly tag: "Function",
+  readonly tag: "FunctionType",
   readonly contents: {
     readonly parameters: Member[],
     readonly returnType?: TSType
@@ -111,6 +114,7 @@ export interface InterfaceReference {
 export interface UnknownObject {
   readonly tag: "UnknownObject",
   readonly contents: {
+    readonly type: string,
     readonly flags: ts.ObjectFlags 
   }
 }
@@ -149,28 +153,28 @@ export interface TupleType {
 export interface ExceptionType {
   readonly tag: "ExceptionType",
   readonly contents: {
-    readonly e: Error,
+    readonly error: string,
     readonly type: string,
     readonly flags: ts.TypeFlags
   }
 }
 
 
-const readTypes = (): Interface[] => {
+export const _interfaces = (): Interface[] => {
   
   const output: Interface[] = []
 
   const getTSType = (type: ts.Type): TSType => {
     try{
-      if(type.isUnionOrIntersection()) return { tag: "Union", contents: { types: (type.types.map(getWithAliasProps).filter(t => t) as unknown as TSType[]) } }
-      if(type.flags & ts.TypeFlags.String) return { tag: "String" }
-      if(type.flags & ts.TypeFlags.BooleanLike) return { tag: "Boolean" }
-      if(type.flags & ts.TypeFlags.Number) return { tag: "Number" }
-      if(type.flags & ts.TypeFlags.Null) return { tag: "Null" }
-      if(type.flags & ts.TypeFlags.VoidLike) return { tag: "Unit" }
-      if(type.flags & ts.TypeFlags.Any) return { tag: "Any" }
-      if(type.isStringLiteral()) return { tag: "StringLiteral", contents: { value: type.value } }
-      if(type.isNumberLiteral()) return { tag: "NumericLiteral", contents: { value: type.value } }
+      if(type.isUnionOrIntersection()) return { tag: "UnionType", contents: { types: (type.types.map(getWithAliasProps).filter(t => t) as unknown as TSType[]) } }
+      if(type.flags & ts.TypeFlags.String) return { tag: "StringType" }
+      if(type.flags & ts.TypeFlags.BooleanLike) return { tag: "BooleanType" }
+      if(type.flags & ts.TypeFlags.Number) return { tag: "NumberType" }
+      if(type.flags & ts.TypeFlags.Null) return { tag: "NullType" }
+      if(type.flags & ts.TypeFlags.VoidLike) return { tag: "VoidType" }
+      if(type.flags & ts.TypeFlags.Any) return { tag: "AnyType" }
+      if(type.isStringLiteral()) return { tag: "StringLiteralType", contents: { value: type.value } }
+      if(type.isNumberLiteral()) return { tag: "NumericLiteralType", contents: { value: type.value } }
   
       const callSigs = type.getCallSignatures()
       
@@ -178,7 +182,7 @@ const readTypes = (): Interface[] => {
         const sig = callSigs[0] 
         const parameters = sig.getParameters().map(p => optionalMember(p))
         const returnType = getWithAliasProps(sig.getReturnType())
-        return { tag: "Function", contents: { parameters, returnType } }
+        return { tag: "FunctionType", contents: { parameters, returnType } }
       }
   
       if(type.flags & (ts.TypeFlags.Object | ts.TypeFlags.NonPrimitive)){
@@ -207,7 +211,7 @@ const readTypes = (): Interface[] => {
           return { tag: "InterfaceReference", contents: { name } }
         }
   
-        return { tag: "UnknownObject", contents: { flags: objFlags } }
+        return { tag: "UnknownObject", contents: { type: checker.typeToString(type), flags: objFlags } }
   
       }
   
@@ -219,11 +223,9 @@ const readTypes = (): Interface[] => {
       return { tag: "Unknown", contents: { name: checker.typeToString(type), flags: type.flags } }
   
     } catch (e) {
-
-      console.log(type.flags, checker.typeToString(type))
-      return { tag: "ExceptionType", contents: { e, type: checker.typeToString(type), flags: type.flags } }
+      const error = JSON.stringify(e)
+      return { tag: "ExceptionType", contents: { error, type: checker.typeToString(type), flags: type.flags } }
     }
-  
   }
   
   const getWithAliasProps = (t: ts.Type): TSType => {
@@ -250,7 +252,7 @@ const readTypes = (): Interface[] => {
     (ts.getCombinedNodeFlags(node) & ts.ModifierFlags.Export) !== 0 ||
       (!!node.parent && node.parent.kind === ts.SyntaxKind.SourceFile)
  
-  const visit = (node: ts.Node) => {
+  const visit = (fileName: string) => (node: ts.Node) => {
     if(isNodeExported(node)){
       if(ts.isInterfaceDeclaration(node)){
         const symbol = checker.getSymbolAtLocation(node.name)
@@ -259,11 +261,56 @@ const readTypes = (): Interface[] => {
           const name = checker.getFullyQualifiedName(nodeType.symbol)
           if(nodeType.isClassOrInterface()){
             let members = convertProperties(nodeType, node)
-            output.push({ tag: "Interface", contents: { name, members }})
+            output.push({ tag: "Interface", contents: { fileName, name, members }})
           }
         }
+      } else if(ts.isVariableStatement(node)) {
+        if(fileName.indexOf("Avatar.d.ts") >= 0 && fileName.indexOf("ListItemAvatar") < 0){
+          const type = checker.getTypeAtLocation(node)
+          node.forEachChild( node => {
+            if(ts.isVariableDeclarationList(node)){
+              node.declarations.map(decl => {
+                const nodeType = checker.getTypeAtLocation(decl)
+                //console.log(nodeType)
+                const type = getWithAliasProps(nodeType)
+                console.log(type)
+                //console.log("\n\n\n")
+                //console.log(JSON.stringify(type, null, 2))
+                /*
+                if(nodeType.flags & (ts.TypeFlags.Object | ts.TypeFlags.NonPrimitive)){
+                  const objFlags = (<ts.ObjectType>nodeType).objectFlags
+                }
+                  if(ts.isIdentifier(decl.name)){
+                    const name = decl.name.escapedText.toString()
+                    if(nodeType.flags & (ts.TypeFlags.Object | ts.TypeFlags.NonPrimitive)){
+                      const objFlags = (<ts.ObjectType>nodeType).objectFlags
+                      const tr = (<ts.TypeReference>nodeType)
+                      const typeParams = tr.typeArguments ? (tr.typeArguments.map(getWithAliasProps).filter(i => i) as unknown as TypeAlias[]) : ([] as TypeAlias[])
+                      console.log(name, objFlags, JSON.stringify(typeParams))
+                    } else {
+                      console.log("here", ts.SyntaxKind[node.kind])
+                    }
+                  }
+                */
+              }) 
+            } else {
+              
+            }
+          })
+        } 
       } else if(ts.isModuleDeclaration(node)){
-        ts.forEachChild(node, visit)
+        ts.forEachChild(node, visit(fileName))
+      } else {
+        if(fileName.indexOf("Avatar.d.ts") >= 0 && fileName.indexOf("ListItemAvatar") < 0){
+          if(node.kind == ts.SyntaxKind.EndOfFileToken && node.parent && ts.isSourceFile(node.parent)){
+            const source = node.parent 
+            source.statements.forEach(statement => {
+              if(isNodeExported(statement)){ 
+                console.log(ts.SyntaxKind[statement.kind])
+              }
+            })
+          }
+        }
       }
     }
   }
@@ -274,13 +321,13 @@ const readTypes = (): Interface[] => {
   const checker = program.getTypeChecker()
   
   sources.forEach(source => {
-    ts.forEachChild(source, visit)
+    const fileName = source.fileName
+    ts.forEachChild(source, visit(fileName))
   })
 
-  console.log("output", output.length)
-  return output
+  const slice = output.slice(0).filter(i => i.contents.name.indexOf(".GridProps") < 0)
+  console.log("Output: " + output.length, "Slice: " + slice.length)
+  return slice
 }
-
-readTypes()
 
 

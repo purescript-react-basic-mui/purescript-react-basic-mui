@@ -1,1 +1,0 @@
-exports._selectInput = require("@material-ui/core/SelectInput")

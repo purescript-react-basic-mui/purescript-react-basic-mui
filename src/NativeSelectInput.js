@@ -1,1 +1,0 @@
-exports._nativeSelectInput = require("@material-ui/core/NativeSelectInput")

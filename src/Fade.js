@@ -1,1 +1,0 @@
-exports._fade = require("@material-ui/core/Fade")

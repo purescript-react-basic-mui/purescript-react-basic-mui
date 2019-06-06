@@ -1,1 +1,0 @@
-exports._common = require("@material-ui/core/Colors.Common")

@@ -1,1 +1,0 @@
-exports._radioGroup = require("@material-ui/core/RadioGroup")

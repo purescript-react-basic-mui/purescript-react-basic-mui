@@ -1,1 +1,0 @@
-exports._table = require("@material-ui/core/Table")

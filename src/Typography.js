@@ -1,1 +1,0 @@
-exports._typography = require("@material-ui/core/Typography")

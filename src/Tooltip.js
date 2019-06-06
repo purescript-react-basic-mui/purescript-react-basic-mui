@@ -1,1 +1,0 @@
-exports._tooltip = require("@material-ui/core/Tooltip")

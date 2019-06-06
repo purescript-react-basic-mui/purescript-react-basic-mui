@@ -1,1 +1,0 @@
-exports._rootRef = require("@material-ui/core/RootRef")

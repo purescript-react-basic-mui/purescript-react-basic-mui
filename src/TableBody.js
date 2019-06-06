@@ -1,1 +1,0 @@
-exports._tableBody = require("@material-ui/core/TableBody")

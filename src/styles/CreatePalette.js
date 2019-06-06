@@ -1,1 +1,0 @@
-exports._createPalette = require("@material-ui/core/Styles.CreatePalette")

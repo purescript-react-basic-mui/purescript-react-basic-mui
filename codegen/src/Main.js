@@ -1,34 +1,34 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var ts = require("typescript");
-var readTypes = function () {
+exports._interfaces = function () {
     var output = [];
     var getTSType = function (type) {
         try {
             if (type.isUnionOrIntersection())
-                return { tag: "Union", contents: { types: type.types.map(getWithAliasProps).filter(function (t) { return t; }) } };
+                return { tag: "UnionType", contents: { types: type.types.map(getWithAliasProps).filter(function (t) { return t; }) } };
             if (type.flags & ts.TypeFlags.String)
-                return { tag: "String" };
+                return { tag: "StringType" };
             if (type.flags & ts.TypeFlags.BooleanLike)
-                return { tag: "Boolean" };
+                return { tag: "BooleanType" };
             if (type.flags & ts.TypeFlags.Number)
-                return { tag: "Number" };
+                return { tag: "NumberType" };
             if (type.flags & ts.TypeFlags.Null)
-                return { tag: "Null" };
+                return { tag: "NullType" };
             if (type.flags & ts.TypeFlags.VoidLike)
-                return { tag: "Unit" };
+                return { tag: "VoidType" };
             if (type.flags & ts.TypeFlags.Any)
-                return { tag: "Any" };
+                return { tag: "AnyType" };
             if (type.isStringLiteral())
-                return { tag: "StringLiteral", contents: { value: type.value } };
+                return { tag: "StringLiteralType", contents: { value: type.value } };
             if (type.isNumberLiteral())
-                return { tag: "NumericLiteral", contents: { value: type.value } };
+                return { tag: "NumericLiteralType", contents: { value: type.value } };
             var callSigs = type.getCallSignatures();
             if (callSigs.length) {
                 var sig = callSigs[0];
                 var parameters = sig.getParameters().map(function (p) { return optionalMember(p); });
                 var returnType = getWithAliasProps(sig.getReturnType());
-                return { tag: "Function", contents: { parameters: parameters, returnType: returnType } };
+                return { tag: "FunctionType", contents: { parameters: parameters, returnType: returnType } };
             }
             if (type.flags & (ts.TypeFlags.Object | ts.TypeFlags.NonPrimitive)) {
                 var objFlags = type.objectFlags;
@@ -51,7 +51,7 @@ var readTypes = function () {
                     var name_2 = checker.getFullyQualifiedName(type.symbol);
                     return { tag: "InterfaceReference", contents: { name: name_2 } };
                 }
-                return { tag: "UnknownObject", contents: { flags: objFlags } };
+                return { tag: "UnknownObject", contents: { type: checker.typeToString(type), flags: objFlags } };
             }
             if (type.flags & ts.TypeFlags.TypeParameter) {
                 var name_3 = checker.typeToString(type);
@@ -60,8 +60,8 @@ var readTypes = function () {
             return { tag: "Unknown", contents: { name: checker.typeToString(type), flags: type.flags } };
         }
         catch (e) {
-            console.log(type.flags, checker.typeToString(type));
-            return { tag: "ExceptionType", contents: { e: e, type: checker.typeToString(type), flags: type.flags } };
+            var error = JSON.stringify(e);
+            return { tag: "ExceptionType", contents: { error: error, type: checker.typeToString(type), flags: type.flags } };
         }
     };
     var getWithAliasProps = function (t) {
@@ -85,7 +85,7 @@ var readTypes = function () {
         return (ts.getCombinedNodeFlags(node) & ts.ModifierFlags.Export) !== 0 ||
             (!!node.parent && node.parent.kind === ts.SyntaxKind.SourceFile);
     };
-    var visit = function (node) {
+    var visit = function (fileName) { return function (node) {
         if (isNodeExported(node)) {
             if (ts.isInterfaceDeclaration(node)) {
                 var symbol = checker.getSymbolAtLocation(node.name);
@@ -94,23 +94,71 @@ var readTypes = function () {
                     var name_4 = checker.getFullyQualifiedName(nodeType.symbol);
                     if (nodeType.isClassOrInterface()) {
                         var members = convertProperties(nodeType, node);
-                        output.push({ tag: "Interface", contents: { name: name_4, members: members } });
+                        output.push({ tag: "Interface", contents: { fileName: fileName, name: name_4, members: members } });
                     }
                 }
             }
+            else if (ts.isVariableStatement(node)) {
+                if (fileName.indexOf("Avatar.d.ts") >= 0 && fileName.indexOf("ListItemAvatar") < 0) {
+                    var type = checker.getTypeAtLocation(node);
+                    node.forEachChild(function (node) {
+                        if (ts.isVariableDeclarationList(node)) {
+                            node.declarations.map(function (decl) {
+                                var nodeType = checker.getTypeAtLocation(decl);
+                                //console.log(nodeType)
+                                var type = getWithAliasProps(nodeType);
+                                console.log(type);
+                                //console.log("\n\n\n")
+                                //console.log(JSON.stringify(type, null, 2))
+                                /*
+                                if(nodeType.flags & (ts.TypeFlags.Object | ts.TypeFlags.NonPrimitive)){
+                                  const objFlags = (<ts.ObjectType>nodeType).objectFlags
+                                }
+                                  if(ts.isIdentifier(decl.name)){
+                                    const name = decl.name.escapedText.toString()
+                                    if(nodeType.flags & (ts.TypeFlags.Object | ts.TypeFlags.NonPrimitive)){
+                                      const objFlags = (<ts.ObjectType>nodeType).objectFlags
+                                      const tr = (<ts.TypeReference>nodeType)
+                                      const typeParams = tr.typeArguments ? (tr.typeArguments.map(getWithAliasProps).filter(i => i) as unknown as TypeAlias[]) : ([] as TypeAlias[])
+                                      console.log(name, objFlags, JSON.stringify(typeParams))
+                                    } else {
+                                      console.log("here", ts.SyntaxKind[node.kind])
+                                    }
+                                  }
+                                */
+                            });
+                        }
+                        else {
+                        }
+                    });
+                }
+            }
             else if (ts.isModuleDeclaration(node)) {
-                ts.forEachChild(node, visit);
+                ts.forEachChild(node, visit(fileName));
+            }
+            else {
+                if (fileName.indexOf("Avatar.d.ts") >= 0 && fileName.indexOf("ListItemAvatar") < 0) {
+                    if (node.kind == ts.SyntaxKind.EndOfFileToken && node.parent && ts.isSourceFile(node.parent)) {
+                        var source = node.parent;
+                        source.statements.forEach(function (statement) {
+                            if (isNodeExported(statement)) {
+                                console.log(ts.SyntaxKind[statement.kind]);
+                            }
+                        });
+                    }
+                }
             }
         }
-    };
+    }; };
     var options = ts.getDefaultCompilerOptions();
     var program = ts.createProgram(["./node_modules/@material-ui/core/index.d.ts"], options);
     var sources = program.getSourceFiles();
     var checker = program.getTypeChecker();
     sources.forEach(function (source) {
-        ts.forEachChild(source, visit);
+        var fileName = source.fileName;
+        ts.forEachChild(source, visit(fileName));
     });
-    console.log("output", output.length);
-    return output;
+    var slice = output.slice(0).filter(function (i) { return i.contents.name.indexOf(".GridProps") < 0; });
+    console.log("Output: " + output.length, "Slice: " + slice.length);
+    return slice;
 };
-readTypes();

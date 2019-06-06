@@ -1,1 +1,0 @@
-exports._menuList = require("@material-ui/core/MenuList")
