@@ -31,6 +31,7 @@ export type TSType =
   AnonymousObject |
   AnyType |
   BooleanType |
+  SymbolType |
   ExceptionType |
   FunctionType |
   InterfaceReference |
@@ -59,6 +60,8 @@ export interface NullType { readonly tag: "NullType" }
 export interface VoidType { readonly tag: "VoidType" }
 
 export interface AnyType { readonly tag: "AnyType" }
+
+export interface SymbolType { readonly tag: "SymbolType", contents: string }
 
 export interface UnionType {
   readonly tag: "UnionType",
