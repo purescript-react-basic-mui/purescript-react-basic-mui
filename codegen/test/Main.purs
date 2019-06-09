@@ -8,6 +8,3 @@ import Effect (Effect)
 main :: Effect Unit
 main = Main.main 
   
-
-
-

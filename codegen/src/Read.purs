@@ -8,11 +8,12 @@ import Data.Array as Array
 import Data.Either (Either(..))
 import Data.Generic.Rep as GR
 import Data.Generic.Rep.Show (genericShow)
-import Data.Lens (Fold, Lens', Prism', preview, prism', toListOf, traversed)
+import Data.Lens (Fold, Lens', Prism', Traversal', preview, prism', toListOf, traversed)
 import Data.Lens.Record (prop)
 import Data.List (List)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Monoid.Endo (Endo)
+import Data.String as String
 import Data.Symbol (SProxy(..))
 import Data.Traversable (traverse)
 import Effect (Effect)
@@ -61,22 +62,16 @@ _InterfaceDeclaration = prism' InterfaceDeclaration case _ of
 toArrayOf :: forall s t a b. Fold (Endo (->) (List a)) s t a b -> s -> Array a
 toArrayOf p = Array.fromFoldable <<< toListOf p
 
+_interfaces ::  Traversal' DeclarationSourceFile InterfaceDeclarationRec
+_interfaces = 
+  _DeclarationSourceFile <<<
+  _declarationModuleElements <<<
+  traversed <<<
+  _DeclarationElement <<<
+  _InterfaceDeclaration
 
 interfaces :: DeclarationSourceFile -> (Array InterfaceDeclarationRec)
-interfaces declarationSourceFile = fromMaybe [] do
-  let maybeArray = preview (_DeclarationSourceFile <<< _declarationModuleElements) declarationSourceFile 
-  maybeArray <#> \array -> Array.mapMaybe (preview (_DeclarationElement <<< _InterfaceDeclaration)) array
-
-interfaces2 :: DeclarationSourceFile -> (Array InterfaceDeclarationRec)
-interfaces2 declarationSourceFile = 
-  toArrayOf (
-    _DeclarationSourceFile <<<
-    _declarationModuleElements <<<
-    traversed <<<
-    _DeclarationElement <<<
-    _InterfaceDeclaration
-  ) declarationSourceFile
-
+interfaces declarationSourceFile = toArrayOf _interfaces declarationSourceFile
 
 interfaceByName :: DeclarationSourceFile -> String -> Maybe InterfaceDeclarationRec
 interfaceByName file interfaceName = Array.find (\{ name } -> name == interfaceName) (interfaces file)
@@ -114,7 +109,7 @@ data TSType
   | TypeReference { name :: EntityName, typeParameters :: Array TSType }
   | ParenthesizedType TSType
   | ConstructorType { typeParameters :: Array TSType, parameters :: Array TypeMember, returnType :: TSType }
-  | FunctionType { typeParameters :: Array TSType, parameters :: Array TypeMember, returnType :: TSType }
+  | FunctionType { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
   | ClassType { name :: Maybe String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
   | InterfaceType { name :: Maybe String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
   | LiteralType LiteralValue
@@ -127,8 +122,58 @@ data EntityName
 
 
 showDeclarationElements :: DeclarationElements -> String
-showDeclarationElements (InterfaceDeclaration { name, typeParameters, typeMembers }) = name
+showDeclarationElements (InterfaceDeclaration { name, typeParameters, typeMembers }) = 
+  "type " <> name <> parameters <> " =\n  { " <> members <> "\n  }"
+  where
+    parameters | Array.length typeParameters > 0 = " " <> (Array.intercalate " " $ map showTypeParameter typeParameters)
+    parameters = ""
+    members = Array.intercalate "  , " $ map (\member -> (showTypeMember member) <> "\n") typeMembers
 showDeclarationElements element = show element
+
+showTypeMember :: TypeMember -> String
+showTypeMember (PropertySignature signature) = 
+  (getName signature.name) <> " :: " <> fieldType
+  where
+    getName (Just propertyName) = showPropertyName propertyName
+    getName Nothing = "NoName"
+
+    fieldType | signature.isOptional = "(Maybe " <> showTSType signature.type <> ")"
+    fieldType = "(" <> showTSType signature.type <> ")"
+
+showTypeMemberAsFunctionType :: TypeMember -> String
+showTypeMemberAsFunctionType (PropertySignature signature) | signature.isOptional = "(Maybe -- this doesn't seem right " <> (showTSType signature.type) <> ")"
+showTypeMemberAsFunctionType (PropertySignature signature) = showTSType signature.type
+
+
+showTypeParameter :: TypeParameter -> String
+showTypeParameter (TypeParameter param) = String.toLower param
+
+showTSType :: TSType -> String
+showTSType BooleanType = "Boolean"
+showTSType StringType = "String"
+showTSType NumberType = "Number"
+showTSType BigIntType = "Number"
+showTSType ObjectType = "(Object Foreign)"
+showTSType VoidType = "Unit"
+showTSType AnyType = "Any"
+showTSType SymbolType = "Symbol"
+showTSType UnknownType = "Unknown"
+showTSType NeverType = "Never"
+showTSType (ParenthesizedType t) = "(" <> (showTSType t) <> ")"
+showTSType (TypeReference { name, typeParameters}) = "(" <> (showEntityName name) <> " " <> (Array.intercalate " " $ map showTSType typeParameters) <> ")"
+showTSType (FunctionType { typeParameters, parameters, returnType }) | Array.length typeParameters == 0 = (Array.intercalate " -> " $ map showTypeMemberAsFunctionType parameters) <> " -> " <> (showTSType returnType)
+showTSType (FunctionType { typeParameters, parameters, returnType }) = "forall " <> (Array.intercalate " " $ map showTypeParameter typeParameters) <> ". " <> (Array.intercalate " -> " $ map showTypeMemberAsFunctionType parameters) <> " -> " <> (showTSType returnType)
+showTSType (ArrayType t) = "(Array " <> (showTSType t) <> ")"
+showTSType t = show t
+
+showEntityName :: EntityName -> String
+showEntityName (Identifier name) = name
+showEntityName (QualifiedName entityName name) = (showEntityName entityName) <> "." <> name
+
+showPropertyName :: PropertyName -> String
+showPropertyName (IdentifierName name) = name
+showPropertyName (StringLiteral name) = name
+showPropertyName (NumericLiteral name) = show (show name)
 
 
 derive instance genericDeclarationSourceFile :: GR.Generic DeclarationSourceFile _
@@ -151,15 +196,15 @@ instance decodeTypeMember :: Decode TypeMember where decode = genericDecode defa
 instance decodeEntityName :: Decode EntityName where decode = fix \_ -> genericDecode defaultOptions
 instance decodeLiteralValue :: Decode LiteralValue where decode = fix \_ -> genericDecode defaultOptions
 
-instance showDeclarationSourceFile :: Show DeclarationSourceFile where show = genericShow
-instance showDeclarationModule :: Show DeclarationModuleElements where show = genericShow 
-instance showDeclarationElementsG :: Show DeclarationElements where show = genericShow
-instance showTypeParameter :: Show TypeParameter where show = genericShow
-instance showTSType :: Show TSType where show = fix \_ -> genericShow
-instance showPropertyName :: Show PropertyName where show = genericShow
-instance showTypeMember :: Show TypeMember where show = fix \_ -> genericShow
-instance showEntityName :: Show EntityName where show = fix \_ -> genericShow
-instance showLiteralValue :: Show LiteralValue where show = fix \_ -> genericShow
+instance _showDeclarationSourceFile :: Show DeclarationSourceFile where show = genericShow
+instance _showDeclarationModule :: Show DeclarationModuleElements where show = genericShow 
+instance _showDeclarationElementsG :: Show DeclarationElements where show = genericShow
+instance _showTypeParameter :: Show TypeParameter where show = genericShow
+instance _showTSType :: Show TSType where show = fix \_ -> genericShow
+instance _showPropertyName :: Show PropertyName where show = genericShow
+instance _showTypeMember :: Show TypeMember where show = fix \_ -> genericShow
+instance _showEntityName :: Show EntityName where show = fix \_ -> genericShow
+instance _showLiteralValue :: Show LiteralValue where show = fix \_ -> genericShow
 
 
 sourceFiles :: Effect (Array DeclarationSourceFile)
