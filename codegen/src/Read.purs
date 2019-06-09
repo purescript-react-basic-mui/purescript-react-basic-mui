@@ -1,4 +1,4 @@
-module Codegen.Main2 where
+module Codegen.Read where
 
 import Prelude
 
@@ -8,18 +8,30 @@ import Data.Array as Array
 import Data.Either (Either(..))
 import Data.Generic.Rep as GR
 import Data.Generic.Rep.Show (genericShow)
-import Data.Maybe (Maybe(..), isJust)
-import Data.String.Regex as String
-import Data.String.Regex.Flags as RegexFlags
+import Data.Lens (Fold, Lens', Prism', preview, prism', toListOf, traversed)
+import Data.Lens.Record (prop)
+import Data.List (List)
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Monoid.Endo (Endo)
+import Data.Symbol (SProxy(..))
 import Data.Traversable (traverse)
 import Effect (Effect)
-import Effect.Console (log)
 import Effect.Exception (throw)
 import Foreign (Foreign)
 import Foreign.Generic (class Decode, decode, defaultOptions, genericDecode)
 
+
+type DeclarationSourceFileRec = { fileName :: String, declarationModuleElements :: Array DeclarationModuleElements }
+
 data DeclarationSourceFile 
-  = DeclarationSourceFile { fileName :: String, declarationModuleElements :: Array DeclarationModuleElements }
+  = DeclarationSourceFile DeclarationSourceFileRec
+
+_DeclarationSourceFile :: Prism' DeclarationSourceFile DeclarationSourceFileRec
+_DeclarationSourceFile = prism' DeclarationSourceFile case _ of 
+  DeclarationSourceFile rec -> Just rec
+
+_declarationModuleElements :: ∀ r. Lens' { declarationModuleElements :: Array DeclarationModuleElements | r } (Array DeclarationModuleElements)
+_declarationModuleElements = prop (SProxy :: SProxy "declarationModuleElements")
 
 data DeclarationModuleElements
   = DeclarationElement DeclarationElements
@@ -29,10 +41,45 @@ data DeclarationModuleElements
   | ExportDefaultDeclaration
   | ExportAssignment
 
+_DeclarationElement :: Prism' DeclarationModuleElements DeclarationElements
+_DeclarationElement = prism' DeclarationElement case _ of
+  DeclarationElement element -> Just element
+  _ -> Nothing
+
+type InterfaceDeclarationRec = { name :: String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
+
 data DeclarationElements
-  = InterfaceDeclaration { name :: String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
+  = InterfaceDeclaration InterfaceDeclarationRec 
   | TypeAliasDeclaration { name :: String, aliasName :: Maybe String, type :: TSType }
   | AmbientDeclaration
+
+_InterfaceDeclaration :: Prism' DeclarationElements InterfaceDeclarationRec
+_InterfaceDeclaration = prism' InterfaceDeclaration case _ of 
+  InterfaceDeclaration rec -> Just rec
+  _ -> Nothing
+
+toArrayOf :: forall s t a b. Fold (Endo (->) (List a)) s t a b -> s -> Array a
+toArrayOf p = Array.fromFoldable <<< toListOf p
+
+
+interfaces :: DeclarationSourceFile -> (Array InterfaceDeclarationRec)
+interfaces declarationSourceFile = fromMaybe [] do
+  let maybeArray = preview (_DeclarationSourceFile <<< _declarationModuleElements) declarationSourceFile 
+  maybeArray <#> \array -> Array.mapMaybe (preview (_DeclarationElement <<< _InterfaceDeclaration)) array
+
+interfaces2 :: DeclarationSourceFile -> (Array InterfaceDeclarationRec)
+interfaces2 declarationSourceFile = 
+  toArrayOf (
+    _DeclarationSourceFile <<<
+    _declarationModuleElements <<<
+    traversed <<<
+    _DeclarationElement <<<
+    _InterfaceDeclaration
+  ) declarationSourceFile
+
+
+interfaceByName :: DeclarationSourceFile -> String -> Maybe InterfaceDeclarationRec
+interfaceByName file interfaceName = Array.find (\{ name } -> name == interfaceName) (interfaces file)
 
 data TypeParameter = TypeParameter String
 data PropertyName 
@@ -79,6 +126,11 @@ data EntityName
   | QualifiedName EntityName String
 
 
+showDeclarationElements :: DeclarationElements -> String
+showDeclarationElements (InterfaceDeclaration { name, typeParameters, typeMembers }) = name
+showDeclarationElements element = show element
+
+
 derive instance genericDeclarationSourceFile :: GR.Generic DeclarationSourceFile _
 derive instance genericDeclarationModuleElements :: GR.Generic DeclarationModuleElements _
 derive instance genericDeclarationElements :: GR.Generic DeclarationElements _
@@ -101,24 +153,13 @@ instance decodeLiteralValue :: Decode LiteralValue where decode = fix \_ -> gene
 
 instance showDeclarationSourceFile :: Show DeclarationSourceFile where show = genericShow
 instance showDeclarationModule :: Show DeclarationModuleElements where show = genericShow 
-instance showDeclarationElements :: Show DeclarationElements where show = genericShow
+instance showDeclarationElementsG :: Show DeclarationElements where show = genericShow
 instance showTypeParameter :: Show TypeParameter where show = genericShow
 instance showTSType :: Show TSType where show = fix \_ -> genericShow
 instance showPropertyName :: Show PropertyName where show = genericShow
 instance showTypeMember :: Show TypeMember where show = fix \_ -> genericShow
 instance showEntityName :: Show EntityName where show = fix \_ -> genericShow
 instance showLiteralValue :: Show LiteralValue where show = fix \_ -> genericShow
-
-main :: Effect Unit
-main = do
-  sources       <- sourceFiles
-  avatarRegex   <- liftEither $ String.regex "\\/Avatar.d.ts$" RegexFlags.noFlags
-  cardRegex     <- liftEither $ String.regex "\\/Card.d.ts$" RegexFlags.noFlags
-  avatar        <- liftMaybe "Couldn't find Avatar" $ Array.head $ Array.filter (\(DeclarationSourceFile { fileName }) -> isJust $ String.match avatarRegex fileName) sources
-  card          <- liftMaybe "Couldn't find Card" $ Array.head $ Array.filter (\(DeclarationSourceFile { fileName }) -> isJust $ String.match cardRegex fileName) sources
-  log $ show avatar
-  log "\n\n"
-  log $ show card
 
 
 sourceFiles :: Effect (Array DeclarationSourceFile)
@@ -135,8 +176,6 @@ liftMaybe :: ∀ a. String -> Maybe a -> Effect a
 liftMaybe msg = case _ of 
   Nothing -> throw msg
   Just a -> pure a
-
-
 
 
 foreign import _sourceFiles :: Effect (Array Foreign)
