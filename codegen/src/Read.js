@@ -91,6 +91,13 @@ exports._sourceFiles = function () {
         var falseType = handleTSType(checker.getTypeAtLocation(node.falseType));
         return { tag: "ConditionalType", contents: { checkType: checkType, extendsType: extendsType, trueType: trueType, falseType: falseType } };
     };
+    var handleUnionType = function (node) {
+        node.types.map(function (typeNode) {
+            console.log(ts.SyntaxKind[typeNode.kind]);
+            var type = checker.getTypeFromTypeNode(typeNode);
+        });
+        return { tag: "AnyType" };
+    };
     var handleTSType = function (type) {
         if (type.flags & ts.TypeFlags.String)
             return { tag: "StringType" };
@@ -120,7 +127,7 @@ exports._sourceFiles = function () {
         if (node && ts.isTypeReferenceNode(node))
             return handleTypeReference(type, node);
         if (node && ts.isUnionTypeNode(node))
-            return { tag: "UnionType", contents: node.types.map(function (t) { return handleTSType(checker.getTypeFromTypeNode(t)); }) };
+            return handleUnionType(node); ////return { tag: "UnionType", contents: node.types.map(t => handleTSType(checker.getTypeFromTypeNode(t))) }
         if (node && ts.isIntersectionTypeNode(node))
             return { tag: "IntersectionType", contents: node.types.map(function (t) { return handleTSType(checker.getTypeFromTypeNode(t)); }) };
         if (node && ts.isConstructorTypeNode(node))

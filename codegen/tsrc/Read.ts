@@ -321,6 +321,14 @@ export const _sourceFiles = (): DeclarationSourceFile[] => {
     return { tag: "ConditionalType", contents: { checkType, extendsType, trueType, falseType } }
   }
 
+  const handleUnionType = (node: ts.UnionTypeNode): TSType => {
+    node.types.map(typeNode => {
+      console.log(ts.SyntaxKind[typeNode.kind])
+      const type = checker.getTypeFromTypeNode(typeNode)
+    })
+    return { tag: "AnyType" }
+  }
+
   const handleTSType = (type: ts.Type): TSType => {
     if(type.flags & ts.TypeFlags.String) return { tag: "StringType" }
     if(type.flags & ts.TypeFlags.Number) return { tag: "NumberType" }
@@ -337,7 +345,7 @@ export const _sourceFiles = (): DeclarationSourceFile[] => {
     if(node && ts.isTypeOperatorNode(node)) return { tag: "TypeOperator" }
     if(node && node.kind === ts.SyntaxKind.SymbolKeyword) return { tag: "SymbolType" }
     if(node && ts.isTypeReferenceNode(node)) return handleTypeReference(type, node)
-    if(node && ts.isUnionTypeNode(node)) return { tag: "UnionType", contents: node.types.map(t => handleTSType(checker.getTypeFromTypeNode(t))) }
+    if(node && ts.isUnionTypeNode(node)) return handleUnionType(node) ////return { tag: "UnionType", contents: node.types.map(t => handleTSType(checker.getTypeFromTypeNode(t))) }
     if(node && ts.isIntersectionTypeNode(node)) return { tag: "IntersectionType", contents: node.types.map(t => handleTSType(checker.getTypeFromTypeNode(t))) }
     if(node && ts.isConstructorTypeNode(node)) return handleConstructor(type)
     if(node && ts.isFunctionLike(node)) return handleFunction(type)
