@@ -427,7 +427,6 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
 
   const handleTSType = (node: ts.Node): TSType => {
     switch(node.kind){
-
       case ts.SyntaxKind.StringKeyword:   return { tag: "StringType" }
       case ts.SyntaxKind.NumberKeyword:   return { tag: "NumberType" }
       case ts.SyntaxKind.BooleanKeyword:  return { tag: "BooleanType" }
@@ -442,7 +441,6 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
       case ts.SyntaxKind.ObjectKeyword:   return { tag: "ObjectType" }
       case ts.SyntaxKind.TypeOperator:    return { tag: "TypeOperator" }
       case ts.SyntaxKind.AnyKeyword:      return { tag: "AnyType" }
-
     }
     
     if(ts.isTypeReferenceNode(node))      return handleTypeReference(node)
@@ -459,7 +457,7 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
     if(ts.isConditionalTypeNode(node))    return handleConditionalType(node)
     if(ts.isInferTypeNode(node))          return handleInferType(node)
 
-    console.log(ts.SyntaxKind[node.kind])
+    console.log("Don't have a handler for: " + ts.SyntaxKind[node.kind], "It will be converted to an AnyType")
     return { tag: "AnyType" }
   }
 

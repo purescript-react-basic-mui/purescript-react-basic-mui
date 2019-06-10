@@ -198,7 +198,7 @@ exports._sourceFiles = function (filterRegex) { return function () {
             return handleConditionalType(node);
         if (ts.isInferTypeNode(node))
             return handleInferType(node);
-        console.log(ts.SyntaxKind[node.kind]);
+        console.log("Don't have a handler for: " + ts.SyntaxKind[node.kind], "It will be converted to an AnyType");
         return { tag: "AnyType" };
     };
     var handleTypeParameter = function (param) {
