@@ -22,7 +22,16 @@ exports._sourceFiles = function (filterRegex) { return function () {
     var handleTypeReference = function (node) {
         var name = handleEntityName(node.typeName);
         var typeArguments = (node.typeArguments) ? node.typeArguments.map(handleTSType) : [];
-        return { tag: "TypeReference", contents: { name: name, typeArguments: typeArguments } };
+        var type = checker.getTypeAtLocation(node);
+        var record = (type && type.aliasSymbol)
+            ? { aliasName: { tag: "Identifier", contents: type.aliasSymbol.name },
+                aliasTypeArguments: type.aliasTypeArguments ? type.aliasTypeArguments.map(function (t) {
+                    var nodeType = checker.typeToTypeNode(t);
+                    return nodeType ? handleTSType(nodeType) : { tag: "AnyType" };
+                }) : []
+            }
+            : { aliasName: undefined, aliasTypeArguments: undefined };
+        return { tag: "TypeReference", contents: { name: name, typeArguments: typeArguments, aliasName: record.aliasName, aliasTypeArguments: record.aliasTypeArguments } };
     };
     var handleParameter = function (node) {
         var isOptional = node.questionToken !== undefined;

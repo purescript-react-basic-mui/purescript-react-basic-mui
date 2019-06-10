@@ -114,7 +114,7 @@ data TSType
   | IntersectionType (Array TSType)
   | ArrayType TSType
   | TypeLiteral (Array TypeMember)
-  | TypeReference { name :: EntityName }
+  | TypeReference { name :: EntityName, typeArguments :: Array TSType, aliasName :: Maybe EntityName, aliasTypeArguments :: Maybe (Array TSType) }
   | ParenthesizedType TSType
   | ConstructorType { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
   | FunctionType { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }

@@ -87,11 +87,20 @@ export interface VoidType { tag: "VoidType" }
 export interface AnyType { tag: "AnyType" }
 export interface UnknownType { tag: "UnknownType" }
 export interface SymbolType { tag: "SymbolType" }
-export interface TypeReference { tag: "TypeReference", contents: { name: EntityName, typeArguments: TSType[] } }
 export interface LiteralType { tag: "LiteralType", contents: LiteralValue }
 export interface TypeLiteral { tag: "TypeLiteral", contents: TypeMember[] }
 export interface MappedType { tag: "MappedType", contents: { isOptional: boolean, type: TSType, typeParameter?: TypeParameter } }
 export interface InferType { tag: "InferType", contents: TypeParameter }
+
+export interface TypeReference {
+  tag: "TypeReference",
+  contents: {
+    name: EntityName,
+    typeArguments: TSType[]
+    aliasName?: EntityName
+    aliasTypeArguments?: TSType[]
+  }
+}
 
 export interface ConditionalType { 
   tag: "ConditionalType",
@@ -271,7 +280,18 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
   const handleTypeReference = (node: ts.TypeReferenceNode): TSType => {
     const name = handleEntityName(node.typeName)
     const typeArguments: TSType[] = (node.typeArguments) ? node.typeArguments.map(handleTSType) : []
-    return { tag: "TypeReference", contents: { name, typeArguments } }
+    const type = checker.getTypeAtLocation(node) 
+    const record: ({ aliasName?: EntityName, aliasTypeArguments?: TSType[] }) = 
+      (type && type.aliasSymbol)
+        ? { aliasName: { tag: "Identifier", contents: type.aliasSymbol.name }, 
+            aliasTypeArguments: type.aliasTypeArguments ? type.aliasTypeArguments.map(t => {
+              const nodeType = checker.typeToTypeNode(t)
+              return nodeType ? handleTSType(nodeType): { tag: "AnyType" }
+            }) : [] 
+          }
+        : { aliasName: undefined, aliasTypeArguments : undefined }
+
+    return { tag: "TypeReference", contents: { name, typeArguments, aliasName: record.aliasName, aliasTypeArguments: record.aliasTypeArguments } }
   }
 
   const handleParameter = (node: ts.ParameterDeclaration): TypeMember => {

@@ -18,4 +18,5 @@ main = do
                       $ Array.head
                       $ Array.mapMaybe (\src -> interfaceByName src "CardProps") sources
   log $ showDeclarationElements (InterfaceDeclaration cardProps)
+  log $ show cardProps
 
