@@ -14,9 +14,11 @@ import Data.List (List)
 import Data.Maybe (Maybe(..))
 import Data.Monoid.Endo (Endo)
 import Data.String as String
+import Data.String.Regex (Regex)
 import Data.Symbol (SProxy(..))
 import Data.Traversable (traverse)
 import Effect (Effect)
+import Effect.Console (log)
 import Effect.Exception (throw)
 import Foreign (Foreign)
 import Foreign.Generic (class Decode, decode, defaultOptions, genericDecode)
@@ -121,6 +123,8 @@ data TSType
   | LiteralType LiteralValue
   | IndexAccessType { indexType :: TSType, objectType :: TSType }
   | ConditionalType { checkType :: TSType, extendsType :: TSType, trueType :: TSType, falseType :: TSType }
+  | MappedType { isOptional :: Boolean, type :: TSType, typeParameter :: Maybe TypeParameter }
+  | InferType TypeParameter
 
 data EntityName 
   = Identifier String
@@ -215,10 +219,19 @@ instance _showEntityName :: Show EntityName where show = fix \_ -> genericShow
 instance _showLiteralValue :: Show LiteralValue where show = fix \_ -> genericShow
 
 
-sourceFiles :: Effect (Array DeclarationSourceFile)
-sourceFiles = do
-  fs <- _sourceFiles
-  traverse (liftEither <<< runExcept <<< decode) fs
+sourceFiles :: Regex -> Effect (Array DeclarationSourceFile)
+sourceFiles regex = do
+  fs    <- _sourceFiles regex
+  traverse convert fs
+  where
+    convert :: Foreign -> Effect DeclarationSourceFile
+    convert f = do
+      decl <- liftEither $ runExcept $ decode f
+      logConverted decl
+    logConverted :: DeclarationSourceFile -> Effect DeclarationSourceFile
+    logConverted d@(DeclarationSourceFile { fileName }) = do
+      log ("Converted " <> fileName)
+      pure d
 
 liftEither :: ∀ e a. Show e => Either e a -> Effect a
 liftEither = case _ of 
@@ -230,5 +243,4 @@ liftMaybe msg = case _ of
   Nothing -> throw msg
   Just a -> pure a
 
-
-foreign import _sourceFiles :: Effect (Array Foreign)
+foreign import _sourceFiles :: Regex -> Effect (Array Foreign)

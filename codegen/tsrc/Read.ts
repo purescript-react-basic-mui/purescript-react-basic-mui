@@ -65,7 +65,9 @@ export type TSType =
   ConditionalType |
   NullType |
   UndefinedType |
-  TypeLiteral
+  TypeLiteral | 
+  MappedType | 
+  InferType
 
 export interface ArrayType { tag: "ArrayType", contents: TSType }
 export interface ObjectType { tag: "ObjectType" }
@@ -87,8 +89,9 @@ export interface UnknownType { tag: "UnknownType" }
 export interface SymbolType { tag: "SymbolType" }
 export interface TypeReference { tag: "TypeReference", contents: { name: EntityName, typeArguments: TSType[] } }
 export interface LiteralType { tag: "LiteralType", contents: LiteralValue }
-
 export interface TypeLiteral { tag: "TypeLiteral", contents: TypeMember[] }
+export interface MappedType { tag: "MappedType", contents: { isOptional: boolean, type: TSType, typeParameter?: TypeParameter } }
+export interface InferType { tag: "InferType", contents: TypeParameter }
 
 export interface ConditionalType { 
   tag: "ConditionalType",
@@ -250,7 +253,7 @@ const isThing = (thing: string, str: string): boolean => {
   return results !== null && results.length > 0
 }
 
-export const _sourceFiles = (): DeclarationSourceFile[] => {
+export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[] => {
   const options = ts.getDefaultCompilerOptions()
   const program = ts.createProgram(["./node_modules/@material-ui/core/index.d.ts"], options)
   const sources = program.getSourceFiles()
@@ -401,13 +404,25 @@ export const _sourceFiles = (): DeclarationSourceFile[] => {
         const parameters: TypeMember[] = t.parameters.map(handleParameter)
         return { tag: "ConstructSignature", contents: { name, isOptional, returnType, typeParameters, parameters } }
       }
-      
-      console.log("No TypeLiteral impl for: " + ts.SyntaxKind[t.kind])
+
+      // shouldn't get here unless typescript changes
       const name: PropertyName | undefined = undefined
       return { tag: "PropertySignature", contents: { name, isOptional: true, type: { tag: "AnyType" } } }
     })
     
     return { tag: "TypeLiteral", contents }
+  }
+
+  const handleMappedType = (node: ts.MappedTypeNode): TSType => {
+    const isOptional: boolean = node.questionToken === undefined
+    const type: TSType = node.type ? handleTSType(node.type) : { tag: "AnyType" }
+    const typeParameter = node.typeParameter ? handleTypeParameter(node.typeParameter) : undefined
+    return { tag: "MappedType", contents: { isOptional, type, typeParameter } }
+  }
+
+  const handleInferType = (node: ts.InferTypeNode): TSType => {
+    const contents = handleTypeParameter(node.typeParameter)
+    return { tag: "InferType", contents  }
   }
 
   const handleTSType = (node: ts.Node): TSType => {
@@ -439,21 +454,12 @@ export const _sourceFiles = (): DeclarationSourceFile[] => {
     if(ts.isParenthesizedTypeNode(node))  return { tag: "ParenthesizedType", contents: handleTSType(node.type) }
     if(ts.isArrayTypeNode(node))          return handleArrayType(node)
     if(ts.isFunctionLike(node))           return handleFunction(node)
+    if(ts.isMappedTypeNode(node))         return handleMappedType(node)
     if(ts.isIndexedAccessTypeNode(node))  return handleIndexAccessType(node)
     if(ts.isConditionalTypeNode(node))    return handleConditionalType(node)
-/*    if(ts.isConstructorTypeNode(node))    return handleConstructor(node)
-  
-*/
-    /*
-    if(type.flags & (ts.TypeFlags.Object | ts.TypeFlags.NonPrimitive)){
-      const objFlags = (<ts.ObjectType>type).objectFlags
-      if(objFlags & ts.ObjectFlags.Reference && node && ts.isTypeReferenceNode(node)) return handleTypeReference(type, node)
-      if(objFlags & ts.ObjectFlags.Class && node && ts.isClassDeclaration(node)) return handleClass(node)
-      if(objFlags & (ts.ObjectFlags.Mapped | ts.ObjectFlags.Anonymous | ts.ObjectFlags.ObjectLiteral | ts.ObjectFlags.ObjectLiteralPatternWithComputedProperties)) return handleAnonymousObjectType(type)
-      if(objFlags === 96) return handleAnonymousObjectType(type)
-    }
-    */
-    //console.log(ts.SyntaxKind[node.kind])
+    if(ts.isInferTypeNode(node))          return handleInferType(node)
+
+    console.log(ts.SyntaxKind[node.kind])
     return { tag: "AnyType" }
   }
 
@@ -505,11 +511,15 @@ export const _sourceFiles = (): DeclarationSourceFile[] => {
     return { tag: "DeclarationElement", contents: handleDeclarationElement(node) }
   }
 
-  const srcs: DeclarationSourceFile[] = sources.map(src => {
+  const srcs: DeclarationSourceFile[] = (sources.map(src => {
     const fileName = src.fileName
+    console.log("Reading " + fileName)
     const declarationModuleElements: DeclarationModuleElement[] = src.statements.map(handleDeclarationModuleElements) 
     return { tag: "DeclarationSourceFile", contents: { fileName, declarationModuleElements } }
-  })
+  }).filter((decl) => {
+    const result = decl.contents.fileName.match(filterRegex)
+    return result !== null && result.length > 0
+  }) as DeclarationSourceFile[])
 
   return srcs
 

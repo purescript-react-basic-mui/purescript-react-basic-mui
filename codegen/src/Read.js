@@ -6,7 +6,7 @@ var isThing = function (thing, str) {
     var results = str.match(new RegExp(regexStr));
     return results !== null && results.length > 0;
 };
-exports._sourceFiles = function () {
+exports._sourceFiles = function (filterRegex) { return function () {
     var options = ts.getDefaultCompilerOptions();
     var program = ts.createProgram(["./node_modules/@material-ui/core/index.d.ts"], options);
     var sources = program.getSourceFiles();
@@ -139,11 +139,21 @@ exports._sourceFiles = function () {
                 var parameters = t.parameters.map(handleParameter);
                 return { tag: "ConstructSignature", contents: { name: name_5, isOptional: isOptional, returnType: returnType, typeParameters: typeParameters, parameters: parameters } };
             }
-            console.log("No TypeLiteral impl for: " + ts.SyntaxKind[t.kind]);
+            // shouldn't get here unless typescript changes
             var name = undefined;
             return { tag: "PropertySignature", contents: { name: name, isOptional: true, type: { tag: "AnyType" } } };
         });
         return { tag: "TypeLiteral", contents: contents };
+    };
+    var handleMappedType = function (node) {
+        var isOptional = node.questionToken === undefined;
+        var type = node.type ? handleTSType(node.type) : { tag: "AnyType" };
+        var typeParameter = node.typeParameter ? handleTypeParameter(node.typeParameter) : undefined;
+        return { tag: "MappedType", contents: { isOptional: isOptional, type: type, typeParameter: typeParameter } };
+    };
+    var handleInferType = function (node) {
+        var contents = handleTypeParameter(node.typeParameter);
+        return { tag: "InferType", contents: contents };
     };
     var handleTSType = function (node) {
         switch (node.kind) {
@@ -180,23 +190,15 @@ exports._sourceFiles = function () {
             return handleArrayType(node);
         if (ts.isFunctionLike(node))
             return handleFunction(node);
+        if (ts.isMappedTypeNode(node))
+            return handleMappedType(node);
         if (ts.isIndexedAccessTypeNode(node))
             return handleIndexAccessType(node);
         if (ts.isConditionalTypeNode(node))
             return handleConditionalType(node);
-        /*    if(ts.isConstructorTypeNode(node))    return handleConstructor(node)
-          
-        */
-        /*
-        if(type.flags & (ts.TypeFlags.Object | ts.TypeFlags.NonPrimitive)){
-          const objFlags = (<ts.ObjectType>type).objectFlags
-          if(objFlags & ts.ObjectFlags.Reference && node && ts.isTypeReferenceNode(node)) return handleTypeReference(type, node)
-          if(objFlags & ts.ObjectFlags.Class && node && ts.isClassDeclaration(node)) return handleClass(node)
-          if(objFlags & (ts.ObjectFlags.Mapped | ts.ObjectFlags.Anonymous | ts.ObjectFlags.ObjectLiteral | ts.ObjectFlags.ObjectLiteralPatternWithComputedProperties)) return handleAnonymousObjectType(type)
-          if(objFlags === 96) return handleAnonymousObjectType(type)
-        }
-        */
-        //console.log(ts.SyntaxKind[node.kind])
+        if (ts.isInferTypeNode(node))
+            return handleInferType(node);
+        console.log(ts.SyntaxKind[node.kind]);
         return { tag: "AnyType" };
     };
     var handleTypeParameter = function (param) {
@@ -250,8 +252,12 @@ exports._sourceFiles = function () {
     };
     var srcs = sources.map(function (src) {
         var fileName = src.fileName;
+        console.log("Reading " + fileName);
         var declarationModuleElements = src.statements.map(handleDeclarationModuleElements);
         return { tag: "DeclarationSourceFile", contents: { fileName: fileName, declarationModuleElements: declarationModuleElements } };
+    }).filter(function (decl) {
+        var result = decl.contents.fileName.match(filterRegex);
+        return result !== null && result.length > 0;
     });
     return srcs;
-};
+}; };
