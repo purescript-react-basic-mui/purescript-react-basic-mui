@@ -43,10 +43,8 @@ export type TSType =
   IntersectionType |
   ClassType |
   FunctionType |
-  ConstructorType |
   ParenthesizedType |
   TypeReference | 
-  AnonymousObjectType |
   TupleType | 
   ArrayType | 
   AnyType |
@@ -64,10 +62,15 @@ export type TSType =
   LiteralType |
   NeverType |
   IndexAccessType |
-  ConditionalType
+  ConditionalType |
+  NullType |
+  UndefinedType |
+  TypeLiteral
 
 export interface ArrayType { tag: "ArrayType", contents: TSType }
 export interface ObjectType { tag: "ObjectType" }
+export interface NullType { tag: "NullType" }
+export interface UndefinedType { tag: "UndefinedType" }
 export interface TypeOperator { tag: "TypeOperator" }
 export interface TypeQuery { tag: "TypeQuery" } 
 export interface ThisType { tag: "ThisType" }
@@ -82,8 +85,11 @@ export interface VoidType { tag: "VoidType" }
 export interface AnyType { tag: "AnyType" }
 export interface UnknownType { tag: "UnknownType" }
 export interface SymbolType { tag: "SymbolType" }
-export interface TypeReference { tag: "TypeReference", contents: { name: EntityName, typeParameters: TSType[] } }
+export interface TypeReference { tag: "TypeReference", contents: { name: EntityName, typeArguments: TSType[] } }
 export interface LiteralType { tag: "LiteralType", contents: LiteralValue }
+
+export interface TypeLiteral { tag: "TypeLiteral", contents: TypeMember[] }
+
 export interface ConditionalType { 
   tag: "ConditionalType",
   contents: {
@@ -111,11 +117,6 @@ export interface IndexAccessType {
   }
 }
 
-export interface AnonymousObjectType { 
-  tag: "AnonymousObjectType",
-  contents: TypeMember[]
-}
-
 export type EntityName = Identifier | QualifiedName
 
 export interface Identifier {
@@ -128,12 +129,6 @@ export interface QualifiedName {
   contents: { left: EntityName, right: string }
 }
 
-export type TypeMember = PropertySignature | CallSignature | ConstructSignature | IndexSignature | MethodSignature 
-
-export interface PropertySignature {
-  tag: "PropertySignature",
-  contents: { name?: PropertyName, type: TSType, isOptional: boolean }
-}
 
 export type PropertyName = IdentifierName | StringLiteral | NumericLiteral
 
@@ -149,23 +144,20 @@ export interface StringLiteral {
 
 export interface NumericLiteral {
   tag: "NumericLiteral"
-  contents: number
+  contents: string 
 }
 
-export interface CallSignature {
-  tag: "CallSignature"
-  contents: {
-    typeParameters: TSType[],
-    parameters: TypeMember[],
-    returnType: TSType
-  }
-}
 
-export type LiteralValue = LiteralStringValue | LiteralNumericValue | LiteralBigIntValue
+export type LiteralValue = LiteralStringValue | LiteralNumericValue | LiteralBigIntValue | LiteralBooleanValue
 
 export interface LiteralStringValue {
   tag: "LiteralStringValue",
   contents: string
+}
+
+export interface LiteralBooleanValue {
+  tag: "LiteralBooleanValue",
+  contents: boolean 
 }
 
 export interface LiteralNumericValue {
@@ -189,30 +181,67 @@ export interface TypeParameter { tag: "TypeParameter", contents: string }
 export interface UnionType { tag: "UnionType", contents: TSType[] }
 export interface IntersectionType { tag: "IntersectionType", contents: TSType[] }
 
-export interface ConstructorType { 
-  tag: "ConstructorType",
-  contents: {
-    typeParameters: TSType[],
-    parameters: TypeMember[],
-    returnType: TSType
-  }
+export type TypeMember = PropertySignature | CallSignature | ConstructSignature | IndexSignature | MethodSignature 
+
+export interface PropertySignature {
+  tag: "PropertySignature",
+  contents: { name?: PropertyName, type: TSType, isOptional: boolean }
 }
 
 export interface FunctionType { 
   tag: "FunctionType",
   contents: {
-    typeParameters: TSType[],
+    typeParameters: TypeParameter[],
     parameters: TypeMember[],
     returnType: TSType
   }
 }
 
+export interface CallSignature {
+  tag: "CallSignature"
+  contents: {
+    name?: PropertyName,
+    isOptional: boolean,
+    typeParameters: TypeParameter[],
+    parameters: TypeMember[],
+    returnType: TSType
+  }
+}
+
+export interface ConstrucSignature {
+  tag: "ConstrucSignature"
+  contents: {
+    name?: PropertyName,
+    isOptional: boolean,
+    typeParameters: TypeParameter[],
+    parameters: TypeMember[],
+    returnType: TSType
+  }
+}
+
+export interface IndexSignature {
+  tag: "IndexSignature"
+  contents: {
+    name?: PropertyName,
+    isOptional: boolean,
+    typeParameters: TypeParameter[],
+    parameters: TypeMember[],
+  }
+}
+
+export interface MethodSignature {
+  tag: "MethodSignature"
+  contents: {
+    name?: PropertyName,
+    isOptional: boolean,
+    typeParameters: TypeParameter[],
+    parameters: TypeMember[],
+    returnType: TSType
+  }
+}
 
 export interface NamespaceDeclaration { tag: "NamespaceDeclaration" }
-
 export interface ConstructSignature { tag: "ConstructSignature" }
-export interface IndexSignature { tag: "IndexSignature" }
-export interface MethodSignature { tag: "MethodSignature" }
 
 
 const isThing = (thing: string, str: string): boolean => {
@@ -228,47 +257,32 @@ export const _sourceFiles = (): DeclarationSourceFile[] => {
   const checker = program.getTypeChecker()
 
   const handleArrayType = (node: ts.ArrayTypeNode): TSType => {
-    const type = checker.getTypeFromTypeNode(node.elementType)
-    return { tag: "ArrayType", contents: handleTSType(type) }
+    return { tag: "ArrayType", contents: handleTSType(node.elementType) }
   }
-
-  const handleAnonymousObjectType = (type: ts.Type): TSType => {
-    const contents: TypeMember[] = type.getProperties().map(symbol => handleTypeMember(symbol)) 
-    return { tag: "AnonymousObjectType", contents }
-  }
-  
+ 
   const handleEntityName = (name: ts.EntityName): EntityName => {
     if(ts.isIdentifier(name)) return { tag: "Identifier", contents: name.escapedText.toString() }
     return { tag: "QualifiedName", contents: { left: handleEntityName(name.left), right: name.right.escapedText.toString() } }
   }
 
-  const handleTypeReference = (type: ts.Type, node: ts.TypeReferenceNode): TSType => {
+  const handleTypeReference = (node: ts.TypeReferenceNode): TSType => {
     const name = handleEntityName(node.typeName)
-    const typeParameters: TSType[] = (node.typeArguments) ? node.typeArguments.map(nt => handleTSType(checker.getTypeFromTypeNode(nt))) : []
-    return { tag: "TypeReference", contents: { name, typeParameters } }
+    const typeArguments: TSType[] = (node.typeArguments) ? node.typeArguments.map(handleTSType) : []
+    return { tag: "TypeReference", contents: { name, typeArguments } }
   }
 
-  const handleCallSignature = (type: ts.Type): CallSignature => {
-    const callSigs = type.getCallSignatures()
-    if(callSigs[0]){
-      const sig = callSigs[0]
-      const params = sig.getTypeParameters()
-      const typeParameters: TSType[] = params ? params.map(handleTSType) : []
-      const parameters = sig.getParameters().map(handleTypeMember)
-      const returnType = handleTSType(sig.getReturnType())
-      return { tag: "CallSignature", contents: { typeParameters, parameters, returnType }}
-    }
-    return { tag: "CallSignature", contents: { typeParameters: [], parameters: [], returnType: { tag: "VoidType" }} }
+  const handleParameter = (node: ts.ParameterDeclaration): TypeMember => {
+    const isOptional: boolean = node.questionToken !== undefined 
+    const type: TSType = node.type ? handleTSType(node.type) : { tag: "AnyType" }
+    const name = undefined
+    return { tag: "PropertySignature", contents: { isOptional, type, name } }
   }
 
-  const handleConstructor = (type: ts.Type): ConstructorType => {
-    const { contents } = handleCallSignature(type)
-    return { tag: "ConstructorType", contents }
-  }
-
-  const handleFunction = (type: ts.Type): FunctionType => {
-    const { contents } = handleCallSignature(type)
-    return { tag: "FunctionType", contents }
+  const handleFunction = (node: ts.SignatureDeclaration): FunctionType => {
+    const typeParameters: TypeParameter[] = node.typeParameters ? node.typeParameters.map(handleTypeParameter) : []
+    const parameters: TypeMember[] = node.parameters ? node.parameters.map(handleParameter) : []
+    const returnType: TSType = node.type ? handleTSType(node.type) : { tag: "AnyType" }
+    return { tag: "FunctionType", contents: { typeParameters, parameters, returnType } }
   }
 
   const handleClass = (node: ts.ClassDeclaration): ClassType => {
@@ -281,32 +295,54 @@ export const _sourceFiles = (): DeclarationSourceFile[] => {
 
   const handleLiteralType = (node: ts.LiteralTypeNode): TSType => {
 
-    if(node.literal.kind === ts.SyntaxKind.StringLiteral){
-      const str = (<ts.StringLiteral>node.literal).text
-      const contents: LiteralValue = { tag: "LiteralStringValue", contents: str }
+    if(node.literal.kind === ts.SyntaxKind.FalseKeyword) {
+      const contents: LiteralValue = { tag: "LiteralBooleanValue", contents: false }
       return { tag: "LiteralType", contents }
- 
     }
-    if(node.literal.kind === ts.SyntaxKind.NumericLiteral){
-      const str = (<ts.NumericLiteral>node.literal).text
+
+    if(node.literal.kind === ts.SyntaxKind.TrueKeyword) {
+      const contents: LiteralValue = { tag: "LiteralBooleanValue", contents: true }
+      return { tag: "LiteralType", contents }
+    }
+ 
+    if(ts.isNumericLiteral(node.literal)){
+      const str = node.literal.text
       const contents: LiteralValue = { tag: "LiteralNumericValue", contents: str }
       return { tag: "LiteralType", contents }
     }
 
-    if(node.literal.kind === ts.SyntaxKind.BigIntLiteral){
-      const str = (<ts.BigIntLiteral>node.literal).text
+    if(ts.isBigIntLiteral(node.literal)){
+      const str = node.literal.text
       const contents: LiteralValue = { tag: "LiteralBigIntValue", contents: str }
       return { tag: "LiteralType", contents }
     }
 
-    const str = (<ts.NumericLiteral>node.literal).text
-    const contents: LiteralValue = { tag: "LiteralStringValue", contents: str }
+    if(ts.isStringLiteral(node.literal)){
+      const str = node.literal.text
+      const contents: LiteralValue = { tag: "LiteralStringValue", contents: str }
+      return { tag: "LiteralType", contents }
+    }
+
+    const contents: LiteralValue = { tag: "LiteralStringValue", contents: "UNKNOWN" }
     return { tag: "LiteralType", contents }
   }
 
+  const handlePropertyName = (name?: ts.PropertyName): PropertyName | undefined => {
+    if(name !== undefined){
+      if(ts.isIdentifier(name)) return { tag: "IdentifierName", contents: name.text }
+      if(ts.isStringLiteral(name))  return { tag: "StringLiteral", contents: name.text }
+      if(ts.isNumericLiteral(name)) return { tag: "NumericLiteral", contents: name.text }
+      if(ts.isComputedPropertyName(name)){
+        console.log("Found computed property name and haven't implemented it yet")
+        return { tag: "StringLiteral", contents: "ComputedExpressionNotImplemented" }
+      }
+    }
+    return undefined
+  }
+
   const handleIndexAccessType = (node: ts.IndexedAccessTypeNode): TSType => {
-    const indexType = handleTSType(checker.getTypeFromTypeNode(node.indexType))
-    const objectType = handleTSType(checker.getTypeFromTypeNode(node.objectType))
+    const indexType = handleTSType(node.indexType)
+    const objectType = handleTSType(node.objectType)
     return {
       tag: "IndexAccessType",
       contents: { indexType, objectType }
@@ -314,47 +350,101 @@ export const _sourceFiles = (): DeclarationSourceFile[] => {
   }
 
   const handleConditionalType = (node: ts.ConditionalTypeNode): TSType => {
-    const checkType = handleTSType(checker.getTypeAtLocation(node.checkType))
-    const extendsType = handleTSType(checker.getTypeAtLocation(node.extendsType))
-    const trueType = handleTSType(checker.getTypeAtLocation(node.trueType))
-    const falseType = handleTSType(checker.getTypeAtLocation(node.falseType))
+    const checkType = handleTSType(node.checkType)
+    const extendsType = handleTSType(node.extendsType)
+    const trueType = handleTSType(node.trueType)
+    const falseType = handleTSType(node.falseType)
     return { tag: "ConditionalType", contents: { checkType, extendsType, trueType, falseType } }
   }
 
-  const handleUnionType = (node: ts.UnionTypeNode): TSType => {
-    node.types.map(typeNode => {
-      console.log(ts.SyntaxKind[typeNode.kind])
-      const type = checker.getTypeFromTypeNode(typeNode)
+  const handleTypeLiteral = (node: ts.TypeLiteralNode): TSType => {
+    const contents: TypeMember[] = node.members.map(t => {
+      
+      if(ts.isPropertySignature(t)){
+        const name: PropertyName | undefined = handlePropertyName(t.name)
+        const isOptional: boolean = t.questionToken === undefined
+        const type: TSType = t.type ? handleTSType(t.type) : { tag: "AnyType" }
+        return { tag: "PropertySignature", contents: { name, isOptional, type } }
+      }
+      
+      if(ts.isCallSignatureDeclaration(t)){
+        const name: PropertyName | undefined  = handlePropertyName(t.name)
+        const isOptional: boolean = t.questionToken === undefined
+        const returnType: TSType = t.type ? handleTSType(t.type) : { tag: "AnyType" }
+        const typeParameters: TypeParameter[] = t.typeParameters ? t.typeParameters.map(handleTypeParameter) : []
+        const parameters: TypeMember[] = t.parameters.map(handleParameter)
+        return { tag: "CallSignature", contents: { name, isOptional, returnType, typeParameters, parameters } }
+      }
+      
+      if(ts.isIndexSignatureDeclaration(t)){
+        const name: PropertyName | undefined  = handlePropertyName(t.name)
+        const isOptional: boolean = t.questionToken === undefined
+        const typeParameters: TypeParameter[] = t.typeParameters ? t.typeParameters.map(handleTypeParameter) : []
+        const parameters: TypeMember[] = t.parameters.map(handleParameter)
+        return { tag: "IndexSignature", contents: { name, isOptional, typeParameters, parameters } }
+      }
+      
+      if(ts.isMethodSignature(t)){
+        const name: PropertyName | undefined  = handlePropertyName(t.name)
+        const isOptional: boolean = t.questionToken === undefined
+        const returnType: TSType = t.type ? handleTSType(t.type) : { tag: "AnyType" }
+        const typeParameters: TypeParameter[] = t.typeParameters ? t.typeParameters.map(handleTypeParameter) : []
+        const parameters: TypeMember[] = t.parameters.map(handleParameter)
+        return { tag: "MethodSignature", contents: { name, isOptional, returnType, typeParameters, parameters } }
+      }
+      
+      if(ts.isConstructSignatureDeclaration(t)){
+        const name: PropertyName | undefined  = handlePropertyName(t.name)
+        const isOptional: boolean = t.questionToken === undefined
+        const returnType: TSType = t.type ? handleTSType(t.type) : { tag: "AnyType" }
+        const typeParameters: TypeParameter[] = t.typeParameters ? t.typeParameters.map(handleTypeParameter) : []
+        const parameters: TypeMember[] = t.parameters.map(handleParameter)
+        return { tag: "ConstructSignature", contents: { name, isOptional, returnType, typeParameters, parameters } }
+      }
+      
+      console.log("No TypeLiteral impl for: " + ts.SyntaxKind[t.kind])
+      const name: PropertyName | undefined = undefined
+      return { tag: "PropertySignature", contents: { name, isOptional: true, type: { tag: "AnyType" } } }
     })
-    return { tag: "AnyType" }
+    
+    return { tag: "TypeLiteral", contents }
   }
 
-  const handleTSType = (type: ts.Type): TSType => {
-    if(type.flags & ts.TypeFlags.String) return { tag: "StringType" }
-    if(type.flags & ts.TypeFlags.Number) return { tag: "NumberType" }
-    if(type.flags & ts.TypeFlags.BooleanLike) return { tag: "BooleanType" }
-    if(type.flags & ts.TypeFlags.VoidLike) return { tag: "VoidType" }
-    if(type.flags & ts.TypeFlags.BigInt) return { tag: "BigIntType" }
-    if(type.flags & ts.TypeFlags.Unknown) return { tag: "UnknownType" }
-    if(type.flags & ts.TypeFlags.Never) return { tag: "NeverType" }
-    if(type.symbol && type.symbol.name === "Symbol") return { tag: "SymbolType" }
+  const handleTSType = (node: ts.Node): TSType => {
+    switch(node.kind){
 
-    const node = checker.typeToTypeNode(type)
-    if(node && ts.isIndexedAccessTypeNode(node)) return handleIndexAccessType(node)
-    if(node && ts.isLiteralTypeNode(node)) return handleLiteralType(node)
-    if(node && ts.isTypeOperatorNode(node)) return { tag: "TypeOperator" }
-    if(node && node.kind === ts.SyntaxKind.SymbolKeyword) return { tag: "SymbolType" }
-    if(node && ts.isTypeReferenceNode(node)) return handleTypeReference(type, node)
-    if(node && ts.isUnionTypeNode(node)) return handleUnionType(node) ////return { tag: "UnionType", contents: node.types.map(t => handleTSType(checker.getTypeFromTypeNode(t))) }
-    if(node && ts.isIntersectionTypeNode(node)) return { tag: "IntersectionType", contents: node.types.map(t => handleTSType(checker.getTypeFromTypeNode(t))) }
-    if(node && ts.isConstructorTypeNode(node)) return handleConstructor(type)
-    if(node && ts.isFunctionLike(node)) return handleFunction(type)
-    if(node && node.kind === ts.SyntaxKind.ArrayType) return handleArrayType(node as unknown as ts.ArrayTypeNode)
-    if(node && node.kind === ts.SyntaxKind.TypeQuery) return { tag: "TypeQuery" }
-    if(node && ts.isTupleTypeNode(node)) return { tag: "TupleType", contents: node.elementTypes.map(t => handleTSType(checker.getTypeFromTypeNode(t))) }
-    if(node && ts.isParenthesizedTypeNode(node)) return { tag: "ParenthesizedType", contents: handleTSType(checker.getTypeFromTypeNode(node.type)) }
-    if(node && node.kind === ts.SyntaxKind.ObjectKeyword) return { tag: "ObjectType" }
-    if(node && ts.isConditionalTypeNode(node)) return handleConditionalType(node)
+      case ts.SyntaxKind.StringKeyword:   return { tag: "StringType" }
+      case ts.SyntaxKind.NumberKeyword:   return { tag: "NumberType" }
+      case ts.SyntaxKind.BooleanKeyword:  return { tag: "BooleanType" }
+      case ts.SyntaxKind.VoidKeyword:     return { tag: "VoidType" }
+      case ts.SyntaxKind.NullKeyword:     return { tag: "NullType" }
+      case ts.SyntaxKind.UndefinedKeyword:return { tag: "UndefinedType" }
+      case ts.SyntaxKind.BigIntKeyword:   return { tag: "BigIntType" }
+      case ts.SyntaxKind.UnknownKeyword:  return { tag: "UnknownType" }
+      case ts.SyntaxKind.NeverKeyword:    return { tag: "NeverType" }
+      case ts.SyntaxKind.SymbolKeyword:   return { tag: "SymbolType" }
+      case ts.SyntaxKind.TypeQuery:       return { tag: "TypeQuery" }
+      case ts.SyntaxKind.ObjectKeyword:   return { tag: "ObjectType" }
+      case ts.SyntaxKind.TypeOperator:    return { tag: "TypeOperator" }
+      case ts.SyntaxKind.AnyKeyword:      return { tag: "AnyType" }
+
+    }
+    
+    if(ts.isTypeReferenceNode(node))      return handleTypeReference(node)
+    if(ts.isTypeLiteralNode(node))        return handleTypeLiteral(node)
+    if(ts.isUnionTypeNode(node))          return { tag: "UnionType", contents: node.types.map(handleTSType) }
+    if(ts.isLiteralTypeNode(node))        return handleLiteralType(node)
+    if(ts.isIntersectionTypeNode(node))   return { tag: "IntersectionType", contents: node.types.map(t => handleTSType(t)) }
+    if(ts.isTupleTypeNode(node))          return { tag: "TupleType", contents: node.elementTypes.map(t => handleTSType(t)) }
+    if(ts.isParenthesizedTypeNode(node))  return { tag: "ParenthesizedType", contents: handleTSType(node.type) }
+    if(ts.isArrayTypeNode(node))          return handleArrayType(node)
+    if(ts.isFunctionLike(node))           return handleFunction(node)
+    if(ts.isIndexedAccessTypeNode(node))  return handleIndexAccessType(node)
+    if(ts.isConditionalTypeNode(node))    return handleConditionalType(node)
+/*    if(ts.isConstructorTypeNode(node))    return handleConstructor(node)
+  
+*/
+    /*
     if(type.flags & (ts.TypeFlags.Object | ts.TypeFlags.NonPrimitive)){
       const objFlags = (<ts.ObjectType>type).objectFlags
       if(objFlags & ts.ObjectFlags.Reference && node && ts.isTypeReferenceNode(node)) return handleTypeReference(type, node)
@@ -362,10 +452,8 @@ export const _sourceFiles = (): DeclarationSourceFile[] => {
       if(objFlags & (ts.ObjectFlags.Mapped | ts.ObjectFlags.Anonymous | ts.ObjectFlags.ObjectLiteral | ts.ObjectFlags.ObjectLiteralPatternWithComputedProperties)) return handleAnonymousObjectType(type)
       if(objFlags === 96) return handleAnonymousObjectType(type)
     }
-
-    if(type.flags & ts.TypeFlags.Any) return { tag: "AnyType" }
-
-    console.log("Type not found", type, node)
+    */
+    //console.log(ts.SyntaxKind[node.kind])
     return { tag: "AnyType" }
   }
 
@@ -376,7 +464,7 @@ export const _sourceFiles = (): DeclarationSourceFile[] => {
 
   const handleTypeAliasDeclaration = (node: ts.TypeAliasDeclaration): TypeAliasDeclaration => {
     const name = node.name.escapedText.toString()
-    const type = handleTSType(checker.getTypeFromTypeNode(node.type))
+    const type = handleTSType(node.type)
     const typeParameters = (node.typeParameters) ? node.typeParameters.map(handleTypeParameter) : []
     return { tag: "TypeAliasDeclaration", contents: { name, typeParameters, type } }
   }
@@ -388,7 +476,7 @@ export const _sourceFiles = (): DeclarationSourceFile[] => {
     const isOptional: boolean = (symbol.flags & ts.SymbolFlags.Optional) === ts.SymbolFlags.Optional
     if(declaration && ts.isPropertySignature(declaration) && declaration.type){
       const nodeType = declaration.type
-      const propertyType: TSType = handleTSType(checker.getTypeAtLocation(nodeType))
+      const propertyType: TSType = handleTSType(nodeType)
       return { tag: "PropertySignature", contents: { name, isOptional, type: propertyType } }
     }
     return { tag: "PropertySignature", contents: { name, isOptional, type: { tag: "AnyType" } } }

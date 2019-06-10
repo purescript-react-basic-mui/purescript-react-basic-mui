@@ -8,10 +8,10 @@ import Data.Array as Array
 import Data.Either (Either(..))
 import Data.Generic.Rep as GR
 import Data.Generic.Rep.Show (genericShow)
-import Data.Lens (Fold, Lens', Prism', Traversal', preview, prism', toListOf, traversed)
+import Data.Lens (Fold, Lens', Prism', Traversal', prism', toListOf, traversed)
 import Data.Lens.Record (prop)
 import Data.List (List)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..))
 import Data.Monoid.Endo (Endo)
 import Data.String as String
 import Data.Symbol (SProxy(..))
@@ -83,9 +83,13 @@ data PropertyName
   | NumericLiteral Number
 
 data TypeMember
-  = PropertySignature { name :: Maybe PropertyName, type :: TSType, isOptional :: Boolean }
+  = PropertySignature { name :: Maybe PropertyName, isOptional :: Boolean, type :: TSType }
+  | CallSignature { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+  | ConstructSignature { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+  | MethodSignature { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+  | IndexSignature { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember }
 
-data LiteralValue = LiteralStringValue String | LiteralNumericValue String | LiteralBigInt String
+data LiteralValue = LiteralStringValue String | LiteralNumericValue String | LiteralBigIntValue String | LiteralBooleanValue Boolean
 
 data TSType 
   = ThisType
@@ -95,6 +99,8 @@ data TSType
   | BigIntType
   | ObjectType
   | VoidType
+  | NullType
+  | UndefinedType
   | AnyType
   | SymbolType
   | TypeQuery
@@ -105,10 +111,10 @@ data TSType
   | UnionType (Array TSType)
   | IntersectionType (Array TSType)
   | ArrayType TSType
-  | AnonymousObjectType (Array TypeMember)
-  | TypeReference { name :: EntityName, typeParameters :: Array TSType }
+  | TypeLiteral (Array TypeMember)
+  | TypeReference { name :: EntityName }
   | ParenthesizedType TSType
-  | ConstructorType { typeParameters :: Array TSType, parameters :: Array TypeMember, returnType :: TSType }
+  | ConstructorType { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
   | FunctionType { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
   | ClassType { name :: Maybe String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
   | InterfaceType { name :: Maybe String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
@@ -118,7 +124,7 @@ data TSType
 
 data EntityName 
   = Identifier String
-  | QualifiedName EntityName String
+  | QualifiedName { left :: EntityName, right :: String }
 
 
 showDeclarationElements :: DeclarationElements -> String
@@ -139,10 +145,12 @@ showTypeMember (PropertySignature signature) =
 
     fieldType | signature.isOptional = "(Maybe " <> showTSType signature.type <> ")"
     fieldType = "(" <> showTSType signature.type <> ")"
+showTypeMember typeMember = show typeMember
 
 showTypeMemberAsFunctionType :: TypeMember -> String
 showTypeMemberAsFunctionType (PropertySignature signature) | signature.isOptional = "(Maybe -- this doesn't seem right " <> (showTSType signature.type) <> ")"
 showTypeMemberAsFunctionType (PropertySignature signature) = showTSType signature.type
+showTypeMemberAsFunctionType typeMember = show typeMember
 
 
 showTypeParameter :: TypeParameter -> String
@@ -160,7 +168,7 @@ showTSType SymbolType = "Symbol"
 showTSType UnknownType = "Unknown"
 showTSType NeverType = "Never"
 showTSType (ParenthesizedType t) = "(" <> (showTSType t) <> ")"
-showTSType (TypeReference { name, typeParameters}) = "(" <> (showEntityName name) <> " " <> (Array.intercalate " " $ map showTSType typeParameters) <> ")"
+showTSType (TypeReference { name}) = "(" <> (showEntityName name) {- <> " " <> (Array.intercalate " " $ map showTSType typeArguments) -} <> ")"
 showTSType (FunctionType { typeParameters, parameters, returnType }) | Array.length typeParameters == 0 = (Array.intercalate " -> " $ map showTypeMemberAsFunctionType parameters) <> " -> " <> (showTSType returnType)
 showTSType (FunctionType { typeParameters, parameters, returnType }) = "forall " <> (Array.intercalate " " $ map showTypeParameter typeParameters) <> ". " <> (Array.intercalate " -> " $ map showTypeMemberAsFunctionType parameters) <> " -> " <> (showTSType returnType)
 showTSType (ArrayType t) = "(Array " <> (showTSType t) <> ")"
@@ -168,7 +176,7 @@ showTSType t = show t
 
 showEntityName :: EntityName -> String
 showEntityName (Identifier name) = name
-showEntityName (QualifiedName entityName name) = (showEntityName entityName) <> "." <> name
+showEntityName (QualifiedName { left, right }) = (showEntityName left) <> "." <> right
 
 showPropertyName :: PropertyName -> String
 showPropertyName (IdentifierName name) = name
@@ -192,7 +200,7 @@ instance decodeDeclarationElements :: Decode DeclarationElements where decode = 
 instance decodeTypeParameter :: Decode TypeParameter where decode = genericDecode defaultOptions
 instance decodeTSType :: Decode TSType where decode = fix \_ -> genericDecode defaultOptions
 instance decodePropertyName :: Decode PropertyName where decode = genericDecode defaultOptions
-instance decodeTypeMember :: Decode TypeMember where decode = genericDecode defaultOptions
+instance decodeTypeMember :: Decode TypeMember where decode = fix \_ -> genericDecode defaultOptions
 instance decodeEntityName :: Decode EntityName where decode = fix \_ -> genericDecode defaultOptions
 instance decodeLiteralValue :: Decode LiteralValue where decode = fix \_ -> genericDecode defaultOptions
 
