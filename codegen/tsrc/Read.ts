@@ -71,6 +71,8 @@ export type TSType =
 
 export interface ArrayType { tag: "ArrayType", contents: TSType }
 export interface ObjectType { tag: "ObjectType" }
+export interface FalseType { tag: "FalseType" }
+export interface TrueType { tag: "TrueType" }
 export interface NullType { tag: "NullType" }
 export interface UndefinedType { tag: "UndefinedType" }
 export interface TypeOperator { tag: "TypeOperator" }
@@ -461,6 +463,8 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
       case ts.SyntaxKind.ObjectKeyword:   return { tag: "ObjectType" }
       case ts.SyntaxKind.TypeOperator:    return { tag: "TypeOperator" }
       case ts.SyntaxKind.AnyKeyword:      return { tag: "AnyType" }
+      case ts.SyntaxKind.TrueKeyword:     return { tag: "TrueType" }
+      case ts.SyntaxKind.FalseKeyword:    return { tag: "FalseType" }
     }
     
     if(ts.isTypeReferenceNode(node))      return handleTypeReference(node)

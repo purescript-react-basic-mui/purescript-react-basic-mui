@@ -101,6 +101,8 @@ data TSType
   | BigIntType
   | ObjectType
   | VoidType
+  | TrueType
+  | FalseType
   | NullType
   | UndefinedType
   | AnyType

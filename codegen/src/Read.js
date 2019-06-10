@@ -180,6 +180,8 @@ exports._sourceFiles = function (filterRegex) { return function () {
             case ts.SyntaxKind.ObjectKeyword: return { tag: "ObjectType" };
             case ts.SyntaxKind.TypeOperator: return { tag: "TypeOperator" };
             case ts.SyntaxKind.AnyKeyword: return { tag: "AnyType" };
+            case ts.SyntaxKind.TrueKeyword: return { tag: "TrueType" };
+            case ts.SyntaxKind.FalseKeyword: return { tag: "FalseType" };
         }
         if (ts.isTypeReferenceNode(node))
             return handleTypeReference(node);
