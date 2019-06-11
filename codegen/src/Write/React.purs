@@ -2,30 +2,51 @@ module Codegen.Write.React where
 
 import Prelude
 
-import Codegen.Read (DeclarationElements(..), EntityName(..), InterfaceDeclarationRec, LiteralValue(..), PropertyName(..), TSType(..), TypeMember(..), TypeParameter(..), isOptional)
+import Codegen.Read (DeclarationElements(..), EntityName(..), InterfaceDeclarationRec, LiteralValue(..), PropertyName(..), TSType(..), TypeMember(..), TypeParameter(..), _IdentifierName, _PropertySignature, _name, isOptional, liftEither)
 import Data.Array as Array
+import Data.Lens (_Just, over)
 import Data.Maybe (Maybe(..))
 import Data.String as String
+import Data.String.Regex (Regex)
+import Data.String.Regex as Regex
+import Data.String.Regex.Flags as Flags
+import Effect (Effect)
 
 
-showPropsInterface :: InterfaceDeclarationRec -> String
+showPropsInterface :: InterfaceDeclarationRec -> Effect String
 showPropsInterface interface = do
-  let partition = Array.partition isOptional interface.typeMembers
+  members <- cleanMembers interface.typeMembers
+  let partition = Array.partition isOptional members 
   let optionalMembers = partition.yes
   let requiredMembers = partition.no
-  if Array.length requiredMembers > 0
+  pure $ if Array.length requiredMembers > 0
     then Array.intercalate "\n\n" [requiredType requiredMembers, optionalType optionalMembers]
-    else singleType 
+    else singleType members
   where
     parameters | Array.length interface.typeParameters > 0 = " " <> (Array.intercalate " " $ map showTypeParameter interface.typeParameters)
     parameters = ""
 
     requiredType members = "type " <> interface.name <> "_required" <> parameters <> " =\n  { " <> (showMembers members) <> "\n  }"
     optionalType members = "type " <> interface.name <> "_optional" <> parameters <> " =\n  { " <> (showMembers members) <> "\n  }"
-    singleType = "type " <> interface.name <> parameters <> " =\n  { " <> (showMembers interface.typeMembers) <> "\n  }"
+    singleType members = "type " <> interface.name <> parameters <> " =\n  { " <> (showMembers interface.typeMembers) <> "\n  }"
 
     showMembers :: Array TypeMember -> String
     showMembers members = Array.intercalate "  , " $ map (\member -> (showTypeMember member) <> "\n") members
+
+cleanMembers :: Array TypeMember -> Effect (Array TypeMember)
+cleanMembers members = do 
+  regex <- liftEither $ Regex.regex "^[_a-z]+\\w*$" Flags.noFlags
+  pure $ map (filterProp regex) members
+  where
+    filterProp :: Regex -> TypeMember -> TypeMember
+    filterProp regex signature = do
+      let lens = _PropertySignature <<< _name <<< _Just <<< _IdentifierName
+      over lens (clean regex) signature
+
+    clean :: Regex -> String -> String
+    clean regex name = case (Regex.match regex name) of 
+      Nothing -> "\"" <> name <> "\""
+      Just _ -> name
 
 showDeclarationElements :: DeclarationElements -> String
 showDeclarationElements (InterfaceDeclaration { name, typeParameters, typeMembers }) = 
@@ -55,44 +76,35 @@ showTypeParameter :: TypeParameter -> String
 showTypeParameter (TypeParameter param) = String.toLower param
 
 showTSType :: TSType -> String
-showTSType BooleanType = "Boolean"
-showTSType StringType = "String"
-showTSType NumberType = "Number"
-showTSType BigIntType = "Number"
-showTSType ObjectType = "(Object Foreign)"
-showTSType VoidType = "Unit"
-showTSType AnyType = "Any"
-showTSType SymbolType = "Symbol"
-showTSType UnknownType = "Unknown"
-showTSType NeverType = "Never"
-showTSType (ParenthesizedType t) = "(" <> (showTSType t) <> ")"
-showTSType (TypeReference { name, typeArguments }) | Array.length typeArguments > 0 = showEntityName name <> " " <> (Array.intercalate " " $ map showTSType typeArguments)
-showTSType (TypeReference { name, typeArguments }) = showEntityName name
-showTSType (FunctionType { typeParameters, parameters, returnType }) | Array.length typeParameters == 0 = (Array.intercalate " -> " $ map showTypeMemberAsFunctionType parameters) <> " -> " <> (showTSType returnType)
-showTSType (FunctionType { typeParameters, parameters, returnType }) = "forall " <> (Array.intercalate " " $ map showTypeParameter typeParameters) <> ". " <> (Array.intercalate " -> " $ map showTypeMemberAsFunctionType parameters) <> " -> " <> (showTSType returnType)
-showTSType (ArrayType t) = "(Array " <> (showTSType t) <> ")"
-showTSType (UnionType types) = handleUnionTypes types
-showTSType (LiteralType (LiteralStringValue value)) = value
-showTSType (LiteralType (LiteralNumericValue value)) = value
-showTSType (LiteralType (LiteralBigIntValue value)) = value
-showTSType (LiteralType (LiteralBooleanValue value)) = show value
-showTSType t = show t
+showTSType tsType = do
+  passthrough tsType
+  where
+    passthrough BooleanType = "Boolean"
+    passthrough StringType = "String"
+    passthrough NumberType = "Number"
+    passthrough BigIntType = "Number"
+    passthrough ObjectType = "(Object Foreign)"
+    passthrough VoidType = "Unit"
+    passthrough AnyType = "Any"
+    passthrough SymbolType = "Symbol"
+    passthrough UnknownType = "Unknown"
+    passthrough NeverType = "Never"
+    passthrough (ParenthesizedType t) = "(" <> (showTSType t) <> ")"
+    passthrough (TypeReference { name, typeArguments }) | Array.length typeArguments > 0 = showEntityName name <> " " <> (Array.intercalate " " $ map showTSType typeArguments)
+    passthrough (TypeReference { name, typeArguments }) = showEntityName name
+    passthrough (FunctionType { typeParameters, parameters, returnType }) | Array.length typeParameters == 0 = (Array.intercalate " -> " $ map showTypeMemberAsFunctionType parameters) <> " -> " <> (showTSType returnType)
+    passthrough (FunctionType { typeParameters, parameters, returnType }) = "forall " <> (Array.intercalate " " $ map showTypeParameter typeParameters) <> ". " <> (Array.intercalate " -> " $ map showTypeMemberAsFunctionType parameters) <> " -> " <> (showTSType returnType)
+    passthrough (ArrayType t) = "(Array " <> (showTSType t) <> ")"
+    passthrough (UnionType types) = handleUnionTypes types
+    passthrough (LiteralType (LiteralStringValue value)) = value
+    passthrough (LiteralType (LiteralNumericValue value)) = value
+    passthrough (LiteralType (LiteralBigIntValue value)) = value
+    passthrough (LiteralType (LiteralBooleanValue value)) = show value
+    passthrough (TypeLiteral members) = "{ " <> (Array.intercalate ", " $ map showTypeMember members) <> " }"
+    passthrough t = show t
 
 handleUnionTypes :: Array TSType -> String
-handleUnionTypes types = do
-  "(Variant (" <> typeStrs <> "))"
-  where 
-    typeStrs = 
-      Array.intercalate ", " $ types <#> (\t -> do
-      case t of 
-        LiteralType _ -> do
-          let str = showTSType t 
-          str <> " :: Unit"
-        _                 -> do
-          let str = showTSType t
-          str <> " :: " <> str
-      ) 
-
+handleUnionTypes types = "Foreign" 
 
 showEntityName :: EntityName -> String
 showEntityName (Identifier name) = name

@@ -25,8 +25,7 @@ main = do
                   $ Array.mapMaybe (\src -> interfaceByName src "BadgeProps") sources)
   badge       <- liftMaybe "Couldn't find Badge.d.ts" 
                   $ Array.find (\(DeclarationSourceFile { fileName }) -> isJust $ String.indexOf (String.Pattern "/Badge.d.ts") fileName) sources
-  log $ showPropsInterface badgeProps
-  log $ show badge
+  log =<< showPropsInterface badgeProps
 
 getVariant :: Variant (foo :: Unit, bar :: Unit)
 getVariant = inj (SProxy :: SProxy "bar") unit 

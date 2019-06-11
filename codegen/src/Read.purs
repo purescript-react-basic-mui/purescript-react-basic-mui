@@ -64,12 +64,28 @@ data PropertyName
   | StringLiteral String
   | NumericLiteral Number
 
+_IdentifierName :: Prism' PropertyName String
+_IdentifierName = prism' IdentifierName case _ of 
+  IdentifierName name -> Just name
+  _ -> Nothing
+
 data TypeMember
-  = PropertySignature { name :: Maybe PropertyName, isOptional :: Boolean, type :: TSType }
+  = PropertySignature PropertySignatureRec 
   | CallSignature { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
   | ConstructSignature { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
   | MethodSignature { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
   | IndexSignature { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember }
+
+type PropertySignatureRec = { name :: Maybe PropertyName, isOptional :: Boolean, type :: TSType }
+
+_name :: Lens' PropertySignatureRec (Maybe PropertyName)
+_name = prop (SProxy :: SProxy "name")
+
+
+_PropertySignature :: Prism' TypeMember PropertySignatureRec
+_PropertySignature = prism' PropertySignature case _ of
+  PropertySignature rec -> Just rec
+  _ -> Nothing
 
 data LiteralValue = LiteralStringValue String | LiteralNumericValue String | LiteralBigIntValue String | LiteralBooleanValue Boolean
 
