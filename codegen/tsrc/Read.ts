@@ -16,8 +16,33 @@ export interface ImportEqualsDeclaration { tag: "ImportEqualsDeclaration" }
 export interface ExportDeclaration { tag: "ExportDeclaration" }
 export interface ExportDefaultDeclaration { tag: "ExportDefaultDeclaration" }
 export interface ExportAssignment { tag: "ExportAssignment" }
+export interface ModuleDeclaration { tag: "ModuleDeclaration", contents: { name: string, body?: ModuleBody } }
 
-export type DeclarationElements =  InterfaceDeclaration | TypeAliasDeclaration | AmbientDeclaration 
+export type DeclarationElements =  InterfaceDeclaration | TypeAliasDeclaration | AmbientDeclaration | ModuleDeclaration
+
+export type ModuleBody = NamespaceBodyDefinition | JSDocNamespaceBody
+
+export interface JSDocNamespaceBody { tag: "JSDocNamespaceBody" }
+
+export interface NamespaceBodyDefinition {
+  tag: "NamespaceBodyDefinition"
+  contents: NamespaceBody
+}
+
+export type NamespaceBody = ModuleBlock | NamespaceDeclaration
+
+export interface NamespaceDeclaration {
+  tag: "NamespaceDeclaration"
+  contents: {
+    name: string,
+    body: NamespaceBody
+  }
+}
+
+export interface ModuleBlock {
+  tag: "ModuleBlock"
+  contents: DeclarationElements[]
+}
 
 export interface InterfaceDeclaration { 
   tag: "InterfaceDeclaration",
@@ -67,7 +92,10 @@ export type TSType =
   UndefinedType |
   TypeLiteral | 
   MappedType | 
-  InferType
+  InferType |
+  TrueType |
+  FalseType | 
+  TypeAliasType
 
 export interface ArrayType { tag: "ArrayType", contents: TSType }
 export interface ObjectType { tag: "ObjectType" }
@@ -129,6 +157,11 @@ export interface IndexAccessType {
     indexType: TSType,
     objectType: TSType
   }
+}
+
+export interface TypeAliasType { 
+  tag: "TypeAliasType",
+  contents: TypeAliasDeclaration 
 }
 
 export type EntityName = Identifier | QualifiedName
@@ -253,6 +286,8 @@ export interface MethodSignature {
     returnType: TSType
   }
 }
+
+
 
 export interface NamespaceDeclaration { tag: "NamespaceDeclaration" }
 export interface ConstructSignature { tag: "ConstructSignature" }
@@ -466,7 +501,8 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
       case ts.SyntaxKind.TrueKeyword:     return { tag: "TrueType" }
       case ts.SyntaxKind.FalseKeyword:    return { tag: "FalseType" }
     }
-    
+   
+    if(ts.isTypeAliasDeclaration(node))   return handleTypeAliasType(node)
     if(ts.isTypeReferenceNode(node))      return handleTypeReference(node)
     if(ts.isTypeLiteralNode(node))        return handleTypeLiteral(node)
     if(ts.isUnionTypeNode(node))          return { tag: "UnionType", contents: node.types.map(handleTSType) }
@@ -490,6 +526,11 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
     return { tag: "TypeParameter", contents }
   }
 
+  const handleTypeAliasType = (node: ts.TypeAliasDeclaration): TSType => {
+    const contents = handleTypeAliasDeclaration(node)
+    return { tag: "TypeAliasType", contents }
+  }
+
   const handleTypeAliasDeclaration = (node: ts.TypeAliasDeclaration): TypeAliasDeclaration => {
     const name = node.name.escapedText.toString()
     const type = handleTSType(node.type)
@@ -499,12 +540,40 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
 
   const handleTypeMember = (symbol: ts.Symbol): TypeMember => {
     const name: PropertyName = { tag: "IdentifierName",  contents: symbol.name }
-    const declarations = symbol.declarations ? symbol.declarations : []
+   const declarations = symbol.declarations ? symbol.declarations : []
     const declaration = declarations[0]
     const isOptional: boolean = (symbol.flags & ts.SymbolFlags.Optional) === ts.SymbolFlags.Optional
     if(declaration && ts.isPropertySignature(declaration) && declaration.type){
       const nodeType = declaration.type
       const propertyType: TSType = handleTSType(nodeType)
+
+      if(symbol.name === "onTransitionEnd"){
+        const t = checker.getTypeFromTypeNode(nodeType)
+        const sigs = t.getCallSignatures()
+        if(sigs[0]){
+          const signature = sigs[0]
+          const typeParameters: TypeParameter[] = signature.typeParameters ? signature.typeParameters.map(p => {
+            return { tag: "TypeParameter", contents: p.symbol.name }
+          }) : []
+
+          const parameters = signature.parameters.map( s => {
+            if(ts.isParameter(s.valueDeclaration)){
+              //console.log(ts.SyntaxKind[s.valueDeclaration.parent.parent.parent.parent.kind])
+              //console.log(s.valueDeclaration.parent.parent.parent.parent)
+              //console.log(s.valueDeclaration.parent.parent)
+              //console.log(JSON.stringify(handleTSType(s.valueDeclaration.parent.parent.parent.parent), null, 2))
+              //if(s.valueDeclaration.type)console.log(s.valueDeclaration.type)
+            }
+          })
+          const typeNode = checker.typeToTypeNode(signature.getReturnType())
+          const returnType = typeNode ? handleTSType(typeNode) : { tag: "AnyType" }
+//          console.log(JSON.stringify(parameters))
+//          console.log(JSON.stringify(typeParameters))
+//          console.log(JSON.stringify(returnType))
+        }
+
+      }
+ 
       return { tag: "PropertySignature", contents: { name, isOptional, type: propertyType } }
     }
     return { tag: "PropertySignature", contents: { name, isOptional, type: { tag: "AnyType" } } }
@@ -518,9 +587,23 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
     return { tag: "InterfaceDeclaration", contents: { name, typeParameters, typeMembers } }
   }
 
+  const handleNamespaceBody = (node: ts.ModuleBody): NamespaceBody => {
+    if(ts.isModuleBlock(node)) return { tag: "ModuleBlock", contents: node.statements.map(handleDeclarationElement) }
+    if(ts.isIdentifier(node)) return { tag: "NamespaceDeclaration", contents: { name: node.text, body: { tag: "ModuleBlock", contents: [] }}}
+    return { tag: "ModuleBlock", contents: ([] as DeclarationElements[]) }
+  }
+
+  const handleModuleDeclaration = (node: ts.ModuleDeclaration): DeclarationElements => {
+    const name = node.name.text
+    const body: NamespaceBodyDefinition | undefined = node.body ? { tag: "NamespaceBodyDefinition", contents: handleNamespaceBody(node.body) } : undefined
+    return { tag: "ModuleDeclaration", contents: { name, body } }
+  }
+
   const handleDeclarationElement = (node: ts.Node): DeclarationElements => {
     if(ts.isInterfaceDeclaration(node)) return handleInterfaceDeclaration(node)
     if(ts.isTypeAliasDeclaration(node)) return handleTypeAliasDeclaration(node)
+    if(ts.isModuleDeclaration(node)) return handleModuleDeclaration(node)
+    console.log(ts.SyntaxKind[node.kind])
     return { tag: "AmbientDeclaration" }
   }
 

@@ -183,6 +183,8 @@ exports._sourceFiles = function (filterRegex) { return function () {
             case ts.SyntaxKind.TrueKeyword: return { tag: "TrueType" };
             case ts.SyntaxKind.FalseKeyword: return { tag: "FalseType" };
         }
+        if (ts.isTypeAliasDeclaration(node))
+            return handleTypeAliasType(node);
         if (ts.isTypeReferenceNode(node))
             return handleTypeReference(node);
         if (ts.isTypeLiteralNode(node))
@@ -216,6 +218,10 @@ exports._sourceFiles = function (filterRegex) { return function () {
         var contents = param.name.escapedText.toString();
         return { tag: "TypeParameter", contents: contents };
     };
+    var handleTypeAliasType = function (node) {
+        var contents = handleTypeAliasDeclaration(node);
+        return { tag: "TypeAliasType", contents: contents };
+    };
     var handleTypeAliasDeclaration = function (node) {
         var name = node.name.escapedText.toString();
         var type = handleTSType(node.type);
@@ -230,6 +236,30 @@ exports._sourceFiles = function (filterRegex) { return function () {
         if (declaration && ts.isPropertySignature(declaration) && declaration.type) {
             var nodeType = declaration.type;
             var propertyType = handleTSType(nodeType);
+            if (symbol.name === "onTransitionEnd") {
+                var t = checker.getTypeFromTypeNode(nodeType);
+                var sigs = t.getCallSignatures();
+                if (sigs[0]) {
+                    var signature = sigs[0];
+                    var typeParameters = signature.typeParameters ? signature.typeParameters.map(function (p) {
+                        return { tag: "TypeParameter", contents: p.symbol.name };
+                    }) : [];
+                    var parameters = signature.parameters.map(function (s) {
+                        if (ts.isParameter(s.valueDeclaration)) {
+                            //console.log(ts.SyntaxKind[s.valueDeclaration.parent.parent.parent.parent.kind])
+                            //console.log(s.valueDeclaration.parent.parent.parent.parent)
+                            //console.log(s.valueDeclaration.parent.parent)
+                            //console.log(JSON.stringify(handleTSType(s.valueDeclaration.parent.parent.parent.parent), null, 2))
+                            //if(s.valueDeclaration.type)console.log(s.valueDeclaration.type)
+                        }
+                    });
+                    var typeNode = checker.typeToTypeNode(signature.getReturnType());
+                    var returnType = typeNode ? handleTSType(typeNode) : { tag: "AnyType" };
+                    //          console.log(JSON.stringify(parameters))
+                    //          console.log(JSON.stringify(typeParameters))
+                    //          console.log(JSON.stringify(returnType))
+                }
+            }
             return { tag: "PropertySignature", contents: { name: name, isOptional: isOptional, type: propertyType } };
         }
         return { tag: "PropertySignature", contents: { name: name, isOptional: isOptional, type: { tag: "AnyType" } } };
@@ -241,11 +271,26 @@ exports._sourceFiles = function (filterRegex) { return function () {
         var typeMembers = type.getProperties().map(function (symbol) { return handleTypeMember(symbol); });
         return { tag: "InterfaceDeclaration", contents: { name: name, typeParameters: typeParameters, typeMembers: typeMembers } };
     };
+    var handleNamespaceBody = function (node) {
+        if (ts.isModuleBlock(node))
+            return { tag: "ModuleBlock", contents: node.statements.map(handleDeclarationElement) };
+        if (ts.isIdentifier(node))
+            return { tag: "NamespaceDeclaration", contents: { name: node.text, body: { tag: "ModuleBlock", contents: [] } } };
+        return { tag: "ModuleBlock", contents: [] };
+    };
+    var handleModuleDeclaration = function (node) {
+        var name = node.name.text;
+        var body = node.body ? { tag: "NamespaceBodyDefinition", contents: handleNamespaceBody(node.body) } : undefined;
+        return { tag: "ModuleDeclaration", contents: { name: name, body: body } };
+    };
     var handleDeclarationElement = function (node) {
         if (ts.isInterfaceDeclaration(node))
             return handleInterfaceDeclaration(node);
         if (ts.isTypeAliasDeclaration(node))
             return handleTypeAliasDeclaration(node);
+        if (ts.isModuleDeclaration(node))
+            return handleModuleDeclaration(node);
+        console.log(ts.SyntaxKind[node.kind]);
         return { tag: "AmbientDeclaration" };
     };
     var handleDeclarationModuleElements = function (node) {
