@@ -18,7 +18,7 @@ export interface ImportDeclaration { tag: "ImportDeclaration" }
 export interface ImportEqualsDeclaration { tag: "ImportEqualsDeclaration" }
 export interface ModuleDeclaration { tag: "ModuleDeclaration", contents: { name: string, body?: ModuleBody } }
 export interface NamespaceExportDeclaration { tag: "NamespaceExportDeclaration", contents: string }
-export interface VariableDeclaration { tag: "VariableDeclaration", contents: { name: string, type: TSType } }
+export interface VariableDeclaration { tag: "VariableDeclaration", contents: { name: string, fullyQualifiedName?: string, type: TSType } }
 export interface VariableStatement { tag: "VariableStatement", contents: VariableDeclaration[] }
 
 export type DeclarationElements = 
@@ -42,13 +42,14 @@ export interface FunctionElement {
   tag: "FunctionElement",
   contents: {
     name?: string,
+    fullyQualifiedName?: string,
     typeParameters: TypeParameter[],
     parameters: TypeMember[],
     returnType: TSType
   }
 }
 
-export interface ClassElement { tag: "ClassElement", contents: { name?: string }}
+export interface ClassElement { tag: "ClassElement", contents: { name?: string, fullyQualifiedName?: string }}
 export interface JSDocNamespaceBody { tag: "JSDocNamespaceBody" }
 
 
@@ -76,6 +77,7 @@ export interface InterfaceDeclaration {
   tag: "InterfaceDeclaration",
   contents: { 
     name: string,
+    fullyQualifiedName?: string,
     typeParameters: TypeParameter[]
     typeMembers: TypeMember[]
   }
@@ -84,6 +86,7 @@ export interface TypeAliasDeclaration {
   tag: "TypeAliasDeclaration",
   contents: { 
     name: string,
+    fullyQualifiedName?: string
     typeParameters: TypeParameter[],
     type: TSType
   }
@@ -327,7 +330,7 @@ const isThing = (thing: string, str: string): boolean => {
   return results !== null && results.length > 0
 }
 
-export const _sourceFiles = (fileName: string) => (filterRegex: RegExp) => (): DeclarationSourceFile[] => {
+export const _typescript = (fileName: string) => (filterRegex: RegExp) => (): { sources: DeclarationSourceFile[], elements: {[key:string]: DeclarationElements} } => {
 
   const options = ts.getDefaultCompilerOptions()
   const program = ts.createProgram([fileName], options)
@@ -335,10 +338,10 @@ export const _sourceFiles = (fileName: string) => (filterRegex: RegExp) => (): D
   const checker = program.getTypeChecker()
 
 
-  const nodeModules = path.resolve(process.cwd(), "./node_modules")
+  const nodeModules = path.resolve(process.cwd(), "./node_modules/")
   const getFullyQualifiedName = (type: ts.Type): string | undefined => {
     if(type.symbol){
-      const tokens = checker.getFullyQualifiedName(type.symbol).split(nodeModules)
+      const tokens = checker.getFullyQualifiedName(type.symbol).split(nodeModules + "/")
       if(tokens.length === 1) return tokens[0]
       if(tokens.length === 2) return tokens[1]
     }
@@ -587,9 +590,10 @@ export const _sourceFiles = (fileName: string) => (filterRegex: RegExp) => (): D
   const handleInterfaceDeclaration = (node: ts.InterfaceDeclaration): InterfaceDeclaration => {
     const name = node.name.escapedText.toString()
     const type = checker.getTypeAtLocation(node)
+    const fullyQualifiedName = getFullyQualifiedName(type)
     const typeParameters: TypeParameter[] = (node.typeParameters) ? node.typeParameters.map(handleTypeParameter) : []
     const typeMembers: TypeMember[] = type.getProperties().map(symbol => handleTypeMember(symbol)) 
-    return { tag: "InterfaceDeclaration", contents: { name, typeParameters, typeMembers } }
+    return { tag: "InterfaceDeclaration", contents: { name, fullyQualifiedName, typeParameters, typeMembers } }
   }
 
   const handleNamespaceBody = (node: ts.ModuleBody): NamespaceBody => {
@@ -608,17 +612,20 @@ export const _sourceFiles = (fileName: string) => (filterRegex: RegExp) => (): D
     const contents: VariableDeclaration[] = node.declarationList.declarations.map((d: ts.VariableDeclaration) => {
       const name: string = d.name.getText() 
       const type: TSType = d.type ? handleTSType(d.type) : { tag: "AnyType" }
-      return { tag: "VariableDeclaration", contents: { name, type }}
+      const fullyQualifiedName = getFullyQualifiedName(checker.getTypeAtLocation(node))
+      return { tag: "VariableDeclaration", contents: { name, fullyQualifiedName, type }}
     })
     return { tag: "VariableStatement", contents }
   }
 
   const handleFunctionDeclaration = (node: ts.FunctionDeclaration): DeclarationElements => {
     const name = node.name ? node.name.text : undefined
+    const type = checker.getTypeAtLocation(node)
+    const fullyQualifiedName = getFullyQualifiedName(type)
     const typeParameters: TypeParameter[] = node.typeParameters ? node.typeParameters.map(handleTypeParameter) : []
     const parameters: TypeMember[] = node.parameters ? node.parameters.map(handleParameter) : []
     const returnType: TSType = node.type ? handleTSType(node.type) : { tag: "AnyType" }
-    return { tag: "FunctionElement", contents: { name, typeParameters, parameters, returnType }}
+    return { tag: "FunctionElement", contents: { name, fullyQualifiedName, typeParameters, parameters, returnType }}
   }
   const handleClassDeclaration = (node: ts.ClassDeclaration): DeclarationElements => {
     const name = node.name ? node.name.text : undefined
@@ -657,7 +664,23 @@ export const _sourceFiles = (fileName: string) => (filterRegex: RegExp) => (): D
     return result !== null && result.length > 0
   }) as DeclarationSourceFile[])
 
-  return srcs
+
+  const elements: {[key:string]: DeclarationElements} = {}
+  srcs.forEach(src => {
+    src.contents.elements.forEach( element => {
+      if(element.tag === "ClassElement" && element.contents.fullyQualifiedName) elements[element.contents.fullyQualifiedName] = element
+      if(element.tag === "FunctionElement" && element.contents.fullyQualifiedName) elements[element.contents.fullyQualifiedName] = element
+      if(element.tag === "InterfaceDeclaration" && element.contents.fullyQualifiedName) elements[element.contents.fullyQualifiedName] = element
+      if(element.tag === "TypeAliasDeclaration" && element.contents.fullyQualifiedName) elements[element.contents.fullyQualifiedName] = element
+      if(element.tag === "VariableStatement"){
+        element.contents.forEach(decl => {
+          if(decl.contents.fullyQualifiedName) elements[decl.contents.fullyQualifiedName] = element
+        })
+      }
+    })
+  })
+
+  return { sources: srcs, elements }
 
 }
 

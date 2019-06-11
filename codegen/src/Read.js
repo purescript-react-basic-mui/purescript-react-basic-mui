@@ -7,15 +7,15 @@ var isThing = function (thing, str) {
     var results = str.match(new RegExp(regexStr));
     return results !== null && results.length > 0;
 };
-exports._sourceFiles = function (fileName) { return function (filterRegex) { return function () {
+exports._typescript = function (fileName) { return function (filterRegex) { return function () {
     var options = ts.getDefaultCompilerOptions();
     var program = ts.createProgram([fileName], options);
     var sources = program.getSourceFiles();
     var checker = program.getTypeChecker();
-    var nodeModules = path.resolve(process.cwd(), "./node_modules");
+    var nodeModules = path.resolve(process.cwd(), "./node_modules/");
     var getFullyQualifiedName = function (type) {
         if (type.symbol) {
-            var tokens = checker.getFullyQualifiedName(type.symbol).split(nodeModules);
+            var tokens = checker.getFullyQualifiedName(type.symbol).split(nodeModules + "/");
             if (tokens.length === 1)
                 return tokens[0];
             if (tokens.length === 2)
@@ -249,9 +249,10 @@ exports._sourceFiles = function (fileName) { return function (filterRegex) { ret
     var handleInterfaceDeclaration = function (node) {
         var name = node.name.escapedText.toString();
         var type = checker.getTypeAtLocation(node);
+        var fullyQualifiedName = getFullyQualifiedName(type);
         var typeParameters = (node.typeParameters) ? node.typeParameters.map(handleTypeParameter) : [];
         var typeMembers = type.getProperties().map(function (symbol) { return handleTypeMember(symbol); });
-        return { tag: "InterfaceDeclaration", contents: { name: name, typeParameters: typeParameters, typeMembers: typeMembers } };
+        return { tag: "InterfaceDeclaration", contents: { name: name, fullyQualifiedName: fullyQualifiedName, typeParameters: typeParameters, typeMembers: typeMembers } };
     };
     var handleNamespaceBody = function (node) {
         if (ts.isModuleBlock(node))
@@ -269,16 +270,19 @@ exports._sourceFiles = function (fileName) { return function (filterRegex) { ret
         var contents = node.declarationList.declarations.map(function (d) {
             var name = d.name.getText();
             var type = d.type ? handleTSType(d.type) : { tag: "AnyType" };
-            return { tag: "VariableDeclaration", contents: { name: name, type: type } };
+            var fullyQualifiedName = getFullyQualifiedName(checker.getTypeAtLocation(node));
+            return { tag: "VariableDeclaration", contents: { name: name, fullyQualifiedName: fullyQualifiedName, type: type } };
         });
         return { tag: "VariableStatement", contents: contents };
     };
     var handleFunctionDeclaration = function (node) {
         var name = node.name ? node.name.text : undefined;
+        var type = checker.getTypeAtLocation(node);
+        var fullyQualifiedName = getFullyQualifiedName(type);
         var typeParameters = node.typeParameters ? node.typeParameters.map(handleTypeParameter) : [];
         var parameters = node.parameters ? node.parameters.map(handleParameter) : [];
         var returnType = node.type ? handleTSType(node.type) : { tag: "AnyType" };
-        return { tag: "FunctionElement", contents: { name: name, typeParameters: typeParameters, parameters: parameters, returnType: returnType } };
+        return { tag: "FunctionElement", contents: { name: name, fullyQualifiedName: fullyQualifiedName, typeParameters: typeParameters, parameters: parameters, returnType: returnType } };
     };
     var handleClassDeclaration = function (node) {
         var name = node.name ? node.name.text : undefined;
@@ -325,6 +329,25 @@ exports._sourceFiles = function (fileName) { return function (filterRegex) { ret
         var result = decl.contents.fileName.match(filterRegex);
         return result !== null && result.length > 0;
     });
-    return srcs;
+    var elements = {};
+    srcs.forEach(function (src) {
+        src.contents.elements.forEach(function (element) {
+            if (element.tag === "ClassElement" && element.contents.fullyQualifiedName)
+                elements[element.contents.fullyQualifiedName] = element;
+            if (element.tag === "FunctionElement" && element.contents.fullyQualifiedName)
+                elements[element.contents.fullyQualifiedName] = element;
+            if (element.tag === "InterfaceDeclaration" && element.contents.fullyQualifiedName)
+                elements[element.contents.fullyQualifiedName] = element;
+            if (element.tag === "TypeAliasDeclaration" && element.contents.fullyQualifiedName)
+                elements[element.contents.fullyQualifiedName] = element;
+            if (element.tag === "VariableStatement") {
+                element.contents.forEach(function (decl) {
+                    if (decl.contents.fullyQualifiedName)
+                        elements[decl.contents.fullyQualifiedName] = element;
+                });
+            }
+        });
+    });
+    return { sources: srcs, elements: elements };
 }; }; };
 exports._fileName = function (src) { return function () { return src.contents.fileName; }; };

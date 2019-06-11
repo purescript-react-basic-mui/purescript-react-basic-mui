@@ -2,8 +2,8 @@ module Codegen.Main where
 
 import Prelude
 
-import Codegen.Read (DeclarationSourceFile(..), interfaceByName, liftEither, liftMaybe, sourceFiles)
-import Codegen.Write.React (showPropsInterface)
+import Codegen.Read (DeclarationSourceFile(..), liftEither, liftMaybe, typescript)
+import Codegen.Write.React (showDeclarationSourceFile)
 import Data.Array as Array
 import Data.Maybe (isJust)
 import Data.String as String
@@ -16,16 +16,14 @@ import Effect.Console (log)
 
 main :: Effect Unit
 main = do
-  regex       <- liftEither $ Regex.regex ".*Badge.*" RegexFlags.noFlags
+  regex       <- liftEither $ Regex.regex ".*Card.*" RegexFlags.noFlags
   --regex       <- liftEither $ Regex.regex ".*react/index.*" RegexFlags.noFlags
   let path = "./node_modules/@material-ui/core/index.d.ts"
-  sources     <- sourceFiles path regex
-  badgeProps  <- (liftMaybe "Couldn't find BadgeProps" 
-                  $ Array.head
-                  $ Array.mapMaybe (\src -> interfaceByName src "BadgeProps") sources)
+  { sources } <- typescript path regex 
   badge       <- liftMaybe "Couldn't find Badge.d.ts" 
-                  $ Array.find (\(DeclarationSourceFile { fileName }) -> isJust $ String.indexOf (String.Pattern "/Badge.d.ts") fileName) sources
-  log =<< showPropsInterface badgeProps
+                  $ Array.find (\(DeclarationSourceFile { fileName }) -> isJust $ String.indexOf (String.Pattern "/Card.d.ts") fileName) sources
+  str         <- showDeclarationSourceFile badge
+  log str
 
 getVariant :: Variant (foo :: Unit, bar :: Unit)
 getVariant = inj (SProxy :: SProxy "bar") unit 

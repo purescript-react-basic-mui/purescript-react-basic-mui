@@ -21,6 +21,7 @@ import Effect.Console (log)
 import Effect.Exception (throw)
 import Foreign (Foreign)
 import Foreign.Generic (class Decode, decode, defaultOptions, genericDecode)
+import Foreign.Object (Object)
 
 
 -- Types
@@ -32,22 +33,22 @@ type DeclarationSourceFileRec = { fileName :: String, elements :: Array Declarat
 
 data DeclarationElements
   = AmbientDeclaration
-  | ClassElement { name :: String }
+  | ClassElement { name :: Maybe String, fullyQualifiedName :: Maybe String }
   | ExportAssignment
   | ExportDeclaration
   | ExportDefaultDeclaration
-  | FunctionElement { name :: Maybe String, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+  | FunctionElement { name :: Maybe String, fullyQualifiedName :: Maybe String, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
   | ImportDeclaration
   | ImportEqualsDeclaration
   | InterfaceDeclaration InterfaceDeclarationRec 
   | ModuleDeclaration { name :: String, body :: Maybe ModuleBody }
   | NamespaceExportDeclaration String
-  | TypeAliasDeclaration { name :: String, aliasName :: Maybe String, type :: TSType }
+  | TypeAliasDeclaration { name :: String, fullyQualifiedName :: Maybe String, aliasName :: Maybe String, type :: TSType }
   | VariableStatement (Array VariableDeclaration)
 
-type InterfaceDeclarationRec = { name :: String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
+type InterfaceDeclarationRec = { name :: String, fullyQualifiedName :: Maybe String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
 
-data VariableDeclaration = VariableDeclaration { name :: String, type :: TSType }
+data VariableDeclaration = VariableDeclaration { name :: String, fullyQualifiedName :: Maybe String, type :: TSType }
 
 data ModuleBody 
   = NamespaceBodyDefinition NamespaceBody
@@ -135,10 +136,15 @@ interfaces declarationSourceFile = toArrayOf _interfaces declarationSourceFile
 interfaceByName :: DeclarationSourceFile -> String -> Maybe InterfaceDeclarationRec
 interfaceByName file interfaceName = Array.find (\{ name } -> name == interfaceName) (interfaces file)
 
-sourceFiles :: String -> Regex -> Effect (Array DeclarationSourceFile)
-sourceFiles path regex = do
-  fs    <- _sourceFiles path regex
-  traverse convert fs
+typescript :: String -> Regex -> Effect { sources :: (Array DeclarationSourceFile), elements :: Object Foreign }
+typescript path regex = do
+  rec     <- _typescript path regex
+  sources <- sourceFiles rec.sources
+  pure { sources, elements: rec.elements }
+
+sourceFiles :: Array Foreign -> Effect (Array DeclarationSourceFile)
+sourceFiles sources = do
+  traverse convert sources 
   where
     convert :: Foreign -> Effect DeclarationSourceFile
     convert f = do
@@ -196,7 +202,7 @@ _interfaces =
 
 -- FFI
 
-foreign import _sourceFiles :: String -> Regex -> Effect (Array Foreign)
+foreign import _typescript :: String -> Regex -> Effect { sources :: (Array Foreign), elements :: Object Foreign }
 foreign import _fileName :: Foreign -> Effect String
 
 -- Type class instances
