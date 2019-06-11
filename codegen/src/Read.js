@@ -1,16 +1,28 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var ts = require("typescript");
+var path = require("path");
 var isThing = function (thing, str) {
     var regexStr = "\\b" + thing + "\\b";
     var results = str.match(new RegExp(regexStr));
     return results !== null && results.length > 0;
 };
-exports._sourceFiles = function (filterRegex) { return function () {
+exports._sourceFiles = function (fileName) { return function (filterRegex) { return function () {
     var options = ts.getDefaultCompilerOptions();
-    var program = ts.createProgram(["./node_modules/@material-ui/core/index.d.ts"], options);
+    var program = ts.createProgram([fileName], options);
     var sources = program.getSourceFiles();
     var checker = program.getTypeChecker();
+    var nodeModules = path.resolve(process.cwd(), "./node_modules");
+    var getFullyQualifiedName = function (type) {
+        if (type.symbol) {
+            var tokens = checker.getFullyQualifiedName(type.symbol).split(nodeModules);
+            if (tokens.length === 1)
+                return tokens[0];
+            if (tokens.length === 2)
+                return tokens[1];
+        }
+        return undefined;
+    };
     var handleArrayType = function (node) {
         return { tag: "ArrayType", contents: handleTSType(node.elementType) };
     };
@@ -23,6 +35,7 @@ exports._sourceFiles = function (filterRegex) { return function () {
         var name = handleEntityName(node.typeName);
         var typeArguments = (node.typeArguments) ? node.typeArguments.map(handleTSType) : [];
         var type = checker.getTypeAtLocation(node);
+        var fullyQualifiedName = getFullyQualifiedName(type);
         var record = (type && type.aliasSymbol)
             ? { aliasName: { tag: "Identifier", contents: type.aliasSymbol.name },
                 aliasTypeArguments: type.aliasTypeArguments ? type.aliasTypeArguments.map(function (t) {
@@ -31,7 +44,7 @@ exports._sourceFiles = function (filterRegex) { return function () {
                 }) : []
             }
             : { aliasName: undefined, aliasTypeArguments: undefined };
-        return { tag: "TypeReference", contents: { name: name, typeArguments: typeArguments, aliasName: record.aliasName, aliasTypeArguments: record.aliasTypeArguments } };
+        return { tag: "TypeReference", contents: { name: name, fullyQualifiedName: fullyQualifiedName, typeArguments: typeArguments, aliasName: record.aliasName, aliasTypeArguments: record.aliasTypeArguments } };
     };
     var handleParameter = function (node) {
         var isOptional = node.questionToken !== undefined;
@@ -44,13 +57,6 @@ exports._sourceFiles = function (filterRegex) { return function () {
         var parameters = node.parameters ? node.parameters.map(handleParameter) : [];
         var returnType = node.type ? handleTSType(node.type) : { tag: "AnyType" };
         return { tag: "FunctionType", contents: { typeParameters: typeParameters, parameters: parameters, returnType: returnType } };
-    };
-    var handleClass = function (node) {
-        var name = node.name ? node.name.escapedText.toString() : undefined;
-        var type = checker.getTypeAtLocation(node);
-        var typeParameters = (node.typeParameters) ? node.typeParameters.map(handleTypeParameter) : [];
-        var typeMembers = type.getProperties().map(function (symbol) { return handleTypeMember(symbol); });
-        return { tag: "ClassType", contents: { name: name, typeParameters: typeParameters, typeMembers: typeMembers } };
     };
     var handleLiteralType = function (node) {
         if (node.literal.kind === ts.SyntaxKind.FalseKeyword) {
@@ -236,30 +242,6 @@ exports._sourceFiles = function (filterRegex) { return function () {
         if (declaration && ts.isPropertySignature(declaration) && declaration.type) {
             var nodeType = declaration.type;
             var propertyType = handleTSType(nodeType);
-            if (symbol.name === "onTransitionEnd") {
-                var t = checker.getTypeFromTypeNode(nodeType);
-                var sigs = t.getCallSignatures();
-                if (sigs[0]) {
-                    var signature = sigs[0];
-                    var typeParameters = signature.typeParameters ? signature.typeParameters.map(function (p) {
-                        return { tag: "TypeParameter", contents: p.symbol.name };
-                    }) : [];
-                    var parameters = signature.parameters.map(function (s) {
-                        if (ts.isParameter(s.valueDeclaration)) {
-                            //console.log(ts.SyntaxKind[s.valueDeclaration.parent.parent.parent.parent.kind])
-                            //console.log(s.valueDeclaration.parent.parent.parent.parent)
-                            //console.log(s.valueDeclaration.parent.parent)
-                            //console.log(JSON.stringify(handleTSType(s.valueDeclaration.parent.parent.parent.parent), null, 2))
-                            //if(s.valueDeclaration.type)console.log(s.valueDeclaration.type)
-                        }
-                    });
-                    var typeNode = checker.typeToTypeNode(signature.getReturnType());
-                    var returnType = typeNode ? handleTSType(typeNode) : { tag: "AnyType" };
-                    //          console.log(JSON.stringify(parameters))
-                    //          console.log(JSON.stringify(typeParameters))
-                    //          console.log(JSON.stringify(returnType))
-                }
-            }
             return { tag: "PropertySignature", contents: { name: name, isOptional: isOptional, type: propertyType } };
         }
         return { tag: "PropertySignature", contents: { name: name, isOptional: isOptional, type: { tag: "AnyType" } } };
@@ -344,4 +326,5 @@ exports._sourceFiles = function (filterRegex) { return function () {
         return result !== null && result.length > 0;
     });
     return srcs;
-}; };
+}; }; };
+exports._fileName = function (src) { return function () { return src.contents.fileName; }; };

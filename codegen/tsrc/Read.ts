@@ -1,4 +1,6 @@
 import * as ts from "typescript"
+import { exec } from "child_process"
+import * as path from "path"
 
 export interface DeclarationSourceFile {
   tag: "DeclarationSourceFile"
@@ -92,7 +94,6 @@ export interface AmbientDeclaration { tag: "AmbientDeclaration" }
 export type TSType =
   UnionType |
   IntersectionType |
-  ClassType |
   FunctionType |
   ParenthesizedType |
   TypeReference | 
@@ -152,6 +153,7 @@ export interface TypeReference {
   tag: "TypeReference",
   contents: {
     name: EntityName,
+    fullyQualifiedName?: string,
     typeArguments: TSType[]
     aliasName?: EntityName
     aliasTypeArguments?: TSType[]
@@ -325,11 +327,23 @@ const isThing = (thing: string, str: string): boolean => {
   return results !== null && results.length > 0
 }
 
-export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[] => {
+export const _sourceFiles = (fileName: string) => (filterRegex: RegExp) => (): DeclarationSourceFile[] => {
+
   const options = ts.getDefaultCompilerOptions()
-  const program = ts.createProgram(["./node_modules/@material-ui/core/index.d.ts"], options)
+  const program = ts.createProgram([fileName], options)
   const sources = program.getSourceFiles()
   const checker = program.getTypeChecker()
+
+
+  const nodeModules = path.resolve(process.cwd(), "./node_modules")
+  const getFullyQualifiedName = (type: ts.Type): string | undefined => {
+    if(type.symbol){
+      const tokens = checker.getFullyQualifiedName(type.symbol).split(nodeModules)
+      if(tokens.length === 1) return tokens[0]
+      if(tokens.length === 2) return tokens[1]
+    }
+    return undefined
+  }
 
   const handleArrayType = (node: ts.ArrayTypeNode): TSType => {
     return { tag: "ArrayType", contents: handleTSType(node.elementType) }
@@ -344,6 +358,7 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
     const name = handleEntityName(node.typeName)
     const typeArguments: TSType[] = (node.typeArguments) ? node.typeArguments.map(handleTSType) : []
     const type = checker.getTypeAtLocation(node) 
+    const fullyQualifiedName = getFullyQualifiedName(type)
     const record: ({ aliasName?: EntityName, aliasTypeArguments?: TSType[] }) = 
       (type && type.aliasSymbol)
         ? { aliasName: { tag: "Identifier", contents: type.aliasSymbol.name }, 
@@ -354,7 +369,7 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
           }
         : { aliasName: undefined, aliasTypeArguments : undefined }
 
-    return { tag: "TypeReference", contents: { name, typeArguments, aliasName: record.aliasName, aliasTypeArguments: record.aliasTypeArguments } }
+    return { tag: "TypeReference", contents: { name, fullyQualifiedName, typeArguments, aliasName: record.aliasName, aliasTypeArguments: record.aliasTypeArguments } }
   }
 
   const handleParameter = (node: ts.ParameterDeclaration): TypeMember => {
@@ -369,14 +384,6 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
     const parameters: TypeMember[] = node.parameters ? node.parameters.map(handleParameter) : []
     const returnType: TSType = node.type ? handleTSType(node.type) : { tag: "AnyType" }
     return { tag: "FunctionType", contents: { typeParameters, parameters, returnType } }
-  }
-
-  const handleClass = (node: ts.ClassDeclaration): ClassType => {
-    const name = node.name ? node.name.escapedText.toString() : undefined
-    const type = checker.getTypeAtLocation(node)
-    const typeParameters: TypeParameter[] = (node.typeParameters) ? node.typeParameters.map(handleTypeParameter) : []
-    const typeMembers: TypeMember[] = type.getProperties().map(symbol => handleTypeMember(symbol)) 
-    return { tag: "ClassType", contents: { name, typeParameters, typeMembers } }
   }
 
   const handleLiteralType = (node: ts.LiteralTypeNode): TSType => {
@@ -572,34 +579,6 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
     if(declaration && ts.isPropertySignature(declaration) && declaration.type){
       const nodeType = declaration.type
       const propertyType: TSType = handleTSType(nodeType)
-
-      if(symbol.name === "onTransitionEnd"){
-        const t = checker.getTypeFromTypeNode(nodeType)
-        const sigs = t.getCallSignatures()
-        if(sigs[0]){
-          const signature = sigs[0]
-          const typeParameters: TypeParameter[] = signature.typeParameters ? signature.typeParameters.map(p => {
-            return { tag: "TypeParameter", contents: p.symbol.name }
-          }) : []
-
-          const parameters = signature.parameters.map( s => {
-            if(ts.isParameter(s.valueDeclaration)){
-              //console.log(ts.SyntaxKind[s.valueDeclaration.parent.parent.parent.parent.kind])
-              //console.log(s.valueDeclaration.parent.parent.parent.parent)
-              //console.log(s.valueDeclaration.parent.parent)
-              //console.log(JSON.stringify(handleTSType(s.valueDeclaration.parent.parent.parent.parent), null, 2))
-              //if(s.valueDeclaration.type)console.log(s.valueDeclaration.type)
-            }
-          })
-          const typeNode = checker.typeToTypeNode(signature.getReturnType())
-          const returnType = typeNode ? handleTSType(typeNode) : { tag: "AnyType" }
-//          console.log(JSON.stringify(parameters))
-//          console.log(JSON.stringify(typeParameters))
-//          console.log(JSON.stringify(returnType))
-        }
-
-      }
- 
       return { tag: "PropertySignature", contents: { name, isOptional, type: propertyType } }
     }
     return { tag: "PropertySignature", contents: { name, isOptional, type: { tag: "AnyType" } } }
@@ -681,3 +660,6 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
   return srcs
 
 }
+
+
+export const _fileName = (src: DeclarationSourceFile) => () => src.contents.fileName

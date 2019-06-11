@@ -16,7 +16,6 @@ import Data.Monoid.Endo (Endo)
 import Data.String.Regex (Regex)
 import Data.Symbol (SProxy(..))
 import Data.Traversable (traverse)
-import Debug.Trace (spy)
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Exception (throw)
@@ -37,12 +36,12 @@ data DeclarationElements
   | ExportAssignment
   | ExportDeclaration
   | ExportDefaultDeclaration
-  | FunctionElement { name :: Maybe PropertyName, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+  | FunctionElement { name :: Maybe String, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
   | ImportDeclaration
   | ImportEqualsDeclaration
   | InterfaceDeclaration InterfaceDeclarationRec 
   | ModuleDeclaration { name :: String, body :: Maybe ModuleBody }
-  | NamepaceExportDeclaration String
+  | NamespaceExportDeclaration String
   | TypeAliasDeclaration { name :: String, aliasName :: Maybe String, type :: TSType }
   | VariableStatement (Array VariableDeclaration)
 
@@ -79,7 +78,6 @@ data TSType
   | ArrayType TSType
   | BigIntType
   | BooleanType
-  | ClassType { name :: Maybe String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
   | ConditionalType { checkType :: TSType, extendsType :: TSType, trueType :: TSType, falseType :: TSType }
   | ConstructorType { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
   | FalseType
@@ -103,7 +101,7 @@ data TSType
   | TypeLiteral (Array TypeMember)
   | TypeOperator
   | TypeQuery
-  | TypeReference { name :: EntityName, typeArguments :: Array TSType, aliasName :: Maybe EntityName, aliasTypeArguments :: Maybe (Array TSType) }
+  | TypeReference { name :: EntityName, fullyQualifiedName :: Maybe String, typeArguments :: Array TSType, aliasName :: Maybe EntityName, aliasTypeArguments :: Maybe (Array TSType) }
   | UndefinedType
   | UnionType (Array TSType)
   | UnknownType 
@@ -121,19 +119,20 @@ interfaces declarationSourceFile = toArrayOf _interfaces declarationSourceFile
 interfaceByName :: DeclarationSourceFile -> String -> Maybe InterfaceDeclarationRec
 interfaceByName file interfaceName = Array.find (\{ name } -> name == interfaceName) (interfaces file)
 
-sourceFiles :: Regex -> Effect (Array DeclarationSourceFile)
-sourceFiles regex = do
-  fs    <- _sourceFiles regex
+sourceFiles :: String -> Regex -> Effect (Array DeclarationSourceFile)
+sourceFiles path regex = do
+  fs    <- _sourceFiles path regex
   traverse convert fs
   where
     convert :: Foreign -> Effect DeclarationSourceFile
     convert f = do
-      let _ = spy "f" f
+      currentPath <- _fileName f
+      log $ "Attempting to convert TS AST to PS AST " <> currentPath
       decl <- liftEither $ runExcept $ decode f
       logConverted decl
     logConverted :: DeclarationSourceFile -> Effect DeclarationSourceFile
     logConverted d@(DeclarationSourceFile { fileName }) = do
-      log ("Converted " <> fileName)
+      log ("Successfully Converted " <> fileName)
       pure d
 
 isOptional :: TypeMember -> Boolean
@@ -181,7 +180,8 @@ _interfaces =
 
 -- FFI
 
-foreign import _sourceFiles :: Regex -> Effect (Array Foreign)
+foreign import _sourceFiles :: String -> Regex -> Effect (Array Foreign)
+foreign import _fileName :: Foreign -> Effect String
 
 -- Type class instances
 
