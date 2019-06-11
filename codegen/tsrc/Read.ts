@@ -4,23 +4,35 @@ export interface DeclarationSourceFile {
   tag: "DeclarationSourceFile"
   contents: {
     fileName: string
-    declarationModuleElements: DeclarationModuleElement[]
+    elements: DeclarationElements[]
   }
 }
 
-export type DeclarationModuleElement = DeclarationElement | ImportDeclaration | ImportEqualsDeclaration | ExportDeclaration | ExportDefaultDeclaration | ExportAssignment
 
-export interface DeclarationElement { tag: "DeclarationElement", contents: DeclarationElements }
-export interface ImportDeclaration { tag: "ImportDeclaration" }
-export interface ImportEqualsDeclaration { tag: "ImportEqualsDeclaration" }
+export interface ExportAssignment { tag: "ExportAssignment" }
 export interface ExportDeclaration { tag: "ExportDeclaration" }
 export interface ExportDefaultDeclaration { tag: "ExportDefaultDeclaration" }
-export interface ExportAssignment { tag: "ExportAssignment" }
+export interface ImportDeclaration { tag: "ImportDeclaration" }
+export interface ImportEqualsDeclaration { tag: "ImportEqualsDeclaration" }
 export interface ModuleDeclaration { tag: "ModuleDeclaration", contents: { name: string, body?: ModuleBody } }
-export interface VariableStatement { tag: "VariableStatement", contents: VariableDeclaration[] }
+export interface NamespaceExportDeclaration { tag: "NamespaceExportDeclaration", contents: string }
 export interface VariableDeclaration { tag: "VariableDeclaration", contents: { name: string, type: TSType } }
+export interface VariableStatement { tag: "VariableStatement", contents: VariableDeclaration[] }
 
-export type DeclarationElements =  InterfaceDeclaration | TypeAliasDeclaration | AmbientDeclaration | ModuleDeclaration | VariableStatement | FunctionElement | ClassElement
+export type DeclarationElements = 
+  AmbientDeclaration |
+  ClassElement |
+  ExportAssignment |
+  ExportDeclaration |
+  ExportDefaultDeclaration |
+  FunctionElement |
+  ImportDeclaration |
+  ImportEqualsDeclaration |
+  InterfaceDeclaration |
+  ModuleDeclaration |
+  NamespaceExportDeclaration |
+  TypeAliasDeclaration |
+  VariableStatement
 
 export type ModuleBody = NamespaceBodyDefinition | JSDocNamespaceBody
 
@@ -602,7 +614,7 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
   }
 
   const handleNamespaceBody = (node: ts.ModuleBody): NamespaceBody => {
-    if(ts.isModuleBlock(node)) return { tag: "ModuleBlock", contents: node.statements.map(handleDeclarationElement) }
+    if(ts.isModuleBlock(node)) return { tag: "ModuleBlock", contents: node.statements.map(handleDeclarationElements) }
     if(ts.isIdentifier(node)) return { tag: "NamespaceDeclaration", contents: { name: node.text, body: { tag: "ModuleBlock", contents: [] }}}
     return { tag: "ModuleBlock", contents: ([] as DeclarationElements[]) }
   }
@@ -634,31 +646,33 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
     return { tag: "ClassElement", contents: { name }}
   }
 
-  const handleDeclarationElement = (node: ts.Node): DeclarationElements => {
+  const handleNamespaceExplorationDeclaration = (node: ts.NamespaceExportDeclaration): DeclarationElements => {
+    const contents = node.name.text
+    return { tag: "NamespaceExportDeclaration", contents }
+  }
+
+  const handleDeclarationElements = (node: ts.Node): DeclarationElements => {
+    if(ts.isImportDeclaration(node)) return { tag: "ImportDeclaration" }
+    if(ts.isImportEqualsDeclaration(node)) return { tag: "ImportEqualsDeclaration" }
+    if(ts.isExportAssignment(node) && (node.flags & ts.ModifierFlags.Default)) return { tag: "ExportDefaultDeclaration" }
+    if(ts.isExportDeclaration(node)) return { tag: "ExportDeclaration" }
+    if(ts.isExportAssignment(node)) return { tag: "ExportAssignment" }
     if(ts.isInterfaceDeclaration(node)) return handleInterfaceDeclaration(node)
     if(ts.isTypeAliasDeclaration(node)) return handleTypeAliasDeclaration(node)
     if(ts.isModuleDeclaration(node)) return handleModuleDeclaration(node)
     if(ts.isVariableStatement(node)) return handleVariableStatement(node)
     if(ts.isFunctionDeclaration(node)) return handleFunctionDeclaration(node)
     if(ts.isClassDeclaration(node)) return handleClassDeclaration(node)
-    console.log(ts.SyntaxKind[node.kind])
+    if(ts.isNamespaceExportDeclaration(node)) return handleNamespaceExplorationDeclaration(node)
+    console.log("There is no handler for " + ts.SyntaxKind[node.kind] + " it will be given the 'AmbientDeclaration' type")
     return { tag: "AmbientDeclaration" }
-  }
-
-  const handleDeclarationModuleElements = (node: ts.Node): DeclarationModuleElement => {
-    if(ts.isImportDeclaration(node)) return { tag: "ImportDeclaration" }
-    if(ts.isImportEqualsDeclaration(node)) return { tag: "ImportEqualsDeclaration" }
-    if(ts.isExportAssignment(node) && (node.flags & ts.ModifierFlags.Default)) return { tag: "ExportDefaultDeclaration" }
-    if(ts.isExportDeclaration(node)) return { tag: "ExportDeclaration" }
-    if(ts.isExportAssignment(node)) return { tag: "ExportAssignment" }
-    return { tag: "DeclarationElement", contents: handleDeclarationElement(node) }
   }
 
   const srcs: DeclarationSourceFile[] = (sources.map(src => {
     const fileName = src.fileName
     console.log("Reading " + fileName)
-    const declarationModuleElements: DeclarationModuleElement[] = src.statements.map(handleDeclarationModuleElements) 
-    return { tag: "DeclarationSourceFile", contents: { fileName, declarationModuleElements } }
+    const elements: DeclarationElements[] = src.statements.map(handleDeclarationElements) 
+    return { tag: "DeclarationSourceFile", contents: { fileName, elements } }
   }).filter((decl) => {
     const result = decl.contents.fileName.match(filterRegex)
     return result !== null && result.length > 0

@@ -273,7 +273,7 @@ exports._sourceFiles = function (filterRegex) { return function () {
     };
     var handleNamespaceBody = function (node) {
         if (ts.isModuleBlock(node))
-            return { tag: "ModuleBlock", contents: node.statements.map(handleDeclarationElement) };
+            return { tag: "ModuleBlock", contents: node.statements.map(handleDeclarationElements) };
         if (ts.isIdentifier(node))
             return { tag: "NamespaceDeclaration", contents: { name: node.text, body: { tag: "ModuleBlock", contents: [] } } };
         return { tag: "ModuleBlock", contents: [] };
@@ -302,7 +302,21 @@ exports._sourceFiles = function (filterRegex) { return function () {
         var name = node.name ? node.name.text : undefined;
         return { tag: "ClassElement", contents: { name: name } };
     };
-    var handleDeclarationElement = function (node) {
+    var handleNamespaceExplorationDeclaration = function (node) {
+        var contents = node.name.text;
+        return { tag: "NamespaceExportDeclaration", contents: contents };
+    };
+    var handleDeclarationElements = function (node) {
+        if (ts.isImportDeclaration(node))
+            return { tag: "ImportDeclaration" };
+        if (ts.isImportEqualsDeclaration(node))
+            return { tag: "ImportEqualsDeclaration" };
+        if (ts.isExportAssignment(node) && (node.flags & ts.ModifierFlags.Default))
+            return { tag: "ExportDefaultDeclaration" };
+        if (ts.isExportDeclaration(node))
+            return { tag: "ExportDeclaration" };
+        if (ts.isExportAssignment(node))
+            return { tag: "ExportAssignment" };
         if (ts.isInterfaceDeclaration(node))
             return handleInterfaceDeclaration(node);
         if (ts.isTypeAliasDeclaration(node))
@@ -315,27 +329,16 @@ exports._sourceFiles = function (filterRegex) { return function () {
             return handleFunctionDeclaration(node);
         if (ts.isClassDeclaration(node))
             return handleClassDeclaration(node);
-        console.log(ts.SyntaxKind[node.kind]);
+        if (ts.isNamespaceExportDeclaration(node))
+            return handleNamespaceExplorationDeclaration(node);
+        console.log("There is no handler for " + ts.SyntaxKind[node.kind] + " it will be given the 'AmbientDeclaration' type");
         return { tag: "AmbientDeclaration" };
-    };
-    var handleDeclarationModuleElements = function (node) {
-        if (ts.isImportDeclaration(node))
-            return { tag: "ImportDeclaration" };
-        if (ts.isImportEqualsDeclaration(node))
-            return { tag: "ImportEqualsDeclaration" };
-        if (ts.isExportAssignment(node) && (node.flags & ts.ModifierFlags.Default))
-            return { tag: "ExportDefaultDeclaration" };
-        if (ts.isExportDeclaration(node))
-            return { tag: "ExportDeclaration" };
-        if (ts.isExportAssignment(node))
-            return { tag: "ExportAssignment" };
-        return { tag: "DeclarationElement", contents: handleDeclarationElement(node) };
     };
     var srcs = sources.map(function (src) {
         var fileName = src.fileName;
         console.log("Reading " + fileName);
-        var declarationModuleElements = src.statements.map(handleDeclarationModuleElements);
-        return { tag: "DeclarationSourceFile", contents: { fileName: fileName, declarationModuleElements: declarationModuleElements } };
+        var elements = src.statements.map(handleDeclarationElements);
+        return { tag: "DeclarationSourceFile", contents: { fileName: fileName, elements: elements } };
     }).filter(function (decl) {
         var result = decl.contents.fileName.match(filterRegex);
         return result !== null && result.length > 0;

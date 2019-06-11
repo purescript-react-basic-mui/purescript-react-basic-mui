@@ -16,6 +16,7 @@ import Data.Monoid.Endo (Endo)
 import Data.String.Regex (Regex)
 import Data.Symbol (SProxy(..))
 import Data.Traversable (traverse)
+import Debug.Trace (spy)
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Exception (throw)
@@ -25,29 +26,27 @@ import Foreign.Generic (class Decode, decode, defaultOptions, genericDecode)
 
 -- Types
 
-type DeclarationSourceFileRec = { fileName :: String, declarationModuleElements :: Array DeclarationModuleElements }
-
 data DeclarationSourceFile 
   = DeclarationSourceFile DeclarationSourceFileRec
 
-data DeclarationModuleElements
-  = DeclarationElement DeclarationElements
-  | ImportDeclaration
-  | ImportEqualsDeclaration
-  | ExportDeclaration
-  | ExportDefaultDeclaration
-  | ExportAssignment
-
-type InterfaceDeclarationRec = { name :: String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
+type DeclarationSourceFileRec = { fileName :: String, elements :: Array DeclarationElements }
 
 data DeclarationElements
-  = InterfaceDeclaration InterfaceDeclarationRec 
-  | TypeAliasDeclaration { name :: String, aliasName :: Maybe String, type :: TSType }
-  | ModuleDeclaration { name :: String, body :: Maybe ModuleBody }
-  | VariableStatement (Array VariableDeclaration)
-  | FunctionElement { name :: Maybe PropertyName, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+  = AmbientDeclaration
   | ClassElement { name :: String }
-  | AmbientDeclaration
+  | ExportAssignment
+  | ExportDeclaration
+  | ExportDefaultDeclaration
+  | FunctionElement { name :: Maybe PropertyName, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+  | ImportDeclaration
+  | ImportEqualsDeclaration
+  | InterfaceDeclaration InterfaceDeclarationRec 
+  | ModuleDeclaration { name :: String, body :: Maybe ModuleBody }
+  | NamepaceExportDeclaration String
+  | TypeAliasDeclaration { name :: String, aliasName :: Maybe String, type :: TSType }
+  | VariableStatement (Array VariableDeclaration)
+
+type InterfaceDeclarationRec = { name :: String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
 
 data VariableDeclaration = VariableDeclaration { name :: String, type :: TSType }
 
@@ -76,44 +75,43 @@ data TypeMember
 data LiteralValue = LiteralStringValue String | LiteralNumericValue String | LiteralBigIntValue String | LiteralBooleanValue Boolean
 
 data TSType 
-  = ThisType
-  | BooleanType
-  | StringType
-  | NumberType
-  | BigIntType
-  | ObjectType
-  | VoidType
-  | TrueType
-  | FalseType
-  | NullType
-  | UndefinedType
-  | AnyType
-  | SymbolType
-  | TypeQuery
-  | TypeOperator
-  | UnknownType 
-  | NeverType 
-  | TupleType (Array TSType)
-  | UnionType (Array TSType)
-  | IntersectionType (Array TSType)
+  = AnyType
   | ArrayType TSType
-  | TypeLiteral (Array TypeMember)
-  | TypeReference { name :: EntityName, typeArguments :: Array TSType, aliasName :: Maybe EntityName, aliasTypeArguments :: Maybe (Array TSType) }
-  | ParenthesizedType TSType
-  | ConstructorType { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
-  | FunctionType { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+  | BigIntType
+  | BooleanType
   | ClassType { name :: Maybe String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
-  | InterfaceType { name :: Maybe String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
-  | LiteralType LiteralValue
-  | IndexAccessType { indexType :: TSType, objectType :: TSType }
   | ConditionalType { checkType :: TSType, extendsType :: TSType, trueType :: TSType, falseType :: TSType }
-  | MappedType { isOptional :: Boolean, type :: TSType, typeParameter :: Maybe TypeParameter }
+  | ConstructorType { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+  | FalseType
+  | FunctionType { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+  | IndexAccessType { indexType :: TSType, objectType :: TSType }
   | InferType TypeParameter
+  | InterfaceType { name :: Maybe String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
+  | IntersectionType (Array TSType)
+  | LiteralType LiteralValue
+  | MappedType { isOptional :: Boolean, type :: TSType, typeParameter :: Maybe TypeParameter }
+  | NeverType 
+  | NullType
+  | NumberType
+  | ObjectType
+  | ParenthesizedType TSType
+  | StringType
+  | SymbolType
+  | ThisType
+  | TrueType
+  | TupleType (Array TSType)
+  | TypeLiteral (Array TypeMember)
+  | TypeOperator
+  | TypeQuery
+  | TypeReference { name :: EntityName, typeArguments :: Array TSType, aliasName :: Maybe EntityName, aliasTypeArguments :: Maybe (Array TSType) }
+  | UndefinedType
+  | UnionType (Array TSType)
+  | UnknownType 
+  | VoidType
 
 data EntityName 
   = Identifier String
   | QualifiedName { left :: EntityName, right :: String }
-
 
 -- Helpers
 
@@ -130,6 +128,7 @@ sourceFiles regex = do
   where
     convert :: Foreign -> Effect DeclarationSourceFile
     convert f = do
+      let _ = spy "f" f
       decl <- liftEither $ runExcept $ decode f
       logConverted decl
     logConverted :: DeclarationSourceFile -> Effect DeclarationSourceFile
@@ -161,20 +160,13 @@ _DeclarationSourceFile :: Prism' DeclarationSourceFile DeclarationSourceFileRec
 _DeclarationSourceFile = prism' DeclarationSourceFile case _ of 
   DeclarationSourceFile rec -> Just rec
 
-_declarationModuleElements :: ∀ r. Lens' { declarationModuleElements :: Array DeclarationModuleElements | r } (Array DeclarationModuleElements)
-_declarationModuleElements = prop (SProxy :: SProxy "declarationModuleElements")
-
-_DeclarationElement :: Prism' DeclarationModuleElements DeclarationElements
-_DeclarationElement = prism' DeclarationElement case _ of
-  DeclarationElement element -> Just element
-  _ -> Nothing
+_elements :: ∀ r. Lens' { elements :: Array DeclarationElements | r } (Array DeclarationElements)
+_elements = prop (SProxy :: SProxy "elements")
 
 _InterfaceDeclaration :: Prism' DeclarationElements InterfaceDeclarationRec
 _InterfaceDeclaration = prism' InterfaceDeclaration case _ of 
   InterfaceDeclaration rec -> Just rec
   _ -> Nothing
-
-
 
 toArrayOf :: forall s t a b. Fold (Endo (->) (List a)) s t a b -> s -> Array a
 toArrayOf p = Array.fromFoldable <<< toListOf p
@@ -182,9 +174,8 @@ toArrayOf p = Array.fromFoldable <<< toListOf p
 _interfaces ::  Traversal' DeclarationSourceFile InterfaceDeclarationRec
 _interfaces = 
   _DeclarationSourceFile <<<
-  _declarationModuleElements <<<
+  _elements <<<
   traversed <<<
-  _DeclarationElement <<<
   _InterfaceDeclaration
 
 
@@ -195,7 +186,6 @@ foreign import _sourceFiles :: Regex -> Effect (Array Foreign)
 -- Type class instances
 
 derive instance genericDeclarationSourceFile :: GR.Generic DeclarationSourceFile _
-derive instance genericDeclarationModuleElements :: GR.Generic DeclarationModuleElements _
 derive instance genericModuleBody :: GR.Generic ModuleBody _
 derive instance genericNamespaceBody :: GR.Generic NamespaceBody _
 derive instance genericDeclarationElements :: GR.Generic DeclarationElements _
@@ -208,7 +198,6 @@ derive instance genericEntityName :: GR.Generic EntityName _
 derive instance genericLiteralValue :: GR.Generic LiteralValue _
 
 instance decodeDeclarationSourceFile :: Decode DeclarationSourceFile where decode = genericDecode defaultOptions
-instance decodeDeclarationModule :: Decode DeclarationModuleElements where decode = genericDecode defaultOptions
 instance decodeModuleBody :: Decode ModuleBody where decode = genericDecode defaultOptions
 instance decodeNamespaceBody :: Decode NamespaceBody where decode = fix \_ -> genericDecode defaultOptions
 instance decodeDeclarationElements :: Decode DeclarationElements where decode = fix \_ -> genericDecode defaultOptions
@@ -221,7 +210,6 @@ instance decodeEntityName :: Decode EntityName where decode = fix \_ -> genericD
 instance decodeLiteralValue :: Decode LiteralValue where decode = fix \_ -> genericDecode defaultOptions
 
 instance _showDeclarationSourceFile :: Show DeclarationSourceFile where show = genericShow
-instance _showDeclarationModule :: Show DeclarationModuleElements where show = genericShow 
 instance _showModuleBody :: Show ModuleBody where show = genericShow 
 instance _showNamespaceBody :: Show NamespaceBody where show = fix \_ -> genericShow 
 instance _showDeclarationElements :: Show DeclarationElements where show = fix \_ -> genericShow

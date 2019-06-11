@@ -16,14 +16,14 @@ import Effect.Console (log)
 
 main :: Effect Unit
 main = do
-  regex       <- liftEither $ Regex.regex ".*Badge.*" RegexFlags.noFlags
+  regex       <- liftEither $ Regex.regex ".*" RegexFlags.noFlags
   --regex       <- liftEither $ Regex.regex ".*react/index.*" RegexFlags.noFlags
   sources     <- sourceFiles regex
   badgeProps  <- (liftMaybe "Couldn't find BadgeProps" 
                   $ Array.head
-                  $ Array.mapMaybe (\src -> interfaceByName src "BadgeProps") sources)
+                  $ Array.mapMaybe (\src -> interfaceByName src "AvaterProps") sources)
   badge       <- liftMaybe "Couldn't find Badge.d.ts" 
-                  $ Array.find (\(DeclarationSourceFile { fileName }) -> isJust $ String.indexOf (String.Pattern "/Badge.d.ts") fileName) sources
+                  $ Array.find (\(DeclarationSourceFile { fileName }) -> isJust $ String.indexOf (String.Pattern "/Avatar.d.ts") fileName) sources
   log $ showPropsInterface badgeProps
   log $ show badge
 
