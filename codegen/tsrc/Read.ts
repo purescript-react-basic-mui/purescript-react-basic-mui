@@ -8,7 +8,7 @@ export interface DeclarationSourceFile {
   }
 }
 
-export type DeclarationModuleElement = DeclarationElement | ImportDeclaration | ImportEqualsDeclaration | ExportDeclaration | ExportDefaultDeclaration | ExportAssignment 
+export type DeclarationModuleElement = DeclarationElement | ImportDeclaration | ImportEqualsDeclaration | ExportDeclaration | ExportDefaultDeclaration | ExportAssignment
 
 export interface DeclarationElement { tag: "DeclarationElement", contents: DeclarationElements }
 export interface ImportDeclaration { tag: "ImportDeclaration" }
@@ -17,12 +17,26 @@ export interface ExportDeclaration { tag: "ExportDeclaration" }
 export interface ExportDefaultDeclaration { tag: "ExportDefaultDeclaration" }
 export interface ExportAssignment { tag: "ExportAssignment" }
 export interface ModuleDeclaration { tag: "ModuleDeclaration", contents: { name: string, body?: ModuleBody } }
+export interface VariableStatement { tag: "VariableStatement", contents: VariableDeclaration[] }
+export interface VariableDeclaration { tag: "VariableDeclaration", contents: { name: string, type: TSType } }
 
-export type DeclarationElements =  InterfaceDeclaration | TypeAliasDeclaration | AmbientDeclaration | ModuleDeclaration
+export type DeclarationElements =  InterfaceDeclaration | TypeAliasDeclaration | AmbientDeclaration | ModuleDeclaration | VariableStatement | FunctionElement | ClassElement
 
 export type ModuleBody = NamespaceBodyDefinition | JSDocNamespaceBody
 
+export interface FunctionElement { 
+  tag: "FunctionElement",
+  contents: {
+    name?: string,
+    typeParameters: TypeParameter[],
+    parameters: TypeMember[],
+    returnType: TSType
+  }
+}
+
+export interface ClassElement { tag: "ClassElement", contents: { name?: string }}
 export interface JSDocNamespaceBody { tag: "JSDocNamespaceBody" }
+
 
 export interface NamespaceBodyDefinition {
   tag: "NamespaceBodyDefinition"
@@ -599,10 +613,34 @@ export const _sourceFiles = (filterRegex: RegExp) => (): DeclarationSourceFile[]
     return { tag: "ModuleDeclaration", contents: { name, body } }
   }
 
+  const handleVariableStatement = (node: ts.VariableStatement): DeclarationElements => {
+    const contents: VariableDeclaration[] = node.declarationList.declarations.map((d: ts.VariableDeclaration) => {
+      const name: string = d.name.getText() 
+      const type: TSType = d.type ? handleTSType(d.type) : { tag: "AnyType" }
+      return { tag: "VariableDeclaration", contents: { name, type }}
+    })
+    return { tag: "VariableStatement", contents }
+  }
+
+  const handleFunctionDeclaration = (node: ts.FunctionDeclaration): DeclarationElements => {
+    const name = node.name ? node.name.text : undefined
+    const typeParameters: TypeParameter[] = node.typeParameters ? node.typeParameters.map(handleTypeParameter) : []
+    const parameters: TypeMember[] = node.parameters ? node.parameters.map(handleParameter) : []
+    const returnType: TSType = node.type ? handleTSType(node.type) : { tag: "AnyType" }
+    return { tag: "FunctionElement", contents: { name, typeParameters, parameters, returnType }}
+  }
+  const handleClassDeclaration = (node: ts.ClassDeclaration): DeclarationElements => {
+    const name = node.name ? node.name.text : undefined
+    return { tag: "ClassElement", contents: { name }}
+  }
+
   const handleDeclarationElement = (node: ts.Node): DeclarationElements => {
     if(ts.isInterfaceDeclaration(node)) return handleInterfaceDeclaration(node)
     if(ts.isTypeAliasDeclaration(node)) return handleTypeAliasDeclaration(node)
     if(ts.isModuleDeclaration(node)) return handleModuleDeclaration(node)
+    if(ts.isVariableStatement(node)) return handleVariableStatement(node)
+    if(ts.isFunctionDeclaration(node)) return handleFunctionDeclaration(node)
+    if(ts.isClassDeclaration(node)) return handleClassDeclaration(node)
     console.log(ts.SyntaxKind[node.kind])
     return { tag: "AmbientDeclaration" }
   }

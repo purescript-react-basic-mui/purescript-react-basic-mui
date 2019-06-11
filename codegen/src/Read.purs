@@ -44,7 +44,12 @@ data DeclarationElements
   = InterfaceDeclaration InterfaceDeclarationRec 
   | TypeAliasDeclaration { name :: String, aliasName :: Maybe String, type :: TSType }
   | ModuleDeclaration { name :: String, body :: Maybe ModuleBody }
+  | VariableStatement (Array VariableDeclaration)
+  | FunctionElement { name :: Maybe PropertyName, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+  | ClassElement { name :: String }
   | AmbientDeclaration
+
+data VariableDeclaration = VariableDeclaration { name :: String, type :: TSType }
 
 data ModuleBody 
   = NamespaceBodyDefinition NamespaceBody
@@ -140,8 +145,6 @@ isOptional (MethodSignature rec) = rec.isOptional
 isOptional (IndexSignature rec) = rec.isOptional
 
 
-
-
 liftEither :: ∀ e a. Show e => Either e a -> Effect a
 liftEither = case _ of 
   Left e -> throw $ show e
@@ -196,6 +199,7 @@ derive instance genericDeclarationModuleElements :: GR.Generic DeclarationModule
 derive instance genericModuleBody :: GR.Generic ModuleBody _
 derive instance genericNamespaceBody :: GR.Generic NamespaceBody _
 derive instance genericDeclarationElements :: GR.Generic DeclarationElements _
+derive instance genericVariableDeclaration :: GR.Generic VariableDeclaration _
 derive instance genericTypeParameter :: GR.Generic TypeParameter _
 derive instance genericTSType :: GR.Generic TSType _
 derive instance genericPropertyName :: GR.Generic PropertyName _
@@ -208,6 +212,7 @@ instance decodeDeclarationModule :: Decode DeclarationModuleElements where decod
 instance decodeModuleBody :: Decode ModuleBody where decode = genericDecode defaultOptions
 instance decodeNamespaceBody :: Decode NamespaceBody where decode = fix \_ -> genericDecode defaultOptions
 instance decodeDeclarationElements :: Decode DeclarationElements where decode = fix \_ -> genericDecode defaultOptions
+instance decodeVariableDeclaration :: Decode VariableDeclaration where decode = fix \_ -> genericDecode defaultOptions
 instance decodeTypeParameter :: Decode TypeParameter where decode = genericDecode defaultOptions
 instance decodeTSType :: Decode TSType where decode = fix \_ -> genericDecode defaultOptions
 instance decodePropertyName :: Decode PropertyName where decode = genericDecode defaultOptions
@@ -220,6 +225,7 @@ instance _showDeclarationModule :: Show DeclarationModuleElements where show = g
 instance _showModuleBody :: Show ModuleBody where show = genericShow 
 instance _showNamespaceBody :: Show NamespaceBody where show = fix \_ -> genericShow 
 instance _showDeclarationElements :: Show DeclarationElements where show = fix \_ -> genericShow
+instance _showVariableDeclaration :: Show VariableDeclaration where show = fix \_ -> genericShow
 instance _showTypeParameter :: Show TypeParameter where show = genericShow
 instance _showTSType :: Show TSType where show = fix \_ -> genericShow
 instance _showPropertyName :: Show PropertyName where show = genericShow

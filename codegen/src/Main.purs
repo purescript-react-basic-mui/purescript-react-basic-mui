@@ -16,7 +16,7 @@ import Effect.Console (log)
 
 main :: Effect Unit
 main = do
-  regex       <- liftEither $ Regex.regex ".*" RegexFlags.noFlags
+  regex       <- liftEither $ Regex.regex ".*Badge.*" RegexFlags.noFlags
   --regex       <- liftEither $ Regex.regex ".*react/index.*" RegexFlags.noFlags
   sources     <- sourceFiles regex
   badgeProps  <- (liftMaybe "Couldn't find BadgeProps" 

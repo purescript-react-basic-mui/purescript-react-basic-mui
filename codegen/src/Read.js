@@ -283,6 +283,25 @@ exports._sourceFiles = function (filterRegex) { return function () {
         var body = node.body ? { tag: "NamespaceBodyDefinition", contents: handleNamespaceBody(node.body) } : undefined;
         return { tag: "ModuleDeclaration", contents: { name: name, body: body } };
     };
+    var handleVariableStatement = function (node) {
+        var contents = node.declarationList.declarations.map(function (d) {
+            var name = d.name.getText();
+            var type = d.type ? handleTSType(d.type) : { tag: "AnyType" };
+            return { tag: "VariableDeclaration", contents: { name: name, type: type } };
+        });
+        return { tag: "VariableStatement", contents: contents };
+    };
+    var handleFunctionDeclaration = function (node) {
+        var name = node.name ? node.name.text : undefined;
+        var typeParameters = node.typeParameters ? node.typeParameters.map(handleTypeParameter) : [];
+        var parameters = node.parameters ? node.parameters.map(handleParameter) : [];
+        var returnType = node.type ? handleTSType(node.type) : { tag: "AnyType" };
+        return { tag: "FunctionElement", contents: { name: name, typeParameters: typeParameters, parameters: parameters, returnType: returnType } };
+    };
+    var handleClassDeclaration = function (node) {
+        var name = node.name ? node.name.text : undefined;
+        return { tag: "ClassElement", contents: { name: name } };
+    };
     var handleDeclarationElement = function (node) {
         if (ts.isInterfaceDeclaration(node))
             return handleInterfaceDeclaration(node);
@@ -290,6 +309,12 @@ exports._sourceFiles = function (filterRegex) { return function () {
             return handleTypeAliasDeclaration(node);
         if (ts.isModuleDeclaration(node))
             return handleModuleDeclaration(node);
+        if (ts.isVariableStatement(node))
+            return handleVariableStatement(node);
+        if (ts.isFunctionDeclaration(node))
+            return handleFunctionDeclaration(node);
+        if (ts.isClassDeclaration(node))
+            return handleClassDeclaration(node);
         console.log(ts.SyntaxKind[node.kind]);
         return { tag: "AmbientDeclaration" };
     };
