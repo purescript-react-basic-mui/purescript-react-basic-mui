@@ -2,11 +2,11 @@ module Codegen.Write.React where
 
 import Prelude
 
-import Codegen.Read (DeclarationElements(..), DeclarationSourceFile(..), EntityName(..), InterfaceDeclarationRec, LiteralValue(..), PropertyName(..), TSType(..), TypeMember(..), TypeParameter(..), _IdentifierName, _PropertySignature, _name, isOptional, liftEither)
+import Codegen.Read (DeclarationElements(..), DeclarationSourceFile(..), EntityName(..), InterfaceDeclarationRec, LiteralValue(..), PropertyName(..), TSType(..), TypeMember(..), TypeParameter(..), VariableDeclaration(..), _IdentifierName, _PropertySignature, _name, isOptional, liftEither)
 import Data.Array as Array
 import Data.FoldableWithIndex as Fold
 import Data.Lens (_Just, over)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.String as String
 import Data.String.Regex (Regex)
 import Data.String.Regex as Regex
@@ -79,19 +79,49 @@ showDeclarationElements replacements (InterfaceDeclaration { name, typeParameter
     parameters | Array.length typeParameters > 0 = " " <> (Array.intercalate " " $ map showTypeParameter typeParameters)
     parameters = ""
     members = Array.intercalate "  , " $ map (\member -> (showTypeMember replacements member) <> "\n") typeMembers
+
+showDeclarationElements replacements (elem @ (FunctionElement { name: (Just name), fullyQualifiedName, typeParameters, parameters, returnType })) | Array.length parameters > 0 = do
+  pure $ "foreign import " <> name <> " :: foralll " <> (Array.intercalate " " $ map showTypeParameter typeParameters ) <> " . " <> (Array.intercalate " -> " $ map (showTypeMember replacements) parameters) <> " -> " <> (showTSType replacements returnType)
+
+showDeclarationElements replacements (elem @ (FunctionElement { name: (Just name), fullyQualifiedName, typeParameters, parameters, returnType })) = do
+  pure $ "foreign import " <> name <> " :: " <> (Array.intercalate " -> " $ map (showTypeMember replacements) parameters) <> " -> " <> (showTSType replacements returnType)
+
+showDeclarationElements replacements (FunctionElement { name: Nothing }) = pure "" 
+
+showDeclarationElements replacements (TypeAliasDeclaration rec) | Array.length rec.typeParameters > 0 = pure $ 
+  "type " <> rec.name <> " " <> (Array.intercalate " " $ map showTypeParameter rec.typeParameters) <> " = " <> (showTSType replacements rec.type)
+
+showDeclarationElements replacements (TypeAliasDeclaration rec) = pure $ "type " <> rec.name <> " = " <> (showTSType replacements rec.type)
+
+showDeclarationElements replacements (VariableStatement variables) = do 
+  vars <- traverse handleVar variables
+  pure $ Array.intercalate "\n\n" vars
+  where
+    handleVar (VariableDeclaration dec) = do
+      lower <- lowerCaseFirst dec.name
+      pure (lower <> " :: " <> (showTSType replacements dec.type))
+
 showDeclarationElements _ element = pure $ show element
 
+lowerCaseFirst :: String -> Effect String
+lowerCaseFirst str = do
+  regex <- liftEither $ Regex.regex "^(.)" Flags.noFlags
+  let replaced = Regex.replace' regex (\s _ -> String.toLower s) str
+  pure replaced
+
 showTypeMember :: Replacements -> TypeMember -> String
-showTypeMember replacements (PropertySignature signature) = 
+showTypeMember replacements (PropertySignature signature) | isJust signature.name = 
   (getName signature.name) <> " :: " <> fieldType
   where
     getName (Just propertyName) = showPropertyName propertyName
     getName Nothing = "NoName"
     fieldType = showTSType replacements signature.type
+showTypeMember replacements (PropertySignature signature) = showTSType replacements signature.type
 showTypeMember _ typeMember = show typeMember
 
+
 showTypeMemberAsFunctionType :: Replacements -> TypeMember -> String
-showTypeMemberAsFunctionType replacements (PropertySignature signature) | signature.isOptional = "(Maybe -- this doesn't seem right " <> (showTSType replacements signature.type) <> ")"
+showTypeMemberAsFunctionType replacements (PropertySignature signature) | signature.isOptional = "(Undefinable " <> (showTSType replacements signature.type) <> ")"
 showTypeMemberAsFunctionType replacements (PropertySignature signature) = showTSType replacements signature.type
 showTypeMemberAsFunctionType replacements typeMember = show typeMember
 
@@ -126,6 +156,7 @@ showTSType replacements tsType =
     passthrough (LiteralType (LiteralBooleanValue value)) = "Boolean"
     passthrough (TypeLiteral members) = "{ " <> (Array.intercalate ", " $ map (showTypeMember replacements) members) <> " }"
     passthrough t = show t
+
 
 replaceTypeString :: Replacements -> String -> String
 replaceTypeString replacements tpe = do

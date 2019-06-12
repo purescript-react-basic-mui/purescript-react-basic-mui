@@ -22,7 +22,7 @@ import Effect.Exception (throw)
 import Foreign (Foreign)
 import Foreign.Generic (class Decode, decode, defaultOptions, genericDecode)
 import Foreign.Object (Object)
-
+import Generic.Optic (_Ctor')
 
 -- Types
 
@@ -33,22 +33,28 @@ type DeclarationSourceFileRec = { fileName :: String, elements :: Array Declarat
 
 data DeclarationElements
   = AmbientDeclaration
-  | ClassElement { name :: Maybe String, fullyQualifiedName :: Maybe String }
+  | ClassElement ClassElementRec
   | ExportAssignment
   | ExportDeclaration
   | ExportDefaultDeclaration
-  | FunctionElement { name :: Maybe String, fullyQualifiedName :: Maybe String, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+  | FunctionElement FunctionElementRec
   | ImportDeclaration
   | ImportEqualsDeclaration
   | InterfaceDeclaration InterfaceDeclarationRec 
-  | ModuleDeclaration { name :: String, body :: Maybe ModuleBody }
+  | ModuleDeclaration ModuleDeclarationRec 
   | NamespaceExportDeclaration String
-  | TypeAliasDeclaration { name :: String, fullyQualifiedName :: Maybe String, aliasName :: Maybe String, type :: TSType }
+  | TypeAliasDeclaration TypeAliasDeclarationRec
   | VariableStatement (Array VariableDeclaration)
 
+type ClassElementRec = { name :: Maybe String, fullyQualifiedName :: Maybe String }
 type InterfaceDeclarationRec = { name :: String, fullyQualifiedName :: Maybe String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
+type FunctionElementRec = { name :: Maybe String, fullyQualifiedName :: Maybe String, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+type ModuleDeclarationRec = { name :: String, body :: Maybe ModuleBody }
+type TypeAliasDeclarationRec = { name :: String, fullyQualifiedName :: Maybe String, aliasName :: Maybe String, typeParameters :: Array TypeParameter, type :: TSType }
 
-data VariableDeclaration = VariableDeclaration { name :: String, fullyQualifiedName :: Maybe String, type :: TSType }
+data VariableDeclaration = VariableDeclaration VariableDeclarationRec
+
+type VariableDeclarationRec = { name :: String, fullyQualifiedName :: Maybe String, type :: TSType }
 
 data ModuleBody 
   = NamespaceBodyDefinition NamespaceBody
@@ -56,7 +62,9 @@ data ModuleBody
 
 data NamespaceBody
   = ModuleBlock (Array DeclarationElements)
-  | NamespaceDeclaration { name :: String, body :: NamespaceBody }
+  | NamespaceDeclaration NamespaceDeclarationRec
+
+type NamespaceDeclarationRec = { name :: String, body :: NamespaceBody }
 
 data TypeParameter = TypeParameter String
 
@@ -65,46 +73,34 @@ data PropertyName
   | StringLiteral String
   | NumericLiteral Number
 
-_IdentifierName :: Prism' PropertyName String
-_IdentifierName = prism' IdentifierName case _ of 
-  IdentifierName name -> Just name
-  _ -> Nothing
-
 data TypeMember
   = PropertySignature PropertySignatureRec 
-  | CallSignature { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
-  | ConstructSignature { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
-  | MethodSignature { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
-  | IndexSignature { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember }
+  | CallSignature FunctionLikeRec
+  | ConstructSignature FunctionLikeRec
+  | MethodSignature FunctionLikeRec
+  | IndexSignature IndexSignatureRec
 
 type PropertySignatureRec = { name :: Maybe PropertyName, isOptional :: Boolean, type :: TSType }
+type FunctionLikeRec = { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+type IndexSignatureRec = { name :: Maybe PropertyName, isOptional :: Boolean, typeParameters :: Array TypeParameter, parameters :: Array TypeMember }
 
-_name :: Lens' PropertySignatureRec (Maybe PropertyName)
-_name = prop (SProxy :: SProxy "name")
-
-
-_PropertySignature :: Prism' TypeMember PropertySignatureRec
-_PropertySignature = prism' PropertySignature case _ of
-  PropertySignature rec -> Just rec
-  _ -> Nothing
-
-data LiteralValue = LiteralStringValue String | LiteralNumericValue String | LiteralBigIntValue String | LiteralBooleanValue Boolean
+data LiteralValue = LiteralStringValue String | LiteralNumericValue String | LiteralBigIntValue String | LiteralBooleanValue Boolean 
 
 data TSType 
   = AnyType
   | ArrayType TSType
   | BigIntType
   | BooleanType
-  | ConditionalType { checkType :: TSType, extendsType :: TSType, trueType :: TSType, falseType :: TSType }
-  | ConstructorType { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+  | ConditionalType ConditionalTypeRec
+  | ConstructorType ConstructorTypeRec
   | FalseType
-  | FunctionType { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
-  | IndexAccessType { indexType :: TSType, objectType :: TSType }
+  | FunctionType FunctionTypeRec
+  | IndexAccessType IndexAccessTypeRec
   | InferType TypeParameter
-  | InterfaceType { name :: Maybe String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
+  | InterfaceType InterfaceTypeRec
   | IntersectionType (Array TSType)
   | LiteralType LiteralValue
-  | MappedType { isOptional :: Boolean, type :: TSType, typeParameter :: Maybe TypeParameter }
+  | MappedType MappedTypeRec
   | NeverType 
   | NullType
   | NumberType
@@ -118,15 +114,26 @@ data TSType
   | TypeLiteral (Array TypeMember)
   | TypeOperator
   | TypeQuery
-  | TypeReference { name :: EntityName, fullyQualifiedName :: Maybe String, typeArguments :: Array TSType, aliasName :: Maybe EntityName, aliasTypeArguments :: Maybe (Array TSType) }
+  | TypeReference TypeReferenceRec
   | UndefinedType
   | UnionType (Array TSType)
   | UnknownType 
   | VoidType
 
+type ConditionalTypeRec = { checkType :: TSType, extendsType :: TSType, trueType :: TSType, falseType :: TSType }
+type ConstructorTypeRec = { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+type FunctionTypeRec = { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
+type IndexAccessTypeRec = { indexType :: TSType, objectType :: TSType }
+type InterfaceTypeRec = { name :: Maybe String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
+type MappedTypeRec = { isOptional :: Boolean, type :: TSType, typeParameter :: Maybe TypeParameter }
+type TypeReferenceRec = { name :: EntityName, fullyQualifiedName :: Maybe String, typeArguments :: Array TSType, aliasName :: Maybe EntityName, aliasTypeArguments :: Maybe (Array TSType) }
+
 data EntityName 
   = Identifier String
-  | QualifiedName { left :: EntityName, right :: String }
+  | QualifiedName QualifiedNameRec
+
+type QualifiedNameRec = { left :: EntityName, right :: String }
+
 
 -- Helpers
 
@@ -184,11 +191,6 @@ _DeclarationSourceFile = prism' DeclarationSourceFile case _ of
 _elements :: ∀ r. Lens' { elements :: Array DeclarationElements | r } (Array DeclarationElements)
 _elements = prop (SProxy :: SProxy "elements")
 
-_InterfaceDeclaration :: Prism' DeclarationElements InterfaceDeclarationRec
-_InterfaceDeclaration = prism' InterfaceDeclaration case _ of 
-  InterfaceDeclaration rec -> Just rec
-  _ -> Nothing
-
 toArrayOf :: forall s t a b. Fold (Endo (->) (List a)) s t a b -> s -> Array a
 toArrayOf p = Array.fromFoldable <<< toListOf p
 
@@ -198,6 +200,241 @@ _interfaces =
   _elements <<<
   traversed <<<
   _InterfaceDeclaration
+
+_AmbientDeclaration :: Prism' DeclarationElements Unit
+_AmbientDeclaration = _Ctor' (SProxy :: SProxy "AmbientDeclaration")
+
+_ExportAssignment :: Prism' DeclarationElements Unit
+_ExportAssignment = _Ctor' (SProxy :: SProxy "ExportAssignment")
+
+_ExportDeclaration :: Prism' DeclarationElements Unit
+_ExportDeclaration = _Ctor' (SProxy :: SProxy "ExportDeclaration")
+
+_ExportDefaultDeclaration :: Prism' DeclarationElements Unit
+_ExportDefaultDeclaration = _Ctor' (SProxy :: SProxy "ExportDefaultDeclaration")
+
+_ImportDeclaration :: Prism' DeclarationElements Unit
+_ImportDeclaration = _Ctor' (SProxy :: SProxy "ImportDeclaration")
+
+_ImportEqualsDeclaration :: Prism' DeclarationElements Unit
+_ImportEqualsDeclaration = _Ctor' (SProxy :: SProxy "ImportEqualsDeclaration")
+
+_NamespaceExportDeclaration :: Prism' DeclarationElements String 
+_NamespaceExportDeclaration = _Ctor' (SProxy :: SProxy "NamespaceExportDeclaration")
+
+_InterfaceDeclaration :: Prism' DeclarationElements InterfaceDeclarationRec
+_InterfaceDeclaration = _Ctor' (SProxy :: SProxy "InterfaceDeclaration")  
+
+_ClassElement :: Prism' DeclarationElements ClassElementRec
+_ClassElement = _Ctor' (SProxy :: SProxy "ClassElement")  
+
+_FunctionElement :: Prism' DeclarationElements FunctionElementRec
+_FunctionElement = _Ctor' (SProxy :: SProxy "FunctionElement")  
+
+_ModuleDeclaration :: Prism' DeclarationElements ModuleDeclarationRec
+_ModuleDeclaration = _Ctor' (SProxy :: SProxy "ModuleDeclaration")  
+
+_TypeAliasDeclaration :: Prism' DeclarationElements TypeAliasDeclarationRec
+_TypeAliasDeclaration = _Ctor' (SProxy :: SProxy "TypeAliasDeclaration")  
+
+_VariableStatement :: Prism' DeclarationElements (Array VariableDeclaration)
+_VariableStatement = _Ctor' (SProxy :: SProxy "VariableStatement")
+
+_VariableDeclaration :: Prism' VariableDeclaration VariableDeclarationRec
+_VariableDeclaration = _Ctor' (SProxy :: SProxy "VariableDeclaration")
+
+_NamespaceBodyDefinition :: Prism' ModuleBody NamespaceBody
+_NamespaceBodyDefinition = _Ctor' (SProxy :: SProxy "NamespaceBodyDefinition")
+
+_JSDocNamespaceBody :: Prism' ModuleBody Unit 
+_JSDocNamespaceBody = _Ctor' (SProxy :: SProxy "JSDocNamespaceBody")
+
+_ModuleBlock :: Prism' NamespaceBody (Array DeclarationElements)
+_ModuleBlock = _Ctor' (SProxy :: SProxy "ModuleBlock")
+
+_NamespaceDeclaration :: Prism' NamespaceBody NamespaceDeclarationRec
+_NamespaceDeclaration = _Ctor' (SProxy :: SProxy "NamespaceDeclaration")
+
+_TypeParameter:: Prism' TypeParameter String 
+_TypeParameter = _Ctor' (SProxy :: SProxy "TypeParameter")
+
+_IdentifierName :: Prism' PropertyName String 
+_IdentifierName = _Ctor' (SProxy :: SProxy "IdentifierName")
+
+_StringLiteral :: Prism' PropertyName String 
+_StringLiteral = _Ctor' (SProxy :: SProxy "StringLiteral")
+
+_NumericLiteral :: Prism' PropertyName Number 
+_NumericLiteral = _Ctor' (SProxy :: SProxy "NumericLiteral")
+
+_PropertySignature :: Prism' TypeMember PropertySignatureRec
+_PropertySignature = _Ctor' (SProxy :: SProxy "PropertySignature")
+
+_CallSignature :: Prism' TypeMember FunctionLikeRec 
+_CallSignature = _Ctor' (SProxy :: SProxy "CallSignature")
+
+_MethodSignature :: Prism' TypeMember FunctionLikeRec 
+_MethodSignature = _Ctor' (SProxy :: SProxy "MethodSignature")
+
+_ConstructSignature :: Prism' TypeMember FunctionLikeRec 
+_ConstructSignature = _Ctor' (SProxy :: SProxy "ConstructSignature")
+
+_IndexSignature :: Prism' TypeMember IndexSignatureRec
+_IndexSignature = _Ctor' (SProxy :: SProxy "IndexSignature")
+
+_LiteralStringValue :: Prism' LiteralValue String 
+_LiteralStringValue = _Ctor' (SProxy :: SProxy "LiteralStringValue")
+
+_LiteralNumericValue :: Prism' LiteralValue String
+_LiteralNumericValue = _Ctor' (SProxy :: SProxy "LiteralNumericValue")
+
+_LiteralBigIntValue :: Prism' LiteralValue String
+_LiteralBigIntValue = _Ctor' (SProxy :: SProxy "LiteralBigIntValue")
+
+_LiteralBooleanValue :: Prism' LiteralValue Boolean 
+_LiteralBooleanValue = _Ctor' (SProxy :: SProxy "LiteralBooleanValue")
+
+_ArrayType :: Prism' TSType TSType
+_ArrayType  = _Ctor' (SProxy :: SProxy "ArrayType")
+
+_InferType :: Prism' TSType TypeParameter
+_InferType = _Ctor' (SProxy :: SProxy "InferType")
+
+_IntersectionType :: Prism' TSType (Array TSType)
+_IntersectionType = _Ctor' (SProxy :: SProxy "IntersectionType")
+
+_LiteralType :: Prism' TSType LiteralValue
+_LiteralType = _Ctor' (SProxy :: SProxy "LiteralType")
+
+_ParenthesizedType :: Prism' TSType TSType
+_ParenthesizedType = _Ctor' (SProxy :: SProxy "ParenthesizedType")
+
+_TupleType :: Prism' TSType (Array TSType)
+_TupleType = _Ctor' (SProxy :: SProxy "TupleType")
+
+_TypeLiteral :: Prism' TSType (Array TypeMember)
+_TypeLiteral = _Ctor' (SProxy :: SProxy "TypeLiteral")
+
+_UnionType :: Prism' TSType (Array TSType)
+_UnionType = _Ctor' (SProxy :: SProxy "UnionType")
+
+_AnyType :: Prism' TSType Unit
+_AnyType = _Ctor' (SProxy :: SProxy "AnyType")
+
+_BigIntType :: Prism' TSType Unit
+_BigIntType = _Ctor' (SProxy :: SProxy "BigIntType")
+
+_BooleanType :: Prism' TSType Unit
+_BooleanType = _Ctor' (SProxy :: SProxy "BooleanType")
+
+_FalseType :: Prism' TSType Unit
+_FalseType = _Ctor' (SProxy :: SProxy "FalseType")
+
+_NeverType  :: Prism' TSType Unit
+_NeverType = _Ctor' (SProxy :: SProxy "NeverType")
+
+_NullType :: Prism' TSType Unit
+_NullType = _Ctor' (SProxy :: SProxy "NullType")
+
+_NumberType :: Prism' TSType Unit
+_NumberType = _Ctor' (SProxy :: SProxy "NumberType")
+
+_ObjectType :: Prism' TSType Unit
+_ObjectType = _Ctor' (SProxy :: SProxy "ObjectType")
+
+_StringType :: Prism' TSType Unit
+_StringType = _Ctor' (SProxy :: SProxy "StringType")
+
+_SymbolType :: Prism' TSType Unit
+_SymbolType = _Ctor' (SProxy :: SProxy "SymbolType")
+
+_ThisType :: Prism' TSType Unit
+_ThisType = _Ctor' (SProxy :: SProxy "ThisType")
+
+_TrueType :: Prism' TSType Unit
+_TrueType = _Ctor' (SProxy :: SProxy "TrueType")
+
+_TypeOperator :: Prism' TSType Unit
+_TypeOperator = _Ctor' (SProxy :: SProxy "TypeOperator")
+
+_TypeQuery :: Prism' TSType Unit
+_TypeQuery = _Ctor' (SProxy :: SProxy "TypeQuery")
+
+_UndefinedType :: Prism' TSType Unit
+_UndefinedType = _Ctor' (SProxy :: SProxy "UndefinedType")
+
+_UnknownType  :: Prism' TSType Unit
+_UnknownType = _Ctor' (SProxy :: SProxy "UnknownType")
+
+_VoidType :: Prism' TSType Unit
+_VoidType = _Ctor' (SProxy :: SProxy "VoidType")
+
+_body :: ∀ a r. Lens' { body :: a | r } a
+_body = prop (SProxy :: SProxy "body")
+
+_type :: ∀ a r. Lens' { type :: a | r } a
+_type = prop (SProxy :: SProxy "type")
+
+_returnType :: ∀ a r. Lens' { returnType :: a | r } a
+_returnType = prop (SProxy :: SProxy "returnType")
+
+_name :: ∀ a r. Lens' { name :: a | r } a
+_name = prop (SProxy :: SProxy "name")
+
+_checkType :: ∀ a r. Lens' { checkType :: a | r } a
+_checkType = prop (SProxy :: SProxy "checkType")
+
+_falseType :: ∀ a r. Lens' { falseType :: a | r } a
+_falseType = prop (SProxy :: SProxy "falseType")
+
+_trueType :: ∀ a r. Lens' { trueType :: a | r } a
+_trueType = prop (SProxy :: SProxy "trueType")
+
+_extendsType :: ∀ a r. Lens' { extendsType :: a | r } a
+_extendsType = prop (SProxy :: SProxy "extendsType")
+
+_typeParameters :: ∀ a r. Lens' { typeParameters :: a | r } a
+_typeParameters = prop (SProxy :: SProxy "typeParameters")
+
+_typeMembers :: ∀ a r. Lens' { typeMembers :: a | r } a
+_typeMembers = prop (SProxy :: SProxy "typeMembers")
+
+_parameters :: ∀ a r. Lens' { parameters :: a | r } a
+_parameters = prop (SProxy :: SProxy "parameters")
+
+_isOptional :: ∀ a r. Lens' { isOptional :: a | r } a
+_isOptional = prop (SProxy :: SProxy "isOptional")
+
+_objectType :: ∀ a r. Lens' { objectType :: a | r } a
+_objectType = prop (SProxy :: SProxy "objectType")
+
+_indexType :: ∀ a r. Lens' { indexType :: a | r } a
+_indexType = prop (SProxy :: SProxy "indexType")
+
+_aliasTypeArguments :: ∀ a r. Lens' { aliasTypeArguments :: a | r } a
+_aliasTypeArguments = prop (SProxy :: SProxy "aliasTypeArguments")
+
+_aliasName :: ∀ a r. Lens' { aliasName :: a | r } a
+_aliasName = prop (SProxy :: SProxy "aliasName")
+
+_typeArguments :: ∀ a r. Lens' { typeArguments :: a | r } a
+_typeArguments = prop (SProxy :: SProxy "typeArguments")
+
+_fullyQualifiedName :: ∀ a r. Lens' { fullyQualifiedName :: a | r } a
+_fullyQualifiedName = prop (SProxy :: SProxy "fullyQualifiedName")
+
+_left :: ∀ a r. Lens' { left :: a | r } a
+_left = prop (SProxy :: SProxy "left")
+
+_right :: ∀ a r. Lens' { right :: a | r } a
+_right = prop (SProxy :: SProxy "right")
+
+_Identifier :: Prism' EntityName String
+_Identifier = _Ctor' (SProxy :: SProxy "Identifier")
+
+_QualifiedName :: Prism' EntityName QualifiedNameRec
+_QualifiedName = _Ctor' (SProxy :: SProxy "QualifiedName")
+
 
 
 -- FFI

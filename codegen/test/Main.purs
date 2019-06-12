@@ -2,7 +2,7 @@ module Test.Main where
 
 import Prelude
 
-import Codegen.Main (main) as Main
+import Codegen.Write.React2 (main) as Main
 import Codegen.Read (liftEither, typescript)
 import Data.String.Regex as Regex
 import Data.String.Regex.Flags as RegexFlags

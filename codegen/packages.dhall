@@ -37,6 +37,15 @@ let additions =
           ]
           "https://github.com/doolse/purescript-readts.git"
           "master"
+      
+      , generics-rep-optics =
+          mkPackage
+          [ "generics-rep"
+          , "profunctor-lenses"
+          , "typelevel-prelude"
+          ]
+          "https://github.com/LiamGoodacre/purescript-generics-rep-optics.git"
+          "v1.1.0"
       }
 
 in  upstream // overrides // additions

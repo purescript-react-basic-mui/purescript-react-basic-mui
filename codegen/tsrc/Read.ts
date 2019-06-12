@@ -624,6 +624,10 @@ export const _typescript = (fileName: string) => (filterRegex: RegExp) => (): { 
     const fullyQualifiedName = getFullyQualifiedName(type)
     const typeParameters: TypeParameter[] = node.typeParameters ? node.typeParameters.map(handleTypeParameter) : []
     const parameters: TypeMember[] = node.parameters ? node.parameters.map(handleParameter) : []
+    if(name === "createMuiTheme"){
+      //console.log(node, type)
+      console.log(node.parameters.length, parameters.length, parameters)
+    }
     const returnType: TSType = node.type ? handleTSType(node.type) : { tag: "AnyType" }
     return { tag: "FunctionElement", contents: { name, fullyQualifiedName, typeParameters, parameters, returnType }}
   }

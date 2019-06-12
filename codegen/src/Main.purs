@@ -16,12 +16,11 @@ import Effect.Console (log)
 
 main :: Effect Unit
 main = do
-  regex       <- liftEither $ Regex.regex ".*Card.*" RegexFlags.noFlags
-  --regex       <- liftEither $ Regex.regex ".*react/index.*" RegexFlags.noFlags
-  let path = "./node_modules/@material-ui/core/index.d.ts"
+  regex       <- liftEither $ Regex.regex ".*Avatar.*" RegexFlags.noFlags
+  let path    =  "./node_modules/@material-ui/core/index.d.ts"
   { sources } <- typescript path regex 
-  badge       <- liftMaybe "Couldn't find Badge.d.ts" 
-                  $ Array.find (\(DeclarationSourceFile { fileName }) -> isJust $ String.indexOf (String.Pattern "/Card.d.ts") fileName) sources
+  badge       <- liftMaybe "Couldn't find file" 
+                  $ Array.find (\(DeclarationSourceFile { fileName }) -> isJust $ String.indexOf (String.Pattern "/Avatar.d.ts") fileName) sources
   str         <- showDeclarationSourceFile badge
   log str
 

@@ -281,6 +281,10 @@ exports._typescript = function (fileName) { return function (filterRegex) { retu
         var fullyQualifiedName = getFullyQualifiedName(type);
         var typeParameters = node.typeParameters ? node.typeParameters.map(handleTypeParameter) : [];
         var parameters = node.parameters ? node.parameters.map(handleParameter) : [];
+        if (name === "createMuiTheme") {
+            //console.log(node, type)
+            console.log(node.parameters.length, parameters.length, parameters);
+        }
         var returnType = node.type ? handleTSType(node.type) : { tag: "AnyType" };
         return { tag: "FunctionElement", contents: { name: name, fullyQualifiedName: fullyQualifiedName, typeParameters: typeParameters, parameters: parameters, returnType: returnType } };
     };
