@@ -7,6 +7,7 @@ import Control.Monad.Except (runExcept)
 import Data.Array as Array
 import Data.Either (Either(..))
 import Data.Generic.Rep as GR
+import Data.Generic.Rep.Eq (genericEq)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Lens (Fold, Lens', Prism', Traversal', prism', toListOf, traversed)
 import Data.Lens.Record (prop)
@@ -34,7 +35,7 @@ type DeclarationSourceFileRec = { fileName :: String, elements :: Array Declarat
 data DeclarationElements
   = AmbientDeclaration
   | ClassElement ClassElementRec
-  | ExportAssignment
+  | ExportAssignment (Maybe String)
   | ExportDeclaration
   | ExportDefaultDeclaration
   | FunctionElement FunctionElementRec
@@ -97,7 +98,6 @@ data TSType
   | FunctionType FunctionTypeRec
   | IndexAccessType IndexAccessTypeRec
   | InferType TypeParameter
-  | InterfaceType InterfaceTypeRec
   | IntersectionType (Array TSType)
   | LiteralType LiteralValue
   | MappedType MappedTypeRec
@@ -124,7 +124,6 @@ type ConditionalTypeRec = { checkType :: TSType, extendsType :: TSType, trueType
 type ConstructorTypeRec = { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
 type FunctionTypeRec = { typeParameters :: Array TypeParameter, parameters :: Array TypeMember, returnType :: TSType }
 type IndexAccessTypeRec = { indexType :: TSType, objectType :: TSType }
-type InterfaceTypeRec = { name :: Maybe String, typeParameters :: Array TypeParameter, typeMembers :: Array TypeMember }
 type MappedTypeRec = { isOptional :: Boolean, type :: TSType, typeParameter :: Maybe TypeParameter }
 type TypeReferenceRec = { name :: EntityName, fullyQualifiedName :: Maybe String, typeArguments :: Array TSType, aliasName :: Maybe EntityName, aliasTypeArguments :: Maybe (Array TSType) }
 
@@ -133,7 +132,6 @@ data EntityName
   | QualifiedName QualifiedNameRec
 
 type QualifiedNameRec = { left :: EntityName, right :: String }
-
 
 -- Helpers
 
@@ -204,7 +202,7 @@ _interfaces =
 _AmbientDeclaration :: Prism' DeclarationElements Unit
 _AmbientDeclaration = _Ctor' (SProxy :: SProxy "AmbientDeclaration")
 
-_ExportAssignment :: Prism' DeclarationElements Unit
+_ExportAssignment :: Prism' DeclarationElements (Maybe String)
 _ExportAssignment = _Ctor' (SProxy :: SProxy "ExportAssignment")
 
 _ExportDeclaration :: Prism' DeclarationElements Unit
@@ -360,6 +358,9 @@ _TypeOperator = _Ctor' (SProxy :: SProxy "TypeOperator")
 _TypeQuery :: Prism' TSType Unit
 _TypeQuery = _Ctor' (SProxy :: SProxy "TypeQuery")
 
+_TypeReference :: Prism' TSType TypeReferenceRec 
+_TypeReference = _Ctor' (SProxy :: SProxy "TypeReference")
+
 _UndefinedType :: Prism' TSType Unit
 _UndefinedType = _Ctor' (SProxy :: SProxy "UndefinedType")
 
@@ -380,6 +381,14 @@ _returnType = prop (SProxy :: SProxy "returnType")
 
 _name :: ∀ a r. Lens' { name :: a | r } a
 _name = prop (SProxy :: SProxy "name")
+
+_names :: ∀ a r. Lens' { names :: a | r } a
+_names = prop (SProxy :: SProxy "names")
+
+_propertyName :: ∀ a r. Lens' { propertyName :: a | r } a
+_propertyName = prop (SProxy :: SProxy "propertyName")
+
+
 
 _checkType :: ∀ a r. Lens' { checkType :: a | r } a
 _checkType = prop (SProxy :: SProxy "checkType")
@@ -435,6 +444,8 @@ _Identifier = _Ctor' (SProxy :: SProxy "Identifier")
 _QualifiedName :: Prism' EntityName QualifiedNameRec
 _QualifiedName = _Ctor' (SProxy :: SProxy "QualifiedName")
 
+_isDefault :: ∀ a r. Lens' { isDefault :: a | r } a
+_isDefault = prop (SProxy :: SProxy "isDefault")
 
 
 -- FFI
@@ -479,3 +490,15 @@ instance _showPropertyName :: Show PropertyName where show = genericShow
 instance _showTypeMember :: Show TypeMember where show = fix \_ -> genericShow
 instance _showEntityName :: Show EntityName where show = fix \_ -> genericShow
 instance _showLiteralValue :: Show LiteralValue where show = fix \_ -> genericShow
+
+instance _eqDeclarationSourceFile :: Eq DeclarationSourceFile where eq = genericEq
+instance _eqModuleBody :: Eq ModuleBody where eq = genericEq 
+instance _eqNamespaceBody :: Eq NamespaceBody where eq = fix \_ -> genericEq 
+instance _eqDeclarationElements :: Eq DeclarationElements where eq = fix \_ -> genericEq
+instance _eqVariableDeclaration :: Eq VariableDeclaration where eq = fix \_ -> genericEq
+instance _eqTypeParameter :: Eq TypeParameter where eq = genericEq
+instance _eqTSType :: Eq TSType where eq = fix \_ -> genericEq
+instance _eqPropertyName :: Eq PropertyName where eq = genericEq
+instance _eqTypeMember :: Eq TypeMember where eq = fix \_ -> genericEq
+instance _eqEntityName :: Eq EntityName where eq = fix \_ -> genericEq
+instance _eqLiteralValue :: Eq LiteralValue where eq = fix \_ -> genericEq

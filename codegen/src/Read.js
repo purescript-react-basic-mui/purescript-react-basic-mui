@@ -296,17 +296,22 @@ exports._typescript = function (fileName) { return function (filterRegex) { retu
         var contents = node.name.text;
         return { tag: "NamespaceExportDeclaration", contents: contents };
     };
+    var handleExportAssignment = function (node) {
+        if (ts.isIdentifier(node.expression)) {
+            var name_6 = node.expression.text;
+            return { tag: "ExportAssignment", contents: name_6 };
+        }
+        return { tag: "ExportAssignment" };
+    };
     var handleDeclarationElements = function (node) {
         if (ts.isImportDeclaration(node))
             return { tag: "ImportDeclaration" };
         if (ts.isImportEqualsDeclaration(node))
             return { tag: "ImportEqualsDeclaration" };
-        if (ts.isExportAssignment(node) && (node.flags & ts.ModifierFlags.Default))
-            return { tag: "ExportDefaultDeclaration" };
+        if (ts.isExportAssignment(node))
+            return handleExportAssignment(node);
         if (ts.isExportDeclaration(node))
             return { tag: "ExportDeclaration" };
-        if (ts.isExportAssignment(node))
-            return { tag: "ExportAssignment" };
         if (ts.isInterfaceDeclaration(node))
             return handleInterfaceDeclaration(node);
         if (ts.isTypeAliasDeclaration(node))
@@ -335,19 +340,23 @@ exports._typescript = function (fileName) { return function (filterRegex) { retu
     });
     var elements = {};
     srcs.forEach(function (src) {
+        var getName = function (name, fullyQualifiedName) {
+            return (fullyQualifiedName && fullyQualifiedName !== "__type" && fullyQualifiedName !== "__type.bivarianceHack") ? fullyQualifiedName : name ? name : "";
+        };
         src.contents.elements.forEach(function (element) {
-            if (element.tag === "ClassElement" && element.contents.fullyQualifiedName)
-                elements[element.contents.fullyQualifiedName] = element;
-            if (element.tag === "FunctionElement" && element.contents.fullyQualifiedName)
-                elements[element.contents.fullyQualifiedName] = element;
-            if (element.tag === "InterfaceDeclaration" && element.contents.fullyQualifiedName)
-                elements[element.contents.fullyQualifiedName] = element;
-            if (element.tag === "TypeAliasDeclaration" && element.contents.fullyQualifiedName)
-                elements[element.contents.fullyQualifiedName] = element;
+            if (element.tag === "ClassElement" && getName(element.contents.name, element.contents.fullyQualifiedName))
+                elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
+            if (element.tag === "FunctionElement" && getName(element.contents.name, element.contents.fullyQualifiedName))
+                elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
+            if (element.tag === "InterfaceDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName))
+                elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
+            if (element.tag === "TypeAliasDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName))
+                elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
             if (element.tag === "VariableStatement") {
                 element.contents.forEach(function (decl) {
-                    if (decl.contents.fullyQualifiedName)
-                        elements[decl.contents.fullyQualifiedName] = element;
+                    var name = getName(decl.contents.name, decl.contents.fullyQualifiedName);
+                    if (name)
+                        elements[name] = element;
                 });
             }
         });

@@ -11,7 +11,7 @@ export interface DeclarationSourceFile {
 }
 
 
-export interface ExportAssignment { tag: "ExportAssignment" }
+export interface ExportAssignment { tag: "ExportAssignment", contents?: string }
 export interface ExportDeclaration { tag: "ExportDeclaration" }
 export interface ExportDefaultDeclaration { tag: "ExportDefaultDeclaration" }
 export interface ImportDeclaration { tag: "ImportDeclaration" }
@@ -641,12 +641,21 @@ export const _typescript = (fileName: string) => (filterRegex: RegExp) => (): { 
     return { tag: "NamespaceExportDeclaration", contents }
   }
 
+  const handleExportAssignment = (node: ts.ExportAssignment): ExportAssignment => {
+    if(ts.isIdentifier(node.expression)){
+      const name =  node.expression.text
+      return { tag: "ExportAssignment", contents: name }
+    }
+    return { tag: "ExportAssignment" }
+  }
+
+  
+
   const handleDeclarationElements = (node: ts.Node): DeclarationElements => {
     if(ts.isImportDeclaration(node)) return { tag: "ImportDeclaration" }
     if(ts.isImportEqualsDeclaration(node)) return { tag: "ImportEqualsDeclaration" }
-    if(ts.isExportAssignment(node) && (node.flags & ts.ModifierFlags.Default)) return { tag: "ExportDefaultDeclaration" }
+    if(ts.isExportAssignment(node)) return handleExportAssignment(node) 
     if(ts.isExportDeclaration(node)) return { tag: "ExportDeclaration" }
-    if(ts.isExportAssignment(node)) return { tag: "ExportAssignment" }
     if(ts.isInterfaceDeclaration(node)) return handleInterfaceDeclaration(node)
     if(ts.isTypeAliasDeclaration(node)) return handleTypeAliasDeclaration(node)
     if(ts.isModuleDeclaration(node)) return handleModuleDeclaration(node)
@@ -671,14 +680,18 @@ export const _typescript = (fileName: string) => (filterRegex: RegExp) => (): { 
 
   const elements: {[key:string]: DeclarationElements} = {}
   srcs.forEach(src => {
+    const getName = (name?: string, fullyQualifiedName?: string): string => 
+      (fullyQualifiedName && fullyQualifiedName !== "__type" && fullyQualifiedName !== "__type.bivarianceHack") ? fullyQualifiedName : name ? name : ""
+
     src.contents.elements.forEach( element => {
-      if(element.tag === "ClassElement" && element.contents.fullyQualifiedName) elements[element.contents.fullyQualifiedName] = element
-      if(element.tag === "FunctionElement" && element.contents.fullyQualifiedName) elements[element.contents.fullyQualifiedName] = element
-      if(element.tag === "InterfaceDeclaration" && element.contents.fullyQualifiedName) elements[element.contents.fullyQualifiedName] = element
-      if(element.tag === "TypeAliasDeclaration" && element.contents.fullyQualifiedName) elements[element.contents.fullyQualifiedName] = element
+      if(element.tag === "ClassElement" && getName(element.contents.name, element.contents.fullyQualifiedName)) elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
+      if(element.tag === "FunctionElement" && getName(element.contents.name, element.contents.fullyQualifiedName)) elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
+      if(element.tag === "InterfaceDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName)) elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
+      if(element.tag === "TypeAliasDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName)) elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
       if(element.tag === "VariableStatement"){
         element.contents.forEach(decl => {
-          if(decl.contents.fullyQualifiedName) elements[decl.contents.fullyQualifiedName] = element
+          const name = getName(decl.contents.name, decl.contents.fullyQualifiedName)
+          if(name) elements[name] = element
         })
       }
     })

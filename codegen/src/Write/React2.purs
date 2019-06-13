@@ -2,21 +2,18 @@ module Codegen.Write.React2 where
 
 import Prelude
 
-import Codegen.Read (DeclarationElements, DeclarationSourceFile(..), TSType, liftEither, typescript)
+import Codegen.Read (DeclarationElements(..), DeclarationSourceFile(..), EntityName(..), TSType(..), TypeReferenceRec, VariableDeclaration(..), _PropertySignature, _VariableDeclaration, _type, liftEither, toArrayOf, typescript)
 import Data.Array as Array
-import Data.Lens (_Just, preview)
+import Data.Lens (_Just, preview, traversed)
 import Data.Lens.Index (ix)
 import Data.Maybe (Maybe(..), isJust, maybe)
 import Data.String as String
 import Data.String.Regex (Regex)
 import Data.String.Regex as Regex
-import Data.String.Regex.Flags as Flags
 import Data.String.Regex.Flags as RegexFlags
-import Data.Traversable (traverse, traverse_)
-import Data.Tuple (Tuple(..))
+import Data.Traversable (traverse_)
 import Debug.Trace (spy)
 import Effect (Effect)
-import Effect.Console (log)
 import Foreign (Foreign)
 import Foreign.Object (Object)
 import Foreign.Object as Object
@@ -54,9 +51,8 @@ data TypeReplacement
   | Exact String String
 
 type PureScript = 
-  { imports :: Array TSType
+  { imports :: Array String
   , foreignImports :: Array DeclarationElements
-  , exports :: Array DeclarationElements
   , elements :: Array TSType
   }
 type JavaScript = { imports :: Array String , exports :: Array String }
@@ -65,7 +61,7 @@ type FileDescription = { fileName :: String, text :: String }
 
 main :: Effect Unit
 main = do
-  regex                 <- liftEither $ Regex.regex ".*Avatar.*" RegexFlags.noFlags
+  regex                 <- liftEither $ Regex.regex ".*Badge.*" RegexFlags.noFlags
   javascriptImport      <- liftEither $ Regex.regex ".*(@material-ui.*)\\/(.*\\.d\\.ts)" RegexFlags.noFlags
   let regexps           =  { javascriptImport }
   let path              =  "./node_modules/@material-ui/core/index.d.ts"
@@ -79,17 +75,18 @@ main = do
   pure unit
 
 write :: ReactWriter Unit
-write = imports
+write = handleImports
 
 
-imports :: ReactWriter Unit
-imports = do
+handleImports :: ReactWriter Unit
+handleImports = do
   { sources } <- Reader.ask
   traverse_ importsForSource sources
 
 importsForSource :: DeclarationSourceFile -> ReactWriter Unit
 importsForSource source = do
   javascriptImports source 
+  javascriptExports source
   purescriptImports source
   pure unit
 
@@ -104,11 +101,69 @@ javascriptImports (DeclarationSourceFile { fileName, elements }) = do
     addNamespace namespace = getPSJS fileName >>= \psjs -> 
       setPSJS psjs { javascript { imports = Array.cons namespace psjs.javascript.imports } }
 
+javascriptExports :: DeclarationSourceFile -> ReactWriter Unit
+javascriptExports (DeclarationSourceFile { fileName, elements }) = do
+  let exports = Array.nub $ join $ map extract elements 
+  psjs <- getPSJS fileName
+  setPSJS psjs { javascript { exports = exports } }
+  pure unit
+  where
+    extract :: DeclarationElements -> Array String
+    extract (ExportAssignment (Just name)) = [ name ]
+    extract (FunctionElement rec) = maybe [] pure rec.name
+    extract (VariableStatement declarations) = map (\(VariableDeclaration rec) -> rec.name) declarations
+    extract _ = []
+ 
+
 purescriptImports :: DeclarationSourceFile -> ReactWriter Unit
 purescriptImports (DeclarationSourceFile { fileName, elements }) = do
-  Run.liftEffect $ log $ show elements
-  pure unit
+  let typeReferences = join $ map handleElement elements
+  let types = Array.nubEq $ extractNames typeReferences
+  
+  pure unit 
+  -- psjs <- getPSJS fileName
+  -- setPSJS psjs { purescript { imports = imports } }
+  where
+    extractNames :: Array TypeReferenceRec -> Array String
+    extractNames = map extractName 
 
+    extractName :: TypeReferenceRec -> String 
+    extractName { fullyQualifiedName: (Just fullyQualifiedName) } | (fullyQualifiedName /= "__type" && fullyQualifiedName /= "__type.bivarianceHack") = fullyQualifiedName
+    extractName { name } = showEntityName name
+
+    handleElement :: DeclarationElements -> Array TypeReferenceRec
+    handleElement (InterfaceDeclaration rec) =
+      join $ map extractTypes $ toArrayOf (traversed <<< _PropertySignature <<< _type) rec.typeMembers
+    handleElement (FunctionElement rec) = 
+      join $ map extractTypes $ toArrayOf (traversed <<< _PropertySignature <<< _type) rec.parameters
+    handleElement (VariableStatement declarations) = do
+      join $ map extractTypes $ toArrayOf (traversed <<< _VariableDeclaration <<< _type) declarations
+    handleElement _ = []
+
+    extractTypes :: TSType -> Array TypeReferenceRec
+    extractTypes (ArrayType t) = extractTypes t
+    extractTypes (IntersectionType t) = join $ map extractTypes t
+    extractTypes (UnionType ts) = join $ map extractTypes ts
+    extractTypes (TupleType ts) = join $ map extractTypes ts
+    extractTypes (ConditionalType { checkType, extendsType, trueType, falseType }) = join [extractTypes checkType, extractTypes extendsType ]
+    extractTypes (IndexAccessType { indexType, objectType }) = join [ extractTypes indexType, extractTypes objectType ]
+    extractTypes (MappedType rec ) = extractTypes rec.type
+    extractTypes (ParenthesizedType t) = extractTypes t
+    extractTypes (ConstructorType { parameters, returnType }) = do
+      let extractedTypes = toArrayOf (traversed <<< _PropertySignature <<< _type) parameters 
+      join [ extractTypes returnType, (join $ map extractTypes extractedTypes) ]
+    extractTypes (FunctionType { parameters, returnType }) = do
+      let extractedTypes = toArrayOf (traversed <<< _PropertySignature <<< _type) parameters 
+      join [ extractTypes returnType, (join $ map extractTypes extractedTypes) ]
+    extractTypes (TypeLiteral members) = do
+      join $ map extractTypes $ toArrayOf (traversed <<< _PropertySignature <<< _type) members
+    extractTypes (TypeReference t) = Array.cons t $ join $ map extractTypes t.typeArguments
+    extractTypes _ = [] 
+
+
+showEntityName :: EntityName -> String
+showEntityName (Identifier name) = name
+showEntityName (QualifiedName { left, right }) = (showEntityName left) <> "." <> right
 
 isMUIFile :: FilePath -> Boolean
 isMUIFile path = isJust $ String.indexOf (String.Pattern "@material-ui") path
