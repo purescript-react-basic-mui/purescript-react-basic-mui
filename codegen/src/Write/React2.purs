@@ -6,14 +6,14 @@ import Codegen.Read (DeclarationElements(..), DeclarationSourceFile(..), EntityN
 import Data.Array as Array
 import Data.Lens (_Just, preview, traversed)
 import Data.Lens.Index (ix)
-import Data.Maybe (Maybe(..), isJust, maybe)
+import Data.Maybe (Maybe(..), isJust, isNothing, maybe)
 import Data.String as String
 import Data.String.Regex (Regex)
 import Data.String.Regex as Regex
 import Data.String.Regex.Flags as RegexFlags
 import Data.Traversable (traverse_)
-import Debug.Trace (spy)
 import Effect (Effect)
+import Effect.Console (log)
 import Foreign (Foreign)
 import Foreign.Object (Object)
 import Foreign.Object as Object
@@ -59,6 +59,16 @@ type JavaScript = { imports :: Array String , exports :: Array String }
 type PSJS = { path :: FilePath, javascript :: JavaScript, purescript :: PureScript }
 type FileDescription = { fileName :: String, text :: String }
 
+writeJavascript :: ReactWriter Unit
+writeJavascript = do
+  { files } <- State.get
+  traverse_ writeJS files
+  where
+    writeJS :: PSJS -> ReactWriter Unit 
+    writeJS { path, javascript } = do
+      Run.liftEffect $ traverse_ (\i -> log (path <> "\n" <> i)) javascript.imports
+      pure unit
+ 
 main :: Effect Unit
 main = do
   regex                 <- liftEither $ Regex.regex ".*Card.*" RegexFlags.noFlags
@@ -66,28 +76,25 @@ main = do
   let regexps           =  { javascriptImport }
   let path              =  "./node_modules/@material-ui/core/index.d.ts"
   { sources, types }    <- typescript path regex
-  let context = { sources, types, typeReplacements, regexps }
+  let filteredSources = Array.filter (\(DeclarationSourceFile { fileName }) -> isNothing $ String.indexOf (String.Pattern "index.d.ts") fileName) sources
+  let context = { sources : filteredSources, types, typeReplacements, regexps }
   let state = mempty
   tuple                 <- Run.runBaseEffect
                             $ State.runState state
                             $ Reader.runReader context write
-  let _ = spy "tuple" tuple
   pure unit
 
 write :: ReactWriter Unit
-write = handleImports
-
-
-handleImports :: ReactWriter Unit
-handleImports = do
+write = do
   { sources } <- Reader.ask
   traverse_ importsForSource sources
+  writeJavascript
 
 importsForSource :: DeclarationSourceFile -> ReactWriter Unit
 importsForSource source = do
   javascriptImports source 
-  javascriptExports source
   purescriptImports source
+  javascriptExports source
   pure unit
 
 javascriptImports :: DeclarationSourceFile -> ReactWriter Unit
@@ -164,6 +171,8 @@ purescriptImports (DeclarationSourceFile { fileName, elements }) = do
     canImport name = do
       { types } <- Reader.ask
       pure $ isJust $ Object.lookup name types 
+
+     
 
 showEntityName :: EntityName -> String
 showEntityName (Identifier name) = name
