@@ -141,11 +141,11 @@ interfaces declarationSourceFile = toArrayOf _interfaces declarationSourceFile
 interfaceByName :: DeclarationSourceFile -> String -> Maybe InterfaceDeclarationRec
 interfaceByName file interfaceName = Array.find (\{ name } -> name == interfaceName) (interfaces file)
 
-typescript :: String -> Regex -> Effect { sources :: (Array DeclarationSourceFile), elements :: Object Foreign }
+typescript :: String -> Regex -> Effect { sources :: (Array DeclarationSourceFile), types :: Object Foreign }
 typescript path regex = do
   rec     <- _typescript path regex
   sources <- sourceFiles rec.sources
-  pure { sources, elements: rec.elements }
+  pure { sources, types: rec.types }
 
 sourceFiles :: Array Foreign -> Effect (Array DeclarationSourceFile)
 sourceFiles sources = do
@@ -450,7 +450,7 @@ _isDefault = prop (SProxy :: SProxy "isDefault")
 
 -- FFI
 
-foreign import _typescript :: String -> Regex -> Effect { sources :: (Array Foreign), elements :: Object Foreign }
+foreign import _typescript :: String -> Regex -> Effect { sources :: (Array Foreign), types :: Object Foreign }
 foreign import _fileName :: Foreign -> Effect String
 
 -- Type class instances

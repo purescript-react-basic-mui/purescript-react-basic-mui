@@ -28,7 +28,7 @@ import Run.State as State
 type Context = 
   { typeReplacements :: Array TypeReplacement
   , sources :: Array DeclarationSourceFile 
-  , elements :: Object Foreign
+  , types :: Object Foreign
   , regexps :: Regexps
   }
 type State = {
@@ -52,7 +52,7 @@ data TypeReplacement
 
 type PureScript = 
   { imports :: Array String
-  , foreignImports :: Array DeclarationElements
+  , foreignImports :: Array String
   , elements :: Array TSType
   }
 type JavaScript = { imports :: Array String , exports :: Array String }
@@ -61,12 +61,12 @@ type FileDescription = { fileName :: String, text :: String }
 
 main :: Effect Unit
 main = do
-  regex                 <- liftEither $ Regex.regex ".*Badge.*" RegexFlags.noFlags
+  regex                 <- liftEither $ Regex.regex ".*Card.*" RegexFlags.noFlags
   javascriptImport      <- liftEither $ Regex.regex ".*(@material-ui.*)\\/(.*\\.d\\.ts)" RegexFlags.noFlags
   let regexps           =  { javascriptImport }
   let path              =  "./node_modules/@material-ui/core/index.d.ts"
-  { sources, elements } <- typescript path regex
-  let context = { sources, elements, typeReplacements, regexps }
+  { sources, types }    <- typescript path regex
+  let context = { sources, types, typeReplacements, regexps }
   let state = mempty
   tuple                 <- Run.runBaseEffect
                             $ State.runState state
@@ -117,12 +117,12 @@ javascriptExports (DeclarationSourceFile { fileName, elements }) = do
 
 purescriptImports :: DeclarationSourceFile -> ReactWriter Unit
 purescriptImports (DeclarationSourceFile { fileName, elements }) = do
-  let typeReferences = join $ map handleElement elements
-  let types = Array.nubEq $ extractNames typeReferences
-  
-  pure unit 
-  -- psjs <- getPSJS fileName
-  -- setPSJS psjs { purescript { imports = imports } }
+  let typeReferences  = join $ map handleElement elements
+  let types           = Array.nubEq $ extractNames typeReferences
+  imports             <- Array.filterA canImport types  
+  foreignImports      <- Array.filterA ((map not) <<< canImport) types  
+  psjs <- getPSJS fileName
+  setPSJS psjs { purescript { imports = imports, foreignImports = foreignImports } }
   where
     extractNames :: Array TypeReferenceRec -> Array String
     extractNames = map extractName 
@@ -160,6 +160,10 @@ purescriptImports (DeclarationSourceFile { fileName, elements }) = do
     extractTypes (TypeReference t) = Array.cons t $ join $ map extractTypes t.typeArguments
     extractTypes _ = [] 
 
+    canImport :: String -> ReactWriter Boolean
+    canImport name = do
+      { types } <- Reader.ask
+      pure $ isJust $ Object.lookup name types 
 
 showEntityName :: EntityName -> String
 showEntityName (Identifier name) = name

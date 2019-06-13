@@ -330,7 +330,7 @@ const isThing = (thing: string, str: string): boolean => {
   return results !== null && results.length > 0
 }
 
-export const _typescript = (fileName: string) => (filterRegex: RegExp) => (): { sources: DeclarationSourceFile[], elements: {[key:string]: DeclarationElements} } => {
+export const _typescript = (fileName: string) => (filterRegex: RegExp) => (): { sources: DeclarationSourceFile[], types: {[key:string]: DeclarationElements} } => {
 
   const options = ts.getDefaultCompilerOptions()
   const program = ts.createProgram([fileName], options)
@@ -667,37 +667,49 @@ export const _typescript = (fileName: string) => (filterRegex: RegExp) => (): { 
     return { tag: "AmbientDeclaration" }
   }
 
+  const getName = (name?: string, fullyQualifiedName?: string): string => 
+    (fullyQualifiedName && fullyQualifiedName !== "__type" && fullyQualifiedName !== "__type.bivarianceHack") 
+      ? fullyQualifiedName : name ? name : ""
+
+
+  const types: {[key:string]: DeclarationElements} = {}
+  const tallyTypes = (elements: DeclarationElements[]) => {
+    elements.forEach( element => {
+      if(element.tag === "ClassElement" && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
+      if(element.tag === "FunctionElement" && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
+      if(element.tag === "InterfaceDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
+      if(element.tag === "TypeAliasDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
+      if(element.tag === "VariableStatement"){
+        element.contents.forEach(decl => {
+          const name = getName(decl.contents.name, decl.contents.fullyQualifiedName)
+          if(name) types[name] = element
+        })
+      }
+      if(element.tag === "ModuleDeclaration"){
+        if(element.contents.body && element.contents.body.tag === "NamespaceBodyDefinition"){
+          if(Array.isArray(element.contents.body.contents.contents)) tallyTypes(element.contents.body.contents.contents)
+        }
+      }
+    })
+  }
+  
   const srcs: DeclarationSourceFile[] = (sources.map(src => {
     const fileName = src.fileName
     console.log("Reading " + fileName)
     const elements: DeclarationElements[] = src.statements.map(handleDeclarationElements) 
+    tallyTypes(elements)
     return { tag: "DeclarationSourceFile", contents: { fileName, elements } }
   }).filter((decl) => {
+
     const result = decl.contents.fileName.match(filterRegex)
     return result !== null && result.length > 0
+
   }) as DeclarationSourceFile[])
 
 
-  const elements: {[key:string]: DeclarationElements} = {}
-  srcs.forEach(src => {
-    const getName = (name?: string, fullyQualifiedName?: string): string => 
-      (fullyQualifiedName && fullyQualifiedName !== "__type" && fullyQualifiedName !== "__type.bivarianceHack") ? fullyQualifiedName : name ? name : ""
+  //Object.keys(types).sort().forEach(e => console.log("key", e))
 
-    src.contents.elements.forEach( element => {
-      if(element.tag === "ClassElement" && getName(element.contents.name, element.contents.fullyQualifiedName)) elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
-      if(element.tag === "FunctionElement" && getName(element.contents.name, element.contents.fullyQualifiedName)) elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
-      if(element.tag === "InterfaceDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName)) elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
-      if(element.tag === "TypeAliasDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName)) elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
-      if(element.tag === "VariableStatement"){
-        element.contents.forEach(decl => {
-          const name = getName(decl.contents.name, decl.contents.fullyQualifiedName)
-          if(name) elements[name] = element
-        })
-      }
-    })
-  })
-
-  return { sources: srcs, elements }
+  return { sources: srcs, types }
 
 }
 

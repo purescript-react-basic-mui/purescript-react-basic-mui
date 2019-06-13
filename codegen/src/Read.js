@@ -329,38 +329,47 @@ exports._typescript = function (fileName) { return function (filterRegex) { retu
         console.log("There is no handler for " + ts.SyntaxKind[node.kind] + " it will be given the 'AmbientDeclaration' type");
         return { tag: "AmbientDeclaration" };
     };
+    var getName = function (name, fullyQualifiedName) {
+        return (fullyQualifiedName && fullyQualifiedName !== "__type" && fullyQualifiedName !== "__type.bivarianceHack")
+            ? fullyQualifiedName : name ? name : "";
+    };
+    var types = {};
+    var tallyTypes = function (elements) {
+        elements.forEach(function (element) {
+            if (element.tag === "ClassElement" && getName(element.contents.name, element.contents.fullyQualifiedName))
+                types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
+            if (element.tag === "FunctionElement" && getName(element.contents.name, element.contents.fullyQualifiedName))
+                types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
+            if (element.tag === "InterfaceDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName))
+                types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
+            if (element.tag === "TypeAliasDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName))
+                types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
+            if (element.tag === "VariableStatement") {
+                element.contents.forEach(function (decl) {
+                    var name = getName(decl.contents.name, decl.contents.fullyQualifiedName);
+                    if (name)
+                        types[name] = element;
+                });
+            }
+            if (element.tag === "ModuleDeclaration") {
+                if (element.contents.body && element.contents.body.tag === "NamespaceBodyDefinition") {
+                    if (Array.isArray(element.contents.body.contents.contents))
+                        tallyTypes(element.contents.body.contents.contents);
+                }
+            }
+        });
+    };
     var srcs = sources.map(function (src) {
         var fileName = src.fileName;
         console.log("Reading " + fileName);
         var elements = src.statements.map(handleDeclarationElements);
+        tallyTypes(elements);
         return { tag: "DeclarationSourceFile", contents: { fileName: fileName, elements: elements } };
     }).filter(function (decl) {
         var result = decl.contents.fileName.match(filterRegex);
         return result !== null && result.length > 0;
     });
-    var elements = {};
-    srcs.forEach(function (src) {
-        var getName = function (name, fullyQualifiedName) {
-            return (fullyQualifiedName && fullyQualifiedName !== "__type" && fullyQualifiedName !== "__type.bivarianceHack") ? fullyQualifiedName : name ? name : "";
-        };
-        src.contents.elements.forEach(function (element) {
-            if (element.tag === "ClassElement" && getName(element.contents.name, element.contents.fullyQualifiedName))
-                elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
-            if (element.tag === "FunctionElement" && getName(element.contents.name, element.contents.fullyQualifiedName))
-                elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
-            if (element.tag === "InterfaceDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName))
-                elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
-            if (element.tag === "TypeAliasDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName))
-                elements[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
-            if (element.tag === "VariableStatement") {
-                element.contents.forEach(function (decl) {
-                    var name = getName(decl.contents.name, decl.contents.fullyQualifiedName);
-                    if (name)
-                        elements[name] = element;
-                });
-            }
-        });
-    });
-    return { sources: srcs, elements: elements };
+    //Object.keys(types).sort().forEach(e => console.log("key", e))
+    return { sources: srcs, types: types };
 }; }; };
 exports._fileName = function (src) { return function () { return src.contents.fileName; }; };
