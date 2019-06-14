@@ -288,6 +288,10 @@ showFunctionElement { name : Just name, typeParameters, parameters, returnType }
     , " :: Foreign -> "
     , _type
     , "\n"
+    , name
+    , " = _"
+    , name
+    , "\n"
     , "foreign import _"
     , name
     , " :: Foreign -> "
