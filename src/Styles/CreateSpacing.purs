@@ -1,25 +1,30 @@
 module React.Basic.MUI.Styles.CreateSpacing where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-type Spacing  =
-  { 
-  }
 
-type Spacing_required =
-  ( 
-  )
+
+type SpacingArgument = Foreign
 
 type Spacing_optional =
   ( 
   )
 
-createSpacing :: Foreign -> Foreign
+foreign import data Spacing :: Type 
+
+spacing
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (Spacing_optional)
+  => Record (attrs)
+  -> Spacing
+spacing = unsafeCoerce
+
+type SpacingOptions = Foreign
+
+createSpacing :: Spacing 
 createSpacing = _createSpacing
-foreign import _createSpacing :: Foreign -> Foreign
+foreign import _createSpacing :: Spacing 

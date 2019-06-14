@@ -1,65 +1,68 @@
 module React.Basic.MUI.WithWidth where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-type WithWidthOptions  =
-  { withTheme :: Boolean
-  , noSSR :: Boolean
-  , initialWidth :: Foreign
-  , resizeInterval :: Number
-  }
-
-type WithWidthOptions_required =
-  ( 
-  )
+import React.Basic.MUI.Styles.CreateBreakpoints (Breakpoint)
 
 type WithWidthOptions_optional =
   ( withTheme :: Boolean
   , noSSR :: Boolean
-  , initialWidth :: Foreign
+  , initialWidth :: Breakpoint 
   , resizeInterval :: Number
   )
 
-type WithWidth  =
-  { width :: Foreign
-  }
+foreign import data WithWidthOptions :: Type 
 
-type WithWidth_required =
-  ( width :: Foreign
-  )
+withWidthOptions
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (WithWidthOptions_optional)
+  => Record (attrs)
+  -> WithWidthOptions
+withWidthOptions = unsafeCoerce
+
+type WithWidth_required optional =
+  ( width :: Breakpoint 
+  | optional )
 
 type WithWidth_optional =
   ( 
   )
 
-type WithWidthProps  =
-  { innerRef :: Foreign
-  , width :: Foreign
-  }
+foreign import data WithWidth :: Type 
 
-type WithWidthProps_required =
-  ( 
-  )
+withWidth
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (WithWidth_optional)
+  => Record (WithWidth_required attrs)
+  -> WithWidth
+withWidth = unsafeCoerce
 
 type WithWidthProps_optional =
   ( innerRef :: Foreign
-  , width :: Foreign
+  , width :: Breakpoint 
   )
 
-isWidthDown :: Foreign -> Boolean
+foreign import data WithWidthProps :: Type 
+
+withWidthProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (WithWidthProps_optional)
+  => Record (attrs)
+  -> WithWidthProps
+withWidthProps = unsafeCoerce
+
+isWidthDown :: Boolean
 isWidthDown = _isWidthDown
-foreign import _isWidthDown :: Foreign -> Boolean
+foreign import _isWidthDown :: Boolean
 
-isWidthUp :: Foreign -> Boolean
+isWidthUp :: Boolean
 isWidthUp = _isWidthUp
-foreign import _isWidthUp :: Foreign -> Boolean
+foreign import _isWidthUp :: Boolean
 
-withWidth :: Foreign -> Foreign
+withWidth :: PropInjector WithWidth  WithWidthProps 
 withWidth = _withWidth
-foreign import _withWidth :: Foreign -> Foreign
+foreign import _withWidth :: PropInjector WithWidth  WithWidthProps 

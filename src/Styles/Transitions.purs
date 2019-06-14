@@ -1,46 +1,38 @@
 module React.Basic.MUI.Styles.Transitions where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-type Easing  =
-  { easeInOut :: String
-  , easeOut :: String
-  , easeIn :: String
-  , sharp :: String
-  }
 
-type Easing_required =
+
+type Easing_required optional =
   ( easeInOut :: String
   , easeOut :: String
   , easeIn :: String
   , sharp :: String
-  )
+  | optional )
 
 type Easing_optional =
   ( 
   )
 
-easing :: Foreign
+foreign import data Easing :: Type 
+
+easing
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (Easing_optional)
+  => Record (Easing_required attrs)
+  -> Easing
+easing = unsafeCoerce
+
+easing :: Easing 
 easing = _easing
-foreign import _easing :: Foreign
+foreign import _easing :: Easing 
 
-type Duration  =
-  { shortest :: Number
-  , shorter :: Number
-  , short :: Number
-  , standard :: Number
-  , complex :: Number
-  , enteringScreen :: Number
-  , leavingScreen :: Number
-  }
-
-type Duration_required =
+type Duration_required optional =
   ( shortest :: Number
   , shorter :: Number
   , short :: Number
@@ -48,48 +40,48 @@ type Duration_required =
   , complex :: Number
   , enteringScreen :: Number
   , leavingScreen :: Number
-  )
+  | optional )
 
 type Duration_optional =
   ( 
   )
 
-duration :: Foreign
+foreign import data Duration :: Type 
+
+duration
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (Duration_optional)
+  => Record (Duration_required attrs)
+  -> Duration
+duration = unsafeCoerce
+
+duration :: Duration 
 duration = _duration
-foreign import _duration :: Foreign
+foreign import _duration :: Duration 
 
-formatMs :: Foreign -> String
+formatMs :: String
 formatMs = _formatMs
-foreign import _formatMs :: Foreign -> String
+foreign import _formatMs :: String
 
-type Transitions  =
-  { easing :: Foreign
-  , duration :: Foreign
+type Transitions_required optional =
+  ( easing :: Easing 
+  , duration :: Duration 
   , create :: Foreign
   , getAutoHeightDuration :: Foreign
-  }
-
-type Transitions_required =
-  ( easing :: Foreign
-  , duration :: Foreign
-  , create :: Foreign
-  , getAutoHeightDuration :: Foreign
-  )
+  | optional )
 
 type Transitions_optional =
   ( 
   )
 
-type TransitionsOptions  =
-  { easing :: Foreign
-  , duration :: Foreign
-  , create :: Foreign
-  , getAutoHeightDuration :: Foreign
-  }
+foreign import data Transitions :: Type 
 
-type TransitionsOptions_required =
-  ( 
-  )
+transitions
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (Transitions_optional)
+  => Record (Transitions_required attrs)
+  -> Transitions
+transitions = unsafeCoerce
 
 type TransitionsOptions_optional =
   ( easing :: Foreign
@@ -98,6 +90,15 @@ type TransitionsOptions_optional =
   , getAutoHeightDuration :: Foreign
   )
 
-transitions :: Foreign
+foreign import data TransitionsOptions :: Type 
+
+transitionsOptions
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (TransitionsOptions_optional)
+  => Record (attrs)
+  -> TransitionsOptions
+transitionsOptions = unsafeCoerce
+
+transitions :: Transitions 
 transitions = _transitions
-foreign import _transitions :: Foreign
+foreign import _transitions :: Transitions 

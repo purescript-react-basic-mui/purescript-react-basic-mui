@@ -1,57 +1,75 @@
 module React.Basic.MUI.ButtonBase where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
+
+
 import React.Basic.Events (EventHandler)
+import React.Basic.MUI.ButtonBase.TouchRipple (TouchRippleProps)
 
-
-type ButtonBaseTypeMap  =
-  { props :: Foreign
+type ButtonBaseTypeMap_required optional =
+  ( props :: { action :: Foreign, buttonRef :: Foreign, centerRipple :: Boolean, disabled :: Boolean, disableRipple :: Boolean, disableTouchRipple :: Boolean, focusRipple :: Boolean, focusVisibleClassName :: String, onFocusVisible :: EventHandler, "TouchRippleProps" :: Foreign }
   , defaultComponent :: String
   , classKey :: Foreign
-  }
-
-type ButtonBaseTypeMap_required =
-  ( props :: Foreign
-  , defaultComponent :: String
-  , classKey :: Foreign
-  )
+  | optional )
 
 type ButtonBaseTypeMap_optional =
   ( 
   )
 
-type ExtendButtonBaseTypeMap  m =
-  { props :: Foreign
-  , defaultComponent :: Foreign
-  , classKey :: Foreign
-  }
+foreign import data ButtonBaseTypeMap :: Type 
 
-type ExtendButtonBaseTypeMap_required m =
+buttonBaseTypeMap
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (ButtonBaseTypeMap_optional)
+  => Record (ButtonBaseTypeMap_required attrs)
+  -> ButtonBaseTypeMap
+buttonBaseTypeMap = unsafeCoerce
+
+type ExtendButtonBaseTypeMap_required optional m =
   ( props :: Foreign
   , defaultComponent :: Foreign
   , classKey :: Foreign
-  )
+  | optional )
 
 type ExtendButtonBaseTypeMap_optional m =
   ( 
   )
 
-buttonBase :: Foreign
+foreign import data ExtendButtonBaseTypeMap :: Type 
+
+extendButtonBaseTypeMap
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (ExtendButtonBaseTypeMap_optional)
+  => Record (ExtendButtonBaseTypeMap_required attrs)
+  -> ExtendButtonBaseTypeMap
+extendButtonBaseTypeMap = unsafeCoerce
+
+type ExtendButtonBase m = Foreign
+
+buttonBase :: ExtendButtonBase ButtonBaseTypeMap 
 buttonBase = _ButtonBase
-foreign import _ButtonBase :: Foreign
+foreign import _ButtonBase :: ExtendButtonBase ButtonBaseTypeMap 
 
-type ButtonBaseActions  =
-  { focusVisible :: Foreign
-  }
+type ButtonBaseProps = SimplifiedPropsOf ButtonBase
 
-type ButtonBaseActions_required =
+type ButtonBaseClassKey = Foreign
+
+type ButtonBaseActions_required optional =
   ( focusVisible :: Foreign
-  )
+  | optional )
 
 type ButtonBaseActions_optional =
   ( 
   )
+
+foreign import data ButtonBaseActions :: Type 
+
+buttonBaseActions
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (ButtonBaseActions_optional)
+  => Record (ButtonBaseActions_required attrs)
+  -> ButtonBaseActions
+buttonBaseActions = unsafeCoerce

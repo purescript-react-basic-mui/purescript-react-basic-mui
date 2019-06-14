@@ -1,13 +1,19 @@
 module React.Basic.MUI.FormLabel where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
+
+import React.Basic (element, ReactComponent, ReactComponent)
 
 formLabel :: Foreign
 formLabel = _FormLabel
 foreign import _FormLabel :: Foreign
+
+type FormLabelClassKey = Foreign
+
+type FormLabelBaseProps = Foreign
+
+type FormLabelProps = SimplifiedPropsOf FormLabel

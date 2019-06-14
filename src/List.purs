@@ -1,13 +1,17 @@
 module React.Basic.MUI.List where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
+
+import React.Basic (element, ReactComponent, ReactComponent)
 
 list :: Foreign
 list = _List
 foreign import _List :: Foreign
+
+type ListClassKey = Foreign
+
+type ListProps = SimplifiedPropsOf List

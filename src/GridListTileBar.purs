@@ -1,29 +1,13 @@
 module React.Basic.MUI.GridListTileBar where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
+
+
+import React.Basic (element, ReactComponent, JSX)
 import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
-
-
-type GridListTileBarProps  =
-  { actionIcon :: JSX
-  , actionPosition :: Foreign
-  , subtitle :: JSX
-  , title :: JSX
-  , titlePosition :: Foreign
-  , classes :: Foreign
-  , innerRef :: Foreign
-  , className :: String
-  , style :: CSS
-  , ref :: Foreign
-  }
-
-type GridListTileBarProps_required =
-  ( 
-  )
 
 type GridListTileBarProps_optional =
   ( actionIcon :: JSX
@@ -38,6 +22,21 @@ type GridListTileBarProps_optional =
   , ref :: Foreign
   )
 
-gridListTileBar :: JSX
-gridListTileBar = _GridListTileBar
-foreign import _GridListTileBar :: JSX
+foreign import data GridListTileBarProps :: Type 
+
+gridListTileBarProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (GridListTileBarProps_optional)
+  => Record (attrs)
+  -> GridListTileBarProps
+gridListTileBarProps = unsafeCoerce
+
+type GridListTileBarClassKey = Foreign
+
+gridListTileBar
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (GridListTileBarProps_optional)
+  => Record (attrs)
+  -> JSX
+gridListTileBar = element _GridListTileBar
+foreign import _GridListTileBar :: forall a. ReactComponent a 

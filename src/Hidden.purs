@@ -1,36 +1,17 @@
 module React.Basic.MUI.Hidden where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-type HiddenProps  =
-  { implementation :: Foreign
-  , initialWidth :: Foreign
-  , lgDown :: Boolean
-  , lgUp :: Boolean
-  , mdDown :: Boolean
-  , mdUp :: Boolean
-  , only :: Foreign
-  , smDown :: Boolean
-  , smUp :: Boolean
-  , xlDown :: Boolean
-  , xlUp :: Boolean
-  , xsDown :: Boolean
-  , xsUp :: Boolean
-  }
-
-type HiddenProps_required =
-  ( 
-  )
+import React.Basic.MUI.Styles.CreateBreakpoints (Breakpoint)
+import React.Basic (element, ReactComponent, JSX)
 
 type HiddenProps_optional =
   ( implementation :: Foreign
-  , initialWidth :: Foreign
+  , initialWidth :: Breakpoint 
   , lgDown :: Boolean
   , lgUp :: Boolean
   , mdDown :: Boolean
@@ -44,6 +25,19 @@ type HiddenProps_optional =
   , xsUp :: Boolean
   )
 
-hidden :: JSX
-hidden = _Hidden
-foreign import _Hidden :: JSX
+foreign import data HiddenProps :: Type 
+
+hiddenProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (HiddenProps_optional)
+  => Record (attrs)
+  -> HiddenProps
+hiddenProps = unsafeCoerce
+
+hidden
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (HiddenProps_optional)
+  => Record (attrs)
+  -> JSX
+hidden = element _Hidden
+foreign import _Hidden :: forall a. ReactComponent a 

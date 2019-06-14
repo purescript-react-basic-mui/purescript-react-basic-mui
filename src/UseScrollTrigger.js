@@ -1,0 +1,1 @@
+exports._useScrollTrigger = require('@material-ui/core/useScrollTrigger').useScrollTrigger

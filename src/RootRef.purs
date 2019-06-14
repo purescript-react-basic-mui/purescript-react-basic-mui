@@ -1,25 +1,30 @@
 module React.Basic.MUI.RootRef where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-type RootRefProps  t =
-  { rootRef :: Foreign
-  }
-
-type RootRefProps_required t =
-  ( 
-  )
+import React.Basic (element, ReactComponent, JSX)
 
 type RootRefProps_optional t =
   ( rootRef :: Foreign
   )
 
-rootRef :: JSX
-rootRef = _RootRef
-foreign import _RootRef :: JSX
+foreign import data RootRefProps :: Type 
+
+rootRefProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (RootRefProps_optional)
+  => Record (attrs)
+  -> RootRefProps
+rootRefProps = unsafeCoerce
+
+rootRef
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (RootRefProps_optional)
+  => Record (attrs)
+  -> JSX
+rootRef = element _RootRef
+foreign import _RootRef :: forall a. ReactComponent a 

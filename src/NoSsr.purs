@@ -1,28 +1,35 @@
 module React.Basic.MUI.NoSsr where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-type NoSsrProps  =
-  { children :: JSX
-  , defer :: Boolean
-  , fallback :: JSX
-  }
+import React.Basic (element, ReactComponent, JSX)
 
-type NoSsrProps_required =
+type NoSsrProps_required optional =
   ( children :: JSX
-  )
+  | optional )
 
 type NoSsrProps_optional =
   ( defer :: Boolean
   , fallback :: JSX
   )
 
-noSsr :: JSX
-noSsr = _NoSsr
-foreign import _NoSsr :: JSX
+foreign import data NoSsrProps :: Type 
+
+noSsrProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (NoSsrProps_optional)
+  => Record (NoSsrProps_required attrs)
+  -> NoSsrProps
+noSsrProps = unsafeCoerce
+
+noSsr
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (NoSsrProps_optional)
+  => Record (NoSsrProps_required attrs)
+  -> JSX
+noSsr = element _NoSsr
+foreign import _NoSsr :: forall a. ReactComponent a 

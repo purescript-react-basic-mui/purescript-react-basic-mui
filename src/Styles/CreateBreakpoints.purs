@@ -1,41 +1,46 @@
 module React.Basic.MUI.Styles.CreateBreakpoints where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-keys :: Foreign
+
+
+type Breakpoint = Foreign
+
+type BreakpointValues = Foreign
+
+keys :: (Array Breakpoint )
 keys = _keys
-foreign import _keys :: Foreign
+foreign import _keys :: (Array Breakpoint )
 
-type Breakpoints  =
-  { keys :: Foreign
-  , values :: Foreign
+type Breakpoints_required optional =
+  ( keys :: (Array Breakpoint )
+  , values :: BreakpointValues 
   , up :: Foreign
   , down :: Foreign
   , between :: Foreign
   , only :: Foreign
   , width :: Foreign
-  }
-
-type Breakpoints_required =
-  ( keys :: Foreign
-  , values :: Foreign
-  , up :: Foreign
-  , down :: Foreign
-  , between :: Foreign
-  , only :: Foreign
-  , width :: Foreign
-  )
+  | optional )
 
 type Breakpoints_optional =
   ( 
   )
 
-createBreakpoints :: Foreign -> Foreign
+foreign import data Breakpoints :: Type 
+
+breakpoints
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (Breakpoints_optional)
+  => Record (Breakpoints_required attrs)
+  -> Breakpoints
+breakpoints = unsafeCoerce
+
+type BreakpointsOptions = Foreign
+
+createBreakpoints :: Breakpoints 
 createBreakpoints = _createBreakpoints
-foreign import _createBreakpoints :: Foreign -> Foreign
+foreign import _createBreakpoints :: Breakpoints 

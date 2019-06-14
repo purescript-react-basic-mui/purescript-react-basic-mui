@@ -1,26 +1,12 @@
 module React.Basic.MUI.NativeSelect.NativeSelectInput where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-type NativeSelectInputProps  =
-  { disabled :: Boolean
-  , "IconComponent" :: JSX
-  , inputRef :: Foreign
-  , name :: String
-  , onChange :: Foreign
-  , value :: Foreign
-  , variant :: Foreign
-  }
-
-type NativeSelectInputProps_required =
-  ( 
-  )
+import React.Basic (element, ReactComponent, JSX)
 
 type NativeSelectInputProps_optional =
   ( disabled :: Boolean
@@ -32,6 +18,19 @@ type NativeSelectInputProps_optional =
   , variant :: Foreign
   )
 
-nativeSelectInput :: JSX
-nativeSelectInput = _NativeSelectInput
-foreign import _NativeSelectInput :: JSX
+foreign import data NativeSelectInputProps :: Type 
+
+nativeSelectInputProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (NativeSelectInputProps_optional)
+  => Record (attrs)
+  -> NativeSelectInputProps
+nativeSelectInputProps = unsafeCoerce
+
+nativeSelectInput
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (NativeSelectInputProps_optional)
+  => Record (attrs)
+  -> JSX
+nativeSelectInput = element _NativeSelectInput
+foreign import _NativeSelectInput :: forall a. ReactComponent a 

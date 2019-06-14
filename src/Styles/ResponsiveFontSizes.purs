@@ -1,31 +1,31 @@
 module React.Basic.MUI.Styles.ResponsiveFontSizes where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-type ResponsiveFontSizesOptions  =
-  { breakpoints :: Foreign
-  , disableAlign :: Boolean
-  , factor :: Number
-  , variants :: Foreign
-  }
-
-type ResponsiveFontSizesOptions_required =
-  ( 
-  )
+import React.Basic.MUI.Styles.CreateBreakpoints (Breakpoint)
+import React.Basic.MUI.Styles.CreateTypography (ThemeStyle)
+import React.Basic.MUI.Styles.CreateMuiTheme (Theme)
 
 type ResponsiveFontSizesOptions_optional =
-  ( breakpoints :: Foreign
+  ( breakpoints :: (Array Breakpoint )
   , disableAlign :: Boolean
   , factor :: Number
-  , variants :: Foreign
+  , variants :: ThemeStyle 
   )
 
-responsiveFontSizes :: Foreign -> Foreign
+foreign import data ResponsiveFontSizesOptions :: Type 
+
+responsiveFontSizesOptions
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (ResponsiveFontSizesOptions_optional)
+  => Record (attrs)
+  -> ResponsiveFontSizesOptions
+responsiveFontSizesOptions = unsafeCoerce
+
+responsiveFontSizes :: Theme 
 responsiveFontSizes = _responsiveFontSizes
-foreign import _responsiveFontSizes :: Foreign -> Foreign
+foreign import _responsiveFontSizes :: Theme 

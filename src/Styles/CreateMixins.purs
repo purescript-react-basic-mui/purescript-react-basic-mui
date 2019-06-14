@@ -1,41 +1,47 @@
 module React.Basic.MUI.Styles.CreateMixins where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
+
+
 import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
+import React.Basic.MUI.Styles.CreateBreakpoints (Breakpoints)
+import React.Basic.MUI.Styles.CreateSpacing (Spacing)
 
-
-type Mixins  =
-  { gutters :: Foreign
-  , toolbar :: CSS
-  }
-
-type Mixins_required =
+type Mixins_required optional =
   ( gutters :: Foreign
   , toolbar :: CSS
-  )
+  | optional )
 
 type Mixins_optional =
   ( 
   )
 
-type MixinsOptions  =
-  { gutters :: Foreign
-  , toolbar :: CSS
-  }
+foreign import data Mixins :: Type 
 
-type MixinsOptions_required =
-  ( 
-  )
+mixins
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (Mixins_optional)
+  => Record (Mixins_required attrs)
+  -> Mixins
+mixins = unsafeCoerce
 
 type MixinsOptions_optional =
   ( gutters :: Foreign
   , toolbar :: CSS
   )
 
-createMixins :: Foreign -> Foreign
+foreign import data MixinsOptions :: Type 
+
+mixinsOptions
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (MixinsOptions_optional)
+  => Record (attrs)
+  -> MixinsOptions
+mixinsOptions = unsafeCoerce
+
+createMixins :: Mixins 
 createMixins = _createMixins
-foreign import _createMixins :: Foreign -> Foreign
+foreign import _createMixins :: Mixins 

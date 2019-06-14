@@ -1,60 +1,33 @@
 module React.Basic.MUI.Collapse where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
+
+
+import React.Basic (element, ReactComponent, JSX)
+import React.Basic.MUI.Transitions.Transition (TransitionProps)
 import React.Basic.DOM.Internal (CSS)
 import React.Basic.Events (EventHandler)
-
-
-type CollapseProps  =
-  { children :: JSX
-  , collapsedHeight :: String
-  , component :: JSX
-  , theme :: Foreign
-  , timeout :: Foreign
-  , style :: CSS
-  , onEnter :: Foreign
-  , onEntering :: Foreign
-  , onEntered :: Foreign
-  , onExit :: Foreign
-  , onExiting :: Foreign
-  , onExited :: Foreign
-  , in :: Boolean
-  , mountOnEnter :: Boolean
-  , unmountOnExit :: Boolean
-  , addEndListener :: Foreign
-  , appear :: Boolean
-  , enter :: Boolean
-  , exit :: Boolean
-  , classes :: Foreign
-  , innerRef :: Foreign
-  , className :: String
-  , ref :: Foreign
-  }
-
-type CollapseProps_required =
-  ( 
-  )
 
 type CollapseProps_optional =
   ( children :: JSX
   , collapsedHeight :: String
   , component :: JSX
-  , theme :: Foreign
+  , theme :: Theme 
   , timeout :: Foreign
   , style :: CSS
-  , onEnter :: Foreign
-  , onEntering :: Foreign
-  , onEntered :: Foreign
-  , onExit :: Foreign
-  , onExiting :: Foreign
-  , onExited :: Foreign
+  , onEnter :: EventHandler
+  , onEntering :: EventHandler
+  , onEntered :: EventHandler
+  , onExit :: EventHandler
+  , onExiting :: EventHandler
+  , onExited :: EventHandler
   , in :: Boolean
   , mountOnEnter :: Boolean
   , unmountOnExit :: Boolean
-  , addEndListener :: Foreign
+  , addEndListener :: EventHandler
   , appear :: Boolean
   , enter :: Boolean
   , exit :: Boolean
@@ -64,6 +37,21 @@ type CollapseProps_optional =
   , ref :: Foreign
   )
 
-collapse :: JSX
-collapse = _Collapse
-foreign import _Collapse :: JSX
+foreign import data CollapseProps :: Type 
+
+collapseProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (CollapseProps_optional)
+  => Record (attrs)
+  -> CollapseProps
+collapseProps = unsafeCoerce
+
+type CollapseClassKey = Foreign
+
+collapse
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (CollapseProps_optional)
+  => Record (attrs)
+  -> JSX
+collapse = element _Collapse
+foreign import _Collapse :: forall a. ReactComponent a 

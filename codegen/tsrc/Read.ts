@@ -134,7 +134,7 @@ export interface TrueType { tag: "TrueType" }
 export interface NullType { tag: "NullType" }
 export interface UndefinedType { tag: "UndefinedType" }
 export interface TypeOperator { tag: "TypeOperator" }
-export interface TypeQuery { tag: "TypeQuery" } 
+export interface TypeQuery { tag: "TypeQuery", contents: EntityName } 
 export interface ThisType { tag: "ThisType" }
 export interface NeverType { tag: "NeverType" }
 export interface TupleType { tag: "TupleType", contents: TSType[] }
@@ -513,6 +513,10 @@ export const _typescript = (fileName: string) => (filterRegex: RegExp) => (): { 
     return { tag: "MappedType", contents: { isOptional, type, typeParameter } }
   }
 
+  const handleTypeQuery = (node: ts.TypeQueryNode): TSType =>{
+    return { tag: "TypeQuery", contents: handleEntityName(node.exprName) }
+  }
+
   const handleInferType = (node: ts.InferTypeNode): TSType => {
     const contents = handleTypeParameter(node.typeParameter)
     return { tag: "InferType", contents  }
@@ -530,7 +534,6 @@ export const _typescript = (fileName: string) => (filterRegex: RegExp) => (): { 
       case ts.SyntaxKind.UnknownKeyword:  return { tag: "UnknownType" }
       case ts.SyntaxKind.NeverKeyword:    return { tag: "NeverType" }
       case ts.SyntaxKind.SymbolKeyword:   return { tag: "SymbolType" }
-      case ts.SyntaxKind.TypeQuery:       return { tag: "TypeQuery" }
       case ts.SyntaxKind.ObjectKeyword:   return { tag: "ObjectType" }
       case ts.SyntaxKind.TypeOperator:    return { tag: "TypeOperator" }
       case ts.SyntaxKind.AnyKeyword:      return { tag: "AnyType" }
@@ -552,6 +555,7 @@ export const _typescript = (fileName: string) => (filterRegex: RegExp) => (): { 
     if(ts.isIndexedAccessTypeNode(node))  return handleIndexAccessType(node)
     if(ts.isConditionalTypeNode(node))    return handleConditionalType(node)
     if(ts.isInferTypeNode(node))          return handleInferType(node)
+    if(ts.isTypeQueryNode(node))          return handleTypeQuery(node)
 
     console.log("Don't have a handler for: " + ts.SyntaxKind[node.kind], "It will be converted to an AnyType")
     return { tag: "AnyType" }
@@ -672,17 +676,23 @@ export const _typescript = (fileName: string) => (filterRegex: RegExp) => (): { 
       ? fullyQualifiedName : name ? name : ""
 
 
+
   const types: {[key:string]: DeclarationElements} = {}
   const tallyTypes = (elements: DeclarationElements[]) => {
+    
+    const setName = (element: DeclarationElements, name?: string, fullyQualifiedName?: string): void => {
+      if(name) types[name] = element
+      if(fullyQualifiedName) types[fullyQualifiedName] = element
+    }
     elements.forEach( element => {
-      if(element.tag === "ClassElement"         && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
-      if(element.tag === "FunctionElement"      && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
-      if(element.tag === "InterfaceDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
-      if(element.tag === "TypeAliasDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
+      if(element.tag === "ClassElement") setName(element, element.contents.name, element.contents.fullyQualifiedName)
+      if(element.tag === "FunctionElement") setName(element, element.contents.name, element.contents.fullyQualifiedName)
+      if(element.tag === "InterfaceDeclaration") setName(element, element.contents.name, element.contents.fullyQualifiedName)
+      if(element.tag === "TypeAliasDeclaration") setName(element, element.contents.name, element.contents.fullyQualifiedName)
       if(element.tag === "VariableStatement"){
         element.contents.forEach(decl => {
-          const name = getName(decl.contents.name, decl.contents.fullyQualifiedName)
-          if(name) types[name] = element
+          types[decl.contents.name] = element
+          if(decl.contents.fullyQualifiedName) types[decl.contents.fullyQualifiedName] = element
         })
       }
       if(element.tag === "ModuleDeclaration"){

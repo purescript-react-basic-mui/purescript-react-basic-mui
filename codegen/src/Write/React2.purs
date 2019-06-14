@@ -2,7 +2,7 @@ module Codegen.Write.React2 where
 
 import Prelude
 
-import Codegen.Read (DeclarationElements(..), DeclarationSourceFile(..), EntityName(..), FunctionElementRec, InterfaceDeclarationRec, LiteralValue(..), PropertyName(..), TSType(..), TypeMember(..), TypeParameter(..), TypeReferenceRec, VariableDeclaration(..), _PropertySignature, _VariableDeclaration, _type, isOptional, liftEither, toArrayOf, typescript)
+import Codegen.Read (DeclarationElements(..), DeclarationSourceFile(..), EntityName(..), FunctionElementRec, InterfaceDeclarationRec, LiteralValue(..), PropertyName(..), TSType(..), TypeAliasDeclarationRec, TypeMember(..), TypeParameter(..), TypeReferenceRec, VariableDeclaration(..), _PropertySignature, _VariableDeclaration, _isOptional, _type, interfaces, isOptional, liftEither, toArrayOf, typescript)
 import Data.Array (fold)
 import Data.Array as Array
 import Data.Lens (_Just, preview, traversed)
@@ -13,6 +13,8 @@ import Data.String.Regex (Regex)
 import Data.String.Regex as Regex
 import Data.String.Regex.Flags as RegexFlags
 import Data.Traversable (sequence, traverse, traverse_)
+import Data.Tuple (Tuple(..), snd)
+import Debug.Trace (spy)
 import Effect (Effect)
 import Effect.Console (log)
 import Foreign (Foreign)
@@ -39,6 +41,8 @@ type Context =
   }
 type State = {
   files :: Object PSJS
+, hasRequiredFields :: Object Boolean
+, reverseImports :: Object String
 }
 
 type Regexps = 
@@ -60,7 +64,7 @@ data TypeReplacement
   | Exact String String
 
 type PureScript = 
-  { imports :: Array String
+  { imports :: Object (Array String)
   , parentModuleName :: String
   , moduleName :: String
   , name :: String
@@ -84,19 +88,35 @@ main = do
   let regexps           =  { javascriptImport, codegenPath, firstChar, cleanFunctionName }
 
   let typeReplacements  = 
-        [ Exact "React.ComponentType" "JSX"
-        --, Exists "React.Ref" "Ref"
+        [ Exact "T" "Foreign"
+        , Exact "P" "Foreign"
+        , Exact "R" "Foreign"
+        , Exact "D" "Foreign"
+        , Exact "M" "Foreign"
+        , Exact "Key" "Foreign"
+        , Exact "Props" "Foreign"
+        , Exact "Exclude" "Foreign"
+        , Exact "Styles" "Foreign"
+        , Exists "React.ComponentType" "JSX"
+        , Exists "Hook" "Foreign"
         , Exists "CSSProperties" "CSS"
-        , Exists "EventHandler" "EventHandler"
+        , Exists "Handler" "EventHandler"
         , Exists "ReactNode" "JSX"
         , Exists "React.ElementType" "JSX"
         , Exists "React.ReactNode" "JSX"
-        --, Exists "RefType" "Ref"
+        , Exists "RefType" "Foreign"
+        , Exists "React.Ref" "Foreign"
+        , Exists "AcceptsRef" "Foreign"
         , Exists "ClassNameMap" "Foreign"
         , Exists "ClassKey" "Foreign"
         , Exists "Partial" "Foreign"
         , Exists "HTML" "Foreign"
         , Exists "React.DOMAttributes" "Foreign"
+        , Exists "React" "Foreign"
+        , Exists "PropTypes" "Foreign"
+        , Exists "Component" "ReactComponent"
+        , Exists "LegacyRef" "Foreign"
+        , Exists "Color" "Foreign"
         ]
 
   let path              =  "./node_modules/@material-ui/core/index.d.ts"
@@ -105,24 +125,39 @@ main = do
   { sources, types }    <- typescript path regex
   let filteredSources   =  Array.filter (\(DeclarationSourceFile { fileName }) -> isNothing $ String.indexOf (String.Pattern "index.d.ts") fileName) sources
   let context           =  { sources : filteredSources, types, typeReplacements, regexps, outputRoot }
-  let state             =  mempty
+  let state             =  { files : mempty, hasRequiredFields : Object.empty, reverseImports : initialImports }
   tuple                 <- Run.runBaseEffect
                             $ State.runState state
                             $ Reader.runReader context write
-  -- let _ = spy "state" tuple
+--  let _ = spy "state" tuple
   pure unit
 
 write :: ReactWriter Unit
 write = do
+  setup
   { sources } <- Reader.ask
   traverse_ writeSource sources
+
+setup :: ReactWriter Unit
+setup = do
+  { sources } <- Reader.ask
+  traverse_ setHasRequiredFields sources
+  where
+    setHasRequiredFields src = do 
+      let ifaces = interfaces src
+      ifaces # traverse_ (\rec -> do
+        let optionals = toArrayOf (traversed <<< _PropertySignature <<< _isOptional) rec.typeMembers
+        let isRequired = not $ Array.all identity optionals
+        state <- State.get 
+        State.put state { hasRequiredFields = Object.insert rec.name isRequired state.hasRequiredFields })
+
 
 writeSource :: DeclarationSourceFile -> ReactWriter Unit
 writeSource source @ (DeclarationSourceFile { fileName }) = do
   Run.liftEffect $ log $ "Writing " <> fileName
+  setPathAndModuleName source
   importsForSource source
   javascriptExports source
-  setPathAndModuleName source
   setDeclarationElements source
   writeJavaScriptFile source
   writePureScriptFile source
@@ -142,18 +177,27 @@ writePureScriptFile (DeclarationSourceFile { fileName }) = do
   let body = Array.intercalate "\n\n" 
         [ modulePart
         , basicImports
+        , imports
         , elementsPart
         ]
   Run.liftEffect $ FS.writeTextFile UTF8 psjs.purescript.path body 
 
 basicImports :: String
 basicImports = """import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 """
+
+initialImports :: Object String
+initialImports = Object.empty #
+  Object.insert "Object" "Foreign.Object" #
+  Object.insert "ReactComponent" "React.Basic" #
+  Object.insert "JSX" "React.Basic" #
+  Object.insert "element" "React.Basic" #
+  Object.insert "CSS" "React.Basic.DOM.Internal" #
+  Object.insert "EventHandler" "React.Basic.Events"
+
 
 writeJavaScriptFile :: DeclarationSourceFile -> ReactWriter Unit
 writeJavaScriptFile (DeclarationSourceFile { fileName }) | not $ isMUIFile fileName = pure unit 
@@ -168,24 +212,18 @@ showJavaScriptExports namespace exports = Array.intercalate "\n" $
 
 showPureScriptImports :: PSJS -> ReactWriter String 
 showPureScriptImports psjs = do
-  let tokens = String.split (String.Pattern "\".") 
-  strs <- traverse handleImport psjs.purescript.imports
+  let strs = map handleImport $ Object.toUnfoldable psjs.purescript.imports
   let imports = Array.intercalate "\n" $ Array.filter (\i -> i /= "") strs
   pure imports
   where
-    handleImport str = do
-      let tokens = String.split (String.Pattern "\".") str
-      let moduleBase = tokens Array.!! 0 
-      let name = tokens Array.!! 1 
-      handleName moduleBase name      
-
-    handleName :: Maybe String -> Maybe String -> ReactWriter String
-    handleName (Just moduleBase) (Just name) | (moduleBase <> name) == (psjs.purescript.moduleName <> psjs.purescript.name)  = pure ""
-    handleName (Just moduleBase) (Just name)  = do
-      { moduleName, parentModuleName } <- getNames moduleBase
-      pure $ fold [ "import ", moduleName, name, " (", name, ")" ]
-    handleName _ _ = pure ""
-      
+    handleImport (Tuple moduleName strs) = fold
+      [ "import "
+      , if moduleName == "React.Basic.MUI." then "React.Basic.MUI.Styles" else if moduleName == "Theme" then "React.Basic.MUI.Styles.CreateMuiTheme" else moduleName
+      , if moduleName == "React.Basic" then " (element, ReactComponent, " else " ("
+      , Array.intercalate ", " strs 
+      , ")"
+      ]
+     
 
 
 setDeclarationElements :: DeclarationSourceFile -> ReactWriter Unit
@@ -199,20 +237,42 @@ showDeclarationElements :: DeclarationElements -> ReactWriter String
 showDeclarationElements (FunctionElement rec) = showFunctionElement rec
 showDeclarationElements (VariableStatement declarations) = showVariableDeclarations declarations
 showDeclarationElements (InterfaceDeclaration rec) = showInterfaceDeclaration rec
+showDeclarationElements (TypeAliasDeclaration rec) = showTypeAliasDeclaration rec
 showDeclarationElements elem = pure "" 
+
+showTypeAliasDeclaration :: TypeAliasDeclarationRec -> ReactWriter String
+showTypeAliasDeclaration {name, typeParameters, type: _type } = do 
+  t <- showTSType _type
+  let parameters = Array.intercalate " " $ map showTypeParameter typeParameters
+  pure $ fold
+    [ "type "
+    , name
+    , if Array.length typeParameters == 0 then "" else " "
+    , parameters
+    , " = "
+    , t 
+    ]
 
 showInterfaceDeclaration :: InterfaceDeclarationRec -> ReactWriter String
 showInterfaceDeclaration { name, typeParameters, typeMembers } = do
   let partition = Array.partition isOptional typeMembers 
   let optionalMembers = partition.yes
   let requiredMembers = partition.no
-  Array.intercalate "\n\n" <$> sequence [ allType typeMembers, requiredType requiredMembers, optionalType optionalMembers ] 
+  if (Array.length requiredMembers) == 0
+    then Array.intercalate "\n\n" <$> sequence [ optionalType optionalMembers, foreignData, createForeignData ] 
+    else Array.intercalate "\n\n" <$> sequence [ requiredType requiredMembers, optionalType optionalMembers, foreignData, createForeignData ] 
   where
     typeParametersStr | Array.length typeParameters > 0 = " " <> (Array.intercalate " " $ map showTypeParameter typeParameters)
     typeParametersStr = ""
-    requiredType members = (showMembers members) <#> \body ->  ("type " <> name <> "_required" <> typeParametersStr <> " =\n  ( " <> body <> "\n  )")
+    requiredType members = (showMembers members) <#> \body ->  ("type " <> name <> "_required optional" <> typeParametersStr <> " =\n  ( " <> body <> "\n  | optional )")
     optionalType members = (showMembers members) <#> \body ->  ("type " <> name <> "_optional" <> typeParametersStr <> " =\n  ( " <> body <> "\n  )")
+    foreignData = pure $ fold [ "foreign import data ", name, " :: Type ", (Array.intercalate " -> " $ map (const "Type") $ fromMaybe [] $ Array.tail typeParameters) ]
     allType members = (showMembers members) <#> \body ->  ("type " <> name <> " " <> typeParametersStr <> " =\n  { " <> body <> "\n  }")
+    createForeignData = do
+      lower <- lowerCaseFirst name 
+      signature  <- unionSignatureFn lower name name
+      pure $ fold [ signature, "\n", lower, " = unsafeCoerce" ]
+
 
     showMembers :: Array TypeMember -> ReactWriter String
     showMembers members = do 
@@ -223,18 +283,22 @@ showTypeParameter :: TypeParameter -> String
 showTypeParameter (TypeParameter param) = String.toLower param
 
 showTypeMember :: TypeMember -> ReactWriter String
-showTypeMember (PropertySignature (signature @ { name : Just name })) = do
-  { regexps } <- Reader.ask
-  fieldType <- showTSType signature.type
-  pure $ ((clean regexps.cleanFunctionName $ showPropertyName name) <> " :: " <> fieldType)
+showTypeMember typeMember = do
+  context <- Reader.ask
+  pure $ showTypeMemberWithContext context typeMember
+
+showTypeMemberWithContext :: Context -> TypeMember -> String
+showTypeMemberWithContext context (PropertySignature (signature @ { name : Just name })) = do
+  let fieldType = showUnfilteredTSType context signature.type
+  ((clean context.regexps.cleanFunctionName $ showPropertyName name) <> " :: " <> fieldType)
   where
     clean :: Regex -> String -> String
-    clean regex name = case (Regex.match regex name) of 
-      Nothing -> "\"" <> name <> "\""
-      Just _ -> name
+    clean regex str = case (Regex.match regex str) of 
+      Nothing -> "\"" <> str <> "\""
+      Just _ -> str 
+showTypeMemberWithContext context (PropertySignature signature) = showUnfilteredTSType context signature.type
+showTypeMemberWithContext context typeMember = show typeMember
 
-showTypeMember (PropertySignature signature) = showTSType signature.type
-showTypeMember typeMember = pure $ show typeMember
 
 showPropertyName :: PropertyName -> String
 showPropertyName (IdentifierName name) = name
@@ -246,63 +310,60 @@ showVariableDeclarations = (map $ Array.intercalate "\n\n") <<< traverse showVar
 
 showVariableDeclaration :: VariableDeclaration -> ReactWriter String
 showVariableDeclaration (VariableDeclaration rec) = do
-  lower <- lowerCaseFirst rec.name
-  let unfiltered = showUnfilteredTSType rec.type
-  if isReactComponent
-    then showReactComponent
-    else showRegular 
-
-  where 
-    isReactComponent = showUnfilteredTSType rec.type == "React.ComponentType"
-
-    showRegular = do 
-      lower <- lowerCaseFirst rec.name
-      _type <- showTSType rec.type
-      let body = fold [ lower, " = _", rec.name ]
-      let foreignData = fold [ "foreign import _", rec.name, " :: ", _type ]
-      pure $ fold [ lower , " :: " , _type, "\n", body, "\n", foreignData ]   
-
-    showReactComponent = do
-      lower <- lowerCaseFirst rec.name
-      _type <- showTSType rec.type
-      let signature = fold 
-            [ lower
-            , "\n  :: ∀ attrs attrs_\n   . Union attrs attrs_ ("
-            , rec.name
-            , "Props_optional)\n  => Record ("
-            , rec.name
-            , "Props_required attrs)\n  -> JSX"
-            ]
-      let body = fold [ lower, " = element _", rec.name ]
-      let foreignData = fold [ "foreign import _", rec.name, " :: forall a. Component a " ]
-      pure $ fold [ signature, "\n", body, "\n", foreignData ]
-
+  _type <- showTSType rec.type
+  if _type == "JSX"
+    then jsxFn rec.name
+    else normalFn rec.name _type
 
 
 showFunctionElement :: FunctionElementRec -> ReactWriter String
 showFunctionElement { name : Nothing } = pure ""
 showFunctionElement { name : Just name, typeParameters, parameters, returnType } = do
   _type <- showTSType returnType
-  pure $ fold 
-    [ name
-    , " :: Foreign -> "
-    , _type
-    , "\n"
-    , name
-    , " = _"
-    , name
-    , "\n"
-    , "foreign import _"
-    , name
-    , " :: Foreign -> "
-    , _type
-    ]
+  if _type == "JSX"
+    then jsxFn name
+    else normalFn name _type
+
+normalFn :: String -> String -> ReactWriter String
+normalFn name _type = do
+  lower <- lowerCaseFirst name
+  let body = fold [ lower, " = _", name ]
+  let foreignData = fold [ "foreign import _", name, " :: ", _type ]
+  pure $ fold [ lower , " :: " , _type, "\n", body, "\n", foreignData ]   
 
 
-replaceType :: String -> ReactWriter String
-replaceType _type = do
-  { typeReplacements } <- Reader.ask
-  pure $ fromMaybe _type $ Array.foldl replace Nothing typeReplacements
+jsxFn :: String -> ReactWriter String
+jsxFn name = do
+  state <- State.get
+  let hasRequired = fromMaybe false $ Object.lookup (name <> "Props") state.hasRequiredFields
+  lower <- lowerCaseFirst name
+  let recordTypePart = if hasRequired then (name <> "_required attrs") else "attrs"
+  signature <- unionSignatureFn name (name <> "Props") "JSX"
+  let body = fold [ lower, " = element _", name ]
+  let foreignData = fold [ "foreign import _", name, " :: forall a. ReactComponent a " ]
+  pure $ fold [ signature, "\n", body, "\n", foreignData ]
+
+unionSignatureFn :: String -> String -> String -> ReactWriter String
+unionSignatureFn name recordName _type = do
+  state <- State.get
+  let hasRequired = fromMaybe false $ Object.lookup (recordName) state.hasRequiredFields
+  lower <- lowerCaseFirst name
+  let recordTypePart = if hasRequired then (recordName <> "_required attrs") else "attrs"
+  let signature = fold 
+        [ lower
+        , "\n  :: ∀ attrs attrs_\n   . Union attrs attrs_ ("
+        , recordName 
+        , "_optional)\n  => Record ("
+        , recordTypePart
+        , ")\n  -> "
+        , _type
+        ]
+  pure signature
+
+
+replaceType :: Context -> String -> String
+replaceType { typeReplacements }_type = do
+  fromMaybe _type $ Array.foldl replace Nothing typeReplacements
   where
     replace :: Maybe String -> TypeReplacement -> Maybe String 
     replace (Just value) _ = Just value
@@ -313,45 +374,36 @@ replaceType _type = do
 
 showTSType ::  TSType -> ReactWriter String
 showTSType tsType = do
-  { typeReplacements } <- Reader.ask
-  replaceType =<< tmpTypeReplacement tsType
+  context <- Reader.ask
+  pure $ replaceType context $ showUnfilteredTSType context tsType
 
-tmpTypeReplacement :: TSType -> ReactWriter String
-tmpTypeReplacement (_type @ (TypeReference { name })) = do 
-  { typeReplacements }  <- Reader.ask
-  let entityName        = showEntityName name
-  replacement           <- replaceType entityName 
-  if replacement /= entityName
-    then pure replacement
-    else pure "Foreign"
-tmpTypeReplacement _type = pure $ showUnfilteredTSType _type
-
-  
-
-showUnfilteredTSType :: TSType -> String
-showUnfilteredTSType BooleanType = "Boolean"
-showUnfilteredTSType StringType = "String"
-showUnfilteredTSType NumberType = "Number"
-showUnfilteredTSType BigIntType = "Number"
-showUnfilteredTSType ObjectType = "(Object Foreign)"
-showUnfilteredTSType VoidType = "Unit"
-showUnfilteredTSType AnyType = "Foreign"
-showUnfilteredTSType SymbolType = "Foreign"
-showUnfilteredTSType UnknownType = "Foreign"
-showUnfilteredTSType NeverType = "Foreign"
---    showUnfilteredTSType (ParenthesizedType t) = "(" <> (showTSType replacements t) <> ")"
---    showUnfilteredTSType (TypeReference { name, typeArguments }) | Array.length typeArguments > 0 = showEntityName name <> " " <> (Array.intercalate " " $ map (showTSType replacements) typeArguments)
---    showUnfilteredTSType (TypeReference { name, typeArguments }) = showEntityName name
+showUnfilteredTSType :: Context -> TSType -> String
+showUnfilteredTSType _ BooleanType = "Boolean"
+showUnfilteredTSType _ StringType = "String"
+showUnfilteredTSType _ NumberType = "Number"
+showUnfilteredTSType _ BigIntType = "Number"
+showUnfilteredTSType _ ObjectType = "(Object Foreign)"
+showUnfilteredTSType _ VoidType = "Unit"
+showUnfilteredTSType _ AnyType = "Foreign"
+showUnfilteredTSType _ SymbolType = "Foreign"
+showUnfilteredTSType _ UnknownType = "Foreign"
+showUnfilteredTSType _ NeverType = "Foreign"
+showUnfilteredTSType context (ParenthesizedType t) = "(" <> (showUnfilteredTSType context t) <> ")"
+showUnfilteredTSType context (ArrayType t) = "(Array " <> (showUnfilteredTSType context t) <> ")"
+showUnfilteredTSType context (TypeReference { name, typeArguments }) | Array.length typeArguments > 0 && replaceType context (showEntityName name) == showEntityName name =  showEntityName name <> " " <> (Array.intercalate " " $ map (showUnfilteredTSType context) typeArguments)
+showUnfilteredTSType context (TypeReference { name, typeArguments }) | replaceType context (showEntityName name) == showEntityName name =  showEntityName name <> " " <> (Array.intercalate " " $ map (showUnfilteredTSType context) typeArguments)
+showUnfilteredTSType context (TypeReference { name, typeArguments }) = replaceType context $ showEntityName name
 --    showUnfilteredTSType (FunctionType { typeParameters, parameters, returnType }) | Array.length typeParameters == 0 = (Array.intercalate " -> " $ map (showTypeMemberAsFunctionType replacements) parameters) <> " -> " <> (showTSType  replacements returnType)
 --    showUnfilteredTSType (FunctionType { typeParameters, parameters, returnType }) = "forall " <> (Array.intercalate " " $ map showTypeParameter typeParameters) <> ". " <> (Array.intercalate " -> " $ map (showTypeMemberAsFunctionType replacements ) parameters) <> " -> " <> (showTSType replacements returnType)
---    showUnfilteredTSType (ArrayType t) = "(Array " <> (showTSType replacements t) <> ")"
---    showUnfilteredTSType (UnionType types) = handleUnionTypes types
-showUnfilteredTSType (LiteralType (LiteralStringValue value)) = "String"
-showUnfilteredTSType (LiteralType (LiteralNumericValue value)) = "Number"
-showUnfilteredTSType (LiteralType (LiteralBigIntValue value)) = "Number"
-showUnfilteredTSType (LiteralType (LiteralBooleanValue value)) = "Boolean"
--- showUnfilteredTSType (TypeLiteral members) = "{ " <> (Array.intercalate ", " $ map showTypeMember members) <> " }"
-showUnfilteredTSType t = "Foreign"
+showUnfilteredTSType context (UnionType types) = "Foreign"
+showUnfilteredTSType context (IntersectionType types) = "Foreign"
+showUnfilteredTSType _ (LiteralType (LiteralStringValue value)) = "String"
+showUnfilteredTSType _ (LiteralType (LiteralNumericValue value)) = "Number"
+showUnfilteredTSType _ (LiteralType (LiteralBigIntValue value)) = "Number"
+showUnfilteredTSType _ (LiteralType (LiteralBooleanValue value)) = "Boolean"
+showUnfilteredTSType context (TypeLiteral members) = "{ " <> (Array.intercalate ", " $ map (showTypeMemberWithContext context) members) <> " }"
+showUnfilteredTSType _ (TypeQuery entityName) = showEntityName entityName
+showUnfilteredTSType _ t = "Foreign"
 
 getNames :: String -> ReactWriter { name :: String, moduleName :: String, parentModuleName :: String }
 getNames fileName = do
@@ -367,7 +419,7 @@ getNames fileName = do
 
 
 setPathAndModuleName :: DeclarationSourceFile -> ReactWriter Unit 
-setPathAndModuleName (DeclarationSourceFile { fileName }) = do
+setPathAndModuleName (DeclarationSourceFile { fileName, elements }) = do
   { regexps, outputRoot } <- Reader.ask
   let match       =  Regex.match regexps.codegenPath fileName 
   let splitter    =  String.split (String.Pattern "/")
@@ -377,10 +429,14 @@ setPathAndModuleName (DeclarationSourceFile { fileName }) = do
   jsPath          <- Run.liftEffect $ Path.resolve [outputRoot] $ pathPrefix <> ".js"
   psPath          <- Run.liftEffect $ Path.resolve [outputRoot] $ pathPrefix <> ".purs"
   let parentModuleName = "React.Basic.MUI." <> (maybe "" (Array.intercalate "." ) $ Array.init tokens)
-  let name = fromMaybe "" $ Array.head =<< Array.tail tokens
+  let name = fromMaybe "" $ if Array.length tokens > 1
+                              then Array.head =<< Array.tail tokens
+                              else Array.head tokens
   let moduleName  =  "React.Basic.MUI." <> (Array.intercalate "." tokens) 
   psjs          <- getPSJS fileName 
   setPSJS (psjs { javascript = psjs.javascript { path = jsPath }, purescript = psjs.purescript { path = psPath, name = name, moduleName = moduleName, parentModuleName = parentModuleName } })
+  state <- State.get
+  traverse_ (elementSetReverseImport moduleName) elements
     where
       mkDir :: FilePath -> Array String -> ReactWriter Unit
       mkDir _ tokens | Array.length tokens <= 1 = pure unit
@@ -388,6 +444,19 @@ setPathAndModuleName (DeclarationSourceFile { fileName }) = do
         path    <- Run.liftEffect $ Path.resolve [outputRoot] $ maybe outputRoot (Array.intercalate "/") $ Array.init tokens
         exists  <- Run.liftEffect $ FS.exists path 
         if not exists then Run.liftEffect $ FS.mkdir path else pure unit
+
+      elementSetReverseImport :: String -> DeclarationElements -> ReactWriter Unit
+      elementSetReverseImport moduleName (InterfaceDeclaration { name }) = setReverseImport name moduleName
+      elementSetReverseImport moduleName (TypeAliasDeclaration { name }) = setReverseImport name moduleName
+      elementSetReverseImport moduleName (FunctionElement { name: Just name }) = setReverseImport name moduleName
+      elementSetReverseImport moduleName (VariableStatement declarations) = traverse_ (moduleName # flip setReverseImport) $ 
+        map (\(VariableDeclaration { name }) -> name) declarations
+      elementSetReverseImport _ _ = pure unit
+
+
+      setReverseImport :: String -> String -> ReactWriter Unit
+      setReverseImport name moduleName = do
+        State.modify \state -> state { reverseImports = Object.insert name moduleName state.reverseImports }
  
 
 javascriptImports :: DeclarationSourceFile -> ReactWriter Unit
@@ -416,30 +485,37 @@ javascriptExports (DeclarationSourceFile { fileName, elements }) = do
 
 purescriptImports :: DeclarationSourceFile -> ReactWriter Unit
 purescriptImports (DeclarationSourceFile { fileName, elements }) = do
+  context             <- Reader.ask
   let typeReferences  = join $ map handleElement elements
-  let types           = extractTypeNames typeReferences
-  replaced            <- Array.nubEq <$> traverse replaceType types
-  imports             <- Array.filterA (canImport extractNames) replaced 
-  foreignImports      <- Array.filterA ((map not) <<< (canImport extractNames)) replaced
+  let types           = Array.nubEq $ map (replaceType context) $ extractTypeNames typeReferences
+  { reverseImports }  <- State.get
   psjs <- getPSJS fileName
-  setPSJS psjs { purescript { imports = imports, foreignImports = foreignImports } }
+  let importTuples = Array.mapMaybe (\t -> (Object.lookup t reverseImports) <#> \imps -> Tuple imps t ) types
+  let imports = Array.foldl (\obj (Tuple moduleName thing) -> 
+      if moduleName /= psjs.purescript.moduleName
+        then case (Object.lookup moduleName obj) of
+            (Just array) -> Object.insert moduleName (Array.cons thing array) obj
+            Nothing -> Object.insert moduleName [ thing ] obj
+        else obj
+      ) Object.empty importTuples
+
+  setPSJS psjs { purescript { imports = imports } }
   where
     extractNames :: Array String
     extractNames = join $ map getName elements 
       where
         getName :: DeclarationElements -> Array String
-        getName (InterfaceDeclaration rec) = [ rec.name, fromMaybe "" rec.fullyQualifiedName ]
-        getName (FunctionElement rec) = [ fromMaybe "" rec.name, fromMaybe "" rec.fullyQualifiedName ]
-        getName (VariableStatement declarations) = join $ declarations <#> (\(VariableDeclaration { name, fullyQualifiedName }) -> [ name, fromMaybe "" fullyQualifiedName ])
+        getName (InterfaceDeclaration rec) = [ rec.name ]
+        getName (TypeAliasDeclaration rec) = [ rec.name ]
+        getName (FunctionElement rec) = [ fromMaybe "" rec.name ]
+        getName (VariableStatement declarations) = join $ declarations <#> (\(VariableDeclaration { name, fullyQualifiedName }) -> [ name ])
         getName _ = []
-
-       
 
     extractTypeNames :: Array TypeReferenceRec -> Array String
     extractTypeNames = map extractTypeName 
 
     extractTypeName :: TypeReferenceRec -> String 
-    extractTypeName { fullyQualifiedName: (Just fullyQualifiedName) } | (fullyQualifiedName /= "__type" && fullyQualifiedName /= "__type.bivarianceHack") = fullyQualifiedName
+--    extractTypeName { fullyQualifiedName: (Just fullyQualifiedName) } | (fullyQualifiedName /= "__type" && fullyQualifiedName /= "__type.bivarianceHack") = fullyQualifiedName
     extractTypeName { name } = showEntityName name
 
     handleElement :: DeclarationElements -> Array TypeReferenceRec

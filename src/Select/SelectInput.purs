@@ -1,43 +1,21 @@
 module React.Basic.MUI.Select.SelectInput where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
+
+
+import React.Basic (element, ReactComponent, JSX)
+import React.Basic.MUI.Menu (MenuProps)
 import React.Basic.Events (EventHandler)
 
-
-type SelectInputProps  =
-  { autoFocus :: Boolean
-  , autoWidth :: Boolean
-  , disabled :: Boolean
-  , "IconComponent" :: JSX
-  , inputRef :: Foreign
-  , "MenuProps" :: Foreign
-  , multiple :: Boolean
-  , name :: String
-  , native :: Boolean
-  , onBlur :: EventHandler
-  , onChange :: Foreign
-  , onClose :: Foreign
-  , onFocus :: EventHandler
-  , onOpen :: Foreign
-  , open :: Boolean
-  , readOnly :: Boolean
-  , renderValue :: Foreign
-  , "SelectDisplayProps" :: Foreign
-  , tabIndex :: Number
-  , value :: Foreign
-  , variant :: Foreign
-  }
-
-type SelectInputProps_required =
+type SelectInputProps_required optional =
   ( autoWidth :: Boolean
   , multiple :: Boolean
   , native :: Boolean
   , value :: Foreign
-  )
+  | optional )
 
 type SelectInputProps_optional =
   ( autoFocus :: Boolean
@@ -59,6 +37,19 @@ type SelectInputProps_optional =
   , variant :: Foreign
   )
 
-selectInput :: JSX
-selectInput = _SelectInput
-foreign import _SelectInput :: JSX
+foreign import data SelectInputProps :: Type 
+
+selectInputProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (SelectInputProps_optional)
+  => Record (SelectInputProps_required attrs)
+  -> SelectInputProps
+selectInputProps = unsafeCoerce
+
+selectInput
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (SelectInputProps_optional)
+  => Record (SelectInputProps_required attrs)
+  -> JSX
+selectInput = element _SelectInput
+foreign import _SelectInput :: forall a. ReactComponent a 

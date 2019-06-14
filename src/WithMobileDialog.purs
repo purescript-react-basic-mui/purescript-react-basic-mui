@@ -1,53 +1,66 @@
 module React.Basic.MUI.WithMobileDialog where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-type WithMobileDialogOptions  =
-  { breakpoint :: Foreign
-  }
+import React.Basic.MUI.Styles.CreateBreakpoints (Breakpoint)
 
-type WithMobileDialogOptions_required =
-  ( breakpoint :: Foreign
-  )
+type WithMobileDialogOptions_required optional =
+  ( breakpoint :: Breakpoint 
+  | optional )
 
 type WithMobileDialogOptions_optional =
   ( 
   )
 
-type WithMobileDialog  =
-  { fullScreen :: Boolean
-  , width :: Foreign
-  }
+foreign import data WithMobileDialogOptions :: Type 
 
-type WithMobileDialog_required =
+withMobileDialogOptions
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (WithMobileDialogOptions_optional)
+  => Record (WithMobileDialogOptions_required attrs)
+  -> WithMobileDialogOptions
+withMobileDialogOptions = unsafeCoerce
+
+type WithMobileDialog_required optional =
   ( fullScreen :: Boolean
-  , width :: Foreign
-  )
+  , width :: Breakpoint 
+  | optional )
 
 type WithMobileDialog_optional =
   ( 
   )
 
-type InjectedProps  =
-  { fullScreen :: Boolean
-  , width :: Foreign
-  }
+foreign import data WithMobileDialog :: Type 
 
-type InjectedProps_required =
+withMobileDialog
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (WithMobileDialog_optional)
+  => Record (WithMobileDialog_required attrs)
+  -> WithMobileDialog
+withMobileDialog = unsafeCoerce
+
+type InjectedProps_required optional =
   ( fullScreen :: Boolean
-  , width :: Foreign
-  )
+  , width :: Breakpoint 
+  | optional )
 
 type InjectedProps_optional =
   ( 
   )
 
-withMobileDialog :: Foreign -> Foreign
+foreign import data InjectedProps :: Type 
+
+injectedProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (InjectedProps_optional)
+  => Record (InjectedProps_required attrs)
+  -> InjectedProps
+injectedProps = unsafeCoerce
+
+withMobileDialog :: PropInjector WithMobileDialog  Foreign
 withMobileDialog = _withMobileDialog
-foreign import _withMobileDialog :: Foreign -> Foreign
+foreign import _withMobileDialog :: PropInjector WithMobileDialog  Foreign

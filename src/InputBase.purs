@@ -1,296 +1,14 @@
 module React.Basic.MUI.InputBase where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
+
+
+import React.Basic (element, ReactComponent, ReactComponent, JSX)
 import React.Basic.Events (EventHandler)
-
-
-type InputBaseProps  =
-  { autoComplete :: String
-  , autoFocus :: Boolean
-  , defaultValue :: Foreign
-  , disabled :: Boolean
-  , endAdornment :: JSX
-  , error :: Boolean
-  , fullWidth :: Boolean
-  , id :: String
-  , inputComponent :: JSX
-  , inputProps :: Foreign
-  , inputRef :: Foreign
-  , margin :: Foreign
-  , multiline :: Boolean
-  , name :: String
-  , placeholder :: String
-  , readOnly :: Boolean
-  , required :: Boolean
-  , renderPrefix :: Foreign
-  , rows :: Foreign
-  , rowsMax :: Foreign
-  , startAdornment :: JSX
-  , type :: String
-  , value :: Foreign
-  , onFilled :: Foreign
-  , onChange :: EventHandler
-  , onKeyDown :: EventHandler
-  , onKeyUp :: EventHandler
-  , hidden :: Boolean
-  , style :: CSS
-  , title :: String
-  , dir :: String
-  , slot :: String
-  , color :: String
-  , children :: JSX
-  , defaultChecked :: Boolean
-  , suppressContentEditableWarning :: Boolean
-  , suppressHydrationWarning :: Boolean
-  , accessKey :: String
-  , className :: String
-  , contentEditable :: Boolean
-  , contextMenu :: String
-  , draggable :: Boolean
-  , lang :: String
-  , spellCheck :: Boolean
-  , tabIndex :: Number
-  , inputMode :: String
-  , is :: String
-  , radioGroup :: String
-  , role :: String
-  , about :: String
-  , datatype :: String
-  , inlist :: Foreign
-  , prefix :: String
-  , property :: String
-  , resource :: String
-  , typeof :: String
-  , vocab :: String
-  , autoCapitalize :: String
-  , autoCorrect :: String
-  , autoSave :: String
-  , itemProp :: String
-  , itemScope :: Boolean
-  , itemType :: String
-  , itemID :: String
-  , itemRef :: String
-  , results :: Number
-  , security :: String
-  , unselectable :: Foreign
-  , "aria-activedescendant" :: String
-  , "aria-atomic" :: Foreign
-  , "aria-autocomplete" :: Foreign
-  , "aria-busy" :: Foreign
-  , "aria-checked" :: Foreign
-  , "aria-colcount" :: Number
-  , "aria-colindex" :: Number
-  , "aria-colspan" :: Number
-  , "aria-controls" :: String
-  , "aria-current" :: Foreign
-  , "aria-describedby" :: String
-  , "aria-details" :: String
-  , "aria-disabled" :: Foreign
-  , "aria-dropeffect" :: Foreign
-  , "aria-errormessage" :: String
-  , "aria-expanded" :: Foreign
-  , "aria-flowto" :: String
-  , "aria-grabbed" :: Foreign
-  , "aria-haspopup" :: Foreign
-  , "aria-hidden" :: Foreign
-  , "aria-invalid" :: Foreign
-  , "aria-keyshortcuts" :: String
-  , "aria-label" :: String
-  , "aria-labelledby" :: String
-  , "aria-level" :: Number
-  , "aria-live" :: Foreign
-  , "aria-modal" :: Foreign
-  , "aria-multiline" :: Foreign
-  , "aria-multiselectable" :: Foreign
-  , "aria-orientation" :: Foreign
-  , "aria-owns" :: String
-  , "aria-placeholder" :: String
-  , "aria-posinset" :: Number
-  , "aria-pressed" :: Foreign
-  , "aria-readonly" :: Foreign
-  , "aria-relevant" :: Foreign
-  , "aria-required" :: Foreign
-  , "aria-roledescription" :: String
-  , "aria-rowcount" :: Number
-  , "aria-rowindex" :: Number
-  , "aria-rowspan" :: Number
-  , "aria-selected" :: Foreign
-  , "aria-setsize" :: Number
-  , "aria-sort" :: Foreign
-  , "aria-valuemax" :: Number
-  , "aria-valuemin" :: Number
-  , "aria-valuenow" :: Number
-  , "aria-valuetext" :: String
-  , dangerouslySetInnerHTML :: Foreign
-  , onCopy :: EventHandler
-  , onCopyCapture :: EventHandler
-  , onCut :: EventHandler
-  , onCutCapture :: EventHandler
-  , onPaste :: EventHandler
-  , onPasteCapture :: EventHandler
-  , onCompositionEnd :: EventHandler
-  , onCompositionEndCapture :: EventHandler
-  , onCompositionStart :: EventHandler
-  , onCompositionStartCapture :: EventHandler
-  , onCompositionUpdate :: EventHandler
-  , onCompositionUpdateCapture :: EventHandler
-  , onFocus :: EventHandler
-  , onFocusCapture :: EventHandler
-  , onBlur :: EventHandler
-  , onBlurCapture :: EventHandler
-  , onChangeCapture :: EventHandler
-  , onBeforeInput :: EventHandler
-  , onBeforeInputCapture :: EventHandler
-  , onInput :: EventHandler
-  , onInputCapture :: EventHandler
-  , onReset :: EventHandler
-  , onResetCapture :: EventHandler
-  , onSubmit :: EventHandler
-  , onSubmitCapture :: EventHandler
-  , onInvalid :: EventHandler
-  , onInvalidCapture :: EventHandler
-  , onLoad :: EventHandler
-  , onLoadCapture :: EventHandler
-  , onError :: EventHandler
-  , onErrorCapture :: EventHandler
-  , onKeyDownCapture :: EventHandler
-  , onKeyPress :: EventHandler
-  , onKeyPressCapture :: EventHandler
-  , onKeyUpCapture :: EventHandler
-  , onAbort :: EventHandler
-  , onAbortCapture :: EventHandler
-  , onCanPlay :: EventHandler
-  , onCanPlayCapture :: EventHandler
-  , onCanPlayThrough :: EventHandler
-  , onCanPlayThroughCapture :: EventHandler
-  , onDurationChange :: EventHandler
-  , onDurationChangeCapture :: EventHandler
-  , onEmptied :: EventHandler
-  , onEmptiedCapture :: EventHandler
-  , onEncrypted :: EventHandler
-  , onEncryptedCapture :: EventHandler
-  , onEnded :: EventHandler
-  , onEndedCapture :: EventHandler
-  , onLoadedData :: EventHandler
-  , onLoadedDataCapture :: EventHandler
-  , onLoadedMetadata :: EventHandler
-  , onLoadedMetadataCapture :: EventHandler
-  , onLoadStart :: EventHandler
-  , onLoadStartCapture :: EventHandler
-  , onPause :: EventHandler
-  , onPauseCapture :: EventHandler
-  , onPlay :: EventHandler
-  , onPlayCapture :: EventHandler
-  , onPlaying :: EventHandler
-  , onPlayingCapture :: EventHandler
-  , onProgress :: EventHandler
-  , onProgressCapture :: EventHandler
-  , onRateChange :: EventHandler
-  , onRateChangeCapture :: EventHandler
-  , onSeeked :: EventHandler
-  , onSeekedCapture :: EventHandler
-  , onSeeking :: EventHandler
-  , onSeekingCapture :: EventHandler
-  , onStalled :: EventHandler
-  , onStalledCapture :: EventHandler
-  , onSuspend :: EventHandler
-  , onSuspendCapture :: EventHandler
-  , onTimeUpdate :: EventHandler
-  , onTimeUpdateCapture :: EventHandler
-  , onVolumeChange :: EventHandler
-  , onVolumeChangeCapture :: EventHandler
-  , onWaiting :: EventHandler
-  , onWaitingCapture :: EventHandler
-  , onAuxClick :: EventHandler
-  , onAuxClickCapture :: EventHandler
-  , onClick :: EventHandler
-  , onClickCapture :: EventHandler
-  , onContextMenu :: EventHandler
-  , onContextMenuCapture :: EventHandler
-  , onDoubleClick :: EventHandler
-  , onDoubleClickCapture :: EventHandler
-  , onDrag :: EventHandler
-  , onDragCapture :: EventHandler
-  , onDragEnd :: EventHandler
-  , onDragEndCapture :: EventHandler
-  , onDragEnter :: EventHandler
-  , onDragEnterCapture :: EventHandler
-  , onDragExit :: EventHandler
-  , onDragExitCapture :: EventHandler
-  , onDragLeave :: EventHandler
-  , onDragLeaveCapture :: EventHandler
-  , onDragOver :: EventHandler
-  , onDragOverCapture :: EventHandler
-  , onDragStart :: EventHandler
-  , onDragStartCapture :: EventHandler
-  , onDrop :: EventHandler
-  , onDropCapture :: EventHandler
-  , onMouseDown :: EventHandler
-  , onMouseDownCapture :: EventHandler
-  , onMouseEnter :: EventHandler
-  , onMouseLeave :: EventHandler
-  , onMouseMove :: EventHandler
-  , onMouseMoveCapture :: EventHandler
-  , onMouseOut :: EventHandler
-  , onMouseOutCapture :: EventHandler
-  , onMouseOver :: EventHandler
-  , onMouseOverCapture :: EventHandler
-  , onMouseUp :: EventHandler
-  , onMouseUpCapture :: EventHandler
-  , onSelect :: EventHandler
-  , onSelectCapture :: EventHandler
-  , onTouchCancel :: EventHandler
-  , onTouchCancelCapture :: EventHandler
-  , onTouchEnd :: EventHandler
-  , onTouchEndCapture :: EventHandler
-  , onTouchMove :: EventHandler
-  , onTouchMoveCapture :: EventHandler
-  , onTouchStart :: EventHandler
-  , onTouchStartCapture :: EventHandler
-  , onPointerDown :: EventHandler
-  , onPointerDownCapture :: EventHandler
-  , onPointerMove :: EventHandler
-  , onPointerMoveCapture :: EventHandler
-  , onPointerUp :: EventHandler
-  , onPointerUpCapture :: EventHandler
-  , onPointerCancel :: EventHandler
-  , onPointerCancelCapture :: EventHandler
-  , onPointerEnter :: EventHandler
-  , onPointerEnterCapture :: EventHandler
-  , onPointerLeave :: EventHandler
-  , onPointerLeaveCapture :: EventHandler
-  , onPointerOver :: EventHandler
-  , onPointerOverCapture :: EventHandler
-  , onPointerOut :: EventHandler
-  , onPointerOutCapture :: EventHandler
-  , onGotPointerCapture :: EventHandler
-  , onGotPointerCaptureCapture :: EventHandler
-  , onLostPointerCapture :: EventHandler
-  , onLostPointerCaptureCapture :: EventHandler
-  , onScroll :: EventHandler
-  , onScrollCapture :: EventHandler
-  , onWheel :: EventHandler
-  , onWheelCapture :: EventHandler
-  , onAnimationStart :: EventHandler
-  , onAnimationStartCapture :: EventHandler
-  , onAnimationEnd :: EventHandler
-  , onAnimationEndCapture :: EventHandler
-  , onAnimationIteration :: EventHandler
-  , onAnimationIterationCapture :: EventHandler
-  , onTransitionEnd :: EventHandler
-  , onTransitionEndCapture :: EventHandler
-  , classes :: Foreign
-  , innerRef :: Foreign
-  , ref :: Foreign
-  }
-
-type InputBaseProps_required =
-  ( 
-  )
+import React.Basic.DOM.Internal (CSS)
 
 type InputBaseProps_optional =
   ( autoComplete :: String
@@ -302,7 +20,7 @@ type InputBaseProps_optional =
   , fullWidth :: Boolean
   , id :: String
   , inputComponent :: JSX
-  , inputProps :: Foreign
+  , inputProps :: ReactComponent
   , inputRef :: Foreign
   , margin :: Foreign
   , multiline :: Boolean
@@ -409,7 +127,7 @@ type InputBaseProps_optional =
   , "aria-valuemin" :: Number
   , "aria-valuenow" :: Number
   , "aria-valuetext" :: String
-  , dangerouslySetInnerHTML :: Foreign
+  , dangerouslySetInnerHTML :: { __html :: String }
   , onCopy :: EventHandler
   , onCopyCapture :: EventHandler
   , onCut :: EventHandler
@@ -572,265 +290,14 @@ type InputBaseProps_optional =
   , ref :: Foreign
   )
 
-type InputBaseComponentProps  =
-  { defaultChecked :: Boolean
-  , defaultValue :: Foreign
-  , suppressContentEditableWarning :: Boolean
-  , suppressHydrationWarning :: Boolean
-  , accessKey :: String
-  , className :: String
-  , contentEditable :: Boolean
-  , contextMenu :: String
-  , dir :: String
-  , draggable :: Boolean
-  , hidden :: Boolean
-  , id :: String
-  , lang :: String
-  , placeholder :: String
-  , slot :: String
-  , spellCheck :: Boolean
-  , style :: CSS
-  , tabIndex :: Number
-  , title :: String
-  , inputMode :: String
-  , is :: String
-  , radioGroup :: String
-  , role :: String
-  , about :: String
-  , datatype :: String
-  , inlist :: Foreign
-  , prefix :: String
-  , property :: String
-  , resource :: String
-  , typeof :: String
-  , vocab :: String
-  , autoCapitalize :: String
-  , autoCorrect :: String
-  , autoSave :: String
-  , color :: String
-  , itemProp :: String
-  , itemScope :: Boolean
-  , itemType :: String
-  , itemID :: String
-  , itemRef :: String
-  , results :: Number
-  , security :: String
-  , unselectable :: Foreign
-  , "aria-activedescendant" :: String
-  , "aria-atomic" :: Foreign
-  , "aria-autocomplete" :: Foreign
-  , "aria-busy" :: Foreign
-  , "aria-checked" :: Foreign
-  , "aria-colcount" :: Number
-  , "aria-colindex" :: Number
-  , "aria-colspan" :: Number
-  , "aria-controls" :: String
-  , "aria-current" :: Foreign
-  , "aria-describedby" :: String
-  , "aria-details" :: String
-  , "aria-disabled" :: Foreign
-  , "aria-dropeffect" :: Foreign
-  , "aria-errormessage" :: String
-  , "aria-expanded" :: Foreign
-  , "aria-flowto" :: String
-  , "aria-grabbed" :: Foreign
-  , "aria-haspopup" :: Foreign
-  , "aria-hidden" :: Foreign
-  , "aria-invalid" :: Foreign
-  , "aria-keyshortcuts" :: String
-  , "aria-label" :: String
-  , "aria-labelledby" :: String
-  , "aria-level" :: Number
-  , "aria-live" :: Foreign
-  , "aria-modal" :: Foreign
-  , "aria-multiline" :: Foreign
-  , "aria-multiselectable" :: Foreign
-  , "aria-orientation" :: Foreign
-  , "aria-owns" :: String
-  , "aria-placeholder" :: String
-  , "aria-posinset" :: Number
-  , "aria-pressed" :: Foreign
-  , "aria-readonly" :: Foreign
-  , "aria-relevant" :: Foreign
-  , "aria-required" :: Foreign
-  , "aria-roledescription" :: String
-  , "aria-rowcount" :: Number
-  , "aria-rowindex" :: Number
-  , "aria-rowspan" :: Number
-  , "aria-selected" :: Foreign
-  , "aria-setsize" :: Number
-  , "aria-sort" :: Foreign
-  , "aria-valuemax" :: Number
-  , "aria-valuemin" :: Number
-  , "aria-valuenow" :: Number
-  , "aria-valuetext" :: String
-  , children :: JSX
-  , dangerouslySetInnerHTML :: Foreign
-  , onCopy :: EventHandler
-  , onCopyCapture :: EventHandler
-  , onCut :: EventHandler
-  , onCutCapture :: EventHandler
-  , onPaste :: EventHandler
-  , onPasteCapture :: EventHandler
-  , onCompositionEnd :: EventHandler
-  , onCompositionEndCapture :: EventHandler
-  , onCompositionStart :: EventHandler
-  , onCompositionStartCapture :: EventHandler
-  , onCompositionUpdate :: EventHandler
-  , onCompositionUpdateCapture :: EventHandler
-  , onFocus :: EventHandler
-  , onFocusCapture :: EventHandler
-  , onBlur :: EventHandler
-  , onBlurCapture :: EventHandler
-  , onChange :: EventHandler
-  , onChangeCapture :: EventHandler
-  , onBeforeInput :: EventHandler
-  , onBeforeInputCapture :: EventHandler
-  , onInput :: EventHandler
-  , onInputCapture :: EventHandler
-  , onReset :: EventHandler
-  , onResetCapture :: EventHandler
-  , onSubmit :: EventHandler
-  , onSubmitCapture :: EventHandler
-  , onInvalid :: EventHandler
-  , onInvalidCapture :: EventHandler
-  , onLoad :: EventHandler
-  , onLoadCapture :: EventHandler
-  , onError :: EventHandler
-  , onErrorCapture :: EventHandler
-  , onKeyDown :: EventHandler
-  , onKeyDownCapture :: EventHandler
-  , onKeyPress :: EventHandler
-  , onKeyPressCapture :: EventHandler
-  , onKeyUp :: EventHandler
-  , onKeyUpCapture :: EventHandler
-  , onAbort :: EventHandler
-  , onAbortCapture :: EventHandler
-  , onCanPlay :: EventHandler
-  , onCanPlayCapture :: EventHandler
-  , onCanPlayThrough :: EventHandler
-  , onCanPlayThroughCapture :: EventHandler
-  , onDurationChange :: EventHandler
-  , onDurationChangeCapture :: EventHandler
-  , onEmptied :: EventHandler
-  , onEmptiedCapture :: EventHandler
-  , onEncrypted :: EventHandler
-  , onEncryptedCapture :: EventHandler
-  , onEnded :: EventHandler
-  , onEndedCapture :: EventHandler
-  , onLoadedData :: EventHandler
-  , onLoadedDataCapture :: EventHandler
-  , onLoadedMetadata :: EventHandler
-  , onLoadedMetadataCapture :: EventHandler
-  , onLoadStart :: EventHandler
-  , onLoadStartCapture :: EventHandler
-  , onPause :: EventHandler
-  , onPauseCapture :: EventHandler
-  , onPlay :: EventHandler
-  , onPlayCapture :: EventHandler
-  , onPlaying :: EventHandler
-  , onPlayingCapture :: EventHandler
-  , onProgress :: EventHandler
-  , onProgressCapture :: EventHandler
-  , onRateChange :: EventHandler
-  , onRateChangeCapture :: EventHandler
-  , onSeeked :: EventHandler
-  , onSeekedCapture :: EventHandler
-  , onSeeking :: EventHandler
-  , onSeekingCapture :: EventHandler
-  , onStalled :: EventHandler
-  , onStalledCapture :: EventHandler
-  , onSuspend :: EventHandler
-  , onSuspendCapture :: EventHandler
-  , onTimeUpdate :: EventHandler
-  , onTimeUpdateCapture :: EventHandler
-  , onVolumeChange :: EventHandler
-  , onVolumeChangeCapture :: EventHandler
-  , onWaiting :: EventHandler
-  , onWaitingCapture :: EventHandler
-  , onAuxClick :: EventHandler
-  , onAuxClickCapture :: EventHandler
-  , onClick :: EventHandler
-  , onClickCapture :: EventHandler
-  , onContextMenu :: EventHandler
-  , onContextMenuCapture :: EventHandler
-  , onDoubleClick :: EventHandler
-  , onDoubleClickCapture :: EventHandler
-  , onDrag :: EventHandler
-  , onDragCapture :: EventHandler
-  , onDragEnd :: EventHandler
-  , onDragEndCapture :: EventHandler
-  , onDragEnter :: EventHandler
-  , onDragEnterCapture :: EventHandler
-  , onDragExit :: EventHandler
-  , onDragExitCapture :: EventHandler
-  , onDragLeave :: EventHandler
-  , onDragLeaveCapture :: EventHandler
-  , onDragOver :: EventHandler
-  , onDragOverCapture :: EventHandler
-  , onDragStart :: EventHandler
-  , onDragStartCapture :: EventHandler
-  , onDrop :: EventHandler
-  , onDropCapture :: EventHandler
-  , onMouseDown :: EventHandler
-  , onMouseDownCapture :: EventHandler
-  , onMouseEnter :: EventHandler
-  , onMouseLeave :: EventHandler
-  , onMouseMove :: EventHandler
-  , onMouseMoveCapture :: EventHandler
-  , onMouseOut :: EventHandler
-  , onMouseOutCapture :: EventHandler
-  , onMouseOver :: EventHandler
-  , onMouseOverCapture :: EventHandler
-  , onMouseUp :: EventHandler
-  , onMouseUpCapture :: EventHandler
-  , onSelect :: EventHandler
-  , onSelectCapture :: EventHandler
-  , onTouchCancel :: EventHandler
-  , onTouchCancelCapture :: EventHandler
-  , onTouchEnd :: EventHandler
-  , onTouchEndCapture :: EventHandler
-  , onTouchMove :: EventHandler
-  , onTouchMoveCapture :: EventHandler
-  , onTouchStart :: EventHandler
-  , onTouchStartCapture :: EventHandler
-  , onPointerDown :: EventHandler
-  , onPointerDownCapture :: EventHandler
-  , onPointerMove :: EventHandler
-  , onPointerMoveCapture :: EventHandler
-  , onPointerUp :: EventHandler
-  , onPointerUpCapture :: EventHandler
-  , onPointerCancel :: EventHandler
-  , onPointerCancelCapture :: EventHandler
-  , onPointerEnter :: EventHandler
-  , onPointerEnterCapture :: EventHandler
-  , onPointerLeave :: EventHandler
-  , onPointerLeaveCapture :: EventHandler
-  , onPointerOver :: EventHandler
-  , onPointerOverCapture :: EventHandler
-  , onPointerOut :: EventHandler
-  , onPointerOutCapture :: EventHandler
-  , onGotPointerCapture :: EventHandler
-  , onGotPointerCaptureCapture :: EventHandler
-  , onLostPointerCapture :: EventHandler
-  , onLostPointerCaptureCapture :: EventHandler
-  , onScroll :: EventHandler
-  , onScrollCapture :: EventHandler
-  , onWheel :: EventHandler
-  , onWheelCapture :: EventHandler
-  , onAnimationStart :: EventHandler
-  , onAnimationStartCapture :: EventHandler
-  , onAnimationEnd :: EventHandler
-  , onAnimationEndCapture :: EventHandler
-  , onAnimationIteration :: EventHandler
-  , onAnimationIterationCapture :: EventHandler
-  , onTransitionEnd :: EventHandler
-  , onTransitionEndCapture :: EventHandler
-  }
+foreign import data InputBaseProps :: Type 
 
-type InputBaseComponentProps_required =
-  ( 
-  )
+inputBaseProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (InputBaseProps_optional)
+  => Record (attrs)
+  -> InputBaseProps
+inputBaseProps = unsafeCoerce
 
 type InputBaseComponentProps_optional =
   ( defaultChecked :: Boolean
@@ -925,7 +392,7 @@ type InputBaseComponentProps_optional =
   , "aria-valuenow" :: Number
   , "aria-valuetext" :: String
   , children :: JSX
-  , dangerouslySetInnerHTML :: Foreign
+  , dangerouslySetInnerHTML :: { __html :: String }
   , onCopy :: EventHandler
   , onCopyCapture :: EventHandler
   , onCut :: EventHandler
@@ -1088,6 +555,21 @@ type InputBaseComponentProps_optional =
   , onTransitionEndCapture :: EventHandler
   )
 
-inputBase :: JSX
-inputBase = _InputBase
-foreign import _InputBase :: JSX
+foreign import data InputBaseComponentProps :: Type 
+
+inputBaseComponentProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (InputBaseComponentProps_optional)
+  => Record (attrs)
+  -> InputBaseComponentProps
+inputBaseComponentProps = unsafeCoerce
+
+type InputBaseClassKey = Foreign
+
+inputBase
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (InputBaseProps_optional)
+  => Record (attrs)
+  -> JSX
+inputBase = element _InputBase
+foreign import _InputBase :: forall a. ReactComponent a 

@@ -1,58 +1,52 @@
 module React.Basic.MUI.Slide where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
+
+
 import React.Basic.DOM.Internal (CSS)
 import React.Basic.Events (EventHandler)
+import React.Basic (element, ReactComponent, JSX)
 
-
-type SlideProps  =
-  { direction :: Foreign
-  , ref :: Foreign
-  , theme :: Foreign
-  , style :: CSS
-  , appear :: Boolean
-  , enter :: Boolean
-  , exit :: Boolean
-  , onEnter :: Foreign
-  , onEntering :: Foreign
-  , onEntered :: Foreign
-  , onExit :: Foreign
-  , onExiting :: Foreign
-  , onExited :: Foreign
-  , in :: Boolean
-  , mountOnEnter :: Boolean
-  , unmountOnExit :: Boolean
-  , timeout :: Foreign
-  , addEndListener :: Foreign
-  }
-
-type SlideProps_required =
+type SlideProps_required optional =
   ( direction :: Foreign
-  )
+  | optional )
 
 type SlideProps_optional =
   ( ref :: Foreign
-  , theme :: Foreign
+  , theme :: Theme 
   , style :: CSS
   , appear :: Boolean
   , enter :: Boolean
   , exit :: Boolean
-  , onEnter :: Foreign
-  , onEntering :: Foreign
-  , onEntered :: Foreign
-  , onExit :: Foreign
-  , onExiting :: Foreign
-  , onExited :: Foreign
+  , onEnter :: EventHandler
+  , onEntering :: EventHandler
+  , onEntered :: EventHandler
+  , onExit :: EventHandler
+  , onExiting :: EventHandler
+  , onExited :: EventHandler
   , in :: Boolean
   , mountOnEnter :: Boolean
   , unmountOnExit :: Boolean
   , timeout :: Foreign
-  , addEndListener :: Foreign
+  , addEndListener :: EventHandler
   )
 
-slide :: JSX
-slide = _Slide
-foreign import _Slide :: JSX
+foreign import data SlideProps :: Type 
+
+slideProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (SlideProps_optional)
+  => Record (SlideProps_required attrs)
+  -> SlideProps
+slideProps = unsafeCoerce
+
+slide
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (SlideProps_optional)
+  => Record (SlideProps_required attrs)
+  -> JSX
+slide = element _Slide
+foreign import _Slide :: forall a. ReactComponent a 

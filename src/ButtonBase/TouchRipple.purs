@@ -1,13 +1,21 @@
 module React.Basic.MUI.ButtonBase.TouchRipple where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-touchRipple :: JSX
-touchRipple = _TouchRipple
-foreign import _TouchRipple :: JSX
+import React.Basic (element, ReactComponent, JSX)
+
+type TouchRippleProps = Foreign
+
+type TouchRippleClassKey = Foreign
+
+touchRipple
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (TouchRippleProps_optional)
+  => Record (attrs)
+  -> JSX
+touchRipple = element _TouchRipple
+foreign import _TouchRipple :: forall a. ReactComponent a 

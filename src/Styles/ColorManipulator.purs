@@ -1,63 +1,73 @@
 module React.Basic.MUI.Styles.ColorManipulator where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-type ColorObject  =
-  { type :: Foreign
-  , values :: Foreign
-  }
 
-type ColorObject_required =
+
+type ColorFormat = Foreign
+
+type ColorObject_required optional =
   ( type :: Foreign
   , values :: Foreign
-  )
+  | optional )
 
 type ColorObject_optional =
   ( 
   )
 
-recomposeColor :: Foreign -> String
-recomposeColor = _recomposeColor
-foreign import _recomposeColor :: Foreign -> String
+foreign import data ColorObject :: Type 
 
-convertHexToRGB :: Foreign -> String
-convertHexToRGB = _convertHexToRGB
-foreign import _convertHexToRGB :: Foreign -> String
+colorObject
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (ColorObject_optional)
+  => Record (ColorObject_required attrs)
+  -> ColorObject
+colorObject = unsafeCoerce
 
-rgbToHex :: Foreign -> String
+hexToRgb :: String
+hexToRgb = _hexToRgb
+foreign import _hexToRgb :: String
+
+rgbToHex :: String
 rgbToHex = _rgbToHex
-foreign import _rgbToHex :: Foreign -> String
+foreign import _rgbToHex :: String
 
-decomposeColor :: Foreign -> Foreign
+hslToRgb :: String
+hslToRgb = _hslToRgb
+foreign import _hslToRgb :: String
+
+decomposeColor :: Foreign
 decomposeColor = _decomposeColor
-foreign import _decomposeColor :: Foreign -> Foreign
+foreign import _decomposeColor :: Foreign
 
-getContrastRatio :: Foreign -> Number
+recomposeColor :: String
+recomposeColor = _recomposeColor
+foreign import _recomposeColor :: String
+
+getContrastRatio :: Number
 getContrastRatio = _getContrastRatio
-foreign import _getContrastRatio :: Foreign -> Number
+foreign import _getContrastRatio :: Number
 
-getLuminance :: Foreign -> Number
+getLuminance :: Number
 getLuminance = _getLuminance
-foreign import _getLuminance :: Foreign -> Number
+foreign import _getLuminance :: Number
 
-emphasize :: Foreign -> String
+emphasize :: String
 emphasize = _emphasize
-foreign import _emphasize :: Foreign -> String
+foreign import _emphasize :: String
 
-fade :: Foreign -> String
+fade :: String
 fade = _fade
-foreign import _fade :: Foreign -> String
+foreign import _fade :: String
 
-darken :: Foreign -> String
+darken :: String
 darken = _darken
-foreign import _darken :: Foreign -> String
+foreign import _darken :: String
 
-lighten :: Foreign -> String
+lighten :: String
 lighten = _lighten
-foreign import _lighten :: Foreign -> String
+foreign import _lighten :: String

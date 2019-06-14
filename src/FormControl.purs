@@ -1,13 +1,18 @@
 module React.Basic.MUI.FormControl where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
+
+import React.Basic (element, ReactComponent, ReactComponent)
+import React.Basic.Events (EventHandler)
 
 formControl :: Foreign
 formControl = _FormControl
 foreign import _FormControl :: Foreign
+
+type FormControlClassKey = Foreign
+
+type FormControlProps = SimplifiedPropsOf FormControl

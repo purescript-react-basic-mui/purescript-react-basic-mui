@@ -1,24 +1,13 @@
 module React.Basic.MUI.ListItemAvatar where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
+
+
 import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
-
-
-type ListItemAvatarProps  =
-  { classes :: Foreign
-  , innerRef :: Foreign
-  , className :: String
-  , style :: CSS
-  , ref :: Foreign
-  }
-
-type ListItemAvatarProps_required =
-  ( 
-  )
+import React.Basic (element, ReactComponent, JSX)
 
 type ListItemAvatarProps_optional =
   ( classes :: Foreign
@@ -28,6 +17,21 @@ type ListItemAvatarProps_optional =
   , ref :: Foreign
   )
 
-listItemAvatar :: JSX
-listItemAvatar = _ListItemAvatar
-foreign import _ListItemAvatar :: JSX
+foreign import data ListItemAvatarProps :: Type 
+
+listItemAvatarProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (ListItemAvatarProps_optional)
+  => Record (attrs)
+  -> ListItemAvatarProps
+listItemAvatarProps = unsafeCoerce
+
+type ListItemAvatarClassKey = Foreign
+
+listItemAvatar
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (ListItemAvatarProps_optional)
+  => Record (attrs)
+  -> JSX
+listItemAvatar = element _ListItemAvatar
+foreign import _ListItemAvatar :: forall a. ReactComponent a 

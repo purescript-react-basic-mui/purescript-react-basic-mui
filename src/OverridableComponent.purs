@@ -1,35 +1,32 @@
 module React.Basic.MUI.OverridableComponent where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
+
+
 import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
-
-
-type OverridableComponent  m =
-  { 
-  }
-
-type OverridableComponent_required m =
-  ( 
-  )
+import React.Basic (element, ReactComponent, JSX)
 
 type OverridableComponent_optional m =
   ( 
   )
 
-type CommonProps  m =
-  { className :: String
-  , style :: CSS
-  , classes :: Foreign
-  , innerRef :: Foreign
-  }
+foreign import data OverridableComponent :: Type 
 
-type CommonProps_required m =
-  ( 
-  )
+overridableComponent
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (OverridableComponent_optional)
+  => Record (attrs)
+  -> OverridableComponent
+overridableComponent = unsafeCoerce
+
+type OverrideProps m c = (Foreign)
+
+type DefaultComponentProps m = Foreign
+
+type BaseProps m = Foreign
 
 type CommonProps_optional m =
   ( className :: String
@@ -38,18 +35,34 @@ type CommonProps_optional m =
   , innerRef :: Foreign
   )
 
-type OverridableTypeMap  =
-  { props :: Foreign
-  , defaultComponent :: JSX
-  , classKey :: String
-  }
+foreign import data CommonProps :: Type 
 
-type OverridableTypeMap_required =
-  ( props :: Foreign
+commonProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (CommonProps_optional)
+  => Record (attrs)
+  -> CommonProps
+commonProps = unsafeCoerce
+
+type OverridableTypeMap_required optional =
+  ( props :: {  }
   , defaultComponent :: JSX
   , classKey :: String
-  )
+  | optional )
 
 type OverridableTypeMap_optional =
   ( 
   )
+
+foreign import data OverridableTypeMap :: Type 
+
+overridableTypeMap
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (OverridableTypeMap_optional)
+  => Record (OverridableTypeMap_required attrs)
+  -> OverridableTypeMap
+overridableTypeMap = unsafeCoerce
+
+type Simplify t = Foreign
+
+type SimplifiedPropsOf c = Simplify Foreign

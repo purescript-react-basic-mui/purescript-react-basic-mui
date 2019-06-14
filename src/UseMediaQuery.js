@@ -1,0 +1,1 @@
+exports._useMediaQuery = require('@material-ui/core/useMediaQuery').useMediaQuery

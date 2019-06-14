@@ -1,25 +1,32 @@
 module React.Basic.MUI.CssBaseline where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-type CssBaselineProps  =
-  { children :: Foreign
-  }
-
-type CssBaselineProps_required =
-  ( 
-  )
+import React.Basic (element, ReactComponent, JSX)
 
 type CssBaselineProps_optional =
   ( children :: Foreign
   )
 
-cssBaseline :: JSX
-cssBaseline = _CssBaseline
-foreign import _CssBaseline :: JSX
+foreign import data CssBaselineProps :: Type 
+
+cssBaselineProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (CssBaselineProps_optional)
+  => Record (attrs)
+  -> CssBaselineProps
+cssBaselineProps = unsafeCoerce
+
+cssBaseline
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (CssBaselineProps_optional)
+  => Record (attrs)
+  -> JSX
+cssBaseline = element _CssBaseline
+foreign import _CssBaseline :: forall a. ReactComponent a 
+
+type CssBaselineClassKey = String

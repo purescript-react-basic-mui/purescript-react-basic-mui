@@ -166,6 +166,9 @@ exports._typescript = function (fileName) { return function (filterRegex) { retu
         var typeParameter = node.typeParameter ? handleTypeParameter(node.typeParameter) : undefined;
         return { tag: "MappedType", contents: { isOptional: isOptional, type: type, typeParameter: typeParameter } };
     };
+    var handleTypeQuery = function (node) {
+        return { tag: "TypeQuery", contents: handleEntityName(node.exprName) };
+    };
     var handleInferType = function (node) {
         var contents = handleTypeParameter(node.typeParameter);
         return { tag: "InferType", contents: contents };
@@ -182,7 +185,6 @@ exports._typescript = function (fileName) { return function (filterRegex) { retu
             case ts.SyntaxKind.UnknownKeyword: return { tag: "UnknownType" };
             case ts.SyntaxKind.NeverKeyword: return { tag: "NeverType" };
             case ts.SyntaxKind.SymbolKeyword: return { tag: "SymbolType" };
-            case ts.SyntaxKind.TypeQuery: return { tag: "TypeQuery" };
             case ts.SyntaxKind.ObjectKeyword: return { tag: "ObjectType" };
             case ts.SyntaxKind.TypeOperator: return { tag: "TypeOperator" };
             case ts.SyntaxKind.AnyKeyword: return { tag: "AnyType" };
@@ -217,6 +219,8 @@ exports._typescript = function (fileName) { return function (filterRegex) { retu
             return handleConditionalType(node);
         if (ts.isInferTypeNode(node))
             return handleInferType(node);
+        if (ts.isTypeQueryNode(node))
+            return handleTypeQuery(node);
         console.log("Don't have a handler for: " + ts.SyntaxKind[node.kind], "It will be converted to an AnyType");
         return { tag: "AnyType" };
     };
@@ -335,20 +339,26 @@ exports._typescript = function (fileName) { return function (filterRegex) { retu
     };
     var types = {};
     var tallyTypes = function (elements) {
+        var setName = function (element, name, fullyQualifiedName) {
+            if (name)
+                types[name] = element;
+            if (fullyQualifiedName)
+                types[fullyQualifiedName] = element;
+        };
         elements.forEach(function (element) {
-            if (element.tag === "ClassElement" && getName(element.contents.name, element.contents.fullyQualifiedName))
-                types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
-            if (element.tag === "FunctionElement" && getName(element.contents.name, element.contents.fullyQualifiedName))
-                types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
-            if (element.tag === "InterfaceDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName))
-                types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
-            if (element.tag === "TypeAliasDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName))
-                types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element;
+            if (element.tag === "ClassElement")
+                setName(element, element.contents.name, element.contents.fullyQualifiedName);
+            if (element.tag === "FunctionElement")
+                setName(element, element.contents.name, element.contents.fullyQualifiedName);
+            if (element.tag === "InterfaceDeclaration")
+                setName(element, element.contents.name, element.contents.fullyQualifiedName);
+            if (element.tag === "TypeAliasDeclaration")
+                setName(element, element.contents.name, element.contents.fullyQualifiedName);
             if (element.tag === "VariableStatement") {
                 element.contents.forEach(function (decl) {
-                    var name = getName(decl.contents.name, decl.contents.fullyQualifiedName);
-                    if (name)
-                        types[name] = element;
+                    types[decl.contents.name] = element;
+                    if (decl.contents.fullyQualifiedName)
+                        types[decl.contents.fullyQualifiedName] = element;
                 });
             }
             if (element.tag === "ModuleDeclaration") {

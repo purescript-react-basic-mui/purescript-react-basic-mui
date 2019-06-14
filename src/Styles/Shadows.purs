@@ -1,13 +1,15 @@
 module React.Basic.MUI.Styles.Shadows where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-shadows :: Foreign
+
+
+type Shadows = Foreign
+
+shadows :: Shadows 
 shadows = _shadows
-foreign import _shadows :: Foreign
+foreign import _shadows :: Shadows 

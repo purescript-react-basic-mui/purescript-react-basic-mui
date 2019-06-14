@@ -1,80 +1,77 @@
 module React.Basic.MUI.Styles.CreateMuiTheme where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-type ThemeOptions  =
-  { shape :: Foreign
-  , breakpoints :: Foreign
-  , direction :: Foreign
-  , mixins :: Foreign
-  , overrides :: Foreign
-  , palette :: Foreign
-  , props :: Foreign
-  , shadows :: Foreign
-  , spacing :: Foreign
-  , transitions :: Foreign
-  , typography :: Foreign
-  , zIndex :: Foreign
-  }
+import React.Basic.MUI.Styles.Shape (Shape, ShapeOptions)
+import React.Basic.MUI.Styles.CreateBreakpoints (Breakpoints, BreakpointsOptions)
+import React.Basic.MUI.Styles.CreateMixins (Mixins, MixinsOptions)
+import React.Basic.MUI.Styles.Overrides (Overrides)
+import React.Basic.MUI.Styles.CreatePalette (Palette, PaletteOptions)
+import React.Basic (element, ReactComponent, ReactComponent)
+import React.Basic.MUI.Styles.Shadows (Shadows)
+import React.Basic.MUI.Styles.CreateSpacing (Spacing, SpacingOptions)
+import React.Basic.MUI.Styles.Transitions (Transitions, TransitionsOptions)
+import React.Basic.MUI.Styles.CreateTypography (TypographyOptions)
+import React.Basic.MUI.Styles.ZIndex (ZIndex, ZIndexOptions)
+import React.Basic.MUI.Typography (Typography)
 
-type ThemeOptions_required =
-  ( 
-  )
+type Direction = Foreign
 
 type ThemeOptions_optional =
-  ( shape :: Foreign
-  , breakpoints :: Foreign
-  , direction :: Foreign
-  , mixins :: Foreign
-  , overrides :: Foreign
-  , palette :: Foreign
-  , props :: Foreign
-  , shadows :: Foreign
-  , spacing :: Foreign
-  , transitions :: Foreign
+  ( shape :: ShapeOptions 
+  , breakpoints :: BreakpointsOptions 
+  , direction :: Direction 
+  , mixins :: MixinsOptions 
+  , overrides :: Overrides 
+  , palette :: PaletteOptions 
+  , props :: ReactComponent
+  , shadows :: Shadows 
+  , spacing :: SpacingOptions 
+  , transitions :: TransitionsOptions 
   , typography :: Foreign
-  , zIndex :: Foreign
+  , zIndex :: ZIndexOptions 
   )
 
-type Theme  =
-  { shape :: Foreign
-  , breakpoints :: Foreign
-  , direction :: Foreign
-  , mixins :: Foreign
-  , overrides :: Foreign
-  , palette :: Foreign
-  , props :: Foreign
-  , shadows :: Foreign
-  , spacing :: Foreign
-  , transitions :: Foreign
-  , typography :: Foreign
-  , zIndex :: Foreign
-  }
+foreign import data ThemeOptions :: Type 
 
-type Theme_required =
-  ( shape :: Foreign
-  , breakpoints :: Foreign
-  , direction :: Foreign
-  , mixins :: Foreign
-  , palette :: Foreign
-  , shadows :: Foreign
-  , spacing :: Foreign
-  , transitions :: Foreign
-  , typography :: Foreign
-  , zIndex :: Foreign
-  )
+themeOptions
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (ThemeOptions_optional)
+  => Record (attrs)
+  -> ThemeOptions
+themeOptions = unsafeCoerce
+
+type Theme_required optional =
+  ( shape :: Shape 
+  , breakpoints :: Breakpoints 
+  , direction :: Direction 
+  , mixins :: Mixins 
+  , palette :: Palette 
+  , shadows :: Shadows 
+  , spacing :: Spacing 
+  , transitions :: Transitions 
+  , typography :: Typography 
+  , zIndex :: ZIndex 
+  | optional )
 
 type Theme_optional =
-  ( overrides :: Foreign
-  , props :: Foreign
+  ( overrides :: Overrides 
+  , props :: ReactComponent
   )
 
-createMuiTheme :: Foreign -> Foreign
+foreign import data Theme :: Type 
+
+theme
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (Theme_optional)
+  => Record (Theme_required attrs)
+  -> Theme
+theme = unsafeCoerce
+
+createMuiTheme :: Theme 
 createMuiTheme = _createMuiTheme
-foreign import _createMuiTheme :: Foreign -> Foreign
+foreign import _createMuiTheme :: Theme 

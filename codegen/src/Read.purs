@@ -113,7 +113,7 @@ data TSType
   | TupleType (Array TSType)
   | TypeLiteral (Array TypeMember)
   | TypeOperator
-  | TypeQuery
+  | TypeQuery EntityName
   | TypeReference TypeReferenceRec
   | UndefinedType
   | UnionType (Array TSType)
@@ -355,7 +355,7 @@ _TrueType = _Ctor' (SProxy :: SProxy "TrueType")
 _TypeOperator :: Prism' TSType Unit
 _TypeOperator = _Ctor' (SProxy :: SProxy "TypeOperator")
 
-_TypeQuery :: Prism' TSType Unit
+_TypeQuery :: Prism' TSType EntityName 
 _TypeQuery = _Ctor' (SProxy :: SProxy "TypeQuery")
 
 _TypeReference :: Prism' TSType TypeReferenceRec 

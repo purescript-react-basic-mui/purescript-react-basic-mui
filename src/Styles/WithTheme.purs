@@ -1,38 +1,44 @@
 module React.Basic.MUI.Styles.WithTheme where 
 
 import Prelude
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
-import Foreign.Object (Object)
-import React.Basic (Component, JSX)
-import React.Basic.DOM.Internal (CSS)
-import React.Basic.Events (EventHandler)
 
 
-type WithTheme  =
-  { theme :: Foreign
-  }
+import React.Basic.MUI.Styles.CreateMuiTheme (Theme)
+import React.Basic (element, ReactComponent, ReactComponent)
 
-type WithTheme_required =
-  ( theme :: Foreign
-  )
+type WithTheme_required optional =
+  ( theme :: Theme 
+  | optional )
 
 type WithTheme_optional =
   ( 
   )
 
-type ThemedComponentProps  =
-  { innerRef :: Foreign
-  , theme :: Foreign
-  }
+foreign import data WithTheme :: Type 
 
-type ThemedComponentProps_required =
-  ( 
-  )
+withTheme
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (WithTheme_optional)
+  => Record (WithTheme_required attrs)
+  -> WithTheme
+withTheme = unsafeCoerce
 
 type ThemedComponentProps_optional =
   ( innerRef :: Foreign
-  , theme :: Foreign
+  , theme :: Theme 
   )
+
+foreign import data ThemedComponentProps :: Type 
+
+themedComponentProps
+  :: ∀ attrs attrs_
+   . Union attrs attrs_ (ThemedComponentProps_optional)
+  => Record (attrs)
+  -> ThemedComponentProps
+themedComponentProps = unsafeCoerce
 
 withTheme :: Foreign
 withTheme = _withTheme
