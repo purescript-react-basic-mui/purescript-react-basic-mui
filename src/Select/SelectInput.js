@@ -1,0 +1,1 @@
+exports._SelectInput = require('@material-ui/core/Select').SelectInput

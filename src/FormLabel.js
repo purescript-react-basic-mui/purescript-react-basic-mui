@@ -1,0 +1,1 @@
+exports._FormLabel = require('@material-ui/core/FormLabel').FormLabel

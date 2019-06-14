@@ -1,0 +1,1 @@
+exports._ThemeProvider = require('@material-ui/core/styles').ThemeProvider

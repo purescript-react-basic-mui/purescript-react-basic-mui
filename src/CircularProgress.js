@@ -1,0 +1,1 @@
+exports._CircularProgress = require('@material-ui/core/CircularProgress').CircularProgress

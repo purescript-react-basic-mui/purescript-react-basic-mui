@@ -1,0 +1,1 @@
+exports._SwipeableDrawer = require('@material-ui/core/SwipeableDrawer').SwipeableDrawer

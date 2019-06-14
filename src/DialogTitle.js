@@ -1,0 +1,1 @@
+exports._DialogTitle = require('@material-ui/core/DialogTitle').DialogTitle

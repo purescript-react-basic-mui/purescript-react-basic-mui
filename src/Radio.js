@@ -1,0 +1,1 @@
+exports._Radio = require('@material-ui/core/Radio').Radio

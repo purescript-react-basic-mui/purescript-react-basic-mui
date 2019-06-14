@@ -1,0 +1,1 @@
+exports._TabIndicator = require('@material-ui/core/Tabs').TabIndicator

@@ -1,0 +1,1 @@
+exports._Grow = require('@material-ui/core/Grow').Grow
