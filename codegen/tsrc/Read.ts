@@ -675,8 +675,8 @@ export const _typescript = (fileName: string) => (filterRegex: RegExp) => (): { 
   const types: {[key:string]: DeclarationElements} = {}
   const tallyTypes = (elements: DeclarationElements[]) => {
     elements.forEach( element => {
-      if(element.tag === "ClassElement" && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
-      if(element.tag === "FunctionElement" && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
+      if(element.tag === "ClassElement"         && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
+      if(element.tag === "FunctionElement"      && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
       if(element.tag === "InterfaceDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
       if(element.tag === "TypeAliasDeclaration" && getName(element.contents.name, element.contents.fullyQualifiedName)) types[getName(element.contents.name, element.contents.fullyQualifiedName)] = element
       if(element.tag === "VariableStatement"){
@@ -695,7 +695,7 @@ export const _typescript = (fileName: string) => (filterRegex: RegExp) => (): { 
   
   const srcs: DeclarationSourceFile[] = (sources.map(src => {
     const fileName = src.fileName
-    console.log("Reading " + fileName)
+    //console.log("Reading " + fileName)
     const elements: DeclarationElements[] = src.statements.map(handleDeclarationElements) 
     tallyTypes(elements)
     return { tag: "DeclarationSourceFile", contents: { fileName, elements } }

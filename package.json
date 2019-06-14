@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "clean":"rm -rf src/*"
+  },
   "devDependencies": {
     "purescript": "^0.12.5"
   }

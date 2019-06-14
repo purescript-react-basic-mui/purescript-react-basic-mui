@@ -361,7 +361,7 @@ exports._typescript = function (fileName) { return function (filterRegex) { retu
     };
     var srcs = sources.map(function (src) {
         var fileName = src.fileName;
-        console.log("Reading " + fileName);
+        //console.log("Reading " + fileName)
         var elements = src.statements.map(handleDeclarationElements);
         tallyTypes(elements);
         return { tag: "DeclarationSourceFile", contents: { fileName: fileName, elements: elements } };

@@ -154,7 +154,7 @@ sourceFiles sources = do
     convert :: Foreign -> Effect DeclarationSourceFile
     convert f = do
       currentPath <- _fileName f
-      log $ "Attempting to convert TS AST to PS AST " <> currentPath
+      --log $ "Attempting to convert TS AST to PS AST " <> currentPath
       decl <- liftEither $ runExcept $ decode f
       logConverted decl
     logConverted :: DeclarationSourceFile -> Effect DeclarationSourceFile

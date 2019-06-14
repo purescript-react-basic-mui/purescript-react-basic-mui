@@ -81,7 +81,7 @@ showDeclarationElements replacements (InterfaceDeclaration { name, typeParameter
     members = Array.intercalate "  , " $ map (\member -> (showTypeMember replacements member) <> "\n") typeMembers
 
 showDeclarationElements replacements (elem @ (FunctionElement { name: (Just name), fullyQualifiedName, typeParameters, parameters, returnType })) | Array.length parameters > 0 = do
-  pure $ "foreign import " <> name <> " :: foralll " <> (Array.intercalate " " $ map showTypeParameter typeParameters ) <> " . " <> (Array.intercalate " -> " $ map (showTypeMember replacements) parameters) <> " -> " <> (showTSType replacements returnType)
+  pure $ "foreign import " <> name <> " :: forall " <> (Array.intercalate " " $ map showTypeParameter typeParameters ) <> " . " <> (Array.intercalate " -> " $ map (showTypeMember replacements) parameters) <> " -> " <> (showTSType replacements returnType)
 
 showDeclarationElements replacements (elem @ (FunctionElement { name: (Just name), fullyQualifiedName, typeParameters, parameters, returnType })) = do
   pure $ "foreign import " <> name <> " :: " <> (Array.intercalate " -> " $ map (showTypeMember replacements) parameters) <> " -> " <> (showTSType replacements returnType)
