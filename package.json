@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "clean":"rm -rf src/*"
+    "clean":"rm -rf src/* && mkdir src/Core"
   },
   "devDependencies": {
     "purescript": "^0.12.5"

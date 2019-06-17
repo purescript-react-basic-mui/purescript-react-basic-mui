@@ -13,7 +13,7 @@ import Data.String.Regex (Regex)
 import Data.String.Regex as Regex
 import Data.String.Regex.Flags as RegexFlags
 import Data.Traversable (sequence, traverse, traverse_)
-import Data.Tuple (Tuple(..), snd)
+import Data.Tuple (Tuple(..))
 import Debug.Trace (spy)
 import Effect (Effect)
 import Effect.Console (log)
@@ -77,12 +77,11 @@ type PSJS = { path :: FilePath, javascript :: JavaScript, purescript :: PureScri
 type FileDescription = { fileName :: String, text :: String }
 
  
- 
 main :: Effect Unit
 main = do
   regex                 <- liftEither $ Regex.regex ".*@material-ui.*" RegexFlags.noFlags
   javascriptImport      <- liftEither $ Regex.regex ".*(@material-ui.*)\\/(.*\\.d\\.ts)" RegexFlags.noFlags
-  codegenPath           <- liftEither $ Regex.regex ".*@material-ui.*\\/core\\/(.*)\\.d\\.ts" RegexFlags.noFlags
+  codegenPath           <- liftEither $ Regex.regex ".*@material-ui.*?\\/(.*)\\.d\\.ts" RegexFlags.noFlags
   firstChar             <- liftEither $ Regex.regex "^(.)" RegexFlags.noFlags
   cleanFunctionName     <- liftEither $ Regex.regex "^[_a-z]+\\w*$" RegexFlags.noFlags
   let regexps           =  { javascriptImport, codegenPath, firstChar, cleanFunctionName }
@@ -97,6 +96,9 @@ main = do
         , Exact "Props" "Foreign"
         , Exact "Exclude" "Foreign"
         , Exact "Styles" "Foreign"
+        , Exact "PropInjector" "Foreign"
+        , Exact "Omit" "Foreign"
+        , Exact "PropsFor" "Foreign"
         , Exists "React.ComponentType" "JSX"
         , Exists "Hook" "Foreign"
         , Exists "CSSProperties" "CSS"
@@ -114,22 +116,30 @@ main = do
         , Exists "React.DOMAttributes" "Foreign"
         , Exists "React" "Foreign"
         , Exists "PropTypes" "Foreign"
-        , Exists "Component" "ReactComponent"
+        , Exists "Component" "Foreign"
         , Exists "LegacyRef" "Foreign"
         , Exists "Color" "Foreign"
+        , Exists "Font" "Foreign"
+        , Exists "TextTransformProperty" "Foreign"
+        , Exists "LineHeightProperty" "Foreign"
+        , Exists "LetterSpacing" "Foreign"
         ]
 
   let path              =  "./node_modules/@material-ui/core/index.d.ts"
   cwd                   <- Process.cwd
   outputRoot            <- Path.resolve [cwd] "../src/"
   { sources, types }    <- typescript path regex
-  let filteredSources   =  Array.filter (\(DeclarationSourceFile { fileName }) -> isNothing $ String.indexOf (String.Pattern "index.d.ts") fileName) sources
+  let filteredSources   =  Array.filter  (\(DeclarationSourceFile { fileName }) -> isJust $ String.indexOf (String.Pattern "@material-ui/core") fileName)
+                                $ Array.filter (\(DeclarationSourceFile { fileName }) -> 
+                                    (isJust $ String.indexOf (String.Pattern "core/index.d.ts") fileName) || 
+                                    (isNothing $ String.indexOf (String.Pattern "index.d.ts") fileName)
+                                  ) sources
   let context           =  { sources : filteredSources, types, typeReplacements, regexps, outputRoot }
   let state             =  { files : mempty, hasRequiredFields : Object.empty, reverseImports : initialImports }
   tuple                 <- Run.runBaseEffect
                             $ State.runState state
                             $ Reader.runReader context write
---  let _ = spy "state" tuple
+  let _ = spy "state" tuple
   pure unit
 
 write :: ReactWriter Unit
@@ -141,6 +151,7 @@ write = do
 setup :: ReactWriter Unit
 setup = do
   { sources } <- Reader.ask
+  traverse_ setPathAndModuleName sources
   traverse_ setHasRequiredFields sources
   where
     setHasRequiredFields src = do 
@@ -155,7 +166,7 @@ setup = do
 writeSource :: DeclarationSourceFile -> ReactWriter Unit
 writeSource source @ (DeclarationSourceFile { fileName }) = do
   Run.liftEffect $ log $ "Writing " <> fileName
-  setPathAndModuleName source
+  { reverseImports } <- State.get
   importsForSource source
   javascriptExports source
   setDeclarationElements source
@@ -169,6 +180,7 @@ importsForSource source = do
   pure unit
 
 writePureScriptFile :: DeclarationSourceFile -> ReactWriter Unit
+writePureScriptFile (DeclarationSourceFile { fileName }) | not $ isMUIFile fileName = pure unit 
 writePureScriptFile (DeclarationSourceFile { fileName }) = do
   psjs <- getPSJS fileName
   let modulePart = fold [ "module ", psjs.purescript.moduleName, " where " ]
@@ -183,8 +195,7 @@ writePureScriptFile (DeclarationSourceFile { fileName }) = do
   Run.liftEffect $ FS.writeTextFile UTF8 psjs.purescript.path body 
 
 basicImports :: String
-basicImports = """import Prelude
-import Prim.Row (class Union)
+basicImports = """import Prim.Row (class Union)
 import Unsafe.Coerce (unsafeCoerce)
 import Foreign (Foreign)
 """
@@ -218,7 +229,7 @@ showPureScriptImports psjs = do
   where
     handleImport (Tuple moduleName strs) = fold
       [ "import "
-      , if moduleName == "React.Basic.MUI." then "React.Basic.MUI.Styles" else if moduleName == "Theme" then "React.Basic.MUI.Styles.CreateMuiTheme" else moduleName
+      , if moduleName == "React.Basic.MUI." then "React.Basic.MUI" else if moduleName == "Theme" then "React.Basic.MUI.Core.Styles.CreateMuiTheme" else moduleName
       , if moduleName == "React.Basic" then " (element, ReactComponent, " else " ("
       , Array.intercalate ", " strs 
       , ")"
@@ -264,14 +275,15 @@ showInterfaceDeclaration { name, typeParameters, typeMembers } = do
   where
     typeParametersStr | Array.length typeParameters > 0 = " " <> (Array.intercalate " " $ map showTypeParameter typeParameters)
     typeParametersStr = ""
-    requiredType members = (showMembers members) <#> \body ->  ("type " <> name <> "_required optional" <> typeParametersStr <> " =\n  ( " <> body <> "\n  | optional )")
+    requiredType members = (showMembers members) <#> \body ->  ("type " <> name <> "_required " <> typeParametersStr <> " optional =\n  ( " <> body <> "\n  | optional )")
     optionalType members = (showMembers members) <#> \body ->  ("type " <> name <> "_optional" <> typeParametersStr <> " =\n  ( " <> body <> "\n  )")
-    foreignData = pure $ fold [ "foreign import data ", name, " :: Type ", (Array.intercalate " -> " $ map (const "Type") $ fromMaybe [] $ Array.tail typeParameters) ]
+    foreignData = pure $ fold [ "foreign import data ", name, " :: Type ", (Array.intercalate " " $ map (const " -> Type") $ fromMaybe [] $ Array.tail typeParameters) ] 
     allType members = (showMembers members) <#> \body ->  ("type " <> name <> " " <> typeParametersStr <> " =\n  { " <> body <> "\n  }")
-    createForeignData = do
+    createForeignData | isJust $ String.indexOf (String.Pattern "Props") name = do
       lower <- lowerCaseFirst name 
-      signature  <- unionSignatureFn lower name name
+      signature  <- unionSignatureFn lower name name typeParameters
       pure $ fold [ signature, "\n", lower, " = unsafeCoerce" ]
+    createForeignData = pure ""
 
 
     showMembers :: Array TypeMember -> ReactWriter String
@@ -285,10 +297,10 @@ showTypeParameter (TypeParameter param) = String.toLower param
 showTypeMember :: TypeMember -> ReactWriter String
 showTypeMember typeMember = do
   context <- Reader.ask
-  pure $ showTypeMemberWithContext context typeMember
+  pure $ showTypeMemberWithContext context 0 typeMember
 
-showTypeMemberWithContext :: Context -> TypeMember -> String
-showTypeMemberWithContext context (PropertySignature (signature @ { name : Just name })) = do
+showTypeMemberWithContext :: Context -> Int -> TypeMember -> String
+showTypeMemberWithContext context index (PropertySignature (signature @ { name : Just name })) = do
   let fieldType = showUnfilteredTSType context signature.type
   ((clean context.regexps.cleanFunctionName $ showPropertyName name) <> " :: " <> fieldType)
   where
@@ -296,9 +308,14 @@ showTypeMemberWithContext context (PropertySignature (signature @ { name : Just 
     clean regex str = case (Regex.match regex str) of 
       Nothing -> "\"" <> str <> "\""
       Just _ -> str 
-showTypeMemberWithContext context (PropertySignature signature) = showUnfilteredTSType context signature.type
-showTypeMemberWithContext context typeMember = show typeMember
-
+showTypeMemberWithContext context index (PropertySignature signature) = showUnfilteredTSType context signature.type
+showTypeMemberWithContext context index (CallSignature { name, typeParameters, parameters, returnType }) = do
+  let _name = fromMaybe ("noname" <> show index) (name <#> showPropertyName)
+  let _typeParameters = if Array.length typeParameters > 0 then ("∀ " <> (Array.intercalate " " $ map showTypeParameter typeParameters) <> " . ") else ""
+  let _parameters = Array.intercalate " -> " $ map (showTypeMemberWithContext context index) parameters
+  let _returnType = showUnfilteredTSType context returnType
+  fold [ _name, " ", _typeParameters , " :: " , _parameters , " -> " , _returnType ] 
+showTypeMemberWithContext context index typeMember = show typeMember
 
 showPropertyName :: PropertyName -> String
 showPropertyName (IdentifierName name) = name
@@ -312,7 +329,7 @@ showVariableDeclaration :: VariableDeclaration -> ReactWriter String
 showVariableDeclaration (VariableDeclaration rec) = do
   _type <- showTSType rec.type
   if _type == "JSX"
-    then jsxFn rec.name
+    then jsxFn rec.name []
     else normalFn rec.name _type
 
 
@@ -321,7 +338,7 @@ showFunctionElement { name : Nothing } = pure ""
 showFunctionElement { name : Just name, typeParameters, parameters, returnType } = do
   _type <- showTSType returnType
   if _type == "JSX"
-    then jsxFn name
+    then jsxFn name typeParameters
     else normalFn name _type
 
 normalFn :: String -> String -> ReactWriter String
@@ -332,28 +349,34 @@ normalFn name _type = do
   pure $ fold [ lower , " :: " , _type, "\n", body, "\n", foreignData ]   
 
 
-jsxFn :: String -> ReactWriter String
-jsxFn name = do
+jsxFn :: String -> Array TypeParameter -> ReactWriter String
+jsxFn name typeParameters = do
+  let _typeParameters = if Array.length typeParameters == 0 then "" else ((Array.intercalate " " $ map showTypeParameter typeParameters) <> " ")
   state <- State.get
   let hasRequired = fromMaybe false $ Object.lookup (name <> "Props") state.hasRequiredFields
   lower <- lowerCaseFirst name
-  let recordTypePart = if hasRequired then (name <> "_required attrs") else "attrs"
-  signature <- unionSignatureFn name (name <> "Props") "JSX"
+  let recordTypePart = if hasRequired then (name <> "_required " <> _typeParameters <> "attrs") else "attrs"
+  signature <- unionSignatureFn name (name <> "Props") "JSX" typeParameters
   let body = fold [ lower, " = element _", name ]
   let foreignData = fold [ "foreign import _", name, " :: forall a. ReactComponent a " ]
   pure $ fold [ signature, "\n", body, "\n", foreignData ]
 
-unionSignatureFn :: String -> String -> String -> ReactWriter String
-unionSignatureFn name recordName _type = do
+unionSignatureFn :: String -> String -> String -> Array TypeParameter -> ReactWriter String
+unionSignatureFn name recordName _type typeParameters = do
+  let _typeParameters = if Array.length typeParameters == 0 then "" else ((Array.intercalate " " $ map showTypeParameter typeParameters) <> " ")
   state <- State.get
   let hasRequired = fromMaybe false $ Object.lookup (recordName) state.hasRequiredFields
   lower <- lowerCaseFirst name
-  let recordTypePart = if hasRequired then (recordName <> "_required attrs") else "attrs"
+  let recordTypePart = if hasRequired then (recordName <> "_required " <> _typeParameters <> "attrs") else "attrs"
   let signature = fold 
         [ lower
-        , "\n  :: ∀ attrs attrs_\n   . Union attrs attrs_ ("
+        , "\n  :: ∀ "
+        , _typeParameters
+        , "attrs attrs_\n   . Union attrs attrs_ ("
         , recordName 
-        , "_optional)\n  => Record ("
+        , "_optional "
+        , _typeParameters
+        , ")\n  => Record ("
         , recordTypePart
         , ")\n  -> "
         , _type
@@ -401,7 +424,7 @@ showUnfilteredTSType _ (LiteralType (LiteralStringValue value)) = "String"
 showUnfilteredTSType _ (LiteralType (LiteralNumericValue value)) = "Number"
 showUnfilteredTSType _ (LiteralType (LiteralBigIntValue value)) = "Number"
 showUnfilteredTSType _ (LiteralType (LiteralBooleanValue value)) = "Boolean"
-showUnfilteredTSType context (TypeLiteral members) = "{ " <> (Array.intercalate ", " $ map (showTypeMemberWithContext context) members) <> " }"
+showUnfilteredTSType context (TypeLiteral members) = "{ " <> (Array.intercalate ", " $ Array.mapWithIndex (showTypeMemberWithContext context) members) <> " }"
 showUnfilteredTSType _ (TypeQuery entityName) = showEntityName entityName
 showUnfilteredTSType _ t = "Foreign"
 
@@ -412,7 +435,7 @@ getNames fileName = do
   let splitter    =  String.split (String.Pattern "/")
   tokens          <- Array.nubEq <$> (traverse upperCaseFirst $ maybe [] splitter $ preview (_Just <<< ix 1 <<< _Just) match)
   let pathPrefix  =  Array.intercalate "/" tokens
-  let parentModuleName = "React.Basic.MUI." <> (maybe "" (Array.intercalate "." ) $ Array.init tokens)
+  let parentModuleName = "React.Basic.MUI.Core." <> (maybe "" (Array.intercalate "." ) $ Array.init tokens)
   let name = fromMaybe "" $ Array.head =<< Array.tail tokens
   let moduleName  =  "React.Basic.MUI." <> (Array.intercalate "." tokens) 
   pure { name, moduleName, parentModuleName }
@@ -435,7 +458,6 @@ setPathAndModuleName (DeclarationSourceFile { fileName, elements }) = do
   let moduleName  =  "React.Basic.MUI." <> (Array.intercalate "." tokens) 
   psjs          <- getPSJS fileName 
   setPSJS (psjs { javascript = psjs.javascript { path = jsPath }, purescript = psjs.purescript { path = psPath, name = name, moduleName = moduleName, parentModuleName = parentModuleName } })
-  state <- State.get
   traverse_ (elementSetReverseImport moduleName) elements
     where
       mkDir :: FilePath -> Array String -> ReactWriter Unit
@@ -456,7 +478,8 @@ setPathAndModuleName (DeclarationSourceFile { fileName, elements }) = do
 
       setReverseImport :: String -> String -> ReactWriter Unit
       setReverseImport name moduleName = do
-        State.modify \state -> state { reverseImports = Object.insert name moduleName state.reverseImports }
+        state <- State.get
+        State.put (state { reverseImports = Object.insert name moduleName state.reverseImports })
  
 
 javascriptImports :: DeclarationSourceFile -> ReactWriter Unit
@@ -525,6 +548,7 @@ purescriptImports (DeclarationSourceFile { fileName, elements }) = do
       join $ map extractTypes $ toArrayOf (traversed <<< _PropertySignature <<< _type) rec.parameters
     handleElement (VariableStatement declarations) = do
       join $ map extractTypes $ toArrayOf (traversed <<< _VariableDeclaration <<< _type) declarations
+    handleElement (TypeAliasDeclaration rec) = extractTypes rec.type
     handleElement _ = []
 
     extractTypes :: TSType -> Array TypeReferenceRec
@@ -572,7 +596,7 @@ showEntityName (Identifier name) = name
 showEntityName (QualifiedName { left, right }) = (showEntityName left) <> "." <> right
 
 isMUIFile :: FilePath -> Boolean
-isMUIFile path = isJust $ String.indexOf (String.Pattern "@material-ui") path
+isMUIFile path = isJust $ String.indexOf (String.Pattern "@material-ui/core") path
 
 getPSJS :: FilePath -> ReactWriter PSJS
 getPSJS path = do
