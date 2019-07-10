@@ -1,1 +1,0 @@
-exports._Snackbar = require('@material-ui/core/Snackbar').Snackbar

@@ -1,1 +1,0 @@
-exports._ExpansionPanelSummary = require('@material-ui/core/ExpansionPanelSummary').ExpansionPanelSummary

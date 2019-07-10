@@ -1,1 +1,0 @@
-exports._Menu = require('@material-ui/core/Menu').Menu

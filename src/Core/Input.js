@@ -1,1 +1,0 @@
-exports._Input = require('@material-ui/core/Input').Input

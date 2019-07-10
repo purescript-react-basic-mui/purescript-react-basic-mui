@@ -1,1 +1,0 @@
-exports._StepContent = require('@material-ui/core/StepContent').StepContent

@@ -1,1 +1,0 @@
-exports._withMobileDialog = require('@material-ui/core/withMobileDialog').withMobileDialog

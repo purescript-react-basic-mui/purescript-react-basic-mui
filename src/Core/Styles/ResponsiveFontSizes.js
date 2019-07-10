@@ -1,1 +1,0 @@
-exports._responsiveFontSizes = require('@material-ui/core/styles').responsiveFontSizes

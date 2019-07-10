@@ -1,1 +1,0 @@
-exports._InputAdornment = require('@material-ui/core/InputAdornment').InputAdornment

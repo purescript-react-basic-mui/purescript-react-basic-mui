@@ -1,1 +1,0 @@
-exports._Step = require('@material-ui/core/Step').Step

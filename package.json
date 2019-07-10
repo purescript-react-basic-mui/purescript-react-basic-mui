@@ -1,8 +1,8 @@
 {
-  "scripts": {
-    "clean":"rm -rf src/* && mkdir src/Core"
-  },
-  "devDependencies": {
-    "purescript": "^0.12.5"
+  "name": "react-basic-native-mui",
+  "version": "0.0.1",
+  "license": "Apache2.0",
+  "dependencies": {
+    "@material-ui/core": "^4.2.0"
   }
 }

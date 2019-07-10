@@ -1,1 +1,0 @@
-exports._shadows = require('@material-ui/core/styles').shadows

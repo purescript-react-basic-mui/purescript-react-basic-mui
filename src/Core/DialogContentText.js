@@ -1,1 +1,0 @@
-exports._DialogContentText = require('@material-ui/core/DialogContentText').DialogContentText

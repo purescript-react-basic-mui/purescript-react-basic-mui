@@ -1,1 +1,0 @@
-exports._TablePaginationActions = require('@material-ui/core/TablePagination').TablePaginationActions

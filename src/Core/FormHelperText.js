@@ -1,1 +1,0 @@
-exports._FormHelperText = require('@material-ui/core/FormHelperText').FormHelperText

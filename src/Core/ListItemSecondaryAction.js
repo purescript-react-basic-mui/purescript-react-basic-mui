@@ -1,1 +1,0 @@
-exports._ListItemSecondaryAction = require('@material-ui/core/ListItemSecondaryAction').ListItemSecondaryAction

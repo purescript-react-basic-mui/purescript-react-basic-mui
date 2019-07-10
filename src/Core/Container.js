@@ -1,1 +1,0 @@
-exports._Container = require('@material-ui/core/Container').Container

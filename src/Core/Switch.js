@@ -1,1 +1,0 @@
-exports._Switch = require('@material-ui/core/Switch').Switch

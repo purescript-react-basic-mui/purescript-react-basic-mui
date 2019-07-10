@@ -1,1 +1,0 @@
-exports._withStyles = require('@material-ui/core/styles').withStyles

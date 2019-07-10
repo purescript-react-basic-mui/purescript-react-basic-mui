@@ -1,1 +1,0 @@
-exports._color = require('@material-ui/core/colors').color

@@ -1,1 +1,0 @@
-exports._withTheme = require('@material-ui/core/styles').withTheme

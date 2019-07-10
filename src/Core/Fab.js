@@ -1,1 +1,0 @@
-exports._Fab = require('@material-ui/core/Fab').Fab

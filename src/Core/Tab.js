@@ -1,1 +1,0 @@
-exports._Tab = require('@material-ui/core/Tab').Tab

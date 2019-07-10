@@ -1,7 +1,7 @@
 { name =
     "react-basic-mui"
 , dependencies =
-    [  "console", "effect", "foreign", "foreign-object", "psci-support", "react-basic", "undefinable" ]
+    [  "react-basic-hooks", "simple-json" ]
 , packages =
     ./packages.dhall
 }

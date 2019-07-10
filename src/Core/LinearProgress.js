@@ -1,1 +1,0 @@
-exports._LinearProgress = require('@material-ui/core/LinearProgress').LinearProgress

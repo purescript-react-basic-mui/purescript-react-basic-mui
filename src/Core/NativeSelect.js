@@ -1,1 +1,0 @@
-exports._NativeSelect = require('@material-ui/core/NativeSelect').NativeSelect

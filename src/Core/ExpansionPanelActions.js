@@ -1,1 +1,0 @@
-exports._ExpansionPanelActions = require('@material-ui/core/ExpansionPanelActions').ExpansionPanelActions

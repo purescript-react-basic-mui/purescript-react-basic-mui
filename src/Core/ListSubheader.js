@@ -1,1 +1,0 @@
-exports._ListSubheader = require('@material-ui/core/ListSubheader').ListSubheader
