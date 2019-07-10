@@ -1,7 +1,7 @@
 { name =
     "react-basic-mui"
 , dependencies =
-    [  "react-basic-hooks", "simple-json" ]
+    [ "debug", "react-basic-hooks", "simple-json", "spec" ]
 , packages =
     ./packages.dhall
 }

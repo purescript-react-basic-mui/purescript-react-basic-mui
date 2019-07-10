@@ -1,5 +1,6 @@
 module MUI.Core where
 
+import Data.Function.Uncurried (Fn2)
 import Foreign (unsafeToForeign)
 import Simple.JSON (class WriteForeign)
 
@@ -25,10 +26,12 @@ foreign import data JSS :: Type
 newtype StringToString = StringToString (String -> String)
 newtype StringToNumber = StringToNumber (String -> Number)
 newtype NumberToNumber = NumberToNumber (Number -> Number)
+newtype FnStringStringToString = FnStringStringToString (Fn2 String String String)
 newtype JSSToJSS = JSSToJSS (JSS -> JSS)
 
 instance writeForeignJSS :: WriteForeign JSS where writeImpl = unsafeToForeign
 instance writeForeignJSSToJSS :: WriteForeign JSSToJSS where writeImpl = unsafeToForeign
 instance writeForeignStringToString :: WriteForeign StringToString where writeImpl = unsafeToForeign
+instance writeForeignFnStringStringToString :: WriteForeign FnStringStringToString where writeImpl = unsafeToForeign
 instance writeForeignStringToNumber :: WriteForeign StringToNumber where writeImpl = unsafeToForeign
 instance writeForeignNumberToNumber :: WriteForeign NumberToNumber where writeImpl = unsafeToForeign

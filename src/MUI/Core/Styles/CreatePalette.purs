@@ -98,8 +98,7 @@ type Palette =
   , action :: TypeAction
   , background :: TypeBackground
   , getContrastText :: String -> String
-  , error :: PaletteColor
-  , augmentColor :: PaletteColorOptions -> PaletteColor
+  , augmentColor :: Foreign
   }
 
 createPalette :: PaletteOptions -> Palette

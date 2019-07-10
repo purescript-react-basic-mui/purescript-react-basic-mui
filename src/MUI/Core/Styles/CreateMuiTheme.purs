@@ -2,16 +2,16 @@ module MUI.Core.Styles.CreateMuiTheme where
 
 import Prelude
 
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe(..))
 import Foreign (Foreign)
 import MUI.Core (NumberToNumber)
 import MUI.Core.Styles.CreateBreakpoints (BreakpointsOptions, Breakpoints)
 import MUI.Core.Styles.CreateMixins (MixinsOptions, Mixins)
 import MUI.Core.Styles.CreatePalette (PaletteOptions, Palette)
-import MUI.Core.Styles.Shape (ShapeOptions, Shape)
-import MUI.Core.Styles.Transitions (TransitionsOptions, Transitions)
+import MUI.Core.Styles.Shape (ShapeOptions)
+import MUI.Core.Styles.Transitions (TransitionsOptions)
 import MUI.Core.Styles.Typography (TypographyOptions, Typography)
-import MUI.Core.Styles.ZIndex (ZIndexOptions, ZIndex)
+import MUI.Core.Styles.ZIndex (ZIndexOptions)
 import Simple.JSON (write)
 
 type ThemeOptions =
@@ -25,23 +25,39 @@ type ThemeOptions =
   , shadows :: Maybe (Array String)
   , spacing :: Maybe NumberToNumber
   , transitions :: Maybe TransitionsOptions
-  , typography :: TypographyOptions
+  , typography :: Maybe TypographyOptions
   , zIndex :: Maybe ZIndexOptions
   }
 
+themeOptions :: ThemeOptions
+themeOptions =
+  { shape : Nothing
+  , breakpoints : Nothing
+  , direction : Nothing
+  , mixins : Nothing
+  , overrides : Nothing
+  , palette : Nothing
+  , props : Nothing
+  , shadows : Nothing
+  , spacing : Nothing
+  , transitions : Nothing
+  , typography : Nothing
+  , zIndex : Nothing
+  }
+
 type Theme =
-  { shape :: Shape
+  { shape :: Foreign
   , breakpoints :: Breakpoints
-  , direction :: String 
+  , direction :: Foreign
   , mixins :: Mixins
   , overrides :: Foreign
   , palette :: Palette
   , props :: Foreign 
   , shadows :: Array String
   , spacing :: Number -> Number 
-  , transitions :: Transitions
+  , transitions :: Foreign
   , typography :: Typography
-  , zIndex :: ZIndex
+  , zIndex :: Foreign
   }
 
 createMuiTheme :: ThemeOptions -> Theme

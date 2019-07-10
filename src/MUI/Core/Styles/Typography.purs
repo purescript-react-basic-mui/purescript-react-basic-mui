@@ -7,13 +7,10 @@ import MUI.Core (JSS)
 import MUI.Core.Styles.CreatePalette (Palette)
 import Simple.JSON (write)
 
-type FontStyle =
+type TypographyStyle =
   { fontFamily :: String
   , fontSize :: String
-  , fontWeightLight :: String
-  , fontWeightRegular :: String
-  , fontWeightMedium :: String
-  , fontWeightBold :: String
+  , fontWeight :: Number
   , letterSpacing :: Foreign
   , lineHeight :: Foreign
   , textTransform :: Foreign
@@ -36,25 +33,25 @@ type TypographyOptions =
   }
 
 type Typography =
-  { h1 :: FontStyle
-  , h2 :: FontStyle
-  , h3 :: FontStyle
-  , h4 :: FontStyle
-  , h5 :: FontStyle
-  , h6 :: FontStyle
-  , subtitle1 :: FontStyle
-  , subtitle2 :: FontStyle
-  , body1 :: FontStyle
-  , body2 :: FontStyle
-  , caption :: FontStyle
-  , button :: FontStyle
-  , overline :: FontStyle
+  { h1 :: TypographyStyle
+  , h2 :: TypographyStyle
+  , h3 :: TypographyStyle
+  , h4 :: TypographyStyle
+  , h5 :: TypographyStyle
+  , h6 :: TypographyStyle
+  , subtitle1 :: TypographyStyle
+  , subtitle2 :: TypographyStyle
+  , body1 :: TypographyStyle
+  , body2 :: TypographyStyle
+  , caption :: TypographyStyle
+  , button :: TypographyStyle
+  , overline :: TypographyStyle
   , fontFamily :: String
-  , fontSize :: String
-  , fontWeightLight :: String
-  , fontWeightRegular :: String
-  , fontWeightMedium :: String
-  , fontWeightBold :: String
+  , fontSize :: Number
+  , fontWeightLight :: Number
+  , fontWeightRegular :: Number
+  , fontWeightMedium :: Number
+  , fontWeightBold :: Number
   , letterSpacing :: Foreign
   , lineHeight :: Foreign
   , textTransform :: Foreign

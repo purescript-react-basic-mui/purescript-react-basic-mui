@@ -2,9 +2,10 @@ module MUI.Core.Styles.CreateBreakpoints where
 
 import Prelude
 
+import Data.Function.Uncurried (Fn2)
 import Data.Maybe (Maybe(..))
 import Foreign (Foreign)
-import MUI.Core (StringToNumber, StringToString)
+import MUI.Core (FnStringStringToString, StringToNumber, StringToString)
 import Simple.JSON (write)
 
 type BreakpointValues =
@@ -20,19 +21,19 @@ type Breakpoints =
   , values :: BreakpointValues
   , up :: String -> String
   , down :: String -> String
-  , between :: String -> String 
+  , between :: Fn2 String String String 
   , only :: String -> String
   , width :: String -> Number
   }
 
 type BreakpointsOptions =
   { unit :: Maybe String
-  , ste :: Maybe Number
+  , step :: Maybe Number
   , keys :: Maybe (Array String)
   , values :: Maybe BreakpointValues
   , up :: Maybe StringToString 
   , down :: Maybe StringToString 
-  , between :: Maybe StringToString 
+  , between :: Maybe FnStringStringToString 
   , only :: Maybe StringToString 
   , width :: Maybe StringToNumber
   }
@@ -40,7 +41,7 @@ type BreakpointsOptions =
 breakpointsOptions :: BreakpointsOptions
 breakpointsOptions =
   { unit : Nothing
-  , ste : Nothing
+  , step : Nothing
   , keys : Nothing
   , values : Nothing
   , up : Nothing
