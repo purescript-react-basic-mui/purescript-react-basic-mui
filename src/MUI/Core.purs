@@ -3,6 +3,7 @@ module MUI.Core where
 import Data.Function.Uncurried (Fn2)
 import Foreign (unsafeToForeign)
 import Simple.JSON (class WriteForeign)
+import Unsafe.Coerce (unsafeCoerce)
 
 type Color =
   { "50"  :: String
@@ -20,6 +21,9 @@ type Color =
   , "A400" :: String
   , "A700" :: String
 }
+
+jss :: ∀ r. { | r } -> JSS
+jss = unsafeCoerce
 
 foreign import data JSS :: Type
 
