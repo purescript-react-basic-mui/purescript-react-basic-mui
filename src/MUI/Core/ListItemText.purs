@@ -63,8 +63,7 @@ listItemIcon props = do
       foreignProps = (secondary <<< primary <<< toInternalChildren) props
       newProps = Record.set (SProxy :: SProxy "primaryTypographyProps") foreignPrimaryTypographyProps
                    $ Record.set (SProxy :: SProxy "secondaryTypographyProps") foreignSecondaryTypographyProps foreignProps
-
-  element _ListItemText (unsafeCoerce newProps)
+  element _ListItemText (unsafeCoerce $ write newProps)
 
 
 
