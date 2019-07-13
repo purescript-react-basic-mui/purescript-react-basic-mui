@@ -5,6 +5,7 @@ import Foreign (Foreign, unsafeToForeign)
 import MUI.Core.Styles.CreateMuiTheme (Theme)
 import React.Basic (Component, JSX)
 import React.Basic.Events (EventHandler)
+import React.Basic.Hooks (Ref)
 import Simple.JSON (class WriteForeign)
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -66,6 +67,9 @@ onEscapeKeyDown = unsafeCoerce
 onRendered :: ∀ r. { onRendered :: Maybe EventHandler | r } -> { onRendered :: Maybe InternalEventHandler | r }
 onRendered = unsafeCoerce 
 
+onFocusVisible :: ∀ r. { onFocusVisible :: Maybe EventHandler | r } -> { onFocusVisible :: Maybe InternalEventHandler | r }
+onFocusVisible = unsafeCoerce 
+
 addEndListener :: ∀ r. { addEndListener :: Maybe EventHandler | r } -> { addEndListener :: Maybe InternalEventHandler | r }
 addEndListener = unsafeCoerce
 
@@ -77,6 +81,12 @@ theme = unsafeCoerce
 
 backdropComponent :: ∀ a r. { "BackdropComponent" :: Maybe (Component a) | r } -> { "BackdropComponent" :: (Maybe (InternalComponent a)) | r}
 backdropComponent = unsafeCoerce
+
+action :: ∀ a r. { action :: Maybe (Ref a) | r } -> { action :: Maybe Foreign | r }
+action = unsafeCoerce
+
+buttonRef :: ∀ a r. { buttonRef :: Maybe (Ref a) | r } -> { buttonRef :: Maybe Foreign | r }
+buttonRef = unsafeCoerce
 
 
 instance writeForeignInternalJSX :: WriteForeign InternalJSX where writeImpl = unsafeToForeign
