@@ -3,6 +3,7 @@ module MUI.Core.Typography where
 import Prelude
 
 import Data.Maybe (Maybe(..))
+import Foreign (Foreign)
 import MUI.Core (JSS)
 import MUI.Core.Internal (toInternalChildren)
 import React.Basic (JSX, ReactComponent, element)
@@ -130,8 +131,11 @@ variantMapping =
   , body1: "p"
   , body2: "p"
   }
+propsToForeign :: { | TypographyProps } -> Foreign
+propsToForeign props = 
+  write $ toInternalChildren props
 
 typography :: { | TypographyProps } -> JSX
-typography props = element _Typography (unsafeCoerce $ write $ toInternalChildren props)
+typography props = element _Typography $ unsafeCoerce $ propsToForeign props
 
 foreign import _Typography :: ∀ a. ReactComponent a

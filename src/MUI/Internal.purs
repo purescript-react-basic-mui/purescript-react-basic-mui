@@ -24,6 +24,15 @@ toInternalMaybe = unsafeCoerce
 toInternalMaybeEH :: Maybe EventHandler -> Maybe InternalEventHandler
 toInternalMaybeEH = unsafeCoerce
 
+subheader :: ∀ r. { subheader :: Maybe JSX | r } -> { subheader :: Maybe InternalJSX | r }
+subheader = unsafeCoerce
+
+primary :: ∀ r. { primary :: Maybe JSX | r } -> { primary :: Maybe InternalJSX | r }
+primary = unsafeCoerce
+
+secondary :: ∀ r. { secondary :: Maybe JSX | r } -> { secondary :: Maybe InternalJSX | r }
+secondary = unsafeCoerce
+
 onClose :: ∀ r. { onClose :: Maybe EventHandler | r } -> { onClose :: Maybe InternalEventHandler | r }
 onClose = unsafeCoerce 
 
