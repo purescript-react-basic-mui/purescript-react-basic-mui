@@ -3,7 +3,6 @@ module MUI.Core.CardHeader where
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Foreign.Object (Object)
 import MUI.Core (JSS)
 import MUI.Core.Internal (InternalJSX, toInternalChildren)
 import React.Basic (JSX, ReactComponent, element)
@@ -16,7 +15,8 @@ type CardHeaderProps =
   ( action :: Maybe JSX
   , avatar :: Maybe JSX
   , children :: Maybe (Array JSX)
-  , classes :: Maybe (Object JSS)
+  , className :: Maybe String
+  , classes :: CardHeaderClassKey 
   , component :: Maybe String
   , disableTypography :: Maybe Boolean
   , subheader :: Maybe JSX
@@ -25,12 +25,32 @@ type CardHeaderProps =
   , titleTypographyProps :: Maybe TypographyProps
   )
 
+type CardHeaderClassKey =
+  { root :: Maybe JSS
+  , avatar :: Maybe JSS
+  , action :: Maybe JSS
+  , content :: Maybe JSS
+  , title :: Maybe JSS
+  , subheader :: Maybe JSS
+  }
+
+classes :: CardHeaderClassKey 
+classes = 
+  { root : Nothing
+  , avatar : Nothing
+  , action : Nothing
+  , content : Nothing
+  , title : Nothing
+  , subheader : Nothing
+  }
+
 cardHeaderProps :: { | CardHeaderProps }
 cardHeaderProps =
   { action : Nothing
   , avatar : Nothing
   , children : Nothing
-  , classes : Nothing
+  , classes
+  , className : Nothing
   , component : Just "div"
   , disableTypography : Just false
   , subheader : Nothing

@@ -97,3 +97,4 @@ spec =
     it "should create a theme with a proper Shadows" do
       let theme = createMuiTheme themeOptions
       isGood $ decode theme.shadows
+

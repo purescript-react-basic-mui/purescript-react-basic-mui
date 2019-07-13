@@ -3,7 +3,6 @@ module MUI.Core.CardContent where
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Foreign.Object (Object)
 import MUI.Core (JSS)
 import MUI.Core.Internal (toInternalChildren)
 import React.Basic (JSX, ReactComponent, element)
@@ -12,14 +11,21 @@ import Unsafe.Coerce (unsafeCoerce)
 
 type CardContentProps =
   ( children :: Maybe (Array JSX)
-  , classes :: Maybe (Object JSS)
+  , classes :: CardContentClassKey 
+  , className :: Maybe String
   , component :: Maybe String
   )
+
+type CardContentClassKey = { root :: Maybe JSS }
+
+classes :: CardContentClassKey 
+classes = { root : Nothing }
 
 cardContentProps :: { | CardContentProps }
 cardContentProps =
   { children : Nothing
-  , classes : Nothing 
+  , classes
+  , className : Nothing
   , component : Just "div"
   }
   
