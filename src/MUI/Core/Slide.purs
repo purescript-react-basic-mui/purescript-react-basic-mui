@@ -50,5 +50,4 @@ propsToForeign props =
 slide :: { | SlideProps } -> JSX
 slide props = element _Slide $ unsafeCoerce $ propsToForeign props
 
-
 foreign import _Slide :: ∀ a. ReactComponent a

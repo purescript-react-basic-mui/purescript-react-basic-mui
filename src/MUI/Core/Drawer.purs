@@ -9,17 +9,17 @@ import Foreign.Object (Object)
 import Foreign.Object as Object
 import MUI.Core (JSS)
 import MUI.Core.Internal (onClose, toInternalChildren)
-import MUI.Core.Slide (SlideProps, slideProps)
+import MUI.Core.Paper (PaperProps)
+import MUI.Core.Slide (SlideProps)
+import MUI.Core.Paper as Paper
 import MUI.Core.Slide as Slide
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.Events (EventHandler)
-import Record (modify)
 import Record as Record
 import Simple.JSON (write)
 import Unsafe.Coerce (unsafeCoerce)
 
 type ModalProps = Object Foreign
-type PaperProps = Object Foreign
 
 type DrawerProps =
   ( anchor :: Maybe String
@@ -30,7 +30,7 @@ type DrawerProps =
   , "ModalProps" :: ModalProps
   , onClose :: Maybe EventHandler
   , open :: Maybe Boolean
-  , "PaperProps" :: PaperProps
+  , "PaperProps" :: { | PaperProps }
   , "SlideProps" :: { | SlideProps }
   , transitionDuration :: Maybe { enter :: Maybe Number, exit :: Maybe Number }
   , variant :: Maybe String
@@ -46,8 +46,8 @@ drawerProps =
   , "ModalProps" : Object.empty
   , onClose : Nothing
   , open : Just false
-  , "PaperProps" : Object.empty
-  , "SlideProps" : slideProps
+  , "PaperProps" : Paper.paperProps
+  , "SlideProps" : Slide.slideProps
   , transitionDuration : Nothing
   , variant : Just "temporary"
   }
@@ -86,7 +86,9 @@ classes =
 drawer :: { | DrawerProps } -> JSX
 drawer props = do 
   let foreignSlideProps = Slide.propsToForeign props."SlideProps"
-      newProps = Record.set (SProxy :: SProxy "SlideProps") foreignSlideProps props
+      foreignPaperProps = Paper.propsToForeign props."PaperProps"
+      newProps = Record.set (SProxy :: SProxy "SlideProps") foreignSlideProps 
+                   $ Record.set (SProxy :: SProxy "PaperProps") foreignPaperProps props
   element _Drawer (unsafeCoerce $ write $ (onClose <<< toInternalChildren) newProps)
 
 foreign import _Drawer :: ∀ a. ReactComponent a
