@@ -41,6 +41,4 @@ link
   -> JSX
 link = element _Link
 
-
-
 foreign import _Link :: ∀ a. ReactComponent a
