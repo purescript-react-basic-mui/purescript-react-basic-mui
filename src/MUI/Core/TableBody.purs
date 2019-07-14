@@ -1,35 +1,33 @@
 module MUI.Core.TableBody where
 
-import Prelude
-
-import Data.Maybe (Maybe(..))
-import MUI.Core.Internal (toInternalChildren)
+import Data.Maybe (Maybe)
 import React.Basic (JSX, ReactComponent, element)
-import Simple.JSON (write)
+import Prim.Row (class Union)
 import Unsafe.Coerce (unsafeCoerce)
 
 type TableBodyProps =
-  ( children :: Maybe (Array JSX)
+  ( children :: Array JSX
   , classes :: TableBodyClassKey
-  , component :: Maybe String
+  , component :: String
   )
 
-type TableBodyClassKey = { root :: Maybe String }
+foreign import data TableBodyClassKey :: Type
 
-tableBodyProps :: { | TableBodyProps }
-tableBodyProps = 
-  { children : Nothing
-  , classes
-  , component : Just "tbody"
-  }
+type TableBodyClassKeyOptions = ( root :: Maybe String )
 
-classes :: TableBodyClassKey
-classes = { root : Nothing }
+tableBodyClassKey 
+  :: ∀ options options_
+  . Union options options_ TableBodyClassKeyOptions
+  => Record options
+  -> TableBodyClassKey
+tableBodyClassKey = unsafeCoerce
 
-tableBody :: { | TableBodyProps } -> JSX
-tableBody props = do
-  let foreignProps = write $ toInternalChildren props
-  element _TableBody (unsafeCoerce foreignProps)
+tableBody
+  :: ∀ props props_
+  . Union props props_ TableBodyProps
+  => Record props 
+  -> JSX
+tableBody = element _TableBody
 
 
 foreign import  _TableBody :: ∀ a. ReactComponent a

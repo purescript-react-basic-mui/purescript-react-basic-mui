@@ -1,87 +1,58 @@
 module MUI.Core.TableSortLabel where
 
-import Prelude
 
-import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
-import Foreign (Foreign, unsafeToForeign)
+import Foreign (Foreign)
 import MUI.Core.ButtonBase (ButtonBaseActions, TouchRippleProps)
-import MUI.Core.Internal (action, buttonRef, onFocusVisible, toInternalChildren)
 import MUI.Core.SvgIcon (SvgIconProps)
+import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.Events (EventHandler)
 import React.Basic.Hooks (Ref)
-import Record as Record
-import Simple.JSON (write)
 import Unsafe.Coerce (unsafeCoerce)
 
 type TableSortLabelProps =
-  ( active :: Maybe Boolean
-  , children :: Maybe (Array JSX)
+  ( active :: Boolean
+  , children :: Array JSX
   , classes :: TableSortLabelClassKey
-  , direction :: Maybe String
-  , hideSortIcon :: Maybe Boolean
-  , "IconComponent" :: Maybe (ReactComponent { | SvgIconProps })
-  , action :: Maybe (Ref ButtonBaseActions)
-  , buttonRef :: Maybe (Ref Foreign)
-  , centerRipple :: Maybe Boolean
-  , component :: Maybe String
-  , disabled :: Maybe Boolean
-  , disableRipple :: Maybe Boolean
-  , disableTouchRipple :: Maybe Boolean
-  , focusRipple :: Maybe Boolean
-  , focusVisibleClassName :: Maybe String
-  , onFocusVisible :: Maybe EventHandler
-  , "TouchRippleProps" :: Maybe TouchRippleProps
-  , type :: Maybe String
+  , direction :: String
+  , hideSortIcon :: Boolean
+  , "IconComponent" :: ReactComponent { | SvgIconProps }
+  , action :: Ref ButtonBaseActions
+  , buttonRef :: Ref Foreign
+  , centerRipple :: Boolean
+  , component :: String
+  , disabled :: Boolean
+  , disableRipple :: Boolean
+  , disableTouchRipple :: Boolean
+  , focusRipple :: Boolean
+  , focusVisibleClassName :: String
+  , onFocusVisible :: EventHandler
+  , "TouchRippleProps" :: TouchRippleProps
+  , type :: String
   )
 
-tableSortLabelProps :: { | TableSortLabelProps }
-tableSortLabelProps =
-  { active : Just false
-  , direction : Just "desc"
-  , hideSortIcon  : Just false
-  , "IconComponent" : Nothing
-  , action : Nothing
-  , buttonRef : Nothing
-  , centerRipple : Just false
-  , children : Nothing
-  , classes
-  , component : Just "button"
-  , disabled : Nothing
-  , disableRipple : Just false
-  , disableTouchRipple : Just false
-  , focusRipple : Just false
-  , focusVisibleClassName : Nothing
-  , onFocusVisible : Nothing
-  , "TouchRippleProps" : Nothing
-  , type : Just "button"
-  }
+foreign import data TableSortLabelClassKey :: Type
 
+type TableSortLabelClassKeyOptions =
+  ( root :: String
+  , active :: String
+  , icon :: String
+  , iconDirectionDesc :: String
+  , iconDirectionAsc :: String
+  )
 
+classes 
+  :: ∀ options options_
+  . Union options options_ TableSortLabelClassKeyOptions
+  => Record options
+  -> TableSortLabelClassKey
+classes = unsafeCoerce
 
-type TableSortLabelClassKey =
-  { root :: Maybe String
-  , active :: Maybe String
-  , icon :: Maybe String
-  , iconDirectionDesc :: Maybe String
-  , iconDirectionAsc :: Maybe String
-  }
-
-classes :: TableSortLabelClassKey
-classes =
-  { root : Nothing
-  , active : Nothing
-  , icon : Nothing
-  , iconDirectionDesc : Nothing
-  , iconDirectionAsc : Nothing
-  }
-
-tableSortLabel :: { | TableSortLabelProps } -> JSX
-tableSortLabel props = do
-  let foreignProps = (action <<< buttonRef <<< onFocusVisible <<< toInternalChildren) props
-      newProps = Record.set (SProxy :: SProxy "IconComponent") (unsafeToForeign <$> props."IconComponent") foreignProps
-  element _TableSortLabel (unsafeCoerce $ write newProps)
-
+tableSortLabel
+  :: ∀ props props_
+  . Union props props_ TableSortLabelProps
+  => Record props 
+  -> JSX
+tableSortLabel = element _TableSortLabel
 
 foreign import  _TableSortLabel :: ∀ a. ReactComponent a

@@ -1,10 +1,8 @@
 module MUI.Core.ListItemIcon where
 
-import Data.Maybe (Maybe(..))
-import MUI.Core (JSS)
-import MUI.Core.Internal (toInternalChildren)
+import Data.Maybe (Maybe)
+import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
-import Simple.JSON (write)
 import Unsafe.Coerce (unsafeCoerce)
 
 type ListItemIconProps =
@@ -12,28 +10,26 @@ type ListItemIconProps =
   , classes :: ListItemIconClassKey
   )
 
-type ListItemIconClassKey =
-  { root :: Maybe JSS
-  , alignItemsFlexStart :: Maybe JSS
-  }
+foreign import data ListItemIconClassKey :: Type
 
-classes :: ListItemIconClassKey
-classes =
-  { root : Nothing
-  , alignItemsFlexStart : Nothing
-  }
+type ListItemIconClassKeyOptions =
+  ( root :: String
+  , alignItemsFlexStart :: String
+  )
 
-listItemIconProps :: { | ListItemIconProps }
-listItemIconProps = 
-  { children : Nothing
-  , classes
-  }
+listItemIconClassKey 
+  :: ∀ options options_
+  . Union options options_ ListItemIconClassKeyOptions
+  => Record options
+  -> ListItemIconClassKey
+listItemIconClassKey = unsafeCoerce
 
-listItemIcon :: { | ListItemIconProps } -> JSX
-listItemIcon props = do
-  let foreignProps = write (toInternalChildren props) 
-  element _ListItemIcon (unsafeCoerce foreignProps)
-
+listItemIcon
+  :: ∀ props props_
+  . Union props props_ ListItemIconProps
+  => Record props 
+  -> JSX
+listItemIcon = element _ListItemIcon
 
 
 foreign import _ListItemIcon :: ∀ a. ReactComponent a

@@ -1,35 +1,31 @@
 module MUI.Core.TableFooter where
 
-import Prelude
-
-import Data.Maybe (Maybe(..))
-import MUI.Core.Internal (toInternalChildren)
 import React.Basic (JSX, ReactComponent, element)
-import Simple.JSON (write)
+import Prim.Row (class Union)
 import Unsafe.Coerce (unsafeCoerce)
 
 type TableFooterProps =
-  ( children :: Maybe (Array JSX)
+  ( children :: Array JSX
   , classes :: TableFooterClassKey
-  , component :: Maybe String
+  , component :: String
   )
 
-type TableFooterClassKey = { root :: Maybe String }
+foreign import data TableFooterClassKey :: Type
 
-tableFooterProps :: { | TableFooterProps }
-tableFooterProps = 
-  { children : Nothing
-  , classes
-  , component : Just "tfoot"
-  }
+type TableFooterClassKeyOptions = ( root :: String )
 
-classes :: TableFooterClassKey
-classes = { root : Nothing }
+tableFooterClassKey 
+  :: ∀ options options_
+  . Union options options_ TableFooterClassKeyOptions
+  => Record options
+  -> TableFooterClassKey
+tableFooterClassKey = unsafeCoerce
 
-tableFooter :: { | TableFooterProps } -> JSX
-tableFooter props = do
-  let foreignProps = write $ toInternalChildren props
-  element _TableFooter (unsafeCoerce foreignProps)
-
+tableFooter
+  :: ∀ props props_
+  . Union props props_ TableFooterProps
+  => Record props 
+  -> JSX
+tableFooter = element _TableFooter
 
 foreign import  _TableFooter :: ∀ a. ReactComponent a

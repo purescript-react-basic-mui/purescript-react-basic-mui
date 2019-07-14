@@ -1,35 +1,32 @@
 module MUI.Core.TableHead where
 
-import Prelude
-
-import Data.Maybe (Maybe(..))
-import MUI.Core.Internal (toInternalChildren)
+import Data.Maybe (Maybe)
+import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
-import Simple.JSON (write)
 import Unsafe.Coerce (unsafeCoerce)
 
 type TableHeadProps =
-  ( children :: Maybe (Array JSX)
+  ( children :: Array JSX
   , classes :: TableHeadClassKey
   , component :: Maybe String
   )
 
-type TableHeadClassKey = { root :: Maybe String }
+foreign import data TableHeadClassKey :: Type
 
-tableHeadProps :: { | TableHeadProps }
-tableHeadProps = 
-  { children : Nothing
-  , classes
-  , component : Just "thead"
-  }
+type TableHeadClassKeyOptions = ( root :: String )
 
-classes :: TableHeadClassKey
-classes = { root : Nothing }
+tableHeadClassKey 
+  :: ∀ options options_
+  . Union options options_ TableHeadClassKeyOptions
+  => Record options
+  -> TableHeadClassKey
+tableHeadClassKey = unsafeCoerce
 
-tableHead :: { | TableHeadProps } -> JSX
-tableHead props = do
-  let foreignProps = write $ toInternalChildren props
-  element _TableHead (unsafeCoerce foreignProps)
-
+tableHead
+  :: ∀ props props_
+  . Union props props_ TableHeadProps
+  => Record props 
+  -> JSX
+tableHead = element _TableHead
 
 foreign import  _TableHead :: ∀ a. ReactComponent a

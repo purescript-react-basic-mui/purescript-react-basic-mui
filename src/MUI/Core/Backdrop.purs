@@ -1,82 +1,56 @@
 module MUI.Core.Backdrop where
 
-import Prelude
-
-import Data.Maybe (Maybe(..))
 import Foreign (Foreign)
-import MUI.Core (JSS)
-import MUI.Core.Internal (addEndListener, onClick, onEnter, onEntered, onEntering, onExit, onExited, onExiting, theme, toInternalChildren)
 import MUI.Core.Styles.CreateMuiTheme (Theme)
+import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.Events (EventHandler)
-import Simple.JSON (write)
 import Unsafe.Coerce (unsafeCoerce)
 
 type BackdropProps =
-  ( invisible :: Maybe Boolean
-  , children :: Maybe (Array JSX)
+  ( invisible :: Boolean
+  , children :: Array JSX
   , classes :: BackdropClassKey
-  , className :: Maybe String
-  , onClick :: Maybe EventHandler
+  , className :: String
+  , onClick :: EventHandler
   , open :: Boolean
-  , transitionDuration :: Maybe { enter :: Maybe Number, exit :: Maybe Number }
-  , ref :: Maybe Foreign
-  , theme :: Maybe Theme
-  , in :: Maybe Boolean
-  , timeout :: Maybe Number
-  , onEnter :: Maybe EventHandler
-  , onEntering :: Maybe EventHandler
-  , onEntered :: Maybe EventHandler
-  , onExit :: Maybe EventHandler
-  , onExiting :: Maybe EventHandler
-  , onExited :: Maybe EventHandler
-  , mountOnEnter :: Maybe Boolean
-  , unmountOnExit :: Maybe Boolean
-  , addEndListener :: Maybe EventHandler
+  , transitionDuration :: { enter :: Number, exit :: Number }
+  , ref :: Foreign
+  , theme :: Theme
+  , in :: Boolean
+  , timeout :: Number
+  , onEnter :: EventHandler
+  , onEntering :: EventHandler
+  , onEntered :: EventHandler
+  , onExit :: EventHandler
+  , onExiting :: EventHandler
+  , onExited :: EventHandler
+  , mountOnEnter :: Boolean
+  , unmountOnExit :: Boolean
+  , addEndListener :: EventHandler
   )
 
-backdropProps :: { | BackdropProps }
-backdropProps =
-  { invisible : Just false
-  , children : Nothing
-  , classes
-  , className : Nothing
-  , onClick : Nothing
-  , open : false
-  , transitionDuration : Nothing
-  , ref : Nothing
-  , theme : Nothing
-  , in : Just false
-  , timeout : Nothing
-  , onEnter : Nothing
-  , onEntering : Nothing
-  , onEntered : Nothing
-  , onExit : Nothing
-  , onExiting : Nothing
-  , onExited : Nothing
-  , mountOnEnter : Just true
-  , unmountOnExit : Just false
-  , addEndListener : Nothing
-  }
 
+foreign import data BackdropClassKey :: Type
 
-type BackdropClassKey = 
-  { root :: Maybe JSS
-  , invisible :: Maybe JSS
-  }
+type BackdropClassKeyOptions = 
+  ( root :: String
+  , invisible :: String
+  )
 
-classes :: BackdropClassKey 
-classes =
-  { root : Nothing
-  , invisible : Nothing
-  }
+backdropClassKey 
+  :: ∀ options options_
+  . Union options options_ BackdropClassKeyOptions
+  => Record options
+  -> BackdropClassKey
+backdropClassKey = unsafeCoerce
 
-backdrop :: { | BackdropProps } -> JSX
-backdrop props = do
-  let foreignProps = write 
-        $ (onClick <<< onEnter <<< onEntering <<< onEntered <<< onExit <<< onExiting <<< onExited <<< addEndListener <<< theme <<< toInternalChildren) 
-        $ props
-  element _Backdrop (unsafeCoerce foreignProps)
+backdrop
+  :: ∀ props props_
+  . Union props props_ BackdropProps
+  => Record props 
+  -> JSX
+backdrop = element _Backdrop
 
 foreign import _Backdrop :: ∀ a. ReactComponent a
 

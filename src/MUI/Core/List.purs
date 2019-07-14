@@ -1,54 +1,39 @@
 module MUI.Core.List where
 
-import Prelude
-
-import Data.Maybe (Maybe(..))
-import MUI.Core (JSS)
-import MUI.Core.Internal (subheader, toInternalChildren)
 import React.Basic (JSX, ReactComponent, element)
-import Simple.JSON (write)
+import Prim.Row (class Union)
 import Unsafe.Coerce (unsafeCoerce)
 
 type ListProps =
-  ( children :: Maybe (Array JSX)
+  ( children :: Array JSX
   , classes :: ListClassKey
-  , component :: Maybe String
-  , dense :: Maybe Boolean
-  , disablePadding :: Maybe Boolean
-  , subheader :: Maybe JSX
+  , component :: String
+  , dense :: Boolean
+  , disablePadding :: Boolean
+  , subheader :: JSX
   )
 
-type ListClassKey =
-  { root :: Maybe JSS
-  , padding :: Maybe JSS
-  , dense :: Maybe JSS
-  , subheader :: Maybe JSS
-  }
+foreign import data ListClassKey :: Type
 
-classes :: ListClassKey
-classes = 
-  { root : Nothing
-  , padding : Nothing
-  , dense : Nothing
-  , subheader : Nothing
-  }
+type ListClassKeyOptions =
+  ( root :: String
+  , padding :: String
+  , dense :: String
+  , subheader :: String
+  )
 
-listProps :: { | ListProps }
-listProps = 
-  { children : Nothing
-  , classes
-  , component : Just "ul"
-  , dense : Just false
-  , disablePadding : Just false
-  , subheader : Nothing
-  }
+listClassKey 
+  :: ∀ options options_
+  . Union options options_ ListClassKeyOptions
+  => Record options
+  -> ListClassKey
+listClassKey = unsafeCoerce
 
-list :: { | ListProps } -> JSX
-list props = do
-  let foreignProps = write
-        $ (subheader <<< toInternalChildren) 
-        $ props
-  element _List (unsafeCoerce foreignProps)
-
+list
+  :: ∀ props props_
+  . Union props props_ ListProps
+  => Record props 
+  -> JSX
+list = element _List
 
 foreign import _List :: ∀ a. ReactComponent a

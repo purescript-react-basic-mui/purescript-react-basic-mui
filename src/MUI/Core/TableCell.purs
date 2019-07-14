@@ -1,71 +1,49 @@
 module MUI.Core.TableCell where
 
-import Prelude
-
-import Data.Maybe (Maybe(..))
-import MUI.Core.Internal (toInternalChildren)
+import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
-import Simple.JSON (write)
 import Unsafe.Coerce (unsafeCoerce)
 
 type TableCellProps =
-  ( align :: Maybe String
-  , children :: Maybe (Array JSX)
+  ( align :: String
+  , children :: Array JSX
   , classes :: TableCellClassKey
-  , component :: Maybe String
-  , padding :: Maybe String
-  , scope :: Maybe String
-  , size :: Maybe String
-  , sortDirection :: Maybe String
-  , variant :: Maybe String
+  , component :: String
+  , padding :: String
+  , scope :: String
+  , size :: String
+  , sortDirection :: String
+  , variant :: String
   )
 
-tableCellProps :: { | TableCellProps }
-tableCellProps =
-  { align : Just "inherit"
-  , children : Nothing
-  , classes
-  , component : Nothing
-  , padding : Nothing
-  , scope : Nothing
-  , size : Nothing
-  , sortDirection : Nothing
-  , variant : Nothing
-  }
+foreign import data TableCellClassKey :: Type
 
-type TableCellClassKey =
-  { root :: Maybe String
-  , head :: Maybe String
-  , body :: Maybe String
-  , footer :: Maybe String
-  , sizeSmall :: Maybe String
-  , paddingCheckbox :: Maybe String
-  , paddingNone :: Maybe String
-  , alignLeft :: Maybe String
-  , alignCenter :: Maybe String
-  , alignRight :: Maybe String
-  , alignJustify :: Maybe String
-  }
+type TableCellClassKeyOptions =
+  ( root :: String
+  , head :: String
+  , body :: String
+  , footer :: String
+  , sizeSmall :: String
+  , paddingCheckbox :: String
+  , paddingNone :: String
+  , alignLeft :: String
+  , alignCenter :: String
+  , alignRight :: String
+  , alignJustify :: String
+  )
 
-classes :: TableCellClassKey
-classes =
-  { root : Nothing
-  , head : Nothing
-  , body : Nothing
-  , footer : Nothing
-  , sizeSmall : Nothing
-  , paddingCheckbox : Nothing
-  , paddingNone : Nothing
-  , alignLeft : Nothing
-  , alignCenter : Nothing
-  , alignRight : Nothing
-  , alignJustify : Nothing
-  }
+tableCellClassKey 
+  :: ∀ options options_
+  . Union options options_ TableCellClassKeyOptions
+  => Record options
+  -> TableCellClassKey
+tableCellClassKey = unsafeCoerce
 
-tableCell :: { | TableCellProps } -> JSX
-tableCell props = do
-  let foreignProps = write $ toInternalChildren props
-  element _TableCell (unsafeCoerce foreignProps)
-
+tableCell
+  :: ∀ props props_
+  . Union props props_ TableCellProps
+  => Record props 
+  -> JSX
+tableCell = element _TableCell
 
 foreign import  _TableCell :: ∀ a. ReactComponent a

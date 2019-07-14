@@ -1,53 +1,30 @@
 module MUI.Core.Slide where
 
-import Prelude
-
-import Data.Maybe (Maybe(..))
-import Foreign (Foreign)
-import MUI.Core.Internal (addEndListener, onEnter, onEntered, onEntering, onExit, onExited, onExiting, toInternalChildren)
+import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.Events (EventHandler)
-import Simple.JSON (write)
-import Unsafe.Coerce (unsafeCoerce)
 
 type SlideProps =
-  ( children :: Maybe (Array JSX)
-  , direction :: Maybe String
-  , in :: Maybe Boolean
-  , timeout :: Maybe Number
-  , onEnter :: Maybe EventHandler
-  , onEntering :: Maybe EventHandler
-  , onEntered :: Maybe EventHandler
-  , onExit :: Maybe EventHandler
-  , onExiting :: Maybe EventHandler
-  , onExited :: Maybe EventHandler
-  , mountOnEnter :: Maybe Boolean
-  , unmountOnExit :: Maybe Boolean
-  , addEndListener :: Maybe EventHandler
+  ( children :: Array JSX
+  , direction :: String
+  , in :: Boolean
+  , timeout :: Number
+  , onEnter :: EventHandler
+  , onEntering :: EventHandler
+  , onEntered :: EventHandler
+  , onExit :: EventHandler
+  , onExiting :: EventHandler
+  , onExited :: EventHandler
+  , mountOnEnter :: Boolean
+  , unmountOnExit :: Boolean
+  , addEndListener :: EventHandler
   )
 
-slideProps :: { | SlideProps }
-slideProps =
-  { children : Nothing
-  , direction : Just "down"
-  , in : Just false
-  , timeout : Nothing
-  , onEnter : Nothing
-  , onEntering : Nothing
-  , onEntered : Nothing
-  , onExit : Nothing
-  , onExiting : Nothing
-  , onExited : Nothing
-  , mountOnEnter : Just true
-  , unmountOnExit : Just false
-  , addEndListener : Nothing
-  }
-
-propsToForeign :: { | SlideProps } -> Foreign
-propsToForeign props = 
-  write $ (onEnter <<< onEntering <<< onEntered <<< onExit <<< onExiting <<< onExited <<< addEndListener <<< toInternalChildren) props
-
-slide :: { | SlideProps } -> JSX
-slide props = element _Slide $ unsafeCoerce $ propsToForeign props
+slide
+  :: ∀ props props_
+  . Union props props_ SlideProps
+  => Record props 
+  -> JSX
+slide = element _Slide
 
 foreign import _Slide :: ∀ a. ReactComponent a

@@ -1,36 +1,35 @@
 module MUI.Core.CardContent where
 
-import Prelude
 
-import Data.Maybe (Maybe(..))
 import MUI.Core (JSS)
-import MUI.Core.Internal (toInternalChildren)
+import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
-import Simple.JSON (write)
 import Unsafe.Coerce (unsafeCoerce)
 
 type CardContentProps =
-  ( children :: Maybe (Array JSX)
+  ( children :: Array JSX
   , classes :: CardContentClassKey 
-  , className :: Maybe String
-  , component :: Maybe String
+  , className :: String
+  , component :: String
   )
 
-type CardContentClassKey = { root :: Maybe JSS }
+foreign import data CardContentClassKey :: Type
 
-classes :: CardContentClassKey 
-classes = { root : Nothing }
+type CardContentClassKeyOptions = ( root :: JSS )
 
-cardContentProps :: { | CardContentProps }
-cardContentProps =
-  { children : Nothing
-  , classes
-  , className : Nothing
-  , component : Just "div"
-  }
-  
-cardContent :: { | CardContentProps } -> JSX
-cardContent props = element _CardContent (unsafeCoerce $ write $ toInternalChildren props)
+cardContentClassKey 
+  :: ∀ options options_
+  . Union options options_ CardContentClassKeyOptions
+  => Record options
+  -> CardContentClassKey
+cardContentClassKey = unsafeCoerce
+
+cardContent
+  :: ∀ props props_
+  . Union props props_ CardContentProps
+  => Record props 
+  -> JSX
+cardContent = element _CardContent
 
 
 foreign import _CardContent :: ∀ a. ReactComponent a

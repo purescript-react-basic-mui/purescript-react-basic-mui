@@ -1,59 +1,46 @@
 module MUI.Core.Link where
 
-import Prelude
 
-import Data.Maybe (Maybe(..))
-import MUI.Core.Internal (toInternalChildren)
 import MUI.Core.Typography (TypographyClassKey)
-import MUI.Core.Typography as Typography
+import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
-import Simple.JSON (write)
 import Unsafe.Coerce (unsafeCoerce)
 
 type LinkProps =
-  ( children :: Maybe (Array JSX)
+  ( children :: Array JSX
   , classes :: LinkClassKey
-  , color :: Maybe String
-  , component :: Maybe String
+  , color :: String
+  , component :: String
   , "TypographyClasses" :: TypographyClassKey
-  , underline :: Maybe String
-  , variant :: Maybe String
+  , underline :: String
+  , variant :: String
   )
 
-linkProps :: { | LinkProps }
-linkProps = 
-  { children : Nothing
-  , classes
-  , color : Just "primary"
-  , component : Just "a"
-  , "TypographyClasses" : Typography.classes
-  , underline : Just "hover"
-  , variant : Just "inherit"
-  }
+foreign import data LinkClassKey :: Type
 
-type LinkClassKey =
-  { root :: Maybe String
-  , underlineNone :: Maybe String
-  , underlineHover :: Maybe String
-  , underlineAlways :: Maybe String
-  , button :: Maybe String
-  , focusVisible :: Maybe String
-  }
+type LinkClassKeyOptions =
+  ( root :: String
+  , underlineNone :: String
+  , underlineHover :: String
+  , underlineAlways :: String
+  , button :: String
+  , focusVisible :: String
+  )
 
-classes :: LinkClassKey
-classes = 
-  { root : Nothing
-  , underlineNone : Nothing
-  , underlineHover : Nothing
-  , underlineAlways : Nothing
-  , button : Nothing
-  , focusVisible : Nothing
-  }
+linkClassKey 
+  :: ∀ options options_
+  . Union options options_ LinkClassKeyOptions
+  => Record options
+  -> LinkClassKey
+linkClassKey = unsafeCoerce
 
-link :: { | LinkProps } -> JSX
-link props = do
-  let foreignProps = write $ toInternalChildren props
-  element _Link (unsafeCoerce foreignProps)
+link
+  :: ∀ props props_
+  . Union props props_ LinkProps
+  => Record props 
+  -> JSX
+link = element _Link
+
 
 
 foreign import _Link :: ∀ a. ReactComponent a

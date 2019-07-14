@@ -1,66 +1,48 @@
 module MUI.Core.SvgIcon where
 
-import Prelude
-
-import Data.Maybe (Maybe(..))
-import MUI.Core.Internal (toInternalChildren)
 import React.Basic (JSX, ReactComponent, element)
-import Simple.JSON (write)
+import Prim.Row (class Union)
 import Unsafe.Coerce (unsafeCoerce)
 
 type SvgIconProps =
-  ( children :: Maybe (Array JSX)
+  ( children :: Array JSX
   , classes :: SvgIconClassKey
-  , color :: Maybe String
-  , component :: Maybe String
-  , fontSize :: Maybe String
-  , htmlColor :: Maybe String
-  , shapeRendering :: Maybe String
-  , titleAccess :: Maybe String
-  , viewBox :: Maybe String
+  , color :: String
+  , component :: String
+  , fontSize :: String
+  , htmlColor :: String
+  , shapeRendering :: String
+  , titleAccess :: String
+  , viewBox :: String
   )
 
-svgIconProps :: { | SvgIconProps }
-svgIconProps = 
-  { children : Nothing
-  , classes
-  , color : Nothing
-  , component : Just "svg"
-  , fontSize : Just "default"
-  , htmlColor : Nothing
-  , shapeRendering : Nothing
-  , titleAccess : Nothing
-  , viewBox : Just "0 0 24 24"
-  }
+foreign import data SvgIconClassKey :: Type
 
-type SvgIconClassKey =
-  { root :: Maybe String
-  , colorPrimary :: Maybe String
-  , colorSecondary :: Maybe String
-  , colorAction :: Maybe String
-  , colorError :: Maybe String
-  , colorDisabled :: Maybe String
-  , fontSizeInherit :: Maybe String
-  , fontSizeSmall :: Maybe String
-  , fontSizeLarge :: Maybe String
-  }
+type SvgIconClassKeyOptions =
+  ( root :: String
+  , colorPrimary :: String
+  , colorSecondary :: String
+  , colorAction :: String
+  , colorError :: String
+  , colorDisabled :: String
+  , fontSizeInherit :: String
+  , fontSizeSmall :: String
+  , fontSizeLarge :: String
+  )
 
-classes :: SvgIconClassKey
-classes =
-  { root : Nothing
-  , colorPrimary : Nothing
-  , colorSecondary : Nothing
-  , colorAction : Nothing
-  , colorError : Nothing
-  , colorDisabled : Nothing
-  , fontSizeInherit : Nothing
-  , fontSizeSmall : Nothing
-  , fontSizeLarge : Nothing
-  }
+svgIconClassKey 
+  :: ∀ options options_
+  . Union options options_ SvgIconClassKeyOptions
+  => Record options
+  -> SvgIconClassKey
+svgIconClassKey = unsafeCoerce
 
-svgIcon :: { | SvgIconProps } -> JSX
-svgIcon props = do
-  let foreignProps = write $ toInternalChildren props
-  element _SvgIcon (unsafeCoerce foreignProps)
+svgIcon
+  :: ∀ props props_
+  . Union props props_ SvgIconProps
+  => Record props 
+  -> JSX
+svgIcon = element _SvgIcon
+
 
 foreign import _SvgIcon :: ∀ a. ReactComponent a
