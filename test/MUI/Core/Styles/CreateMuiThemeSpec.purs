@@ -4,7 +4,6 @@ import Prelude
 
 import Data.Either (isRight)
 import Data.Function.Uncurried (runFn2)
-import Debug.Trace (spy)
 import Effect.Aff (Aff)
 import Foreign (unsafeToForeign)
 import MUI.Core.Styles.CreateMuiTheme (createMuiTheme)
