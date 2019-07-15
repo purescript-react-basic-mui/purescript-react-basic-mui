@@ -13,6 +13,7 @@ type LinearProgressProps =
   )
 
 foreign import data LinearProgressClassKey :: Type
+foreign import data LinearProgressPropsPartial :: Type
 
 type LinearProgressClassKeyOptions =
   ( root :: String
@@ -35,18 +36,22 @@ type LinearProgressClassKeyOptions =
   , bar2Buffer :: String
   )
 
-linearProgressClassKey 
-  :: ∀ options options_
+linearProgressClassKey :: ∀ options options_
   . Union options options_ LinearProgressClassKeyOptions
   => Record options
   -> LinearProgressClassKey
 linearProgressClassKey = unsafeCoerce
 
-linearProgress
-  :: ∀ props props_
+linearProgress :: ∀ props props_
   . Union props props_ LinearProgressProps
   => Record props 
   -> JSX
 linearProgress = element _LinearProgress
+
+linearProgressPropsPartial :: ∀ props props_
+  . Union props props_ LinearProgressProps
+  => Record props 
+  -> LinearProgressPropsPartial 
+linearProgressPropsPartial = unsafeCoerce
 
 foreign import _LinearProgress :: ∀ a. ReactComponent a

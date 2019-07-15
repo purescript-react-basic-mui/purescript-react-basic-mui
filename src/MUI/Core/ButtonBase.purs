@@ -38,18 +38,23 @@ type ButtonBaseClassKeyOptions =
   , focusVisible :: String
   )
 
+foreign import data ButtonBasePropsPartial :: Type
+
 foreign import data ButtonBaseClassKey :: Type
 
-
-buttonBaseClassKey
-  :: ∀ options options_
+buttonBaseClassKey :: ∀ options options_
   . Union options options_ ButtonBaseClassKeyOptions
   => Record options
   -> ButtonBaseClassKey
 buttonBaseClassKey = unsafeCoerce
 
-buttonBase
-  :: ∀ props props_
+buttonBasePartial :: ∀ props props_
+  . Union props props_ ButtonBaseProps
+  => Record props 
+  -> ButtonBasePropsPartial
+buttonBasePartial = unsafeCoerce
+
+buttonBase :: ∀ props props_
   . Union props props_ ButtonBaseProps
   => Record props 
   -> JSX

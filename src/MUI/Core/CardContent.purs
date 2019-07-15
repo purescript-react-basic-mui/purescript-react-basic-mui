@@ -13,19 +13,25 @@ type CardContentProps =
   , component :: String
   )
 
+foreign import data CardContentPropsPartial :: Type
+
 foreign import data CardContentClassKey :: Type
 
 type CardContentClassKeyOptions = ( root :: JSS )
 
-cardContentClassKey 
-  :: ∀ options options_
+cardContentClassKey :: ∀ options options_
   . Union options options_ CardContentClassKeyOptions
   => Record options
   -> CardContentClassKey
 cardContentClassKey = unsafeCoerce
 
-cardContent
-  :: ∀ props props_
+cardContentPropsPartial :: ∀ props props_
+  . Union props props_ CardContentProps
+  => Record props 
+  -> CardContentPropsPartial 
+cardContentPropsPartial = unsafeCoerce
+
+cardContent :: ∀ props props_
   . Union props props_ CardContentProps
   => Record props 
   -> JSX

@@ -17,6 +17,7 @@ type SvgIconProps =
   )
 
 foreign import data SvgIconClassKey :: Type
+foreign import data SvgIconPropsPartial :: Type
 
 type SvgIconClassKeyOptions =
   ( root :: String
@@ -30,15 +31,19 @@ type SvgIconClassKeyOptions =
   , fontSizeLarge :: String
   )
 
-svgIconClassKey 
-  :: ∀ options options_
+svgIconClassKey :: ∀ options options_
   . Union options options_ SvgIconClassKeyOptions
   => Record options
   -> SvgIconClassKey
 svgIconClassKey = unsafeCoerce
 
-svgIcon
-  :: ∀ props props_
+svgIconPropsPartial :: ∀ props props_
+  . Union props props_ SvgIconProps
+  => Record props 
+  -> SvgIconPropsPartial 
+svgIconPropsPartial = unsafeCoerce
+
+svgIcon :: ∀ props props_
   . Union props props_ SvgIconProps
   => Record props 
   -> JSX

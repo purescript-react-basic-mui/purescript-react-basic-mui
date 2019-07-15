@@ -13,6 +13,7 @@ type PaperProps =
   )
 
 foreign import data PaperClassKey :: Type
+foreign import data PaperPropsPartial :: Type
 
 type PaperClassKeyOptions =
   ( root :: String
@@ -44,15 +45,19 @@ type PaperClassKeyOptions =
   , elevation24 :: String
   )
 
-paperClassKey 
-  :: ∀ options options_
+paperClassKey :: ∀ options options_
   . Union options options_ PaperClassKeyOptions
   => Record options
   -> PaperClassKey
 paperClassKey = unsafeCoerce
 
-paper
-  :: ∀ props props_
+paperPropsPartial :: ∀ props props_
+  . Union props props_ PaperProps
+  => Record props 
+  -> JSX
+paperPropsPartial = unsafeCoerce
+
+paper :: ∀ props props_
   . Union props props_ PaperProps
   => Record props 
   -> JSX

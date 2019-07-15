@@ -11,18 +11,23 @@ type TableBodyProps =
   )
 
 foreign import data TableBodyClassKey :: Type
+foreign import data TableBodyPropsPartial :: Type
 
 type TableBodyClassKeyOptions = ( root :: String )
 
-tableBodyClassKey 
-  :: ∀ options options_
+tableBodyClassKey :: ∀ options options_
   . Union options options_ TableBodyClassKeyOptions
   => Record options
   -> TableBodyClassKey
 tableBodyClassKey = unsafeCoerce
 
-tableBody
-  :: ∀ props props_
+tableBodyPropsPartial :: ∀ props props_
+  . Union props props_ TableBodyProps
+  => Record props 
+  -> TableBodyPropsPartial
+tableBodyPropsPartial = unsafeCoerce
+
+tableBody :: ∀ props props_
   . Union props props_ TableBodyProps
   => Record props 
   -> JSX

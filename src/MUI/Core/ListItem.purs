@@ -24,6 +24,7 @@ type ListItemProps =
   )
 
 foreign import data ListItemClassKey :: Type
+foreign import data ListItemPropsPartial :: Type
 
 type ListItemClassKeyOptions =
   ( root :: String
@@ -39,15 +40,20 @@ type ListItemClassKeyOptions =
   , selected :: String
   )
 
-listItemClassKey 
-  :: ∀ options options_
+listItemClassKey :: ∀ options options_
   . Union options options_ ListItemClassKeyOptions
   => Record options
   -> ListItemClassKey
 listItemClassKey = unsafeCoerce
 
-listItem
-  :: ∀ props props_
+listItemPropsPartial :: ∀ props props_
+  . Union props props_ ListItemProps
+  => Record props 
+  -> ListItemPropsPartial 
+listItemPropsPartial = unsafeCoerce
+
+
+listItem :: ∀ props props_
   . Union props props_ ListItemProps
   => Record props 
   -> JSX

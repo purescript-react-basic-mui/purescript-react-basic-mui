@@ -41,18 +41,23 @@ type TextFieldProps =
 
 
 foreign import data TextFieldClassKey :: Type
+foreign import data TextFieldPropsPartial :: Type
 
 type TextFieldClassKeyOptions = ( root :: String )
 
-textFieldClassKey
-  :: ∀ options options_
+textFieldClassKey :: ∀ options options_
   . Union options options_ TextFieldClassKeyOptions
   => Record options
   -> TextFieldClassKey
 textFieldClassKey = unsafeCoerce
 
-textField
-  :: ∀ props props_
+textFieldPropsPartial :: ∀ props props_
+  . Union props props_ TextFieldProps
+  => Record props 
+  -> TextFieldPropsPartial 
+textFieldPropsPartial = unsafeCoerce
+
+textField :: ∀ props props_
   . Union props props_ TextFieldProps
   => Record props 
   -> JSX

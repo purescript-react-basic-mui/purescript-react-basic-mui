@@ -23,6 +23,7 @@ type DrawerProps =
   )
 
 foreign import data DrawerClassKey :: Type
+foreign import data DrawerPropsPartial :: Type
 
 type DrawerClassKeyOptions =
   ( root :: String
@@ -53,5 +54,11 @@ drawer
   -> JSX
 drawer = element _Drawer
 
+drawerPropsPartial
+  :: ∀ props props_
+  . Union props props_ DrawerProps
+  => Record props 
+  -> DrawerPropsPartial 
+drawerPropsPartial = unsafeCoerce
 
 foreign import _Drawer :: ∀ a. ReactComponent a

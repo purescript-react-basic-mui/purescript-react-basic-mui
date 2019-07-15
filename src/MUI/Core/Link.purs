@@ -17,6 +17,7 @@ type LinkProps =
   )
 
 foreign import data LinkClassKey :: Type
+foreign import data LinkPropsPartial :: Type
 
 type LinkClassKeyOptions =
   ( root :: String
@@ -27,15 +28,20 @@ type LinkClassKeyOptions =
   , focusVisible :: String
   )
 
-linkClassKey 
-  :: ∀ options options_
+linkClassKey  :: ∀ options options_
   . Union options options_ LinkClassKeyOptions
   => Record options
   -> LinkClassKey
 linkClassKey = unsafeCoerce
 
-link
-  :: ∀ props props_
+linkPropsPartial :: ∀ props props_
+  . Union props props_ LinkProps
+  => Record props 
+  -> LinkPropsPartial
+linkPropsPartial = unsafeCoerce
+
+
+link :: ∀ props props_
   . Union props props_ LinkProps
   => Record props 
   -> JSX

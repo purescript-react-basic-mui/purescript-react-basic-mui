@@ -16,6 +16,8 @@ type CardProps =
   , raised :: Boolean
   )
 
+foreign import data CardPropsPartial :: Type
+
 foreign import data CardClassKey :: Type
 
 type CardClassKeyOptions =
@@ -48,15 +50,19 @@ type CardClassKeyOptions =
   , elevation24 :: String
   )
 
-cardClassKey 
-  :: ∀ options options_
+cardClassKey :: ∀ options options_
   . Union options options_ CardClassKeyOptions
   => Record options
   -> CardClassKey
 cardClassKey = unsafeCoerce
 
-card
-  :: ∀ props props_
+cardPropsPartial :: ∀ props props_
+  . Union props props_ CardProps
+  => Record props 
+  -> CardPropsPartial 
+cardPropsPartial = unsafeCoerce
+
+card :: ∀ props props_
   . Union props props_ CardProps
   => Record props 
   -> JSX

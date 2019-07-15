@@ -14,6 +14,7 @@ type ListProps =
   )
 
 foreign import data ListClassKey :: Type
+foreign import data ListPropsPartial :: Type
 
 type ListClassKeyOptions =
   ( root :: String
@@ -22,15 +23,20 @@ type ListClassKeyOptions =
   , subheader :: String
   )
 
-listClassKey 
-  :: ∀ options options_
+listClassKey :: ∀ options options_
   . Union options options_ ListClassKeyOptions
   => Record options
   -> ListClassKey
 listClassKey = unsafeCoerce
 
-list
-  :: ∀ props props_
+listPropsPartial :: ∀ props props_
+  . Union props props_ ListProps
+  => Record props 
+  -> ListPropsPartial
+listPropsPartial = unsafeCoerce
+
+
+list :: ∀ props props_
   . Union props props_ ListProps
   => Record props 
   -> JSX

@@ -11,18 +11,23 @@ type TableHeadProps =
   )
 
 foreign import data TableHeadClassKey :: Type
+foreign import data TableHeadPropsPartial :: Type
 
 type TableHeadClassKeyOptions = ( root :: String )
 
-tableHeadClassKey 
-  :: ∀ options options_
+tableHeadClassKey :: ∀ options options_
   . Union options options_ TableHeadClassKeyOptions
   => Record options
   -> TableHeadClassKey
 tableHeadClassKey = unsafeCoerce
 
-tableHead
-  :: ∀ props props_
+tableHeadPropsPartial :: ∀ props props_
+  . Union props props_ TableHeadProps
+  => Record props 
+  -> TableHeadPropsPartial 
+tableHeadPropsPartial = unsafeCoerce
+
+tableHead :: ∀ props props_
   . Union props props_ TableHeadProps
   => Record props 
   -> JSX

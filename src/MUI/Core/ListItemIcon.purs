@@ -10,21 +10,26 @@ type ListItemIconProps =
   )
 
 foreign import data ListItemIconClassKey :: Type
+foreign import data ListItemIconPropsPartial :: Type
 
 type ListItemIconClassKeyOptions =
   ( root :: String
   , alignItemsFlexStart :: String
   )
 
-listItemIconClassKey 
-  :: ∀ options options_
+listItemIconClassKey :: ∀ options options_
   . Union options options_ ListItemIconClassKeyOptions
   => Record options
   -> ListItemIconClassKey
 listItemIconClassKey = unsafeCoerce
 
-listItemIcon
-  :: ∀ props props_
+listItemIconPropsPartial :: ∀ props props_
+  . Union props props_ ListItemIconProps
+  => Record props 
+  -> ListItemIconPropsPartial 
+listItemIconPropsPartial = unsafeCoerce
+
+listItemIcon :: ∀ props props_
   . Union props props_ ListItemIconProps
   => Record props 
   -> JSX

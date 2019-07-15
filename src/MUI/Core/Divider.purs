@@ -13,6 +13,7 @@ type DividerProps =
   )
 
 foreign import data DividerClassKey :: Type
+foreign import data DividerPropsPartial :: Type
 
 type DividerClassKeyOptions =
   ( root :: String
@@ -22,19 +23,22 @@ type DividerClassKeyOptions =
   , middle :: String
   )
 
-dividerClassKey 
-  :: ∀ options options_
+dividerClassKey :: ∀ options options_
   . Union options options_ DividerClassKeyOptions
   => Record options
   -> DividerClassKey
 dividerClassKey = unsafeCoerce
 
-divider
-  :: ∀ props props_
+dividerPropsPartial :: ∀ props props_
+  . Union props props_ DividerProps
+  => Record props 
+  -> DividerPropsPartial 
+dividerPropsPartial = unsafeCoerce
+
+divider :: ∀ props props_
   . Union props props_ DividerProps
   => Record props 
   -> JSX
 divider = element _Divider
-
 
 foreign import _Divider :: ∀ a. ReactComponent a

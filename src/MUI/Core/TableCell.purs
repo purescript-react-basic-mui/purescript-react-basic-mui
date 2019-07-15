@@ -17,6 +17,7 @@ type TableCellProps =
   )
 
 foreign import data TableCellClassKey :: Type
+foreign import data TableCellPropsPartial :: Type
 
 type TableCellClassKeyOptions =
   ( root :: String
@@ -32,15 +33,19 @@ type TableCellClassKeyOptions =
   , alignJustify :: String
   )
 
-tableCellClassKey 
-  :: ∀ options options_
+tableCellClassKey :: ∀ options options_
   . Union options options_ TableCellClassKeyOptions
   => Record options
   -> TableCellClassKey
 tableCellClassKey = unsafeCoerce
 
-tableCell
-  :: ∀ props props_
+tableCellPropsPartial :: ∀ props props_
+  .  Union props props_ TableCellProps
+  => Record props 
+  -> TableCellPropsPartial
+tableCellPropsPartial = unsafeCoerce
+
+tableCell :: ∀ props props_
   . Union props props_ TableCellProps
   => Record props 
   -> JSX

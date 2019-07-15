@@ -20,6 +20,7 @@ type TypographyProps =
   )
 
 foreign import data TypographyClassKey :: Type
+foreign import data TypographyPropsPartial :: Type
 
 type TypographyClassKeyOptions =
   ( root :: String
@@ -79,15 +80,19 @@ variantMapping =
   , body2: "p"
   }
 
-typographyClassKey 
-  :: ∀ options options_
+typographyClassKey :: ∀ options options_
   . Union options options_ TypographyClassKeyOptions
   => Record options
   -> TypographyClassKey
 typographyClassKey = unsafeCoerce
 
-typography
-  :: ∀ props props_
+typographyPropsPartial :: ∀ props props_
+  . Union props props_ TypographyProps
+  => Record props 
+  -> TypographyPropsPartial 
+typographyPropsPartial = unsafeCoerce
+
+typography :: ∀ props props_
   . Union props props_ TypographyProps
   => Record props 
   -> JSX

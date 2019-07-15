@@ -25,20 +25,24 @@ type IconClassKeyOptions =
   )
 
 foreign import data IconClassKey :: Type
+foreign import data IconPropsPartial :: Type
 
-iconClassKey 
-  :: ∀ options options_
-  . Union options options_ IconClassKeyOptions
+iconClassKey :: ∀ options options_
+  .  Union options options_ IconClassKeyOptions
   => Record options
   -> IconClassKey 
 iconClassKey = unsafeCoerce
 
-icon
-  :: ∀ props props_
-  . Union props props_ IconProps
+iconPropsPartial :: ∀ props props_
+  .  Union props props_ IconProps
+  => Record props 
+  -> IconPropsPartial
+iconPropsPartial = unsafeCoerce
+
+icon :: ∀ props props_
+  .  Union props props_ IconProps
   => Record props 
   -> JSX
 icon = element _Icon
-
 
 foreign import _Icon :: ∀ a. ReactComponent a

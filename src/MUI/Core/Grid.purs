@@ -25,6 +25,7 @@ type GridProps =
   )
 
 foreign import data GridClassKey :: Type
+foreign import data GridPropsPartial :: Type
 
 type GridClassKeyOptions =
   ( container :: String
@@ -73,15 +74,20 @@ type GridClassKeyOptions =
   , "grid-xs-12" :: String
   )
 
-gridClassKey 
-  :: ∀ options options_
+gridClassKey :: ∀ options options_
   . Union options options_ GridClassKeyOptions
   => Record options
   -> GridClassKey
 gridClassKey = unsafeCoerce
 
-grid
-  :: ∀ props props_
+gridPropsPartial :: ∀ props props_
+  . Union props props_ GridProps
+  => Record props 
+  -> GridPropsPartial 
+gridPropsPartial = unsafeCoerce
+
+
+grid :: ∀ props props_
   . Union props props_ GridProps
   => Record props 
   -> JSX

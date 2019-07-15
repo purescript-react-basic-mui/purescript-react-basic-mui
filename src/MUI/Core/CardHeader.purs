@@ -20,6 +20,8 @@ type CardHeaderProps =
 
 foreign import data CardHeaderClassKey :: Type
 
+foreign import data CardHeaderPropsPartial :: Type
+
 type CardHeaderClassKeyOptions =
   ( root :: String
   , avatar :: String
@@ -29,15 +31,19 @@ type CardHeaderClassKeyOptions =
   , subheader :: String
   )
 
-cardHeaderClassKey 
-  :: ∀ options options_
+cardHeaderClassKey :: ∀ options options_
   . Union options options_ CardHeaderClassKeyOptions
   => Record options
   -> CardHeaderClassKey
 cardHeaderClassKey = unsafeCoerce
 
-cardHeader
-  :: ∀ props props_
+cardHeaderPropsPartial :: ∀ props props_
+  . Union props props_ CardHeaderProps
+  => Record props 
+  -> CardHeaderPropsPartial 
+cardHeaderPropsPartial = unsafeCoerce
+
+cardHeader :: ∀ props props_
   . Union props props_ CardHeaderProps
   => Record props 
   -> JSX

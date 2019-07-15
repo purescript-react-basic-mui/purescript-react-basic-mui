@@ -34,21 +34,26 @@ type ModalProps =
   )
 
 foreign import data ModalClassKey :: Type
+foreign import data ModalPropsPartial :: Type
 
 type ModalClassKeyOptions = 
   ( root :: String
   , hidden :: String
   )
 
-modalClassKey 
-  :: ∀ options options_
+modalClassKey :: ∀ options options_
   . Union options options_ ModalClassKeyOptions
   => Record options
   -> ModalClassKey
 modalClassKey = unsafeCoerce
 
-modal
-  :: ∀ props props_
+modalPropsPartial :: ∀ options options_
+  . Union options options_ ModalProps
+  => Record options
+  -> ModalPropsPartial
+modalPropsPartial = unsafeCoerce
+
+modal :: ∀ props props_
   . Union props props_ ModalProps
   => Record props 
   -> JSX

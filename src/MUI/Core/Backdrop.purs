@@ -1,7 +1,6 @@
 module MUI.Core.Backdrop where
 
 import Foreign (Foreign)
-import MUI.Core.Styles.CreateMuiTheme (Theme)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.Events (EventHandler)
@@ -16,7 +15,6 @@ type BackdropProps =
   , open :: Boolean
   , transitionDuration :: { enter :: Number, exit :: Number }
   , ref :: Foreign
-  , theme :: Theme
   , in :: Boolean
   , timeout :: Number
   , onEnter :: EventHandler
@@ -31,6 +29,7 @@ type BackdropProps =
   )
 
 
+foreign import data BackdropPropsPartial :: Type
 foreign import data BackdropClassKey :: Type
 
 type BackdropClassKeyOptions = 
@@ -38,16 +37,20 @@ type BackdropClassKeyOptions =
   , invisible :: String
   )
 
-backdropClassKey 
-  :: ∀ options options_
-  . Union options options_ BackdropClassKeyOptions
+backdropClassKey :: ∀ options options_
+  .  Union options options_ BackdropClassKeyOptions
   => Record options
   -> BackdropClassKey
 backdropClassKey = unsafeCoerce
 
-backdrop
-  :: ∀ props props_
-  . Union props props_ BackdropProps
+backdropPropsPartial :: ∀ props props_
+  .  Union props props_ BackdropProps
+  => Record props 
+  -> BackdropPropsPartial
+backdropPropsPartial = unsafeCoerce
+
+backdrop :: ∀ props props_
+  .  Union props props_ BackdropProps
   => Record props 
   -> JSX
 backdrop = element _Backdrop

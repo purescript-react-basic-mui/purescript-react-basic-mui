@@ -11,19 +11,25 @@ type TableFooterProps =
   )
 
 foreign import data TableFooterClassKey :: Type
+foreign import data TableFooterPropsPartial :: Type
 
 type TableFooterClassKeyOptions = ( root :: String )
 
-tableFooterClassKey 
-  :: ∀ options options_
-  . Union options options_ TableFooterClassKeyOptions
+tableFooterClassKey :: ∀ options options_
+  .  Union options options_ TableFooterClassKeyOptions
   => Record options
   -> TableFooterClassKey
 tableFooterClassKey = unsafeCoerce
 
-tableFooter
-  :: ∀ props props_
-  . Union props props_ TableFooterProps
+
+tableFooterPropsPartial :: ∀ props props_
+  .  Union props props_ TableFooterProps
+  => Record props 
+  -> TableFooterPropsPartial
+tableFooterPropsPartial = unsafeCoerce
+
+tableFooter :: ∀ props props_
+  .  Union props props_ TableFooterProps
   => Record props 
   -> JSX
 tableFooter = element _TableFooter

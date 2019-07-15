@@ -30,6 +30,7 @@ type IconButtonProps =
   )
 
 foreign import data IconButtonClassKey :: Type
+foreign import data IconButtonPropsPartial :: Type
 
 type IconButtonClassKeyOptions =
   ( root :: String
@@ -43,15 +44,20 @@ type IconButtonClassKeyOptions =
   , label :: String
   )
 
-iconButtonClassKey 
-  :: ∀ options options_
+iconButtonClassKey :: ∀ options options_
   . Union options options_ IconButtonClassKeyOptions
   => Record options
   -> IconButtonClassKey
 iconButtonClassKey = unsafeCoerce
 
-iconButton
-  :: ∀ props props_
+iconButtonPropsPartial :: ∀ props props_
+  . Union props props_ IconButtonProps
+  => Record props 
+  -> IconButtonPropsPartial 
+iconButtonPropsPartial = unsafeCoerce
+
+
+iconButton :: ∀ props props_
   . Union props props_ IconButtonProps
   => Record props 
   -> JSX

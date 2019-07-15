@@ -6,6 +6,8 @@ import Foreign (Foreign, unsafeToForeign)
 import MUI.Core.Styles.CreateBreakpoints (BreakpointsOptions, Breakpoints)
 import MUI.Core.Styles.CreateMixins (MixinsOptions, Mixins)
 import MUI.Core.Styles.CreatePalette (PaletteOptions, Palette)
+import MUI.Core.Styles.Props (ComponentsPropsPartial)
+import MUI.Core.Styles.Overrides (OverridesPartial)
 import MUI.Core.Styles.Shape (ShapeOptions, Shape)
 import MUI.Core.Styles.Transitions (TransitionsOptions, Transitions)
 import MUI.Core.Styles.Typography (Typography, TypographyOptions)
@@ -17,9 +19,9 @@ type ThemePartial =
   , breakpoints :: BreakpointsOptions
   , direction :: String
   , mixins :: MixinsOptions
-  , overrides :: Foreign
+  , overrides :: OverridesPartial
   , palette :: PaletteOptions
-  , props :: Foreign 
+  , props :: ComponentsPropsPartial 
   , shadows :: Array String
   , spacing :: Number -> Number 
   , transitions :: TransitionsOptions
@@ -32,9 +34,9 @@ type Theme =
   , breakpoints :: Breakpoints
   , direction :: String
   , mixins :: Mixins
-  , overrides :: Foreign
+  , overrides :: OverridesPartial
   , palette :: Palette
-  , props :: Foreign
+  , props :: ComponentsPropsPartial
   , shadows :: Array String
   , spacing :: Number -> Number
   , transitions :: Transitions

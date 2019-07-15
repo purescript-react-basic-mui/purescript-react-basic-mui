@@ -35,6 +35,7 @@ type TablePaginationProps =
   )
 
 foreign import data TablePaginationClassKey :: Type
+foreign import data TablePaginationPropsPartial :: Type
 
 type TablePaginationClassKeyOptions =
   ( root :: String
@@ -49,15 +50,19 @@ type TablePaginationClassKeyOptions =
   , actions :: String
   )
 
-tablePaginationClassKey 
-  :: ∀ options options_
+tablePaginationClassKey :: ∀ options options_
   . Union options options_ TablePaginationClassKeyOptions
   => Record options
   -> TablePaginationClassKey
 tablePaginationClassKey = unsafeCoerce
 
-tablePagination
-  :: ∀ props props_
+tablePaginationPropsPartial :: ∀ props props_
+  . Union props props_ TablePaginationProps
+  => Record props 
+  -> TablePaginationPropsPartial
+tablePaginationPropsPartial = unsafeCoerce
+
+tablePagination :: ∀ props props_
   . Union props props_ TablePaginationProps
   => Record props 
   -> JSX
