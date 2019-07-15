@@ -3,19 +3,20 @@ module MUI.Core.TablePagination where
 import Foreign (Foreign)
 import Foreign.Object (Object)
 import MUI.Core.IconButton (IconButtonProps)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.Events (EventHandler)
 import Prim.Row (class Union)
+import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_div)
+import React.Basic.Events (EventHandler)
 import Unsafe.Coerce (unsafeCoerce)
 
 type TablePaginationActions = Object Foreign
 type SelectProps = Object Foreign
 
-type TablePaginationProps =
+type TablePaginationProps a =
   ( "ActionsComponent" :: TablePaginationActions
   , backIconButtonProps :: { | IconButtonProps }
   , classes :: TablePaginationClassKey
-  , component :: String
+  , component :: ReactComponent { | a } 
   , count :: Number
   , labelDisplayedRows :: ({ from :: Number, to :: Number, count :: Number } -> String)
   , labelRowsPerPage :: String
@@ -57,13 +58,13 @@ tablePaginationClassKey :: ∀ options options_
 tablePaginationClassKey = unsafeCoerce
 
 tablePaginationPropsPartial :: ∀ props props_
-  . Union props props_ TablePaginationProps
+  . Union props props_ (TablePaginationProps Props_div)
   => Record props 
   -> TablePaginationPropsPartial
 tablePaginationPropsPartial = unsafeCoerce
 
 tablePagination :: ∀ props props_
-  . Union props props_ TablePaginationProps
+  . Union props props_ (TablePaginationProps Props_div)
   => Record props 
   -> JSX
 tablePagination = element _TablePagination

@@ -2,14 +2,15 @@ module MUI.Core.Grid where
 
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
-type GridProps =
+type GridProps a =
   ( alignContent :: String
   , alignItems :: String
   , children :: Array JSX
   , classes :: GridClassKey
-  , component :: String
+  , component :: ReactComponent { | a }
   , container :: Boolean
   , direction :: String
   , item :: Boolean
@@ -81,14 +82,14 @@ gridClassKey :: ∀ options options_
 gridClassKey = unsafeCoerce
 
 gridPropsPartial :: ∀ props props_
-  . Union props props_ GridProps
+  . Union props props_ (GridProps Props_div)
   => Record props 
   -> GridPropsPartial 
 gridPropsPartial = unsafeCoerce
 
 
 grid :: ∀ props props_
-  . Union props props_ GridProps
+  . Union props props_ (GridProps Props_div)
   => Record props 
   -> JSX
 grid = element _Grid

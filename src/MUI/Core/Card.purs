@@ -4,13 +4,14 @@ module MUI.Core.Card where
  
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
-type CardProps =
+type CardProps a =
   ( children :: Array JSX
   , classes :: CardClassKey 
   , className :: String
-  , component :: String
+  , component :: ReactComponent { | a }
   , elevation :: Number
   , square :: Boolean
   , raised :: Boolean
@@ -57,13 +58,13 @@ cardClassKey :: ∀ options options_
 cardClassKey = unsafeCoerce
 
 cardPropsPartial :: ∀ props props_
-  . Union props props_ CardProps
+  . Union props props_ (CardProps Props_div)
   => Record props 
   -> CardPropsPartial 
 cardPropsPartial = unsafeCoerce
 
 card :: ∀ props props_
-  . Union props props_ CardProps
+  . Union props props_ (CardProps Props_div)
   => Record props 
   -> JSX
 card = element _Card

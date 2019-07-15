@@ -3,10 +3,11 @@ module MUI.Core.Backdrop where
 import Foreign (Foreign)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_div)
 import React.Basic.Events (EventHandler)
 import Unsafe.Coerce (unsafeCoerce)
 
-type BackdropProps =
+type BackdropProps props =
   ( invisible :: Boolean
   , children :: Array JSX
   , classes :: BackdropClassKey
@@ -26,6 +27,7 @@ type BackdropProps =
   , mountOnEnter :: Boolean
   , unmountOnExit :: Boolean
   , addEndListener :: EventHandler
+  | props
   )
 
 
@@ -44,13 +46,13 @@ backdropClassKey :: ∀ options options_
 backdropClassKey = unsafeCoerce
 
 backdropPropsPartial :: ∀ props props_
-  .  Union props props_ BackdropProps
+  .  Union props props_ (BackdropProps Props_div)
   => Record props 
   -> BackdropPropsPartial
 backdropPropsPartial = unsafeCoerce
 
 backdrop :: ∀ props props_
-  .  Union props props_ BackdropProps
+  .  Union props props_ (BackdropProps Props_div)
   => Record props 
   -> JSX
 backdrop = element _Backdrop

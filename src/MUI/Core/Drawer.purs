@@ -5,6 +5,7 @@ import MUI.Core.Paper (PaperProps)
 import MUI.Core.Slide (SlideProps)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_div)
 import React.Basic.Events (EventHandler)
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -16,7 +17,7 @@ type DrawerProps =
   , "ModalProps" :: { | ModalProps } 
   , onClose :: EventHandler
   , open :: Boolean
-  , "PaperProps" :: { | PaperProps }
+  , "PaperProps" :: { | (PaperProps Props_div) }
   , "SlideProps" :: { | SlideProps }
   , transitionDuration :: { enter :: Number, exit :: Number }
   , variant :: String

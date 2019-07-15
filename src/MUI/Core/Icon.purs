@@ -2,13 +2,14 @@ module MUI.Core.Icon where
 
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_span)
 import Unsafe.Coerce (unsafeCoerce)
 
-type IconProps =
+type IconProps a =
   ( children :: (Array JSX)
   , classes :: IconClassKey
   , color :: String
-  , component :: String
+  , component :: ReactComponent  { | a }
   , fontSize :: String
   )
 
@@ -34,13 +35,13 @@ iconClassKey :: ∀ options options_
 iconClassKey = unsafeCoerce
 
 iconPropsPartial :: ∀ props props_
-  .  Union props props_ IconProps
+  .  Union props props_ (IconProps Props_span)
   => Record props 
   -> IconPropsPartial
 iconPropsPartial = unsafeCoerce
 
 icon :: ∀ props props_
-  .  Union props props_ IconProps
+  .  Union props props_ (IconProps Props_span)
   => Record props 
   -> JSX
 icon = element _Icon

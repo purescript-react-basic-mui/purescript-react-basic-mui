@@ -1,13 +1,14 @@
 module MUI.Core.TableBody where
 
-import React.Basic (JSX, ReactComponent, element)
 import Prim.Row (class Union)
+import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_tbody)
 import Unsafe.Coerce (unsafeCoerce)
 
-type TableBodyProps =
+type TableBodyProps a =
   ( children :: Array JSX
   , classes :: TableBodyClassKey
-  , component :: String
+  , component :: ReactComponent { | a }
   )
 
 foreign import data TableBodyClassKey :: Type
@@ -22,13 +23,13 @@ tableBodyClassKey :: ∀ options options_
 tableBodyClassKey = unsafeCoerce
 
 tableBodyPropsPartial :: ∀ props props_
-  . Union props props_ TableBodyProps
+  . Union props props_ (TableBodyProps Props_tbody)
   => Record props 
   -> TableBodyPropsPartial
 tableBodyPropsPartial = unsafeCoerce
 
 tableBody :: ∀ props props_
-  . Union props props_ TableBodyProps
+  . Union props props_ (TableBodyProps Props_tbody)
   => Record props 
   -> JSX
 tableBody = element _TableBody

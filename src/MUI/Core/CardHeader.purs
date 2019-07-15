@@ -2,15 +2,16 @@ module MUI.Core.CardHeader where
 
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
 type TypographyProps = String
 
-type CardHeaderProps =
+type CardHeaderProps a =
   ( action :: JSX
   , avatar :: JSX
   , classes :: CardHeaderClassKey 
-  , component :: String
+  , component :: ReactComponent { | a }
   , disableTypography :: Boolean
   , subheader :: JSX
   , subheaderTypographyProps :: TypographyProps
@@ -38,13 +39,13 @@ cardHeaderClassKey :: ∀ options options_
 cardHeaderClassKey = unsafeCoerce
 
 cardHeaderPropsPartial :: ∀ props props_
-  . Union props props_ CardHeaderProps
+  . Union props props_ (CardHeaderProps Props_div)
   => Record props 
   -> CardHeaderPropsPartial 
 cardHeaderPropsPartial = unsafeCoerce
 
 cardHeader :: ∀ props props_
-  . Union props props_ CardHeaderProps
+  . Union props props_ (CardHeaderProps Props_div)
   => Record props 
   -> JSX
 cardHeader = element _CardHeader

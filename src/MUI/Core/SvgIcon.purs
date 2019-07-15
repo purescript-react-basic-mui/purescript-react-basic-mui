@@ -1,14 +1,15 @@
 module MUI.Core.SvgIcon where
 
-import React.Basic (JSX, ReactComponent, element)
 import Prim.Row (class Union)
+import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_svg)
 import Unsafe.Coerce (unsafeCoerce)
 
-type SvgIconProps =
+type SvgIconProps a =
   ( children :: Array JSX
   , classes :: SvgIconClassKey
   , color :: String
-  , component :: String
+  , component :: ReactComponent { | a }
   , fontSize :: String
   , htmlColor :: String
   , shapeRendering :: String
@@ -38,13 +39,13 @@ svgIconClassKey :: ∀ options options_
 svgIconClassKey = unsafeCoerce
 
 svgIconPropsPartial :: ∀ props props_
-  . Union props props_ SvgIconProps
+  . Union props props_ (SvgIconProps Props_svg)
   => Record props 
   -> SvgIconPropsPartial 
 svgIconPropsPartial = unsafeCoerce
 
 svgIcon :: ∀ props props_
-  . Union props props_ SvgIconProps
+  . Union props props_ (SvgIconProps Props_svg)
   => Record props 
   -> JSX
 svgIcon = element _SvgIcon

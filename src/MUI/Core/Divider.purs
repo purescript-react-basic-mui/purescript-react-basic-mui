@@ -2,12 +2,13 @@ module MUI.Core.Divider where
 
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_hr)
 import Unsafe.Coerce (unsafeCoerce)
 
-type DividerProps =
+type DividerProps a =
   ( absolute :: Boolean
   , classes :: DividerClassKey 
-  , component :: String
+  , component :: ReactComponent { | a }
   , light :: Boolean
   , variant :: String
   )
@@ -30,13 +31,13 @@ dividerClassKey :: ∀ options options_
 dividerClassKey = unsafeCoerce
 
 dividerPropsPartial :: ∀ props props_
-  . Union props props_ DividerProps
+  . Union props props_ (DividerProps Props_hr)
   => Record props 
   -> DividerPropsPartial 
 dividerPropsPartial = unsafeCoerce
 
 divider :: ∀ props props_
-  . Union props props_ DividerProps
+  . Union props props_ (DividerProps Props_hr)
   => Record props 
   -> JSX
 divider = element _Divider

@@ -1,13 +1,14 @@
 module MUI.Core.TableFooter where
 
-import React.Basic (JSX, ReactComponent, element)
 import Prim.Row (class Union)
+import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_tfoot)
 import Unsafe.Coerce (unsafeCoerce)
 
-type TableFooterProps =
+type TableFooterProps a =
   ( children :: Array JSX
   , classes :: TableFooterClassKey
-  , component :: String
+  , component :: ReactComponent { | a } 
   )
 
 foreign import data TableFooterClassKey :: Type
@@ -23,13 +24,13 @@ tableFooterClassKey = unsafeCoerce
 
 
 tableFooterPropsPartial :: ∀ props props_
-  .  Union props props_ TableFooterProps
+  .  Union props props_ (TableFooterProps Props_tfoot)
   => Record props 
   -> TableFooterPropsPartial
 tableFooterPropsPartial = unsafeCoerce
 
 tableFooter :: ∀ props props_
-  .  Union props props_ TableFooterProps
+  .  Union props props_ (TableFooterProps Props_tfoot)
   => Record props 
   -> JSX
 tableFooter = element _TableFooter

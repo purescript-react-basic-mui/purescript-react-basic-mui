@@ -1,13 +1,14 @@
 module MUI.Core.Paper where
 
-import React.Basic (JSX, ReactComponent, element)
 import Prim.Row (class Union)
+import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
-type PaperProps =
+type PaperProps a =
   ( children :: Array JSX
   , classes :: PaperClassKey
-  , component :: String
+  , component :: ReactComponent { | a }
   , elevation :: Number
   , square :: Boolean
   )
@@ -52,13 +53,13 @@ paperClassKey :: ∀ options options_
 paperClassKey = unsafeCoerce
 
 paperPropsPartial :: ∀ props props_
-  . Union props props_ PaperProps
+  . Union props props_ (PaperProps Props_div)
   => Record props 
   -> JSX
 paperPropsPartial = unsafeCoerce
 
 paper :: ∀ props props_
-  . Union props props_ PaperProps
+  . Union props props_ (PaperProps Props_div)
   => Record props 
   -> JSX
 paper = element _Paper

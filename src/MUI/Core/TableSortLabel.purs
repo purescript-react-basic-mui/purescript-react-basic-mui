@@ -5,21 +5,22 @@ import MUI.Core.ButtonBase (ButtonBaseActions, TouchRippleProps)
 import MUI.Core.SvgIcon (SvgIconProps)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_svg, Props_span)
 import React.Basic.Events (EventHandler)
 import React.Basic.Hooks (Ref)
 import Unsafe.Coerce (unsafeCoerce)
 
-type TableSortLabelProps =
+type TableSortLabelProps a =
   ( active :: Boolean
   , children :: Array JSX
   , classes :: TableSortLabelClassKey
   , direction :: String
   , hideSortIcon :: Boolean
-  , "IconComponent" :: ReactComponent { | SvgIconProps }
+  , "IconComponent" :: ReactComponent { | (SvgIconProps Props_svg) }
   , action :: Ref ButtonBaseActions
   , buttonRef :: Ref Foreign
   , centerRipple :: Boolean
-  , component :: String
+  , component :: ReactComponent { | a }
   , disabled :: Boolean
   , disableRipple :: Boolean
   , disableTouchRipple :: Boolean
@@ -48,13 +49,13 @@ tableSortLabelClassKey :: ∀ options options_
 tableSortLabelClassKey = unsafeCoerce
 
 tableSortLabelPropsPartial :: ∀ props props_
-  .  Union props props_ TableSortLabelProps
+  .  Union props props_ (TableSortLabelProps Props_span)
   => Record props 
   -> TableSortLabelPropsPartial 
 tableSortLabelPropsPartial = unsafeCoerce
 
 tableSortLabel :: ∀ props props_
-  .  Union props props_ TableSortLabelProps
+  .  Union props props_ (TableSortLabelProps Props_span)
   => Record props 
   -> JSX
 tableSortLabel = element _TableSortLabel
