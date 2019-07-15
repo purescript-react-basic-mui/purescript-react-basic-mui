@@ -1,6 +1,5 @@
 module MUI.Core.TableHead where
 
-import Data.Maybe (Maybe)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import Unsafe.Coerce (unsafeCoerce)
@@ -8,7 +7,7 @@ import Unsafe.Coerce (unsafeCoerce)
 type TableHeadProps =
   ( children :: Array JSX
   , classes :: TableHeadClassKey
-  , component :: Maybe String
+  , component :: String
   )
 
 foreign import data TableHeadClassKey :: Type

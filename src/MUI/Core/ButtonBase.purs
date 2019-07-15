@@ -2,7 +2,6 @@ module MUI.Core.ButtonBase where
 
 import Prelude
 
-import Data.Maybe (Maybe)
 import Effect (Effect)
 import Foreign (Foreign)
 import Foreign.Object (Object)
@@ -18,19 +17,19 @@ type ButtonBaseActions =
 type TouchRippleProps = Object Foreign
 
 type ButtonBaseProps =
-  ( action :: Maybe (Ref ButtonBaseActions)
-  , buttonRef :: Maybe (Ref Foreign)
-  , centerRipple :: Maybe Boolean
+  ( action :: Ref ButtonBaseActions
+  , buttonRef :: Ref Foreign
+  , centerRipple :: Boolean
   , classes :: ButtonBaseClassKey
-  , component :: Maybe String
-  , disabled :: Maybe Boolean
-  , disableRipple :: Maybe Boolean
-  , disableTouchRipple :: Maybe Boolean
-  , focusRipple :: Maybe Boolean
-  , focusVisibleClassName :: Maybe String
-  , onFocusVisible :: Maybe EventHandler
-  , "TouchRippleProps" :: Maybe TouchRippleProps
-  , type :: Maybe String
+  , component :: String
+  , disabled :: Boolean
+  , disableRipple :: Boolean
+  , disableTouchRipple :: Boolean
+  , focusRipple :: Boolean
+  , focusVisibleClassName :: String
+  , onFocusVisible :: EventHandler
+  , "TouchRippleProps" :: TouchRippleProps
+  , type :: String
   )
 
 type ButtonBaseClassKeyOptions =

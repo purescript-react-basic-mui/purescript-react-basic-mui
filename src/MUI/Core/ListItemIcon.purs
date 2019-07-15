@@ -1,12 +1,11 @@
 module MUI.Core.ListItemIcon where
 
-import Data.Maybe (Maybe)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import Unsafe.Coerce (unsafeCoerce)
 
 type ListItemIconProps =
-  ( children :: Maybe (Array JSX)
+  ( children :: Array JSX
   , classes :: ListItemIconClassKey
   )
 

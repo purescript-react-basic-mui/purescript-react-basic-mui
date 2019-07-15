@@ -1,29 +1,27 @@
 module MUI.Core.Icon where
 
-
-import Data.Maybe (Maybe)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import Unsafe.Coerce (unsafeCoerce)
 
 type IconProps =
-  ( children :: Maybe (Array JSX)
+  ( children :: (Array JSX)
   , classes :: IconClassKey
-  , color :: Maybe String
-  , component :: Maybe String
-  , fontSize :: Maybe String
+  , color :: String
+  , component :: String
+  , fontSize :: String
   )
 
 type IconClassKeyOptions =
-  ( root :: Maybe String
-  , colorPrimary :: Maybe String
-  , colorSecondary :: Maybe String
-  , colorAction :: Maybe String
-  , colorError :: Maybe String
-  , colorDisabled :: Maybe String
-  , fontSizeInherit :: Maybe String
-  , fontSizeSmall :: Maybe String
-  , fontSizeLarge :: Maybe String
+  ( root :: String
+  , colorPrimary :: String
+  , colorSecondary :: String
+  , colorAction :: String
+  , colorError :: String
+  , colorDisabled :: String
+  , fontSizeInherit :: String
+  , fontSizeSmall :: String
+  , fontSizeLarge :: String
   )
 
 foreign import data IconClassKey :: Type

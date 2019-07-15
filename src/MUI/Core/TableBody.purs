@@ -1,6 +1,5 @@
 module MUI.Core.TableBody where
 
-import Data.Maybe (Maybe)
 import React.Basic (JSX, ReactComponent, element)
 import Prim.Row (class Union)
 import Unsafe.Coerce (unsafeCoerce)
@@ -13,7 +12,7 @@ type TableBodyProps =
 
 foreign import data TableBodyClassKey :: Type
 
-type TableBodyClassKeyOptions = ( root :: Maybe String )
+type TableBodyClassKeyOptions = ( root :: String )
 
 tableBodyClassKey 
   :: ∀ options options_
