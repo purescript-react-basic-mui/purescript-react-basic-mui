@@ -3,10 +3,9 @@ module MUI.Core.Styles.CreateBreakpoints where
 import Prelude
 
 import Data.Function.Uncurried (Fn2)
-import Data.Maybe (Maybe(..))
-import Foreign (Foreign)
-import MUI.Core (FnStringStringToString, StringToNumber, StringToString)
-import Simple.JSON (write)
+import Foreign (Foreign, unsafeToForeign)
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 
 type BreakpointValues =
   { xs :: Number
@@ -26,32 +25,31 @@ type Breakpoints =
   , width :: String -> Number
   }
 
-type BreakpointsOptions =
-  { unit :: Maybe String
-  , step :: Maybe Number
-  , keys :: Maybe (Array String)
-  , values :: Maybe BreakpointValues
-  , up :: Maybe StringToString 
-  , down :: Maybe StringToString 
-  , between :: Maybe FnStringStringToString 
-  , only :: Maybe StringToString 
-  , width :: Maybe StringToNumber
-  }
+type BreakpointsPartial =
+  ( unit :: String
+  , step :: Number
+  , keys :: Array String
+  , values :: BreakpointValues
+  , up :: String -> String
+  , down :: String -> String
+  , between :: Fn2 String String String 
+  , only :: String -> String
+  , width :: String -> Number
+  )
 
-breakpointsOptions :: BreakpointsOptions
-breakpointsOptions =
-  { unit : Nothing
-  , step : Nothing
-  , keys : Nothing
-  , values : Nothing
-  , up : Nothing
-  , down : Nothing
-  , between : Nothing
-  , only : Nothing
-  , width : Nothing
-  }
+foreign import data BreakpointsOptions :: Type
 
-createBreakpoints :: BreakpointsOptions -> Breakpoints
-createBreakpoints = write >>> _createBreakpoints
+breakpointsOptions :: ∀ options options_
+  . Union options options_ BreakpointsPartial
+  => Record options
+  -> BreakpointsOptions
+breakpointsOptions = unsafeCoerce
+
+createBreakPoints :: ∀ options options_
+  . Union options options_ BreakpointsPartial
+  => Record options 
+  -> Breakpoints 
+createBreakPoints = _createBreakpoints <<< unsafeToForeign
+
 
 foreign import _createBreakpoints :: Foreign -> Breakpoints 

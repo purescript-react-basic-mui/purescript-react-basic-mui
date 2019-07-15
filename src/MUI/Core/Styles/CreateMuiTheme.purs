@@ -2,65 +2,50 @@ module MUI.Core.Styles.CreateMuiTheme where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
-import Foreign (Foreign)
-import MUI.Core (NumberToNumber)
+import Foreign (Foreign, unsafeToForeign)
 import MUI.Core.Styles.CreateBreakpoints (BreakpointsOptions, Breakpoints)
 import MUI.Core.Styles.CreateMixins (MixinsOptions, Mixins)
 import MUI.Core.Styles.CreatePalette (PaletteOptions, Palette)
-import MUI.Core.Styles.Shape (ShapeOptions)
-import MUI.Core.Styles.Transitions (TransitionsOptions)
-import MUI.Core.Styles.Typography (TypographyOptions, Typography)
-import MUI.Core.Styles.ZIndex (ZIndexOptions)
-import Simple.JSON (write)
+import MUI.Core.Styles.Shape (ShapeOptions, Shape)
+import MUI.Core.Styles.Transitions (TransitionsOptions, Transitions)
+import MUI.Core.Styles.Typography (Typography, TypographyOptions)
+import MUI.Core.Styles.ZIndex (ZIndex, ZIndexOptions)
+import Prim.Row (class Union)
 
-type ThemeOptions =
-  { shape :: Maybe ShapeOptions
-  , breakpoints :: Maybe BreakpointsOptions
-  , direction :: Maybe String 
-  , mixins :: Maybe MixinsOptions
-  , overrides :: Maybe Foreign
-  , palette :: Maybe PaletteOptions
-  , props :: Maybe Foreign 
-  , shadows :: Maybe (Array String)
-  , spacing :: Maybe NumberToNumber
-  , transitions :: Maybe TransitionsOptions
-  , typography :: Maybe TypographyOptions
-  , zIndex :: Maybe ZIndexOptions
-  }
-
-themeOptions :: ThemeOptions
-themeOptions =
-  { shape : Nothing
-  , breakpoints : Nothing
-  , direction : Nothing
-  , mixins : Nothing
-  , overrides : Nothing
-  , palette : Nothing
-  , props : Nothing
-  , shadows : Nothing
-  , spacing : Nothing
-  , transitions : Nothing
-  , typography : Nothing
-  , zIndex : Nothing
-  }
-
-type Theme =
-  { shape :: Foreign
-  , breakpoints :: Breakpoints
-  , direction :: Foreign
-  , mixins :: Mixins
+type ThemePartial =
+  ( shape :: ShapeOptions
+  , breakpoints :: BreakpointsOptions
+  , direction :: String
+  , mixins :: MixinsOptions
   , overrides :: Foreign
-  , palette :: Palette
+  , palette :: PaletteOptions
   , props :: Foreign 
   , shadows :: Array String
   , spacing :: Number -> Number 
-  , transitions :: Foreign
+  , transitions :: TransitionsOptions
+  , typography :: TypographyOptions
+  , zIndex :: ZIndexOptions
+  )
+
+type Theme = 
+  { shape :: Shape
+  , breakpoints :: Breakpoints
+  , direction :: String
+  , mixins :: Mixins
+  , overrides :: Foreign
+  , palette :: Palette
+  , props :: Foreign
+  , shadows :: Array String
+  , spacing :: Number -> Number
+  , transitions :: Transitions
   , typography :: Typography
-  , zIndex :: Foreign
+  , zIndex :: ZIndex
   }
 
-createMuiTheme :: ThemeOptions -> Theme
-createMuiTheme = write >>> _createMuiTheme
+createMuiTheme :: ∀ options options_
+  . Union options options_ ThemePartial
+  => Record options 
+  -> Theme 
+createMuiTheme = _createMuiTheme <<< unsafeToForeign
 
 foreign import _createMuiTheme :: Foreign -> Theme

@@ -1,11 +1,11 @@
 module MUI.Core.Styles.Typography where
 
 import Data.Function.Uncurried (Fn2, runFn2)
-import Data.Maybe (Maybe)
 import Foreign (Foreign, unsafeToForeign)
 import MUI.Core (JSS)
 import MUI.Core.Styles.CreatePalette (Palette)
-import Simple.JSON (write)
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 
 type TypographyStyle =
   { fontFamily :: String
@@ -16,21 +16,30 @@ type TypographyStyle =
   , textTransform :: Foreign
   } 
 
-type TypographyOptions =
-  { h1 :: Maybe JSS
-  , h2 :: Maybe JSS
-  , h3 :: Maybe JSS
-  , h4 :: Maybe JSS
-  , h5 :: Maybe JSS
-  , h6 :: Maybe JSS
-  , subtitle1 :: Maybe JSS
-  , subtitle2 :: Maybe JSS
-  , body1 :: Maybe JSS
-  , body2 :: Maybe JSS
-  , caption :: Maybe JSS
-  , button :: Maybe JSS
-  , overline :: Maybe JSS
-  }
+type TypographyPartial =
+  ( h1 :: JSS
+  , h2 :: JSS
+  , h3 :: JSS
+  , h4 :: JSS
+  , h5 :: JSS
+  , h6 :: JSS
+  , subtitle1 :: JSS
+  , subtitle2 :: JSS
+  , body1 :: JSS
+  , body2 :: JSS
+  , caption :: JSS
+  , button :: JSS
+  , overline :: JSS
+  )
+
+foreign import data TypographyOptions :: Type
+
+typographyOptions :: ∀ options options_
+  . Union options options_ TypographyPartial
+  => Record options 
+  -> TypographyOptions
+typographyOptions = unsafeCoerce
+
 
 type Typography =
   { h1 :: TypographyStyle
@@ -58,7 +67,12 @@ type Typography =
   , pxToRem :: Number -> String
   }
 
-createTypography :: Palette -> TypographyOptions -> Typography
-createTypography palette options = runFn2 _createTypography (unsafeToForeign palette) (write options)
+createTypography :: ∀ options options_
+  . Union options options_ TypographyPartial
+  => Palette
+  -> Record options 
+  -> Typography 
+createTypography palette options = runFn2 _createTypography (unsafeToForeign palette) (unsafeToForeign options)
+
 
 foreign import _createTypography :: Fn2 Foreign Foreign Typography

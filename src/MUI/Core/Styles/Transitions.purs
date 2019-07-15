@@ -1,57 +1,51 @@
 module MUI.Core.Styles.Transitions where
 
-import Data.Maybe (Maybe(..))
 import Foreign (Foreign)
-import MUI.Core (NumberToNumber)
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 
-type EasingOptions =
-  { easeInOut :: Maybe String
-  , easeOut :: Maybe String
-  , easeIn :: Maybe String
-  , sharp :: Maybe String
-  }
-
-type Easing =
-  { easeInOut :: String
+type EasingPartial =
+  ( easeInOut :: String
   , easeOut :: String
   , easeIn :: String
   , sharp :: String
-  }
+  )
 
-foreign import easing :: Easing
+foreign import data EasingOptions :: Type
 
-type Duration =
-  { shortest :: Number
+type Easing = Record EasingPartial
+
+type DurationPartial =
+  ( shortest :: Number
   , shorter :: Number
   , short :: Number
   , standard :: Number
   , complex :: Number
   , enteringScreen :: Number
   , leavingScreen :: Number
-  }
+  )
 
-type Transitions =
-  { easing :: Easing
+type Duration = Record DurationPartial
+
+type TransitionsPartial =
+  ( easing :: Easing
   , duration :: Duration
   , create :: Foreign
   , getAutoHeightDuration :: Number -> Number
-  }
+  )
 
-type TransitionsOptions =
-  { easing :: Maybe Easing
-  , duration :: Maybe Duration
-  , create :: Maybe Foreign
-  , getAutoHeightDuration :: Maybe NumberToNumber
-  } 
+foreign import data TransitionsOptions :: Type
 
-transitionsOptions :: TransitionsOptions
-transitionsOptions = 
-  { easing : Nothing
-  , duration : Nothing
-  , create : Nothing
-  , getAutoHeightDuration : Nothing
-  }
+type Transitions = Record TransitionsPartial
 
+transitionsOptions :: ∀ options options_
+  .  Union options options_ TransitionsPartial
+  => Record options 
+  -> TransitionsOptions 
+transitionsOptions = unsafeCoerce
+
+
+foreign import easing :: Easing
 foreign import duration :: Duration 
 foreign import formatMs :: Number -> String
 foreign import transitions :: Transitions

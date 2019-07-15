@@ -2,28 +2,32 @@ module MUI.Core.Styles.CreateMixins where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
-import Foreign (Foreign)
-import MUI.Core (JSS, JSSToJSS)
-import Simple.JSON (write)
+import Foreign (Foreign, unsafeToForeign)
+import MUI.Core (JSS)
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 
-type Mixins =
-  { gutters :: JSS -> JSS
+type MixinsPartial =
+  ( gutters :: JSS -> JSS
   , toolbar :: JSS 
-  }
+  )
 
-type MixinsOptions =
-  { gutters :: Maybe JSSToJSS
-  , toolbar :: Maybe JSS
-  }
+foreign import data MixinsOptions :: Type
 
-mixinsOptions :: MixinsOptions
-mixinsOptions = 
-  { gutters : Nothing
-  , toolbar : Nothing
-  }
+type Mixins = Record MixinsPartial
 
-createMixins :: MixinsOptions -> Mixins
-createMixins = write >>> _createMixins
+mixinsOptions 
+  :: ∀ options options_
+  .  Union options options_ MixinsPartial
+  => Record options
+  -> MixinsOptions
+mixinsOptions = unsafeCoerce
+
+
+createMixins :: ∀ options options_
+  . Union options options_ MixinsPartial
+  => Record options 
+  -> Mixins 
+createMixins = _createMixins <<< unsafeToForeign
 
 foreign import _createMixins :: Foreign -> Mixins

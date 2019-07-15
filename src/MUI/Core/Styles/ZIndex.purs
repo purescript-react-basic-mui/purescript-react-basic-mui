@@ -1,33 +1,26 @@
 module MUI.Core.Styles.ZIndex where
 
-import Data.Maybe (Maybe(..))
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 
-type ZIndex =
-  { mobileStepper :: Number
+type ZIndexPartial =
+  ( mobileStepper :: Number
   , appBar :: Number
   , drawer :: Number
   , modal :: Number
   , snackbar :: Number
   , tooltip :: Number
-  }
+  )
 
-type ZIndexOptions =
-  { mobileStepper :: Maybe Number
-  , appBar :: Maybe Number
-  , drawer :: Maybe Number
-  , modal :: Maybe Number
-  , snackbar :: Maybe Number
-  , tooltip :: Maybe Number
-  }
+type ZIndex = Record ZIndexPartial
 
-zIndexOptions :: ZIndexOptions
-zIndexOptions = 
-  { mobileStepper : Nothing
-  , appBar : Nothing
-  , drawer : Nothing
-  , modal : Nothing
-  , snackbar : Nothing
-  , tooltip : Nothing
-  }
+foreign import data ZIndexOptions :: Type
+
+zIndexOptions :: ∀ options options_
+  .  Union options options_ ZIndexPartial
+  => Record options 
+  -> ZIndexOptions
+zIndexOptions = unsafeCoerce
+
 
 foreign import zIndex :: ZIndex

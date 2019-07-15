@@ -4,9 +4,10 @@ import Prelude
 
 import Data.Either (isRight)
 import Data.Function.Uncurried (runFn2)
+import Debug.Trace (spy)
 import Effect.Aff (Aff)
 import Foreign (unsafeToForeign)
-import MUI.Core.Styles.CreateMuiTheme (createMuiTheme, themeOptions)
+import MUI.Core.Styles.CreateMuiTheme (createMuiTheme)
 import MUI.Core.Styles.Typography (TypographyStyle)
 import Simple.JSON (class ReadForeign, E, read)
 import Test.Spec (Spec, describe, it)
@@ -32,7 +33,7 @@ spec :: Spec Unit
 spec =
   describe "CretingMuiTheme" do
     it "should create a theme with proper Breakpoints" do
-      let theme = createMuiTheme themeOptions
+      let theme = createMuiTheme {}
       isGood $ decode theme.breakpoints.keys
       isGood $ decode theme.breakpoints.values.xs
       isGood $ decode theme.breakpoints.values.sm
@@ -46,7 +47,7 @@ spec =
       theme.breakpoints.width "xs" `shouldEqual` 0.0 
 
     it "should create a theme with a proper Palette" do
-      let theme = createMuiTheme themeOptions
+      let theme = createMuiTheme {}
       isGood $ decode theme.palette.common
       isGood $ decode theme.palette.type
       isGood $ decode theme.palette.contrastThreshold
@@ -57,14 +58,19 @@ spec =
       isGood $ decode theme.palette.grey
       isGood $ decode theme.palette.text
       isGood $ decode theme.palette.divider
-      isGood $ decode theme.palette.action
+      isGood $ decode theme.palette.action.active
+      isGood $ decode theme.palette.action.hover
+      isGood $ decode theme.palette.action.hoverOpacity
+      isGood $ decode theme.palette.action.selected
+      isGood $ decode theme.palette.action.disabled
+      isGood $ decode theme.palette.action.disabledBackground
       isGood $ decode theme.palette.background
       (theme.palette.getContrastText "#AAA" == "rgba(0, 0, 0, 0.87)") `shouldEqual` true
       pure unit
 
 
     it "should create a theme with a proper Typography" do
-      let theme = createMuiTheme themeOptions
+      let theme = createMuiTheme {}
       testTypographyStyle theme.typography.h1 
       testTypographyStyle theme.typography.h2
       testTypographyStyle theme.typography.h3
@@ -78,7 +84,7 @@ spec =
       testTypographyStyle theme.typography.caption
       testTypographyStyle theme.typography.button
       testTypographyStyle theme.typography.overline
-      isGood $ decode theme.typography.fontFamily
+      isGood $ decode theme.typography.fontFamily 
       isGood $ decode theme.typography.fontWeightLight
       isGood $ decode theme.typography.fontWeightRegular
       isGood $ decode theme.typography.fontWeightMedium
@@ -89,12 +95,35 @@ spec =
       (theme.typography.pxToRem 12.0 == "0.75rem") `shouldEqual` true
 
     it "should create a theme with a proper Spacing" do
-      let theme = createMuiTheme themeOptions
+      let theme = createMuiTheme {}
       testTypographyStyle theme.typography.h1 
       (theme.spacing 2.0 == 16.0) `shouldEqual` true
 
+    it "should create a theme with a proper direction" do
+      let theme = createMuiTheme {}
+      isGood $ decode theme.direction
 
-    it "should create a theme with a proper Shadows" do
-      let theme = createMuiTheme themeOptions
+    it "should create a theme with a proper shadows" do
+      let theme = createMuiTheme {}
       isGood $ decode theme.shadows
+
+    it "should create a theme with a proper zIndex" do
+      let theme = createMuiTheme {}
+      isGood $ decode theme.zIndex
+
+    it "should create a theme with a proper shape" do
+      let theme = createMuiTheme {}
+      isGood $ decode theme.shape
+
+    it "should create a theme with a proper direction" do
+      let theme = createMuiTheme {}
+      isGood $ decode theme.direction
+
+    it "should create a theme with a proper transitions" do
+      let theme = createMuiTheme {}
+      isGood $ decode theme.transitions.easing
+      isGood $ decode theme.transitions.duration
+
+
+
 

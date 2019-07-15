@@ -2,87 +2,73 @@ module MUI.Core.Styles.CreatePalette where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
-import Foreign (Foreign)
-import MUI.Core (Color, StringToString)
+import Foreign (Foreign, unsafeToForeign)
+import MUI.Core (Color)
 import MUI.Core.Colors.Common (CommonColors)
-import Simple.JSON (write)
+import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 
-type PaletteColorOptions =
-  { light :: Maybe String
-  , main :: String
-  , dark :: Maybe String
-  , contrastText :: Maybe String
-  }
-
-paletteColorOptions :: String -> PaletteColorOptions
-paletteColorOptions main = 
-  { light : Nothing
-  , main 
-  , dark : Nothing
-  , contrastText : Nothing
-  }
-
-type PaletteColor =
-  { light :: String
+type PaletteColorPartial =
+  ( light :: String
   , main :: String
   , dark :: String
   , contrastText :: String
-  }
+  )
 
-type TypeBackground =
-  { default :: String
+type PaletteColor = Record PaletteColorPartial
+
+foreign import data PaletteColorOptions :: Type
+
+type TypeBackgroundPartial =
+  ( default :: String
   , paper :: String
-  }
+  )
 
-type TypeText = 
-  { primary :: String
+foreign import data TypeBackgroundOptions :: Type
+
+type TypeBackground = Record TypeBackgroundPartial
+
+type TypeTextPartial =
+  ( primary :: String
   , secondary :: String
   , disabled :: String
   , hint :: String
-  }
+  )
 
-type TypeAction =
-  { active :: String
+foreign import data TypeTextOptions :: Type
+
+type TypeText = Record TypeTextPartial
+
+type TypeActionPartial =
+  ( active :: String
   , hover :: String
   , hoverOpacity :: Number
   , selected :: String
   , disabled :: String
   , disabledBackground :: String
-  }
+  )
 
-type PaletteOptions =
-  { primary :: Maybe PaletteColorOptions
-  , secondary :: Maybe PaletteColorOptions
-  , error :: Maybe PaletteColorOptions
-  , type :: Maybe String 
-  , tonalOffset :: Maybe Number
-  , contrastThreshold :: Maybe Number
-  , common :: Maybe CommonColors
-  , grey :: Maybe Color
-  , text :: Maybe TypeText
-  , divider :: Maybe String
-  , action :: Maybe TypeAction
-  , background :: Maybe TypeBackground
-  , getContrastText :: Maybe StringToString
-  }
+foreign import data TypeActionOptions :: Type
 
-paletteOptions :: PaletteOptions
-paletteOptions =
-  { primary : Nothing
-  , secondary : Nothing
-  , error : Nothing
-  , type : Nothing
-  , tonalOffset : Nothing
-  , contrastThreshold : Nothing
-  , common : Nothing
-  , grey : Nothing
-  , text : Nothing
-  , divider : Nothing
-  , action : Nothing
-  , background : Nothing
-  , getContrastText : Nothing
-  }
+type TypeAction = Record TypeActionPartial
+
+type PalettePartial =
+  ( primary :: PaletteColorOptions
+  , secondary :: PaletteColorOptions
+  , error :: PaletteColorOptions
+  , type :: String 
+  , tonalOffset :: Number
+  , contrastThreshold :: Number
+  , common :: CommonColors
+  , grey :: Color
+  , text :: TypeTextOptions
+  , divider :: String
+  , action :: TypeActionOptions
+  , background :: TypeBackground
+  , getContrastText :: String -> String
+  )
+
+foreign import data PaletteOptions :: Type
 
 type Palette = 
   { common :: CommonColors
@@ -98,10 +84,43 @@ type Palette =
   , action :: TypeAction
   , background :: TypeBackground
   , getContrastText :: String -> String
-  , augmentColor :: Foreign
+  , augmentColor :: PaletteColorOptions -> PaletteColor
   }
 
-createPalette :: PaletteOptions -> Palette
-createPalette = write >>> _createPalette
+paletteOptions :: ∀ options options_
+  .  Union options options_ PalettePartial
+  => Record options 
+  -> PaletteOptions
+paletteOptions = unsafeCoerce
+
+createPalette :: ∀ options options_
+  .  Union options options_ PalettePartial
+  => Record options 
+  -> Palette
+createPalette = _createPalette <<< unsafeToForeign
+
+paletteColorOptions :: ∀ options options_
+  .  Union options options_ PaletteColorPartial
+  => Record options 
+  -> PaletteColorOptions
+paletteColorOptions = unsafeCoerce
+
+typeBackgroundOptions :: ∀ options options_
+  .  Union options options_ TypeBackgroundPartial
+  => Record options 
+  -> TypeBackgroundOptions
+typeBackgroundOptions = unsafeCoerce
+
+typeActionOptions :: ∀ options options_
+  .  Union options options_ TypeTextPartial
+  => Record options 
+  -> TypeTextOptions
+typeActionOptions = unsafeCoerce
+
+typeTextOptions :: ∀ options options_
+  .  Union options options_ TypeTextPartial
+  => Record options 
+  -> TypeTextOptions
+typeTextOptions = unsafeCoerce
 
 foreign import _createPalette :: Foreign -> Palette

@@ -1,9 +1,10 @@
 module MUI.Core.Styles.Shape where
 
-import Data.Maybe (Maybe(..))
+import Unsafe.Coerce (unsafeCoerce)
 
 type Shape = { borderRadius :: Number }
-type ShapeOptions = { borderRadius :: Maybe Number }
 
-shapeOptions :: ShapeOptions
-shapeOptions = { borderRadius : Nothing }
+foreign import data ShapeOptions :: Type
+
+shapeOptions :: Shape -> ShapeOptions
+shapeOptions = unsafeCoerce
