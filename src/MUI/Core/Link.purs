@@ -7,15 +7,15 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_a)
 import Unsafe.Coerce (unsafeCoerce)
 
-type LinkProps props =
+type LinkProps componentProps =
   ( children :: Array JSX
   , classes :: LinkClassKey
   , color :: String
-  , component :: ReactComponent { | props }
+  , component :: ReactComponent { | componentProps }
   , "TypographyClasses" :: TypographyClassKey
   , underline :: String
   , variant :: String
-  | props
+  | componentProps
   )
 
 foreign import data LinkClassKey :: Type
