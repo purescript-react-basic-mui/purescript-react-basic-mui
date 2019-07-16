@@ -6,6 +6,7 @@ import Effect (Effect)
 import Foreign (Foreign)
 import Foreign.Object (Object)
 import Prim.Row (class Union)
+import React.Basic.DOM (Props_button)
 import React.Basic.Events (EventHandler)
 import React.Basic.Hooks (JSX, ReactComponent, Ref, element)
 import Unsafe.Coerce (unsafeCoerce)
@@ -16,12 +17,12 @@ type ButtonBaseActions =
 
 type TouchRippleProps = Object Foreign
 
-type ButtonBaseProps =
+type ButtonBaseProps componentProps =
   ( action :: Ref ButtonBaseActions
   , buttonRef :: Ref Foreign
   , centerRipple :: Boolean
   , classes :: ButtonBaseClassKey
-  , component :: String
+  , component :: ReactComponent { | componentProps } 
   , disabled :: Boolean
   , disableRipple :: Boolean
   , disableTouchRipple :: Boolean
@@ -30,6 +31,7 @@ type ButtonBaseProps =
   , onFocusVisible :: EventHandler
   , "TouchRippleProps" :: TouchRippleProps
   , type :: String
+  | componentProps
   )
 
 type ButtonBaseClassKeyOptions =
@@ -48,14 +50,27 @@ buttonBaseClassKey :: ∀ options options_
   -> ButtonBaseClassKey
 buttonBaseClassKey = unsafeCoerce
 
+buttonBasePartial_component :: ∀ componentProps props props_
+  . Union props props_ (ButtonBaseProps componentProps)
+  => Record props 
+  -> ButtonBasePropsPartial
+buttonBasePartial_component = unsafeCoerce
+
 buttonBasePartial :: ∀ props props_
-  . Union props props_ ButtonBaseProps
+  . Union props props_ (ButtonBaseProps Props_button)
   => Record props 
   -> ButtonBasePropsPartial
 buttonBasePartial = unsafeCoerce
 
+
+buttonBase_component :: ∀ componentProps props props_
+  . Union props props_ (ButtonBaseProps componentProps)
+  => Record props 
+  -> JSX
+buttonBase_component = element _ButtonBase
+
 buttonBase :: ∀ props props_
-  . Union props props_ ButtonBaseProps
+  . Union props props_ (ButtonBaseProps Props_button)
   => Record props 
   -> JSX
 buttonBase = element _ButtonBase

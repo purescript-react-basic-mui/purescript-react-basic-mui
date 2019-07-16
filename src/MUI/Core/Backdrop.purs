@@ -7,7 +7,7 @@ import React.Basic.DOM (Props_div)
 import React.Basic.Events (EventHandler)
 import Unsafe.Coerce (unsafeCoerce)
 
-type BackdropProps props =
+type BackdropProps componentProps =
   ( invisible :: Boolean
   , children :: Array JSX
   , classes :: BackdropClassKey
@@ -27,7 +27,7 @@ type BackdropProps props =
   , mountOnEnter :: Boolean
   , unmountOnExit :: Boolean
   , addEndListener :: EventHandler
-  | props
+  | componentProps
   )
 
 
@@ -50,6 +50,7 @@ backdropPropsPartial :: ∀ props props_
   => Record props 
   -> BackdropPropsPartial
 backdropPropsPartial = unsafeCoerce
+
 
 backdrop :: ∀ props props_
   .  Union props props_ (BackdropProps Props_div)

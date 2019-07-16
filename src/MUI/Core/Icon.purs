@@ -5,12 +5,13 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_span)
 import Unsafe.Coerce (unsafeCoerce)
 
-type IconProps a =
+type IconProps componentProps =
   ( children :: (Array JSX)
   , classes :: IconClassKey
   , color :: String
-  , component :: ReactComponent  { | a }
+  , component :: ReactComponent  { | componentProps }
   , fontSize :: String
+  | componentProps
   )
 
 type IconClassKeyOptions =
@@ -40,10 +41,23 @@ iconPropsPartial :: ∀ props props_
   -> IconPropsPartial
 iconPropsPartial = unsafeCoerce
 
+iconPropsPartial_component :: ∀ componentProps props props_
+  .  Union props props_ (IconProps componentProps)
+  => Record props 
+  -> IconPropsPartial
+iconPropsPartial_component = unsafeCoerce
+
+icon_component :: ∀ componentProps props props_
+  .  Union props props_ (IconProps componentProps)
+  => Record props 
+  -> JSX
+icon_component = element _Icon
+
 icon :: ∀ props props_
   .  Union props props_ (IconProps Props_span)
   => Record props 
   -> JSX
 icon = element _Icon
+
 
 foreign import _Icon :: ∀ a. ReactComponent a

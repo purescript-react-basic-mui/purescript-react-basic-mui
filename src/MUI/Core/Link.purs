@@ -36,11 +36,24 @@ linkClassKey  :: ∀ options options_
   -> LinkClassKey
 linkClassKey = unsafeCoerce
 
-linkPropsPartial :: ∀ a props props_
-  . Union props props_ (LinkProps a)
+linkPropsPartial_component :: ∀ componentProps props props_
+  . Union props props_ (LinkProps componentProps)
+  => Record props 
+  -> LinkPropsPartial
+linkPropsPartial_component = unsafeCoerce
+
+linkPropsPartial :: ∀ props props_
+  . Union props props_ (LinkProps Props_a)
   => Record props 
   -> LinkPropsPartial
 linkPropsPartial = unsafeCoerce
+
+
+link_component :: ∀ componentProps props props_
+  . Union props props_ (LinkProps componentProps)
+  => { | props }
+  -> JSX
+link_component = element _Link
 
 link :: ∀ props props_
   . Union props props_ (LinkProps Props_a)

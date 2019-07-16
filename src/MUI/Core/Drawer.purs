@@ -1,26 +1,27 @@
 module MUI.Core.Drawer where
 
-import MUI.Core.Modal (ModalProps)
-import MUI.Core.Paper (PaperProps)
-import MUI.Core.Slide (SlideProps)
+import MUI.Core.Modal (ModalPropsPartial)
+import MUI.Core.Paper (PaperPropsPartial)
+import MUI.Core.Slide (SlidePropsPartial)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
 import React.Basic.Events (EventHandler)
 import Unsafe.Coerce (unsafeCoerce)
 
-type DrawerProps =
+type DrawerProps componentProps =
   ( anchor :: String
   , children :: Array JSX
   , classes :: DrawerClassKey
   , elevation :: Number
-  , "ModalProps" :: { | ModalProps } 
+  , "ModalProps" :: ModalPropsPartial
   , onClose :: EventHandler
   , open :: Boolean
-  , "PaperProps" :: { | (PaperProps Props_div) }
-  , "SlideProps" :: { | SlideProps }
+  , "PaperProps" :: PaperPropsPartial
+  , "SlideProps" :: SlidePropsPartial
   , transitionDuration :: { enter :: Number, exit :: Number }
   , variant :: String
+  | componentProps
   )
 
 foreign import data DrawerClassKey :: Type
@@ -48,18 +49,30 @@ drawerClassKey
   -> DrawerClassKey
 drawerClassKey = unsafeCoerce
 
-drawer
+drawerPropsPartial_component :: ∀ componentProps props props_
+  . Union props props_ (DrawerProps componentProps)
+  => Record props 
+  -> DrawerPropsPartial 
+drawerPropsPartial_component = unsafeCoerce
+
+drawerPropsPartial
   :: ∀ props props_
-  . Union props props_ DrawerProps
+  . Union props props_ (DrawerProps Props_div)
+  => Record props 
+  -> DrawerPropsPartial 
+drawerPropsPartial = unsafeCoerce
+
+drawer_component :: ∀ componentProps props props_
+  . Union props props_ (DrawerProps componentProps)
+  => Record props 
+  -> JSX
+drawer_component = element _Drawer
+
+drawer :: ∀ props props_
+  . Union props props_ (DrawerProps Props_div)
   => Record props 
   -> JSX
 drawer = element _Drawer
 
-drawerPropsPartial
-  :: ∀ props props_
-  . Union props props_ DrawerProps
-  => Record props 
-  -> DrawerPropsPartial 
-drawerPropsPartial = unsafeCoerce
 
 foreign import _Drawer :: ∀ a. ReactComponent a

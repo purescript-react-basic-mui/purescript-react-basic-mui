@@ -1,19 +1,21 @@
 module MUI.Core.ListItemText where
 
-import MUI.Core.Typography (TypographyProps)
+import MUI.Core.Typography (TypographyPropsPartial)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
-type ListItemTextProps =
+type ListItemTextProps componentProps =
   ( children :: Array JSX
   , classes :: ListItemTextClassKey
   , disableTypography :: Boolean
   , inset :: Boolean
   , primary :: JSX
-  , primaryTypographyProps :: { | TypographyProps }
+  , primaryTypographyProps :: TypographyPropsPartial
   , secondary :: JSX
-  , secondaryTypographyProps :: { | TypographyProps }
+  , secondaryTypographyProps :: TypographyPropsPartial
+  | componentProps
   )
 
 foreign import data ListItemTextClassKey :: Type
@@ -35,13 +37,13 @@ listItemTextClassKey :: ∀ options options_
 listItemTextClassKey = unsafeCoerce
 
 listItemTextPropsPartial :: ∀ props props_
-  . Union props props_ ListItemTextProps
+  . Union props props_ (ListItemTextProps Props_div)
   => Record props 
   -> ListItemTextPropsPartial 
 listItemTextPropsPartial = unsafeCoerce
 
 listItemText :: ∀ props props_
-  . Union props props_ ListItemTextProps
+  . Union props props_ (ListItemTextProps Props_div)
   => Record props 
   -> JSX
 listItemText = element _ListItemText

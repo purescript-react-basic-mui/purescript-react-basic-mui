@@ -2,17 +2,19 @@ module MUI.Core.Modal where
 
 import Foreign (Foreign)
 import Foreign.Object (Object)
+import MUI.Core.Backdrop (BackdropPropsPartial)
 import MUI.Core.Modal.ModalManager (ModalManager)
-import React.Basic (Component, JSX, ReactComponent, element)
-import React.Basic.Events (EventHandler)
 import Prim.Row (class Union)
+import React.Basic (Component, JSX, ReactComponent, element)
+import React.Basic.DOM (Props_div)
+import React.Basic.Events (EventHandler)
 import Unsafe.Coerce (unsafeCoerce)
 
 type BackdropProps = Object Foreign
 
-type ModalProps =
+type ModalProps componentProps =
   ( "BackdropComponent" :: Component BackdropProps
-  , "BackdropProps" :: BackdropProps
+  , "BackdropProps" :: BackdropPropsPartial
   , children :: Array JSX
   , className :: String
   , classes :: ModalClassKey
@@ -31,6 +33,7 @@ type ModalProps =
   , onEscapeKeyDown :: EventHandler
   , onRendered :: EventHandler
   , open :: Boolean
+  | componentProps
   )
 
 foreign import data ModalClassKey :: Type
@@ -48,13 +51,13 @@ modalClassKey :: ∀ options options_
 modalClassKey = unsafeCoerce
 
 modalPropsPartial :: ∀ options options_
-  . Union options options_ ModalProps
+  . Union options options_ (ModalProps Props_div)
   => Record options
   -> ModalPropsPartial
 modalPropsPartial = unsafeCoerce
 
 modal :: ∀ props props_
-  . Union props props_ ModalProps
+  . Union props props_ (ModalProps Props_div)
   => Record props 
   -> JSX
 modal = element _Modal

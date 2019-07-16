@@ -2,7 +2,7 @@ module MUI.Core.TablePagination where
 
 import Foreign (Foreign)
 import Foreign.Object (Object)
-import MUI.Core.IconButton (IconButtonProps)
+import MUI.Core.IconButton (IconButtonPropsPartial)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -12,15 +12,15 @@ import Unsafe.Coerce (unsafeCoerce)
 type TablePaginationActions = Object Foreign
 type SelectProps = Object Foreign
 
-type TablePaginationProps a =
+type TablePaginationProps componentProps =
   ( "ActionsComponent" :: TablePaginationActions
-  , backIconButtonProps :: { | IconButtonProps }
+  , backIconButtonProps :: IconButtonPropsPartial
   , classes :: TablePaginationClassKey
-  , component :: ReactComponent { | a } 
+  , component :: ReactComponent { | componentProps } 
   , count :: Number
   , labelDisplayedRows :: ({ from :: Number, to :: Number, count :: Number } -> String)
   , labelRowsPerPage :: String
-  , nextIconButtonProps :: { | IconButtonProps }
+  , nextIconButtonProps :: IconButtonPropsPartial
   , onChangePage :: EventHandler
   , onChangeRowsPerPage :: EventHandler
   , page :: Number
@@ -33,6 +33,7 @@ type TablePaginationProps a =
   , size :: String
   , sortDirection :: String
   , variant :: String
+  | componentProps
   )
 
 foreign import data TablePaginationClassKey :: Type
@@ -62,6 +63,19 @@ tablePaginationPropsPartial :: ∀ props props_
   => Record props 
   -> TablePaginationPropsPartial
 tablePaginationPropsPartial = unsafeCoerce
+
+tablePaginationPropsPartial_component :: ∀ componentProps props props_
+  . Union props props_ (TablePaginationProps componentProps )
+  => Record props 
+  -> TablePaginationPropsPartial
+tablePaginationPropsPartial_component = unsafeCoerce
+
+
+tablePagination_component :: ∀ componentProps props props_
+  . Union props props_ (TablePaginationProps componentProps )
+  => Record props 
+  -> JSX
+tablePagination_component = element _TablePagination
 
 tablePagination :: ∀ props props_
   . Union props props_ (TablePaginationProps Props_div)

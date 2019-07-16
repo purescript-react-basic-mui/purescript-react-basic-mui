@@ -2,18 +2,20 @@ module MUI.Core.TableCell where
 
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_td)
 import Unsafe.Coerce (unsafeCoerce)
 
-type TableCellProps =
+type TableCellProps componentProps =
   ( align :: String
   , children :: Array JSX
   , classes :: TableCellClassKey
-  , component :: String
+  , component :: ReactComponent { | componentProps }
   , padding :: String
   , scope :: String
   , size :: String
   , sortDirection :: String
   , variant :: String
+  | componentProps
   )
 
 foreign import data TableCellClassKey :: Type
@@ -39,14 +41,26 @@ tableCellClassKey :: ∀ options options_
   -> TableCellClassKey
 tableCellClassKey = unsafeCoerce
 
+tableCellPropsPartial_component :: ∀ componentProps props props_
+  .  Union props props_ (TableCellProps componentProps)
+  => Record props 
+  -> TableCellPropsPartial
+tableCellPropsPartial_component = unsafeCoerce
+
 tableCellPropsPartial :: ∀ props props_
-  .  Union props props_ TableCellProps
+  .  Union props props_ (TableCellProps Props_td)
   => Record props 
   -> TableCellPropsPartial
 tableCellPropsPartial = unsafeCoerce
 
+tableCell_component :: ∀ componentProps props props_
+  . Union props props_ (TableCellProps componentProps)
+  => Record props 
+  -> JSX
+tableCell_component = element _TableCell
+
 tableCell :: ∀ props props_
-  . Union props props_ TableCellProps
+  . Union props props_ (TableCellProps Props_td)
   => Record props 
   -> JSX
 tableCell = element _TableCell

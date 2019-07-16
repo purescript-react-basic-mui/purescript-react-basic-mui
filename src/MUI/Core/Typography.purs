@@ -2,21 +2,23 @@ module MUI.Core.Typography where
 
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (SharedProps)
 import Unsafe.Coerce (unsafeCoerce)
 
-type TypographyProps =
+type TypographyProps componentProps =
   ( align :: String
   , children :: Array JSX
   , classes :: TypographyClassKey
   , className :: String
   , color :: String
-  , component :: String
+  , component :: ReactComponent { | componentProps }
   , display :: String
   , gutterBottom :: Boolean
   , noWrap :: Boolean
   , paragraph :: Boolean
   , variant :: String 
   , variantMapping :: VariantMapping
+  | componentProps
   )
 
 foreign import data TypographyClassKey :: Type
@@ -86,14 +88,26 @@ typographyClassKey :: ∀ options options_
   -> TypographyClassKey
 typographyClassKey = unsafeCoerce
 
+typographyPropsPartial_component :: ∀ componentProps props props_
+  . Union props props_ (TypographyProps componentProps)
+  => Record props 
+  -> TypographyPropsPartial 
+typographyPropsPartial_component = unsafeCoerce
+
 typographyPropsPartial :: ∀ props props_
-  . Union props props_ TypographyProps
+  . Union props props_ (TypographyProps (SharedProps ()))
   => Record props 
   -> TypographyPropsPartial 
 typographyPropsPartial = unsafeCoerce
 
+typography_component :: ∀ componentProps props props_
+  . Union props props_ (TypographyProps componentProps)
+  => Record props 
+  -> JSX
+typography_component = element _Typography
+
 typography :: ∀ props props_
-  . Union props props_ TypographyProps
+  . Union props props_ (TypographyProps (SharedProps ()))
   => Record props 
   -> JSX
 typography = element _Typography

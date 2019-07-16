@@ -10,7 +10,7 @@ import React.Basic.Events (EventHandler)
 import React.Basic.Hooks (Ref)
 import Unsafe.Coerce (unsafeCoerce)
 
-type TableSortLabelProps a =
+type TableSortLabelProps componentProps =
   ( active :: Boolean
   , children :: Array JSX
   , classes :: TableSortLabelClassKey
@@ -20,7 +20,7 @@ type TableSortLabelProps a =
   , action :: Ref ButtonBaseActions
   , buttonRef :: Ref Foreign
   , centerRipple :: Boolean
-  , component :: ReactComponent { | a }
+  , component :: ReactComponent { | componentProps }
   , disabled :: Boolean
   , disableRipple :: Boolean
   , disableTouchRipple :: Boolean
@@ -29,6 +29,7 @@ type TableSortLabelProps a =
   , onFocusVisible :: EventHandler
   , "TouchRippleProps" :: TouchRippleProps
   , type :: String
+  | componentProps
   )
 
 foreign import data TableSortLabelClassKey :: Type
@@ -48,11 +49,23 @@ tableSortLabelClassKey :: ∀ options options_
   -> TableSortLabelClassKey
 tableSortLabelClassKey = unsafeCoerce
 
+tableSortLabelPropsPartial_component :: ∀ componentProps props props_
+  .  Union props props_ (TableSortLabelProps componentProps)
+  => Record props 
+  -> TableSortLabelPropsPartial 
+tableSortLabelPropsPartial_component = unsafeCoerce
+
 tableSortLabelPropsPartial :: ∀ props props_
   .  Union props props_ (TableSortLabelProps Props_span)
   => Record props 
   -> TableSortLabelPropsPartial 
 tableSortLabelPropsPartial = unsafeCoerce
+
+tableSortLabel_component :: ∀ componentProps props props_
+  .  Union props props_ (TableSortLabelProps componentProps)
+  => Record props 
+  -> JSX
+tableSortLabel_component = element _TableSortLabel
 
 tableSortLabel :: ∀ props props_
   .  Union props props_ (TableSortLabelProps Props_span)

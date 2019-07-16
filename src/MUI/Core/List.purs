@@ -5,13 +5,14 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
-type ListProps a =
+type ListProps componentProps =
   ( children :: Array JSX
   , classes :: ListClassKey
-  , component :: ReactComponent { | a }
+  , component :: ReactComponent { | componentProps }
   , dense :: Boolean
   , disablePadding :: Boolean
   , subheader :: JSX
+  | componentProps 
   )
 
 foreign import data ListClassKey :: Type
@@ -30,12 +31,23 @@ listClassKey :: ∀ options options_
   -> ListClassKey
 listClassKey = unsafeCoerce
 
+listPropsPartial_component :: ∀ componentProps props props_
+  . Union props props_ (ListProps componentProps)
+  => Record props 
+  -> ListPropsPartial
+listPropsPartial_component = unsafeCoerce
+
 listPropsPartial :: ∀ props props_
   . Union props props_ (ListProps Props_div)
   => Record props 
   -> ListPropsPartial
 listPropsPartial = unsafeCoerce
 
+list_component :: ∀ componentProps props props_
+  . Union props props_ (ListProps componentProps)
+  => Record props 
+  -> JSX
+list_component = element _List
 
 list :: ∀ props props_
   . Union props props_ (ListProps Props_div)

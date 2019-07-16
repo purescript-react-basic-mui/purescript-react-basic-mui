@@ -5,10 +5,11 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_tfoot)
 import Unsafe.Coerce (unsafeCoerce)
 
-type TableFooterProps a =
+type TableFooterProps componentProps =
   ( children :: Array JSX
   , classes :: TableFooterClassKey
-  , component :: ReactComponent { | a } 
+  , component :: ReactComponent { | componentProps } 
+  | componentProps
   )
 
 foreign import data TableFooterClassKey :: Type
@@ -28,6 +29,12 @@ tableFooterPropsPartial :: ∀ props props_
   => Record props 
   -> TableFooterPropsPartial
 tableFooterPropsPartial = unsafeCoerce
+
+tableFooter_component :: ∀ componentProps props props_
+  .  Union props props_ (TableFooterProps componentProps)
+  => Record props 
+  -> JSX
+tableFooter_component = element _TableFooter
 
 tableFooter :: ∀ props props_
   .  Union props props_ (TableFooterProps Props_tfoot)

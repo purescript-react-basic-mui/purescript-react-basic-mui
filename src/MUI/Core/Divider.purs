@@ -5,12 +5,13 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_hr)
 import Unsafe.Coerce (unsafeCoerce)
 
-type DividerProps a =
+type DividerProps componentProps =
   ( absolute :: Boolean
   , classes :: DividerClassKey 
-  , component :: ReactComponent { | a }
+  , component :: ReactComponent { | componentProps }
   , light :: Boolean
   , variant :: String
+  | componentProps
   )
 
 foreign import data DividerClassKey :: Type
@@ -30,16 +31,29 @@ dividerClassKey :: ∀ options options_
   -> DividerClassKey
 dividerClassKey = unsafeCoerce
 
+dividerPropsPartial_component :: ∀ componentProps props props_
+  . Union props props_ (DividerProps componentProps)
+  => Record props 
+  -> DividerPropsPartial 
+dividerPropsPartial_component = unsafeCoerce
+
 dividerPropsPartial :: ∀ props props_
   . Union props props_ (DividerProps Props_hr)
   => Record props 
   -> DividerPropsPartial 
 dividerPropsPartial = unsafeCoerce
 
+divider_component :: ∀ componentProps props props_
+  . Union props props_ (DividerProps componentProps)
+  => Record props 
+  -> JSX
+divider_component = element _Divider
+
 divider :: ∀ props props_
   . Union props props_ (DividerProps Props_hr)
   => Record props 
   -> JSX
 divider = element _Divider
+
 
 foreign import _Divider :: ∀ a. ReactComponent a

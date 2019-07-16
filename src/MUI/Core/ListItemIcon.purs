@@ -2,11 +2,13 @@ module MUI.Core.ListItemIcon where
 
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
-type ListItemIconProps =
+type ListItemIconProps containerProps =
   ( children :: Array JSX
   , classes :: ListItemIconClassKey
+  | containerProps
   )
 
 foreign import data ListItemIconClassKey :: Type
@@ -24,13 +26,13 @@ listItemIconClassKey :: ∀ options options_
 listItemIconClassKey = unsafeCoerce
 
 listItemIconPropsPartial :: ∀ props props_
-  . Union props props_ ListItemIconProps
+  . Union props props_ (ListItemIconProps Props_div)
   => Record props 
   -> ListItemIconPropsPartial 
 listItemIconPropsPartial = unsafeCoerce
 
 listItemIcon :: ∀ props props_
-  . Union props props_ ListItemIconProps
+  . Union props props_ (ListItemIconProps Props_div)
   => Record props 
   -> JSX
 listItemIcon = element _ListItemIcon

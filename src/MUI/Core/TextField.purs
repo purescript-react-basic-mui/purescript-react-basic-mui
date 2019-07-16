@@ -4,14 +4,16 @@ import Effect (Effect)
 import Foreign (Foreign)
 import Foreign.Object (Object)
 import Prim.Row (class Union)
+import React.Basic.DOM (Props_div)
 import React.Basic.Events (EventHandler)
 import React.Basic.Hooks (JSX, ReactComponent, Ref, element)
 import Unsafe.Coerce (unsafeCoerce)
 
-type TextFieldProps =
+type TextFieldProps componentProps =
   ( autoComplete :: String
   , autoFocus :: Boolean
   , classes :: TextFieldClassKey
+  , component :: ReactComponent { | componentProps }
   , defaultValue :: String
   , disabled :: Boolean
   , error :: Boolean
@@ -27,7 +29,9 @@ type TextFieldProps =
   , margin :: String
   , multiline :: Boolean
   , name :: String
+  , onBlur :: EventHandler
   , onChange :: EventHandler
+  , onFocus :: EventHandler
   , placeholder :: String
   , required :: Boolean
   , rows :: Number
@@ -37,6 +41,7 @@ type TextFieldProps =
   , type :: String
   , value :: String
   , variant :: String
+  | componentProps
   )
 
 
@@ -51,14 +56,26 @@ textFieldClassKey :: ∀ options options_
   -> TextFieldClassKey
 textFieldClassKey = unsafeCoerce
 
+textFieldPropsPartial_component :: ∀ componentProps props props_
+  . Union props props_ (TextFieldProps componentProps)
+  => Record props 
+  -> TextFieldPropsPartial 
+textFieldPropsPartial_component = unsafeCoerce
+
 textFieldPropsPartial :: ∀ props props_
-  . Union props props_ TextFieldProps
+  . Union props props_ (TextFieldProps Props_div)
   => Record props 
   -> TextFieldPropsPartial 
 textFieldPropsPartial = unsafeCoerce
 
+textField_component :: ∀ componentProps props props_
+  . Union props props_ (TextFieldProps componentProps)
+  => Record props 
+  -> JSX
+textField_component = element _TextField
+
 textField :: ∀ props props_
-  . Union props props_ TextFieldProps
+  . Union props props_ (TextFieldProps Props_div)
   => Record props 
   -> JSX
 textField = element _TextField

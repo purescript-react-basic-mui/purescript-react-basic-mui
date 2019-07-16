@@ -1,15 +1,17 @@
 module MUI.Core.LinearProgress where
 
-import React.Basic (JSX, ReactComponent, element)
 import Prim.Row (class Union)
+import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
-type LinearProgressProps =
+type LinearProgressProps componentProps =
   ( classes :: LinearProgressClassKey
   , color :: String
   , value :: Number
   , valueBuffer :: Number
   , variant :: String
+  | componentProps
   )
 
 foreign import data LinearProgressClassKey :: Type
@@ -43,13 +45,13 @@ linearProgressClassKey :: ∀ options options_
 linearProgressClassKey = unsafeCoerce
 
 linearProgress :: ∀ props props_
-  . Union props props_ LinearProgressProps
+  . Union props props_ (LinearProgressProps Props_div)
   => Record props 
   -> JSX
 linearProgress = element _LinearProgress
 
 linearProgressPropsPartial :: ∀ props props_
-  . Union props props_ LinearProgressProps
+  . Union props props_ (LinearProgressProps Props_div)
   => Record props 
   -> LinearProgressPropsPartial 
 linearProgressPropsPartial = unsafeCoerce

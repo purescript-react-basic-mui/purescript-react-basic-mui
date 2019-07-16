@@ -5,12 +5,12 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
-type GridProps a =
+type GridProps componentProps =
   ( alignContent :: String
   , alignItems :: String
   , children :: Array JSX
   , classes :: GridClassKey
-  , component :: ReactComponent { | a }
+  , component :: ReactComponent { | componentProps }
   , container :: Boolean
   , direction :: String
   , item :: Boolean
@@ -23,6 +23,7 @@ type GridProps a =
   , xl :: String
   , xs :: String
   , zeroMinWidth :: Boolean
+  | componentProps
   )
 
 foreign import data GridClassKey :: Type
@@ -81,12 +82,24 @@ gridClassKey :: ∀ options options_
   -> GridClassKey
 gridClassKey = unsafeCoerce
 
+
+gridPropsPartial_component :: ∀ componentProps props props_
+  . Union props props_ (GridProps componentProps)
+  => Record props 
+  -> GridPropsPartial 
+gridPropsPartial_component = unsafeCoerce
+
 gridPropsPartial :: ∀ props props_
   . Union props props_ (GridProps Props_div)
   => Record props 
   -> GridPropsPartial 
 gridPropsPartial = unsafeCoerce
 
+grid_component :: ∀ componentProps props props_
+  . Union props props_ (GridProps componentProps)
+  => Record props 
+  -> JSX
+grid_component = element _Grid
 
 grid :: ∀ props props_
   . Union props props_ (GridProps Props_div)

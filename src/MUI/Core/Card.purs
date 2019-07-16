@@ -7,14 +7,15 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
-type CardProps a =
+type CardProps componentProps =
   ( children :: Array JSX
   , classes :: CardClassKey 
   , className :: String
-  , component :: ReactComponent { | a }
+  , component :: ReactComponent { | componentProps }
   , elevation :: Number
   , square :: Boolean
   , raised :: Boolean
+  | componentProps
   )
 
 foreign import data CardPropsPartial :: Type
@@ -57,11 +58,24 @@ cardClassKey :: ∀ options options_
   -> CardClassKey
 cardClassKey = unsafeCoerce
 
+cardPropsPartial_component :: ∀ componentProps props props_
+  . Union props props_ (CardProps componentProps)
+  => Record props 
+  -> CardPropsPartial 
+cardPropsPartial_component = unsafeCoerce
+
 cardPropsPartial :: ∀ props props_
   . Union props props_ (CardProps Props_div)
   => Record props 
   -> CardPropsPartial 
 cardPropsPartial = unsafeCoerce
+
+
+card_component :: ∀ componentProps props props_
+  . Union props props_ (CardProps componentProps)
+  => Record props 
+  -> JSX
+card_component = element _Card
 
 card :: ∀ props props_
   . Union props props_ (CardProps Props_div)

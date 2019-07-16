@@ -3,6 +3,7 @@ module MUI.Core.Slide where
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.Events (EventHandler)
+import Unsafe.Coerce (unsafeCoerce)
 
 type SlideProps =
   ( children :: Array JSX
@@ -19,6 +20,16 @@ type SlideProps =
   , unmountOnExit :: Boolean
   , addEndListener :: EventHandler
   )
+
+foreign import data SlidePropsPartial :: Type
+
+slidePropsPartial
+  :: ∀ props props_
+  . Union props props_ SlideProps
+  => Record props 
+  -> SlidePropsPartial
+slidePropsPartial = unsafeCoerce
+
 
 slide
   :: ∀ props props_
