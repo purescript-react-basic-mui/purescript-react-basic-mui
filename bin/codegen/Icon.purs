@@ -36,7 +36,7 @@ jsModule icon =
     export
       = "exports." <> ffiExportName icon
       <> "="
-      <> "require('@material-ui/icons/" <> icon <> "');"
+      <> "require('@material-ui/icons/" <> icon <> "').default;"
   in
     String.joinWith "\n"
         [ "/* global exports, require */"
