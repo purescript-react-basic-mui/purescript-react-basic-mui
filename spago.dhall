@@ -3,7 +3,14 @@
 , name =
     "react-basic-mui"
 , dependencies =
-    [ "debug", "react-basic-hooks", "simple-json", "spec" ]
+    [ "debug"
+    , "optparse"
+    , "node-fs-aff"
+    , "react-basic-hooks"
+    , "simple-json"
+    , "spec"
+    , "unicode"
+    ]
 , packages =
     ./packages.dhall
 }

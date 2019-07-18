@@ -4,6 +4,7 @@
   "license": "Apache2.0",
   "dependencies": {
     "@material-ui/core": "^4.2.0",
+    "@material-ui/icons": "^4.2.0",
     "react": "^16.8.6"
   }
 }
