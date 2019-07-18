@@ -1,4 +1,4 @@
-module Bin.Codegen.Icon where
+module Scripts.GenIcons where
 
 import Prelude
 
