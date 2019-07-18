@@ -12,10 +12,11 @@ import Data.String (joinWith) as String
 import Data.String.CodeUnits (singleton, uncons) as CodeUnits
 import Effect (Effect)
 import Effect.Aff (launchAff_)
-import Effect.Console (log)
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff (writeTextFile)
 import Node.Path (concat) as Path
+import Node.Process (stderr)
+import Node.Stream (writeString)
 import Options.Applicative (Parser, argument, execParser, fullDesc, help, helper, info, long, many, metavar, str, strOption, (<**>))
 
 -- | List of all "material-ui/icons/" submodule names
@@ -35,7 +36,7 @@ jsModule icon =
   let
     export
       = "exports." <> ffiExportName icon
-      <> "="
+      <> " = "
       <> "require('@material-ui/icons/" <> icon <> "').default;"
   in
     String.joinWith "\n"
@@ -81,8 +82,11 @@ newtype Options = Options
 
 options ∷ Parser Options
 options = map Options $ { dir: _, icons: _ }
-  <$> optional (strOption (long "dir" <> metavar "OUTPUT_DIR" <> help "Icons module would go there"))
+  <$> optional (strOption (long "dir" <> metavar "OUTPUT_DIR" <> help "Icons modules will go there"))
   <*> many (argument str (metavar "ICONS..."))
+
+logStderr ∷ String → Effect Unit
+logStderr msg = void $ writeString stderr UTF8 msg mempty
 
 main ∷ Effect Unit
 main = do
@@ -92,7 +96,7 @@ main = do
     notFound = List.filter (not <<< flip Array.elem icons) opts.icons
   if List.length notFound > 0
     then
-      log $ "Some icons not found between mui-icons: "
+      logStderr $ "Some icons have not been found by our simple mui-icons processor: "
         <> String.joinWith "," (Array.fromFoldable notFound)
     else
       for_ opts.icons \icon → launchAff_ do
