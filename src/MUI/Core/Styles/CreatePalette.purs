@@ -3,7 +3,7 @@ module MUI.Core.Styles.CreatePalette where
 import Prelude
 
 import Foreign (Foreign, unsafeToForeign)
-import MUI.Core (Color)
+import MUI.Core (Color) as Core
 import MUI.Core.Colors.Common (CommonColors)
 import Prim.Row (class Union)
 import Unsafe.Coerce (unsafeCoerce)
@@ -60,7 +60,7 @@ type PalettePartial =
   , tonalOffset :: Number
   , contrastThreshold :: Number
   , common :: CommonColors
-  , grey :: Color
+  , grey :: Core.Color
   , text :: TypeTextOptions
   , divider :: String
   , action :: TypeActionOptions
@@ -78,7 +78,7 @@ type Palette =
   , primary :: PaletteColor
   , secondary :: PaletteColor
   , error :: PaletteColor
-  , grey :: Color
+  , grey :: Core.Color
   , text :: TypeText
   , divider :: String 
   , action :: TypeAction
@@ -86,6 +86,15 @@ type Palette =
   , getContrastText :: String -> String
   , augmentColor :: PaletteColorOptions -> PaletteColor
   }
+
+foreign import data ColorProp :: Type
+
+data Color = Primary | Secondary | Error
+
+color :: Color -> ColorProp
+color Primary = unsafeCoerce "primary"
+color Secondary = unsafeCoerce "secondary"
+color Error = unsafeCoerce "error"
 
 paletteOptions :: ∀ options options_
   .  Union options options_ PalettePartial
