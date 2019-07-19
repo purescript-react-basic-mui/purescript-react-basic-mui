@@ -2,6 +2,7 @@ module Scripts.GenIcons where
 
 import Prelude
 
+import Control.Alternative ((<|>))
 import Data.Array (elem, fromFoldable) as Array
 import Data.Char.Unicode (toLower) as Unicode
 import Data.Foldable (for_)
@@ -11,16 +12,19 @@ import Data.Maybe (Maybe(..), fromMaybe, optional)
 import Data.String (joinWith) as String
 import Data.String.CodeUnits (singleton, uncons) as CodeUnits
 import Effect (Effect)
-import Effect.Aff (launchAff_)
 import Node.Encoding (Encoding(..))
-import Node.FS.Aff (writeTextFile)
+import Node.FS.Sync (writeTextFile)
 import Node.Path (concat) as Path
 import Node.Process (stderr)
 import Node.Stream (writeString)
-import Options.Applicative (Parser, argument, execParser, fullDesc, help, helper, info, long, many, metavar, str, strOption, (<**>))
+import Options.Applicative (Parser, execParser, flag', fullDesc, help, helper, info, long, many, metavar, strOption, (<**>))
 
 -- | List of all "material-ui/icons/" submodule names
-foreign import icons ∷ Array String
+foreign import allIcons ∷ Array String
+
+foreign import data BagPipe ∷ Type
+foreign import bagpipe ∷ Int → Effect BagPipe
+foreign import push ∷ BagPipe → Effect Unit → Effect Unit
 
 ffiExportName ∷ String → String
 ffiExportName icon = "_" <> icon
@@ -75,15 +79,23 @@ psModule icon =
   in
     String.joinWith "\n" lines
 
+data Icons
+  = Icons (List String)
+  | All
+
 newtype Options = Options
   { dir ∷ Maybe String
-  , icons ∷ List String
+  , icons ∷ Icons
   }
 
 options ∷ Parser Options
 options = map Options $ { dir: _, icons: _ }
   <$> optional (strOption (long "dir" <> metavar "OUTPUT_DIR" <> help "Icons modules will go there"))
-  <*> many (argument str (metavar "ICONS..."))
+  <*> icons
+  where
+    icons =
+      (Icons <$> (many (strOption (long "icon"))))
+      <|> flag' All ( long "all" <> help "Generate all icons" )
 
 logStderr ∷ String → Effect Unit
 logStderr msg = void $ writeString stderr UTF8 msg mempty
@@ -93,18 +105,26 @@ main = do
   Options opts ← execParser (info (options <**> helper) fullDesc)
   let
     outputDir = fromMaybe "" opts.dir
-    notFound = List.filter (not <<< flip Array.elem icons) opts.icons
-  if List.length notFound > 0
-    then
-      logStderr $ "Some icons have not been found by our simple mui-icons processor: "
-        <> String.joinWith "," (Array.fromFoldable notFound)
-    else
-      for_ opts.icons \icon → launchAff_ do
+  case opts.icons of
+    All → generate outputDir allIcons
+    Icons icons → do
+      let
+        notFound = List.filter (not <<< flip Array.elem allIcons) icons
+      if List.length notFound > 0
+        then
+          logStderr $ "Some icons have not been found by our simple mui-icons processor: "
+            <> String.joinWith "," (Array.fromFoldable notFound)
+        else
+          generate outputDir (Array.fromFoldable icons)
+  where
+    generate outputDir icons = for_ icons \icon → do
+        b ← bagpipe 300
         let
           jsPath = Path.concat [ outputDir, icon <> ".js" ]
           psPath = Path.concat [ outputDir, icon <> ".purs" ]
 
-        writeTextFile UTF8 jsPath (jsModule icon)
-        writeTextFile UTF8 psPath (psModule icon)
+        push b $ do
+          writeTextFile UTF8 jsPath (jsModule icon)
+          writeTextFile UTF8 psPath (psModule icon)
 
 
