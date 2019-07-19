@@ -2,7 +2,7 @@ module MUI.Core.Typography where
 
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (SharedProps)
+import React.Basic.DOM (Props_h1)
 import Unsafe.Coerce (unsafeCoerce)
 
 type TypographyProps componentProps =
@@ -16,7 +16,7 @@ type TypographyProps componentProps =
   , gutterBottom :: Boolean
   , noWrap :: Boolean
   , paragraph :: Boolean
-  , variant :: String 
+  , variant :: String
   , variantMapping :: VariantMapping
   | componentProps
   )
@@ -95,7 +95,7 @@ typographyPropsPartial_component :: ∀ componentProps props props_
 typographyPropsPartial_component = unsafeCoerce
 
 typographyPropsPartial :: ∀ props props_
-  . Union props props_ (TypographyProps (SharedProps ()))
+  . Union props props_ (TypographyProps (Props_h1))
   => Record props 
   -> TypographyPropsPartial 
 typographyPropsPartial = unsafeCoerce
@@ -107,7 +107,7 @@ typography_component :: ∀ componentProps props props_
 typography_component = element _Typography
 
 typography :: ∀ props props_
-  . Union props props_ (TypographyProps (SharedProps ()))
+  . Union props props_ (TypographyProps (Props_h1))
   => Record props 
   -> JSX
 typography = element _Typography

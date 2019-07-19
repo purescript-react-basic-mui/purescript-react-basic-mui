@@ -4,7 +4,7 @@ let mkPackage =
 let upstream =
       https://raw.githubusercontent.com/purescript/package-sets/psc-0.13.0-20190626/src/packages.dhall sha256:9905f07c9c3bd62fb3205e2108515811a89d55cff24f4341652f61ddacfcf148
 
-let overrides = {=}
+let overrides = { react-basic = upstream.react-basic // { version = "d70820f2e49d800f487834665b92b9008c3e279a" }}
 
 let additions = {=}
 
