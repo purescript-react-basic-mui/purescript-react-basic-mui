@@ -1,4 +1,4 @@
-module MUI.Core.Styles.Typography where
+module MUI.Core.Styles.CreateTypography where
 
 import Data.Function.Uncurried (Fn2, runFn2)
 import Foreign (Foreign, unsafeToForeign)

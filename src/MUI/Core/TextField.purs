@@ -26,7 +26,7 @@ type TextFieldProps componentProps =
   , inputProps :: Object Foreign
   , inputRef :: Effect (Ref Foreign)
   , label :: JSX
-  , margin :: String
+  , margin :: MarginProp
   , multiline :: Boolean
   , name :: String
   , onBlur :: EventHandler
@@ -40,10 +40,23 @@ type TextFieldProps componentProps =
   , "SelectProps" :: Object Foreign
   , type :: String
   , value :: String
-  , variant :: String
+  , variant :: VariantProp
   | componentProps
   )
 
+foreign import data MarginProp :: Type
+data Margin = None | Dense | Normal
+margin :: Margin -> MarginProp
+margin None = unsafeCoerce "none"
+margin Dense = unsafeCoerce "dense"
+margin Normal = unsafeCoerce "normal"
+
+foreign import data VariantProp :: Type
+data Variant = Standard | Outlined | Filled
+variant :: Variant -> VariantProp
+variant Standard = unsafeCoerce "standard"
+variant Outlined = unsafeCoerce "outlines"
+variant Filled = unsafeCoerce "filled"
 
 foreign import data TextFieldClassKey :: Type
 foreign import data TextFieldPropsPartial :: Type

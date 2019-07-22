@@ -1,22 +1,46 @@
 module MUI.Core.TableCell where
 
+import MUI.Core.Table as Table
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_td)
 import Unsafe.Coerce (unsafeCoerce)
 
 type TableCellProps componentProps =
-  ( align :: String
+  ( align :: AlignProp
   , children :: Array JSX
   , classes :: TableCellClassKey
   , component :: ReactComponent { | componentProps }
-  , padding :: String
+  , padding :: Table.PaddingProp
   , scope :: String
-  , size :: String
-  , sortDirection :: String
-  , variant :: String
+  , size :: Table.SizeProp
+  , sortDirection :: SortDirectionProp
+  , variant :: VariantProp
   | componentProps
   )
+
+foreign import data AlignProp :: Type
+data Align = Inherit | Left | Center | Right | Justify
+align :: Align -> AlignProp
+align Inherit = unsafeCoerce "inherit"
+align Left = unsafeCoerce "left"
+align Center = unsafeCoerce "center"
+align Right = unsafeCoerce "right"
+align Justify = unsafeCoerce "justify"
+
+foreign import data SortDirectionProp :: Type
+data SortDirection = Asc | Desc | False
+sortDirection :: SortDirection -> SortDirectionProp
+sortDirection Asc = unsafeCoerce "asc"
+sortDirection Desc = unsafeCoerce "desc"
+sortDirection False = unsafeCoerce false
+
+foreign import data VariantProp :: Type
+data Variant = Head | Body | Footer
+variant :: Variant -> VariantProp
+variant Head = unsafeCoerce "head"
+variant Body = unsafeCoerce "body"
+variant Footer = unsafeCoerce "footer"
 
 foreign import data TableCellClassKey :: Type
 foreign import data TableCellPropsPartial :: Type

@@ -10,9 +10,19 @@ type DividerProps componentProps =
   , classes :: DividerClassKey 
   , component :: ReactComponent { | componentProps }
   , light :: Boolean
-  , variant :: String
+  , variant :: VariantProp
   | componentProps
   )
+
+foreign import data VariantProp :: Type
+
+data Variant = FullWidth | Inset | Middle 
+
+variant :: Variant -> VariantProp
+variant FullWidth = unsafeCoerce "fullWidth"
+variant Inset = unsafeCoerce "inset"
+variant Middle = unsafeCoerce "middle"
+
 
 foreign import data DividerClassKey :: Type
 foreign import data DividerPropsPartial :: Type

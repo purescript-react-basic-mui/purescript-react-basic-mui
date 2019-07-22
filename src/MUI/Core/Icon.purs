@@ -1,5 +1,7 @@
 module MUI.Core.Icon where
 
+import MUI.Core.Icon.FontSize (FontSizeProp)
+import MUI.Core.Icon.Color (ColorProp)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_span)
@@ -8,9 +10,9 @@ import Unsafe.Coerce (unsafeCoerce)
 type IconProps componentProps =
   ( children :: (Array JSX)
   , classes :: IconClassKey
-  , color :: String
+  , color :: ColorProp
   , component :: ReactComponent  { | componentProps }
-  , fontSize :: String
+  , fontSize :: FontSizeProp
   | componentProps
   )
 

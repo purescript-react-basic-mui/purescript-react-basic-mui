@@ -7,7 +7,7 @@ import Unsafe.Coerce (unsafeCoerce)
 
 type SlideProps =
   ( children :: Array JSX
-  , direction :: String
+  , direction :: DirectionProp
   , in :: Boolean
   , timeout :: Number
   , onEnter :: EventHandler
@@ -20,6 +20,14 @@ type SlideProps =
   , unmountOnExit :: Boolean
   , addEndListener :: EventHandler
   )
+
+foreign import data DirectionProp :: Type
+data Direction = Left | Right | Up | Down
+direction :: Direction -> DirectionProp
+direction Left = unsafeCoerce "left"
+direction Right = unsafeCoerce "right"
+direction Up = unsafeCoerce "up"
+direction Down = unsafeCoerce "down"
 
 foreign import data SlidePropsPartial :: Type
 

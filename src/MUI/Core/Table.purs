@@ -9,10 +9,23 @@ type TableProps componentProps =
   ( children :: Array JSX
   , classes :: TableClassKey
   , component :: ReactComponent { | componentProps }
-  , padding :: String
-  , size :: String
+  , padding :: PaddingProp
+  , size :: SizeProp
   | componentProps
   )
+
+foreign import data PaddingProp :: Type
+data Padding = Default | Checkbox | None
+padding :: Padding -> PaddingProp
+padding Default = unsafeCoerce "default"
+padding Checkbox = unsafeCoerce "checkbox"
+padding None = unsafeCoerce "none"
+
+foreign import data SizeProp :: Type
+data Size = Small | Medium
+size :: Size -> SizeProp
+size Small = unsafeCoerce "small"
+size Medium = unsafeCoerce "medium"
 
 foreign import data TableClassKey :: Type
 foreign import data TablePropsPartial :: Type

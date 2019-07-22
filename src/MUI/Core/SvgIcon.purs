@@ -1,5 +1,7 @@
 module MUI.Core.SvgIcon where
 
+import MUI.Core.Icon.Color as Icon
+import MUI.Core.Icon.FontSize (FontSize)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_svg)
@@ -8,9 +10,9 @@ import Unsafe.Coerce (unsafeCoerce)
 type SvgIconProps componentProps =
   ( children :: Array JSX
   , classes :: SvgIconClassKey
-  , color :: String
+  , color :: Icon.ColorProp
   , component :: ReactComponent { | componentProps }
-  , fontSize :: String
+  , fontSize :: FontSize
   , htmlColor :: String
   , shapeRendering :: String
   , titleAccess :: String

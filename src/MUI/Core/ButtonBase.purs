@@ -30,9 +30,17 @@ type ButtonBaseProps componentProps =
   , focusVisibleClassName :: String
   , onFocusVisible :: EventHandler
   , "TouchRippleProps" :: TouchRippleProps
-  , type :: String
+  , type :: ButtonBaseTypeProp 
   | componentProps
   )
+
+foreign import data ButtonBaseTypeProp :: Type
+data ButtonBaseType = Submit | Reset | Button
+
+buttonBaseType :: ButtonBaseType -> ButtonBaseTypeProp
+buttonBaseType Submit = unsafeCoerce "submit"
+buttonBaseType Reset = unsafeCoerce "reset"
+buttonBaseType Button = unsafeCoerce "button"
 
 type ButtonBaseClassKeyOptions =
   ( root :: String
