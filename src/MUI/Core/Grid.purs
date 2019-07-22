@@ -1,11 +1,11 @@
 module MUI.Core.Grid where
 
-import MUI.Core.Styles.CreateSpacing (SpacingProp)
 import MUI.Core.Grid.AlignContent (AlignContentProp)
 import MUI.Core.Grid.AlignItems (AlignItemsProp)
 import MUI.Core.Grid.Direction (DirectionProp)
 import MUI.Core.Grid.GridCount (GridCountProp)
 import MUI.Core.Grid.Justify (JustifyProp)
+import MUI.Core.Grid.Spacing (SpacingProp)
 import MUI.Core.Grid.Wrap (WrapProp)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
