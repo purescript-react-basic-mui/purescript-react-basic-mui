@@ -13,7 +13,7 @@ import Unsafe.Coerce (unsafeCoerce)
 type IconButtonProps componentProps =
   ( children :: Array JSX
   , classes :: IconButtonClassKey
-  , color :: IconButtonColorProp
+  , color ::ColorProp
   , edge :: EdgeProp
   , size :: SizeProp
   , action :: Ref ButtonBaseActions
@@ -31,13 +31,13 @@ type IconButtonProps componentProps =
   | componentProps
   )
 
-foreign import data IconButtonColorProp :: Type
-data IconButtonColor = Primary | Secondary | Default | Inherit
-iconButtonColor :: IconButtonColor -> IconButtonColorProp
-iconButtonColor Primary = unsafeCoerce "primary"
-iconButtonColor Secondary = unsafeCoerce "secondary"
-iconButtonColor Default = unsafeCoerce "default"
-iconButtonColor Inherit = unsafeCoerce "inherit"
+foreign import data ColorProp :: Type
+data Color = Primary | Secondary | Default | Inherit
+color :: Color -> ColorProp
+color Primary = unsafeCoerce "primary"
+color Secondary = unsafeCoerce "secondary"
+color Default = unsafeCoerce "default"
+color Inherit = unsafeCoerce "inherit"
 
 foreign import data EdgeProp :: Type
 data Edge = Start | End | False
