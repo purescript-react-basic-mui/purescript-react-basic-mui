@@ -16,26 +16,35 @@ type BreakpointValues =
   }
 
 type Breakpoints =
-  { keys :: Array String
+  { keys :: Array BreakpointProp
   , values :: BreakpointValues
-  , up :: String -> String
-  , down :: String -> String
-  , between :: Fn2 String String String 
-  , only :: String -> String
-  , width :: String -> Number
+  , up :: BreakpointProp -> String
+  , down :: BreakpointProp -> String
+  , between :: Fn2 BreakpointProp BreakpointProp String 
+  , only :: BreakpointProp -> String
+  , width :: BreakpointProp -> Number
   }
 
 type BreakpointsPartial =
   ( unit :: String
   , step :: Number
-  , keys :: Array String
+  , keys :: Array BreakpointProp
   , values :: BreakpointValues
-  , up :: String -> String
-  , down :: String -> String
-  , between :: Fn2 String String String 
-  , only :: String -> String
-  , width :: String -> Number
+  , up :: BreakpointProp -> String
+  , down :: BreakpointProp -> String
+  , between :: Fn2 BreakpointProp BreakpointProp String 
+  , only :: BreakpointProp -> String
+  , width :: BreakpointProp -> Number
   )
+
+foreign import data BreakpointProp :: Type
+data Breakpoint = XS | SM | MD | LG | XL
+breakpoint :: Breakpoint -> BreakpointProp
+breakpoint XS = unsafeCoerce "xs"
+breakpoint SM = unsafeCoerce "sm"
+breakpoint MD = unsafeCoerce "md"
+breakpoint LG = unsafeCoerce "lg"
+breakpoint XL = unsafeCoerce "xl"
 
 foreign import data BreakpointsOptions :: Type
 
