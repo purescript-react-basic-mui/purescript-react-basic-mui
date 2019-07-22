@@ -2,6 +2,7 @@ module MUI.Core.TableSortLabel where
 
 import Foreign (Foreign)
 import MUI.Core.ButtonBase (ButtonBaseActions, TouchRippleProps)
+import MUI.Core.ButtonBase as ButtonBase
 import MUI.Core.SvgIcon (SvgIconProps)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
@@ -14,7 +15,7 @@ type TableSortLabelProps componentProps =
   ( active :: Boolean
   , children :: Array JSX
   , classes :: TableSortLabelClassKey
-  , direction :: String
+  , direction :: DirectionProp
   , hideSortIcon :: Boolean
   , "IconComponent" :: ReactComponent { | (SvgIconProps Props_svg) }
   , action :: Ref ButtonBaseActions
@@ -28,9 +29,15 @@ type TableSortLabelProps componentProps =
   , focusVisibleClassName :: String
   , onFocusVisible :: EventHandler
   , "TouchRippleProps" :: TouchRippleProps
-  , type :: String
+  , type :: ButtonBase.ButtonBaseTypeProp
   | componentProps
   )
+
+foreign import data DirectionProp :: Type
+data Direction = Asc | Desc
+direction :: Direction -> DirectionProp
+direction Asc = unsafeCoerce "asc"
+direction Desc = unsafeCoerce "desc"
 
 foreign import data TableSortLabelClassKey :: Type
 foreign import data TableSortLabelPropsPartial :: Type

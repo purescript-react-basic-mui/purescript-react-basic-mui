@@ -7,12 +7,26 @@ import Unsafe.Coerce (unsafeCoerce)
 
 type LinearProgressProps componentProps =
   ( classes :: LinearProgressClassKey
-  , color :: String
+  , color :: ColorProp
   , value :: Number
   , valueBuffer :: Number
-  , variant :: String
+  , variant :: Variant
   | componentProps
   )
+
+foreign import data ColorProp :: Type
+data Color = Primary | Secondary
+color :: Color -> ColorProp
+color Primary = unsafeCoerce "primary"
+color Secondary = unsafeCoerce "secondary"
+
+foreign import data VariantProp :: Type
+data Variant = Determinate | Indeterminate | Buffer | Query
+variant :: Variant -> VariantProp
+variant Determinate = unsafeCoerce "determinate"
+variant Indeterminate = unsafeCoerce "indeterminate"
+variant Buffer = unsafeCoerce "buffer"
+variant Query = unsafeCoerce "query"
 
 foreign import data LinearProgressClassKey :: Type
 foreign import data LinearProgressPropsPartial :: Type

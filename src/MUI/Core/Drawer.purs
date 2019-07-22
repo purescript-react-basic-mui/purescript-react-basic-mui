@@ -10,7 +10,7 @@ import React.Basic.Events (EventHandler)
 import Unsafe.Coerce (unsafeCoerce)
 
 type DrawerProps componentProps =
-  ( anchor :: String
+  ( anchor :: AnchorProp
   , children :: Array JSX
   , classes :: DrawerClassKey
   , elevation :: Number
@@ -20,9 +20,27 @@ type DrawerProps componentProps =
   , "PaperProps" :: PaperPropsPartial
   , "SlideProps" :: SlidePropsPartial
   , transitionDuration :: { enter :: Number, exit :: Number }
-  , variant :: String
+  , variant :: VariantProp
   | componentProps
   )
+
+foreign import data AnchorProp :: Type
+data Anchor = Left | Top | Right | Bottom 
+
+anchor :: Anchor -> AnchorProp
+anchor Left = unsafeCoerce "left"
+anchor Top = unsafeCoerce "top"
+anchor Right = unsafeCoerce "right"
+anchor Bottom = unsafeCoerce "bottom"
+
+foreign import data VariantProp :: Type
+data Variant = Permanent | Persistent | Temporary
+
+variant :: Variant -> VariantProp
+variant Permanent = unsafeCoerce "permanent"
+variant Persistent = unsafeCoerce "persistent"
+variant Temporary = unsafeCoerce "temporary"
+
 
 foreign import data DrawerClassKey :: Type
 foreign import data DrawerPropsPartial :: Type

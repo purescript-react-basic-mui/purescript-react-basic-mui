@@ -2,7 +2,7 @@ module MUI.Core.IconButton where
 
 
 import Foreign (Foreign)
-import MUI.Core.ButtonBase (ButtonBaseActions, TouchRippleProps)
+import MUI.Core.ButtonBase (ButtonBaseActions, ButtonBaseTypeProp, TouchRippleProps)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_button)
@@ -13,9 +13,9 @@ import Unsafe.Coerce (unsafeCoerce)
 type IconButtonProps componentProps =
   ( children :: Array JSX
   , classes :: IconButtonClassKey
-  , color :: String
-  , edge :: String
-  , size :: String
+  , color :: IconButtonColorProp
+  , edge :: EdgeProp
+  , size :: SizeProp
   , action :: Ref ButtonBaseActions
   , buttonRef :: Ref Foreign
   , centerRipple :: Boolean
@@ -27,9 +27,30 @@ type IconButtonProps componentProps =
   , focusVisibleClassName :: String
   , onFocusVisible :: EventHandler
   , "TouchRippleProps" :: TouchRippleProps
-  , type :: String
+  , type :: ButtonBaseTypeProp 
   | componentProps
   )
+
+foreign import data IconButtonColorProp :: Type
+data IconButtonColor = Primary | Secondary | Default | Inherit
+iconButtonColor :: IconButtonColor -> IconButtonColorProp
+iconButtonColor Primary = unsafeCoerce "primary"
+iconButtonColor Secondary = unsafeCoerce "secondary"
+iconButtonColor Default = unsafeCoerce "default"
+iconButtonColor Inherit = unsafeCoerce "inherit"
+
+foreign import data EdgeProp :: Type
+data Edge = Start | End | False
+edge :: Edge -> EdgeProp
+edge Start = unsafeCoerce "start"
+edge End = unsafeCoerce "end"
+edge False = unsafeCoerce false
+
+foreign import data SizeProp :: Type
+data Size = Small | Medium
+size :: Size -> SizeProp
+size Small = unsafeCoerce "small"
+size Medium = unsafeCoerce "medium"
 
 foreign import data IconButtonClassKey :: Type
 foreign import data IconButtonPropsPartial :: Type

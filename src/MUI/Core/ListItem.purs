@@ -10,7 +10,7 @@ import Unsafe.Coerce (unsafeCoerce)
 type ContainerProps = Object Foreign
 
 type ListItemProps componentProps containerProps = 
-  ( alignItems :: String
+  ( alignItems :: AlignItemsProp
   , autoFocus :: Boolean
   , button :: Boolean
   , children :: Array JSX
@@ -25,6 +25,13 @@ type ListItemProps componentProps containerProps =
   , selected  :: Boolean
   | componentProps
   )
+
+foreign import data AlignItemsProp :: Type
+data AlignItems = FlexStart | Start | Center
+alignItems :: AlignItems -> AlignItemsProp
+alignItems FlexStart = unsafeCoerce "flex-start"
+alignItems Start = unsafeCoerce "start"
+alignItems Center = unsafeCoerce "center"
 
 foreign import data ListItemClassKey :: Type
 foreign import data ListItemPropsPartial :: Type

@@ -10,7 +10,6 @@ import Unsafe.Coerce (unsafeCoerce)
 type CardProps componentProps =
   ( children :: Array JSX
   , classes :: CardClassKey 
-  , className :: String
   , component :: ReactComponent { | componentProps }
   , elevation :: Number
   , square :: Boolean

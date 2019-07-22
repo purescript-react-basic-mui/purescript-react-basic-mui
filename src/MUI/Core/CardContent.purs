@@ -10,7 +10,6 @@ import Unsafe.Coerce (unsafeCoerce)
 type CardContentProps componentProps =
   ( children :: Array JSX
   , classes :: CardContentClassKey 
-  , className :: String
   , component :: ReactComponent { | componentProps }
   | componentProps
   )
