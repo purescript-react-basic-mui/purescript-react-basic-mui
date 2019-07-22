@@ -1,25 +1,30 @@
 module MUI.Core.Typography where
 
 import Prim.Row (class Union)
+import MUI.Core.Typography.Align (AlignProp)
+import MUI.Core.Typography.Color (ColorProp)
+import MUI.Core.Typography.Display (DisplayProp)
+import MUI.Core.Typography.Variant (VariantProp)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_h1)
 import Unsafe.Coerce (unsafeCoerce)
 
 type TypographyProps componentProps =
-  ( align :: String
+  ( align :: AlignProp
   , children :: Array JSX
   , classes :: TypographyClassKey
-  , className :: String
-  , color :: String
+  , color :: ColorProp
   , component :: ReactComponent { | componentProps }
-  , display :: String
+  , display :: DisplayProp
   , gutterBottom :: Boolean
   , noWrap :: Boolean
   , paragraph :: Boolean
-  , variant :: String
+  , variant :: VariantProp
   , variantMapping :: VariantMapping
   | componentProps
   )
+
+
 
 foreign import data TypographyClassKey :: Type
 foreign import data TypographyPropsPartial :: Type

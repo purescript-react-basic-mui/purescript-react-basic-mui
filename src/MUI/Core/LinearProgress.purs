@@ -1,6 +1,5 @@
 module MUI.Core.LinearProgress where
 
-import MUI.Core.Styles.CreatePalette as Palette
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -8,17 +7,21 @@ import Unsafe.Coerce (unsafeCoerce)
 
 type LinearProgressProps componentProps =
   ( classes :: LinearProgressClassKey
-  , color :: Palette.ColorProp
+  , color :: ColorProp
   , value :: Number
   , valueBuffer :: Number
-  , variant :: VariantProp
+  , variant :: Variant
   | componentProps
   )
 
+foreign import data ColorProp :: Type
+data Color = Primary | Secondary
+color :: Color -> ColorProp
+color Primary = unsafeCoerce "primary"
+color Secondary = unsafeCoerce "secondary"
+
 foreign import data VariantProp :: Type
-
 data Variant = Determinate | Indeterminate | Buffer | Query
-
 variant :: Variant -> VariantProp
 variant Determinate = unsafeCoerce "determinate"
 variant Indeterminate = unsafeCoerce "indeterminate"

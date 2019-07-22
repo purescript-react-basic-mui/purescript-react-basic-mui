@@ -1,30 +1,38 @@
 module MUI.Core.Grid where
 
+import MUI.Core.Styles.CreateSpacing (SpacingProp)
+import MUI.Core.Grid.AlignContent (AlignContentProp)
+import MUI.Core.Grid.AlignItems (AlignItemsProp)
+import MUI.Core.Grid.Direction (DirectionProp)
+import MUI.Core.Grid.GridCount (GridCountProp)
+import MUI.Core.Grid.Justify (JustifyProp)
+import MUI.Core.Grid.Wrap (WrapProp)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
 type GridProps componentProps =
-  ( alignContent :: String
-  , alignItems :: String
+  ( alignContent :: AlignContentProp
+  , alignItems :: AlignItemsProp
   , children :: Array JSX
   , classes :: GridClassKey
   , component :: ReactComponent { | componentProps }
   , container :: Boolean
-  , direction :: String
+  , direction :: DirectionProp
   , item :: Boolean
-  , justify :: String
-  , lg :: String
-  , md :: String
-  , sm :: String
-  , spacing :: Int
-  , wrap :: String
-  , xl :: String
-  , xs :: String
+  , justify :: JustifyProp
+  , lg :: GridCountProp
+  , md :: GridCountProp 
+  , sm :: GridCountProp
+  , spacing :: SpacingProp
+  , wrap :: WrapProp
+  , xl :: GridCountProp
+  , xs :: GridCountProp
   , zeroMinWidth :: Boolean
   | componentProps
   )
+
 
 foreign import data GridClassKey :: Type
 foreign import data GridPropsPartial :: Type

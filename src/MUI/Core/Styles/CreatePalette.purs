@@ -87,15 +87,6 @@ type Palette =
   , augmentColor :: PaletteColorOptions -> PaletteColor
   }
 
-foreign import data ColorProp :: Type
-
-data Color = Primary | Secondary | Error
-
-color :: Color -> ColorProp
-color Primary = unsafeCoerce "primary"
-color Secondary = unsafeCoerce "secondary"
-color Error = unsafeCoerce "error"
-
 paletteOptions :: ∀ options options_
   .  Union options options_ PalettePartial
   => Record options 

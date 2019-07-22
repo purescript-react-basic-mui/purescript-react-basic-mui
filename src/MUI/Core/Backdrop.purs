@@ -11,7 +11,6 @@ type BackdropProps componentProps =
   ( invisible :: Boolean
   , children :: Array JSX
   , classes :: BackdropClassKey
-  , className :: String
   , onClick :: EventHandler
   , open :: Boolean
   , transitionDuration :: { enter :: Number, exit :: Number }
