@@ -1,12 +1,17 @@
 module MUI.Core.TablePagination where
 
+import Prelude
+
+import Effect.Uncurried (EffectFn2)
 import Foreign (Foreign)
 import Foreign.Object (Object)
 import MUI.Core.IconButton (IconButtonPropsPartial)
+import MUI.Core.Table as Table
+import MUI.Core.TableCell (AlignProp, SortDirectionProp, VariantProp)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
-import React.Basic.Events (EventHandler)
+import React.Basic.Events (EventHandler, SyntheticEvent)
 import Unsafe.Coerce (unsafeCoerce)
 
 type TablePaginationActions = Object Foreign
@@ -14,6 +19,7 @@ type SelectProps = Object Foreign
 
 type TablePaginationProps componentProps =
   ( "ActionsComponent" :: TablePaginationActions
+  , align :: AlignProp
   , backIconButtonProps :: IconButtonPropsPartial
   , classes :: TablePaginationClassKey
   , component :: ReactComponent { | componentProps } 
@@ -21,18 +27,17 @@ type TablePaginationProps componentProps =
   , labelDisplayedRows :: ({ from :: Number, to :: Number, count :: Number } -> String)
   , labelRowsPerPage :: String
   , nextIconButtonProps :: IconButtonPropsPartial
-  , onChangePage :: EventHandler
+  , onChangePage :: EffectFn2 SyntheticEvent Number Unit
   , onChangeRowsPerPage :: EventHandler
   , page :: Number
   , rowsPerPage :: Number
   , rowsPerPageOptions :: (Array Number)
   , "SelectProps" :: SelectProps
-  , align :: String
-  , padding :: String
+  , padding :: Table.PaddingProp
   , scope :: String
-  , size :: String
-  , sortDirection :: String
-  , variant :: String
+  , size :: Table.SizeProp
+  , sortDirection :: SortDirectionProp
+  , variant :: VariantProp
   | componentProps
   )
 
