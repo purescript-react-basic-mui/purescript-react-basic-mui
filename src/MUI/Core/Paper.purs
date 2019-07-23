@@ -56,13 +56,13 @@ paperClassKey = unsafeCoerce
 paperPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (PaperProps componentProps)
   => Record props 
-  -> JSX
+  -> PaperPropsPartial
 paperPropsPartial_component = unsafeCoerce
 
 paperPropsPartial :: ∀ props props_
   . Union props props_ (PaperProps Props_div)
   => Record props 
-  -> JSX
+  -> PaperPropsPartial
 paperPropsPartial = unsafeCoerce
 
 paper_component :: ∀ componentProps props props_

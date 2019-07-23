@@ -1,10 +1,21 @@
 module MUI.Core.Styles.Overrides where
 
+import MUI.Core.AppBar (AppBarClassKey)
+import MUI.Core.Avatar (AvatarClassKey)
 import MUI.Core.Backdrop (BackdropClassKey)
+import MUI.Core.Badge (BadgeClassKey)
+import MUI.Core.BottomNavigation (BottomNavigationClassKey)
+import MUI.Core.BottomNavigationAction (BottomNavigationActionClassKey)
+import MUI.Core.Breadcrumbs (BreadcrumbsClassKey)
+import MUI.Core.Button (ButtonClassKey)
 import MUI.Core.ButtonBase (ButtonBaseClassKey)
+import MUI.Core.ButtonGroup (ButtonGroupClassKey)
 import MUI.Core.Card (CardClassKey)
+import MUI.Core.CardActionArea (CardActionAreaClassKey)
+import MUI.Core.CardActions (CardActionsClassKey)
 import MUI.Core.CardContent (CardContentClassKey)
 import MUI.Core.CardHeader (CardHeaderClassKey)
+import MUI.Core.CardMedia (CardMediaClassKey)
 import MUI.Core.Divider (DividerClassKey)
 import MUI.Core.Drawer (DrawerClassKey)
 import MUI.Core.Grid (GridClassKey)
@@ -20,8 +31,8 @@ import MUI.Core.Modal (ModalClassKey)
 import MUI.Core.Paper (PaperClassKey)
 import MUI.Core.SvgIcon (SvgIconClassKey)
 import MUI.Core.Table (TableClassKey)
-import MUI.Core.TableCell (TableCellClassKey)
 import MUI.Core.TableBody (TableBodyClassKey)
+import MUI.Core.TableCell (TableCellClassKey)
 import MUI.Core.TableFooter (TableFooterClassKey)
 import MUI.Core.TableHead (TableHeadClassKey)
 import MUI.Core.TablePagination (TablePaginationClassKey)
@@ -34,22 +45,22 @@ import Unsafe.Coerce (unsafeCoerce)
 
 type Overrides = 
   (
-  --, "MuiAppBar" :: AppBarClassKey
-  --, "MuiAvatar" :: AvatarClassKey
-    "MuiBackdrop" :: BackdropClassKey
-  --, "MuiBadge" :: BadgeClassKey
-  --, "MuiBottomNavigation" :: BottomNavigationClassKey
-  --, "MuiBottomNavigationAction" :: BottomNavigationActionClassKey
-  --, "MuiBreadcrumbs" :: BreadcrumbsClassKey
-  --, "MuiButton" :: ButtonClassKey
+    "MuiAppBar" :: AppBarClassKey
+  , "MuiAvatar" :: AvatarClassKey
+  , "MuiBackdrop" :: BackdropClassKey
+  , "MuiBadge" :: BadgeClassKey
+  , "MuiBottomNavigation" :: BottomNavigationClassKey
+  , "MuiBottomNavigationAction" :: BottomNavigationActionClassKey
+  , "MuiBreadcrumbs" :: BreadcrumbsClassKey
+  , "MuiButton" :: ButtonClassKey
   , "MuiButtonBase" :: ButtonBaseClassKey
-  --, "MuiButtonGroup" :: ButtonGroupClassKey
+  , "MuiButtonGroup" :: ButtonGroupClassKey
   , "MuiCard" :: CardClassKey
-  --, "MuiCardActionArea" :: CardActionAreaClassKey
-  --, "MuiCardActions" :: CardActionsClassKey
+  , "MuiCardActionArea" :: CardActionAreaClassKey
+  , "MuiCardActions" :: CardActionsClassKey
   , "MuiCardContent" :: CardContentClassKey
   , "MuiCardHeader" :: CardHeaderClassKey
-  --, "MuiCardMedia" :: CardMediaClassKey
+  , "MuiCardMedia" :: CardMediaClassKey
   --, "MuiCheckbox" :: CheckboxClassKey
   --, "MuiChip" :: ChipClassKey
   --, "MuiCircularProgress" :: CircularProgressClassKey
