@@ -30,6 +30,7 @@ import MUI.Core.ListItemText (ListItemTextPropsPartial)
 import MUI.Core.Modal (ModalPropsPartial)
 import MUI.Core.Paper (PaperPropsPartial)
 import MUI.Core.SvgIcon (SvgIconPropsPartial)
+import MUI.Core.Tab (TabPropsPartial)
 import MUI.Core.Table (TablePropsPartial)
 import MUI.Core.TableBody (TableBodyPropsPartial)
 import MUI.Core.TableCell (TableCellPropsPartial)
@@ -38,6 +39,7 @@ import MUI.Core.TableHead (TableHeadPropsPartial)
 import MUI.Core.TablePagination (TablePaginationPropsPartial)
 import MUI.Core.TableRow (TableRowPropsPartial)
 import MUI.Core.TableSortLabel (TableSortLabelPropsPartial)
+import MUI.Core.Tabs (TabsPropsPartial)
 import MUI.Core.TextField (TextFieldPropsPartial)
 import MUI.Core.Typography (TypographyPropsPartial)
 import Prim.Row (class Union)
@@ -127,7 +129,7 @@ type ComponentsProps =
   -- , "MuiStepper" :: StepperPropsPartial
   , "MuiSvgIcon" :: SvgIconPropsPartial
   -- , "MuiSwitch" :: SwitchPropsPartial
-  -- , "MuiTab" :: TabPropsPartial
+  , "MuiTab" :: TabPropsPartial
   , "MuiTable" :: TablePropsPartial
   , "MuiTableBody" :: TableBodyPropsPartial
   , "MuiTableCell" :: TableCellPropsPartial
@@ -136,7 +138,7 @@ type ComponentsProps =
   , "MuiTablePagination" :: TablePaginationPropsPartial
   , "MuiTableRow" :: TableRowPropsPartial
   , "MuiTableSortLabel" :: TableSortLabelPropsPartial
-  -- , "MuiTabs" :: TabsPropsPartial
+  , "MuiTabs" :: TabsPropsPartial
   , "MuiTextField" :: TextFieldPropsPartial
   --, "MuiToolbar" :: ToolbarPropsPartial
   -- , "MuiTooltip" :: TooltipPropsPartial

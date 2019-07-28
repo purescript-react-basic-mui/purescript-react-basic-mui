@@ -30,6 +30,7 @@ import MUI.Core.ListItemText (ListItemTextClassKey)
 import MUI.Core.Modal (ModalClassKey)
 import MUI.Core.Paper (PaperClassKey)
 import MUI.Core.SvgIcon (SvgIconClassKey)
+import MUI.Core.Tab (TabClassKey)
 import MUI.Core.Table (TableClassKey)
 import MUI.Core.TableBody (TableBodyClassKey)
 import MUI.Core.TableCell (TableCellClassKey)
@@ -38,6 +39,7 @@ import MUI.Core.TableHead (TableHeadClassKey)
 import MUI.Core.TablePagination (TablePaginationClassKey)
 import MUI.Core.TableRow (TableRowClassKey)
 import MUI.Core.TableSortLabel (TableSortLabelClassKey)
+import MUI.Core.Tabs (TabsClassKey)
 import MUI.Core.TextField (TextFieldClassKey)
 import MUI.Core.Typography (TypographyClassKey)
 import Prim.Row (class Union)
@@ -125,7 +127,7 @@ type Overrides =
   --, "MuiStepper" :: StepperClasskey
   , "MuiSvgIcon" :: SvgIconClassKey
   --, "MuiSwitch" :: SwitchClassKey
-  --, "MuiTab" :: TabClassKey
+  , "MuiTab" :: TabClassKey
   , "MuiTable" :: TableClassKey
   , "MuiTableBody" :: TableBodyClassKey
   , "MuiTableCell" :: TableCellClassKey
@@ -134,7 +136,7 @@ type Overrides =
   , "MuiTablePagination" :: TablePaginationClassKey
   , "MuiTableRow" :: TableRowClassKey
   , "MuiTableSortLabel" :: TableSortLabelClassKey
-  --, "MuiTabs" :: TabsClassKey
+  , "MuiTabs" :: TabsClassKey
   , "MuiTextField" :: TextFieldClassKey
   --, "MuiToolbar" :: ToolbarClassKey
   --, "MuiTooltip" :: TooltipClassKey
