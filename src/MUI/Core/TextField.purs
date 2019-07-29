@@ -3,6 +3,7 @@ module MUI.Core.TextField where
 import Effect (Effect)
 import Foreign (Foreign)
 import Foreign.Object (Object)
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic.DOM (Props_div)
 import React.Basic.Events (EventHandler)
@@ -59,15 +60,24 @@ variant Outlined = unsafeCoerce "outlines"
 variant Filled = unsafeCoerce "filled"
 
 foreign import data TextFieldClassKey :: Type
+foreign import data TextFieldClassKeyJSS :: Type
 foreign import data TextFieldPropsPartial :: Type
 
-type TextFieldClassKeyOptions = ( root :: String )
+type TextFieldClassKeyOptionsJSS = TextFieldClassKeyOptionsR JSS
+type TextFieldClassKeyOptions = TextFieldClassKeyOptionsR String
+type TextFieldClassKeyOptionsR a = ( root :: a )
 
 textFieldClassKey :: ∀ options options_
   . Union options options_ TextFieldClassKeyOptions
   => Record options
   -> TextFieldClassKey
 textFieldClassKey = unsafeCoerce
+
+textFieldClassKeyJSS :: ∀ options options_
+  . Union options options_ TextFieldClassKeyOptionsJSS
+  => Record options
+  -> TextFieldClassKeyJSS
+textFieldClassKeyJSS = unsafeCoerce
 
 textFieldPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (TextFieldProps componentProps)

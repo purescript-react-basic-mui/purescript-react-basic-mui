@@ -1,6 +1,7 @@
 module MUI.Core.Avatar where
 
 import Foreign.Object (Object)
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -21,19 +22,28 @@ type AvatarProps componentProps =
 foreign import data AvatarPropsPartial :: Type
 
 
-type AvatarClassKeyOptions =
-  ( root :: String
-  , colorDefault :: String
-  , img :: String
+type AvatarClassKeyOptions = AvatarClassKeyOptionsR String
+type AvatarClassKeyOptionsJSS = AvatarClassKeyOptionsR JSS 
+type AvatarClassKeyOptionsR a =
+  ( root :: a
+  , colorDefault :: a
+  , img :: a
   )
 
 foreign import data AvatarClassKey :: Type
+foreign import data AvatarClassKeyJSS :: Type
 
 avatarClassKey :: ∀ options options_
   . Union options options_ AvatarClassKeyOptions
   => Record options
   -> AvatarClassKey
 avatarClassKey = unsafeCoerce
+
+avatarClassKeyJSS :: ∀ options options_
+  . Union options options_ AvatarClassKeyOptionsJSS
+  => Record options
+  -> AvatarClassKeyJSS
+avatarClassKeyJSS = unsafeCoerce
 
 avatarPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (AvatarProps componentProps)

@@ -1,123 +1,123 @@
 module MUI.Core.Styles.Overrides where
 
-import MUI.Core.AppBar (AppBarClassKey)
-import MUI.Core.Avatar (AvatarClassKey)
-import MUI.Core.Backdrop (BackdropClassKey)
-import MUI.Core.Badge (BadgeClassKey)
-import MUI.Core.BottomNavigation (BottomNavigationClassKey)
-import MUI.Core.BottomNavigationAction (BottomNavigationActionClassKey)
-import MUI.Core.Breadcrumbs (BreadcrumbsClassKey)
-import MUI.Core.Button (ButtonClassKey)
-import MUI.Core.ButtonBase (ButtonBaseClassKey)
-import MUI.Core.ButtonGroup (ButtonGroupClassKey)
-import MUI.Core.Card (CardClassKey)
-import MUI.Core.CardActionArea (CardActionAreaClassKey)
-import MUI.Core.CardActions (CardActionsClassKey)
-import MUI.Core.CardContent (CardContentClassKey)
-import MUI.Core.CardHeader (CardHeaderClassKey)
-import MUI.Core.CardMedia (CardMediaClassKey)
-import MUI.Core.Divider (DividerClassKey)
-import MUI.Core.Drawer (DrawerClassKey)
-import MUI.Core.Grid (GridClassKey)
-import MUI.Core.Icon (IconClassKey)
-import MUI.Core.IconButton (IconButtonClassKey)
-import MUI.Core.LinearProgress (LinearProgressClassKey)
-import MUI.Core.Link (LinkClassKey)
-import MUI.Core.List (ListClassKey)
-import MUI.Core.ListItem (ListItemClassKey)
-import MUI.Core.ListItemIcon (ListItemIconClassKey)
-import MUI.Core.ListItemText (ListItemTextClassKey)
-import MUI.Core.Modal (ModalClassKey)
-import MUI.Core.Paper (PaperClassKey)
-import MUI.Core.SvgIcon (SvgIconClassKey)
-import MUI.Core.Tab (TabClassKey)
-import MUI.Core.Table (TableClassKey)
-import MUI.Core.TableBody (TableBodyClassKey)
-import MUI.Core.TableCell (TableCellClassKey)
-import MUI.Core.TableFooter (TableFooterClassKey)
-import MUI.Core.TableHead (TableHeadClassKey)
-import MUI.Core.TablePagination (TablePaginationClassKey)
-import MUI.Core.TableRow (TableRowClassKey)
-import MUI.Core.TableSortLabel (TableSortLabelClassKey)
-import MUI.Core.Tabs (TabsClassKey)
-import MUI.Core.TextField (TextFieldClassKey)
-import MUI.Core.Typography (TypographyClassKey)
+import MUI.Core.AppBar (AppBarClassKeyJSS)
+import MUI.Core.Avatar (AvatarClassKeyJSS)
+import MUI.Core.Backdrop (BackdropClassKeyJSS)
+import MUI.Core.Badge (BadgeClassKeyJSS)
+import MUI.Core.BottomNavigation (BottomNavigationClassKeyJSS)
+import MUI.Core.BottomNavigationAction (BottomNavigationActionClassKeyJSS)
+import MUI.Core.Breadcrumbs (BreadcrumbsClassKeyJSS)
+import MUI.Core.Button (ButtonClassKeyJSS)
+import MUI.Core.ButtonBase (ButtonBaseClassKeyJSS)
+import MUI.Core.ButtonGroup (ButtonGroupClassKeyJSS)
+import MUI.Core.Card (CardClassKeyJSS)
+import MUI.Core.CardActionArea (CardActionAreaClassKeyJSS)
+import MUI.Core.CardActions (CardActionsClassKeyJSS)
+import MUI.Core.CardContent (CardContentClassKeyJSS)
+import MUI.Core.CardHeader (CardHeaderClassKeyJSS)
+import MUI.Core.CardMedia (CardMediaClassKeyJSS)
+import MUI.Core.Divider (DividerClassKeyJSS)
+import MUI.Core.Drawer (DrawerClassKeyJSS)
+import MUI.Core.Grid (GridClassKeyJSS)
+import MUI.Core.Icon (IconClassKeyJSS)
+import MUI.Core.IconButton (IconButtonClassKeyJSS)
+import MUI.Core.LinearProgress (LinearProgressClassKeyJSS)
+import MUI.Core.Link (LinkClassKeyJSS)
+import MUI.Core.List (ListClassKeyJSS)
+import MUI.Core.ListItem (ListItemClassKeyJSS)
+import MUI.Core.ListItemIcon (ListItemIconClassKeyJSS)
+import MUI.Core.ListItemText (ListItemTextClassKeyJSS)
+import MUI.Core.Modal (ModalClassKeyJSS)
+import MUI.Core.Paper (PaperClassKeyJSS)
+import MUI.Core.SvgIcon (SvgIconClassKeyJSS)
+import MUI.Core.Tab (TabClassKeyJSS)
+import MUI.Core.Table (TableClassKeyJSS)
+import MUI.Core.TableBody (TableBodyClassKeyJSS)
+import MUI.Core.TableCell (TableCellClassKeyJSS)
+import MUI.Core.TableFooter (TableFooterClassKeyJSS)
+import MUI.Core.TableHead (TableHeadClassKeyJSS)
+import MUI.Core.TablePagination (TablePaginationClassKeyJSS)
+import MUI.Core.TableRow (TableRowClassKeyJSS)
+import MUI.Core.TableSortLabel (TableSortLabelClassKeyJSS)
+import MUI.Core.Tabs (TabsClassKeyJSS)
+import MUI.Core.TextField (TextFieldClassKeyJSS)
+import MUI.Core.Typography (TypographyClassKeyJSS)
 import Prim.Row (class Union)
 import Unsafe.Coerce (unsafeCoerce)
 
 type Overrides = 
   (
-    "MuiAppBar" :: AppBarClassKey
-  , "MuiAvatar" :: AvatarClassKey
-  , "MuiBackdrop" :: BackdropClassKey
-  , "MuiBadge" :: BadgeClassKey
-  , "MuiBottomNavigation" :: BottomNavigationClassKey
-  , "MuiBottomNavigationAction" :: BottomNavigationActionClassKey
-  , "MuiBreadcrumbs" :: BreadcrumbsClassKey
-  , "MuiButton" :: ButtonClassKey
-  , "MuiButtonBase" :: ButtonBaseClassKey
-  , "MuiButtonGroup" :: ButtonGroupClassKey
-  , "MuiCard" :: CardClassKey
-  , "MuiCardActionArea" :: CardActionAreaClassKey
-  , "MuiCardActions" :: CardActionsClassKey
-  , "MuiCardContent" :: CardContentClassKey
-  , "MuiCardHeader" :: CardHeaderClassKey
-  , "MuiCardMedia" :: CardMediaClassKey
-  --, "MuiCheckbox" :: CheckboxClassKey
-  --, "MuiChip" :: ChipClassKey
-  --, "MuiCircularProgress" :: CircularProgressClassKey
-  --, "MuiCollapse" :: CollapseClassKey
-  --, "MuiCssBaseline" :: CssBaselineClassKey
-  --, "MuiDialog" :: DialogClassKey
-  --, "MuiDialogActions" :: DialogActionsClassKey
-  --, "MuiDialogContent" :: DialogContentClassKey
-  --, "MuiDialogContentText" :: DialogContentTextClassKey
-  --, "MuiDialogTitle" :: DialogTitleClassKey
-  , "MuiDivider" :: DividerClassKey
-  , "MuiDrawer" :: DrawerClassKey
-  --, "MuiExpansionPanel" :: ExpansionPanelClassKey
-  --, "MuiExpansionPanelActions" :: ExpansionPanelActionsClassKey
-  --, "MuiExpansionPanelDetails" :: ExpansionPanelDetailsClassKey
-  --, "MuiExpansionPanelSummary" :: ExpansionPanelSummaryClassKey
-  --, "MuiFab" :: FabClassKey
-  --, "MuiFilledInput" :: FilledInputClassKey
-  --, "MuiFormControl" :: FormControlClassKey
-  --, "MuiFormControlLabel" :: FormControlLabelClassKey
-  --, "MuiFormGroup" :: FormGroupClassKey
-  --, "MuiFormHelperText" :: FormHelperTextClassKey
-  --, "MuiFormLabel" :: FormLabelClassKey
-  , "MuiGrid" :: GridClassKey
-  --, "MuiGridList" :: GridListClassKey
-  --, "MuiGridListTile" :: GridListTileClassKey
-  --, "MuiGridListTileBar" :: GridListTileBarClassKey
-  , "MuiIcon" :: IconClassKey
-  , "MuiIconButton" :: IconButtonClassKey
-  --, "MuiInput" :: InputClassKey
-  --, "MuiInputAdornment" :: InputAdornmentClassKey
-  --, "MuiInputBase" :: InputBaseClassKey
-  --, "MuiInputLabel" :: InputLabelClassKey
-  , "MuiLinearProgress" :: LinearProgressClassKey
-  , "MuiLink" :: LinkClassKey
-  , "MuiList" :: ListClassKey
-  , "MuiListItem" :: ListItemClassKey
-  --, "MuiListItemAvatar" :: ListItemAvatarClassKey
-  , "MuiListItemIcon" :: ListItemIconClassKey
-  --, "MuiListItemSecondaryAction" :: ListItemSecondaryActionClassKey
-  , "MuiListItemText" :: ListItemTextClassKey
-  --, "MuiListSubheader" :: ListSubheaderClassKey
-  --, "MuiMenu" :: MenuClassKey
-  --, "MuiMenuItem" :: MenuItemClassKey
-  --, "MuiMobileStepper" :: MobileStepperClassKey
-  , "MuiModal" :: ModalClassKey
-  --, "MuiNativeSelect" :: NativeSelectClassKey
-  --, "MuiOutlinedInput" :: OutlinedInputClassKey
-  , "MuiPaper" :: PaperClassKey
-  --, "MuiPopover" :: PopoverClassKey
-  --, "MuiRadio" :: RadioClassKey
-  --, "MuiSelect" :: SelectClassKey
-  --, "MuiSlider" :: SliderClassKey
-  --, "MuiSnackbar" :: SnackbarClassKey
-  --, "MuiSnackbarContent" :: SnackbarContentClassKey
+    "MuiAppBar" :: AppBarClassKeyJSS
+  , "MuiAvatar" :: AvatarClassKeyJSS
+  , "MuiBackdrop" :: BackdropClassKeyJSS
+  , "MuiBadge" :: BadgeClassKeyJSS
+  , "MuiBottomNavigation" :: BottomNavigationClassKeyJSS
+  , "MuiBottomNavigationAction" :: BottomNavigationActionClassKeyJSS
+  , "MuiBreadcrumbs" :: BreadcrumbsClassKeyJSS
+  , "MuiButton" :: ButtonClassKeyJSS
+  , "MuiButtonBase" :: ButtonBaseClassKeyJSS
+  , "MuiButtonGroup" :: ButtonGroupClassKeyJSS
+  , "MuiCard" :: CardClassKeyJSS
+  , "MuiCardActionArea" :: CardActionAreaClassKeyJSS
+  , "MuiCardActions" :: CardActionsClassKeyJSS
+  , "MuiCardContent" :: CardContentClassKeyJSS
+  , "MuiCardHeader" :: CardHeaderClassKeyJSS
+  , "MuiCardMedia" :: CardMediaClassKeyJSS
+  --, "MuiCheckbox" :: CheckboxClassKeyJSS
+  --, "MuiChip" :: ChipClassKeyJSS
+  --, "MuiCircularProgress" :: CircularProgressClassKeyJSS
+  --, "MuiCollapse" :: CollapseClassKeyJSS
+  --, "MuiCssBaseline" :: CssBaselineClassKeyJSS
+  --, "MuiDialog" :: DialogClassKeyJSS
+  --, "MuiDialogActions" :: DialogActionsClassKeyJSS
+  --, "MuiDialogContent" :: DialogContentClassKeyJSS
+  --, "MuiDialogContentText" :: DialogContentTextClassKeyJSS
+  --, "MuiDialogTitle" :: DialogTitleClassKeyJSS
+  , "MuiDivider" :: DividerClassKeyJSS
+  , "MuiDrawer" :: DrawerClassKeyJSS
+  --, "MuiExpansionPanel" :: ExpansionPanelClassKeyJSS
+  --, "MuiExpansionPanelActions" :: ExpansionPanelActionsClassKeyJSS
+  --, "MuiExpansionPanelDetails" :: ExpansionPanelDetailsClassKeyJSS
+  --, "MuiExpansionPanelSummary" :: ExpansionPanelSummaryClassKeyJSS
+  --, "MuiFab" :: FabClassKeyJSS
+  --, "MuiFilledInput" :: FilledInputClassKeyJSS
+  --, "MuiFormControl" :: FormControlClassKeyJSS
+  --, "MuiFormControlLabel" :: FormControlLabelClassKeyJSS
+  --, "MuiFormGroup" :: FormGroupClassKeyJSS
+  --, "MuiFormHelperText" :: FormHelperTextClassKeyJSS
+  --, "MuiFormLabel" :: FormLabelClassKeyJSS
+  , "MuiGrid" :: GridClassKeyJSS
+  --, "MuiGridList" :: GridListClassKeyJSS
+  --, "MuiGridListTile" :: GridListTileClassKeyJSS
+  --, "MuiGridListTileBar" :: GridListTileBarClassKeyJSS
+  , "MuiIcon" :: IconClassKeyJSS
+  , "MuiIconButton" :: IconButtonClassKeyJSS
+  --, "MuiInput" :: InputClassKeyJSS
+  --, "MuiInputAdornment" :: InputAdornmentClassKeyJSS
+  --, "MuiInputBase" :: InputBaseClassKeyJSS
+  --, "MuiInputLabel" :: InputLabelClassKeyJSS
+  , "MuiLinearProgress" :: LinearProgressClassKeyJSS
+  , "MuiLink" :: LinkClassKeyJSS
+  , "MuiList" :: ListClassKeyJSS
+  , "MuiListItem" :: ListItemClassKeyJSS
+  --, "MuiListItemAvatar" :: ListItemAvatarClassKeyJSS
+  , "MuiListItemIcon" :: ListItemIconClassKeyJSS
+  --, "MuiListItemSecondaryAction" :: ListItemSecondaryActionClassKeyJSS
+  , "MuiListItemText" :: ListItemTextClassKeyJSS
+  --, "MuiListSubheader" :: ListSubheaderClassKeyJSS
+  --, "MuiMenu" :: MenuClassKeyJSS
+  --, "MuiMenuItem" :: MenuItemClassKeyJSS
+  --, "MuiMobileStepper" :: MobileStepperClassKeyJSS
+  , "MuiModal" :: ModalClassKeyJSS
+  --, "MuiNativeSelect" :: NativeSelectClassKeyJSS
+  --, "MuiOutlinedInput" :: OutlinedInputClassKeyJSS
+  , "MuiPaper" :: PaperClassKeyJSS
+  --, "MuiPopover" :: PopoverClassKeyJSS
+  --, "MuiRadio" :: RadioClassKeyJSS
+  --, "MuiSelect" :: SelectClassKeyJSS
+  --, "MuiSlider" :: SliderClassKeyJSS
+  --, "MuiSnackbar" :: SnackbarClassKeyJSS
+  --, "MuiSnackbarContent" :: SnackbarContentClassKeyJSS
   --, "MuiStep" :: StepClasskey
   --, "MuiStepButton" :: StepButtonClasskey
   --, "MuiStepConnector" :: StepConnectorClasskey
@@ -125,23 +125,23 @@ type Overrides =
   --, "MuiStepIcon" :: StepIconClasskey
   --, "MuiStepLabel" :: StepLabelClasskey
   --, "MuiStepper" :: StepperClasskey
-  , "MuiSvgIcon" :: SvgIconClassKey
-  --, "MuiSwitch" :: SwitchClassKey
-  , "MuiTab" :: TabClassKey
-  , "MuiTable" :: TableClassKey
-  , "MuiTableBody" :: TableBodyClassKey
-  , "MuiTableCell" :: TableCellClassKey
-  , "MuiTableFooter" :: TableFooterClassKey
-  , "MuiTableHead" :: TableHeadClassKey
-  , "MuiTablePagination" :: TablePaginationClassKey
-  , "MuiTableRow" :: TableRowClassKey
-  , "MuiTableSortLabel" :: TableSortLabelClassKey
-  , "MuiTabs" :: TabsClassKey
-  , "MuiTextField" :: TextFieldClassKey
-  --, "MuiToolbar" :: ToolbarClassKey
-  --, "MuiTooltip" :: TooltipClassKey
-  --, "MuiTouchRipple" :: TouchRippleClassKey
-  , "MuiTypography" :: TypographyClassKey
+  , "MuiSvgIcon" :: SvgIconClassKeyJSS
+  --, "MuiSwitch" :: SwitchClassKeyJSS
+  , "MuiTab" :: TabClassKeyJSS
+  , "MuiTable" :: TableClassKeyJSS
+  , "MuiTableBody" :: TableBodyClassKeyJSS
+  , "MuiTableCell" :: TableCellClassKeyJSS
+  , "MuiTableFooter" :: TableFooterClassKeyJSS
+  , "MuiTableHead" :: TableHeadClassKeyJSS
+  , "MuiTablePagination" :: TablePaginationClassKeyJSS
+  , "MuiTableRow" :: TableRowClassKeyJSS
+  , "MuiTableSortLabel" :: TableSortLabelClassKeyJSS
+  , "MuiTabs" :: TabsClassKeyJSS
+  , "MuiTextField" :: TextFieldClassKeyJSS
+  --, "MuiToolbar" :: ToolbarClassKeyJSS
+  --, "MuiTooltip" :: TooltipClassKeyJSS
+  --, "MuiTouchRipple" :: TouchRippleClassKeyJSS
+  , "MuiTypography" :: TypographyClassKeyJSS
 )
 
 foreign import data OverridesPartial :: Type

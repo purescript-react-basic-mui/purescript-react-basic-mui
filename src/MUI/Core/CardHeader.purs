@@ -1,5 +1,6 @@
 module MUI.Core.CardHeader where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -21,16 +22,19 @@ type CardHeaderProps componentProps =
   )
 
 foreign import data CardHeaderClassKey :: Type
+foreign import data CardHeaderClassKeyJSS :: Type
 
 foreign import data CardHeaderPropsPartial :: Type
 
-type CardHeaderClassKeyOptions =
-  ( root :: String
-  , avatar :: String
-  , action :: String
-  , content :: String
-  , title :: String
-  , subheader :: String
+type CardHeaderClassKeyOptionsJSS = CardHeaderClassKeyOptionsR JSS
+type CardHeaderClassKeyOptions = CardHeaderClassKeyOptionsR String
+type CardHeaderClassKeyOptionsR a =
+  ( root :: a
+  , avatar :: a
+  , action :: a
+  , content :: a
+  , title :: a
+  , subheader :: a
   )
 
 cardHeaderClassKey :: ∀ options options_
@@ -38,6 +42,12 @@ cardHeaderClassKey :: ∀ options options_
   => Record options
   -> CardHeaderClassKey
 cardHeaderClassKey = unsafeCoerce
+
+cardHeaderClassKeyJSS :: ∀ options options_
+  . Union options options_ CardHeaderClassKeyOptionsJSS
+  => Record options
+  -> CardHeaderClassKeyJSS
+cardHeaderClassKeyJSS = unsafeCoerce
 
 cardHeaderPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (CardHeaderProps componentProps)

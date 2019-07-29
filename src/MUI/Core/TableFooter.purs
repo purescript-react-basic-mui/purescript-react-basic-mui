@@ -1,5 +1,6 @@
 module MUI.Core.TableFooter where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_tfoot)
@@ -13,9 +14,12 @@ type TableFooterProps componentProps =
   )
 
 foreign import data TableFooterClassKey :: Type
+foreign import data TableFooterClassKeyJSS :: Type
 foreign import data TableFooterPropsPartial :: Type
 
-type TableFooterClassKeyOptions = ( root :: String )
+type TableFooterClassKeyOptionsJSS = TableFooterClassKeyOptionsR JSS 
+type TableFooterClassKeyOptions = TableFooterClassKeyOptionsR String
+type TableFooterClassKeyOptionsR a = ( root :: a )
 
 tableFooterClassKey :: ∀ options options_
   .  Union options options_ TableFooterClassKeyOptions
@@ -23,6 +27,11 @@ tableFooterClassKey :: ∀ options options_
   -> TableFooterClassKey
 tableFooterClassKey = unsafeCoerce
 
+tableFooterClassKeyJSS :: ∀ options options_
+  .  Union options options_ TableFooterClassKeyOptionsJSS
+  => Record options
+  -> TableFooterClassKeyJSS
+tableFooterClassKeyJSS = unsafeCoerce
 
 tableFooterPropsPartial :: ∀ props props_
   .  Union props props_ (TableFooterProps Props_tfoot)

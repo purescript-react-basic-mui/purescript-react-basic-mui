@@ -2,6 +2,7 @@ module MUI.Core.ListItem where
 
 import Foreign (Foreign)
 import Foreign.Object (Object)
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_li, Props_div)
@@ -34,20 +35,23 @@ alignItems Start = unsafeCoerce "start"
 alignItems Center = unsafeCoerce "center"
 
 foreign import data ListItemClassKey :: Type
+foreign import data ListItemClassKeyJSS :: Type
 foreign import data ListItemPropsPartial :: Type
 
-type ListItemClassKeyOptions =
-  ( root :: String
-  , container :: String
-  , focusVisible :: String
-  , dense :: String
-  , alignItemsFlexStart :: String
-  , disabled :: String
-  , divider :: String
-  , gutters :: String
-  , button :: String
-  , secondaryAction :: String
-  , selected :: String
+type ListItemClassKeyOptionsJSS = ListItemClassKeyOptionsR JSS
+type ListItemClassKeyOptions = ListItemClassKeyOptionsR String
+type ListItemClassKeyOptionsR a = 
+  ( root :: a
+  , container :: a
+  , focusVisible :: a
+  , dense :: a
+  , alignItemsFlexStart :: a
+  , disabled :: a
+  , divider :: a
+  , gutters :: a
+  , button :: a
+  , secondaryAction :: a
+  , selected :: a
   )
 
 listItemClassKey :: ∀ options options_
@@ -55,6 +59,12 @@ listItemClassKey :: ∀ options options_
   => Record options
   -> ListItemClassKey
 listItemClassKey = unsafeCoerce
+
+listItemClassKeyJSS :: ∀ options options_
+  . Union options options_ ListItemClassKeyOptionsJSS
+  => Record options
+  -> ListItemClassKeyJSS
+listItemClassKeyJSS = unsafeCoerce
 
 listItemPropsPartial_component :: ∀ componentProps containerProps props props_
   . Union props props_ (ListItemProps  componentProps containerProps)

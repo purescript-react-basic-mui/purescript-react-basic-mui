@@ -1,5 +1,6 @@
 module MUI.Core.Divider where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_hr)
@@ -25,14 +26,17 @@ variant Middle = unsafeCoerce "middle"
 
 
 foreign import data DividerClassKey :: Type
+foreign import data DividerClassKeyJSS :: Type
 foreign import data DividerPropsPartial :: Type
 
-type DividerClassKeyOptions =
-  ( root :: String
-  , absolute :: String
-  , inset :: String
-  , light :: String
-  , middle :: String
+type DividerClassKeyOptionsJSS = DividerClassKeyOptionsR JSS
+type DividerClassKeyOptions = DividerClassKeyOptionsR String
+type DividerClassKeyOptionsR a =
+  ( root :: a
+  , absolute :: a
+  , inset :: a
+  , light :: a
+  , middle :: a
   )
 
 dividerClassKey :: ∀ options options_
@@ -40,6 +44,12 @@ dividerClassKey :: ∀ options options_
   => Record options
   -> DividerClassKey
 dividerClassKey = unsafeCoerce
+
+dividerClassKeyJSS :: ∀ options options_
+  . Union options options_ DividerClassKeyOptionsJSS
+  => Record options
+  -> DividerClassKeyJSS
+dividerClassKeyJSS = unsafeCoerce
 
 dividerPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (DividerProps componentProps)

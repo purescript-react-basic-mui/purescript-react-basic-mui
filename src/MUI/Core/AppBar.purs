@@ -1,5 +1,6 @@
 module MUI.Core.AppBar where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -36,24 +37,34 @@ position Static = unsafeCoerce "static"
 position Relative = unsafeCoerce "relative"
 
 
-type AppBarClassKeyOptions =
-  ( positionFixed :: String
-  , positionAbsolute :: String
-  , positionSticky :: String
-  , positionStatic :: String
-  , positionRelative :: String
-  , colorDefault :: String
-  , colorPrimary :: String
-  , colorSecondary :: String
+type AppBarClassKeyOptions = AppBarClassKeyOptionsR String
+type AppBarClassKeyOptionsJSS = AppBarClassKeyOptionsR JSS
+type AppBarClassKeyOptionsR a =
+  ( positionFixed :: a
+  , positionAbsolute :: a
+  , positionSticky :: a
+  , positionStatic :: a
+  , positionRelative :: a
+  , colorDefault :: a
+  , colorPrimary :: a
+  , colorSecondary :: a
   )
 
 foreign import data AppBarClassKey :: Type
+foreign import data AppBarClassKeyJSS :: Type
 
 appBarClassKey :: ∀ options options_
   . Union options options_ AppBarClassKeyOptions
   => Record options
   -> AppBarClassKey
 appBarClassKey = unsafeCoerce
+
+appBarClassKeyJSS :: ∀ options options_
+  . Union options options_ AppBarClassKeyOptionsJSS
+  => Record options
+  -> AppBarClassKeyJSS
+appBarClassKeyJSS = unsafeCoerce
+
 
 appBarPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (AppBarProps componentProps)

@@ -2,6 +2,7 @@ module MUI.Core.IconButton where
 
 
 import Foreign (Foreign)
+import MUI.Core (JSS)
 import MUI.Core.ButtonBase (ButtonBaseActions, ButtonBaseTypeProp, TouchRippleProps)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
@@ -53,19 +54,22 @@ size Small = unsafeCoerce "small"
 size Medium = unsafeCoerce "medium"
 
 foreign import data IconButtonClassKey :: Type
+foreign import data IconButtonClassKeyJSS :: Type
 foreign import data IconButtonPropsPartial :: Type
 
-type IconButtonClassKeyOptions =
-  ( root :: String
-  , edgeStart :: String
-  , edgeEnd :: String
-  , colorInherit :: String
-  , colorPrimary :: String
-  , colorSecondary :: String
-  , disabled :: String
-  , sizeSmall :: String
-  , label :: String
-  )
+type IconButtonClassKeyOptionsJSS = IconButtonClassKeyOptionsR JSS
+type IconButtonClassKeyOptions = IconButtonClassKeyOptionsR String
+type IconButtonClassKeyOptionsR a =
+  ( root :: a
+  , edgeStart :: a
+  , edgeEnd :: a
+  , colorInherit :: a
+  , colorPrimary :: a
+  , colorSecondary :: a
+  , disabled :: a
+  , sizeSmall :: a
+  , label :: a
+  ) 
 
 iconButtonClassKey :: ∀ options options_
   . Union options options_ IconButtonClassKeyOptions
@@ -73,6 +77,11 @@ iconButtonClassKey :: ∀ options options_
   -> IconButtonClassKey
 iconButtonClassKey = unsafeCoerce
 
+iconButtonClassKeyJSS :: ∀ options options_
+  . Union options options_ IconButtonClassKeyOptionsJSS
+  => Record options
+  -> IconButtonClassKeyJSS
+iconButtonClassKeyJSS = unsafeCoerce
 
 iconButtonPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (IconButtonProps componentProps) 

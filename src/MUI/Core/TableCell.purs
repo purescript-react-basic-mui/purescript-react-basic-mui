@@ -1,5 +1,6 @@
 module MUI.Core.TableCell where
 
+import MUI.Core (JSS)
 import MUI.Core.Table as Table
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
@@ -43,20 +44,23 @@ variant Body = unsafeCoerce "body"
 variant Footer = unsafeCoerce "footer"
 
 foreign import data TableCellClassKey :: Type
+foreign import data TableCellClassKeyJSS :: Type
 foreign import data TableCellPropsPartial :: Type
 
-type TableCellClassKeyOptions =
-  ( root :: String
-  , head :: String
-  , body :: String
-  , footer :: String
-  , sizeSmall :: String
-  , paddingCheckbox :: String
-  , paddingNone :: String
-  , alignLeft :: String
-  , alignCenter :: String
-  , alignRight :: String
-  , alignJustify :: String
+type TableCellClassKeyOptionsJSS = TableCellClassKeyOptionsR JSS
+type TableCellClassKeyOptions = TableCellClassKeyOptionsR String
+type TableCellClassKeyOptionsR a =
+  ( root :: a
+  , head :: a
+  , body :: a
+  , footer :: a
+  , sizeSmall :: a
+  , paddingCheckbox :: a
+  , paddingNone :: a
+  , alignLeft :: a
+  , alignCenter :: a
+  , alignRight :: a
+  , alignJustify :: a
   )
 
 tableCellClassKey :: ∀ options options_
@@ -64,6 +68,12 @@ tableCellClassKey :: ∀ options options_
   => Record options
   -> TableCellClassKey
 tableCellClassKey = unsafeCoerce
+
+tableCellClassKeyJSS :: ∀ options options_
+  . Union options options_ TableCellClassKeyOptionsJSS
+  => Record options
+  -> TableCellClassKeyJSS
+tableCellClassKeyJSS = unsafeCoerce
 
 tableCellPropsPartial_component :: ∀ componentProps props props_
   .  Union props props_ (TableCellProps componentProps)

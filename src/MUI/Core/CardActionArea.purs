@@ -1,6 +1,7 @@
 module MUI.Core.CardActionArea where
 
 import Foreign (Foreign)
+import MUI.Core (JSS)
 import MUI.Core.ButtonBase (ButtonBaseActions, ButtonBaseTypeProp, TouchRippleProps)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
@@ -27,12 +28,15 @@ type CardActionAreaProps componentProps =
   )
 
 foreign import data CardActionAreaClassKey :: Type
+foreign import data CardActionAreaClassKeyJSS :: Type
 foreign import data CardActionAreaPropsPartial :: Type
 
-type CardActionAreaClassKeyOptions =
-  ( root :: String
-  , focusVisible :: String
-  , focusHighlight :: String
+type CardActionAreaClassKeyOptionsJSS = CardActionAreaClassKeyOptionsR JSS
+type CardActionAreaClassKeyOptions = CardActionAreaClassKeyOptionsR String
+type CardActionAreaClassKeyOptionsR a =
+  ( root :: a
+  , focusVisible :: a
+  , focusHighlight :: a
   )
 
 cardActionAreaClassKey :: ∀ options options_
@@ -40,6 +44,12 @@ cardActionAreaClassKey :: ∀ options options_
   => Record options
   -> CardActionAreaClassKey
 cardActionAreaClassKey = unsafeCoerce
+
+cardActionAreaClassKeyJSS :: ∀ options options_
+  . Union options options_ CardActionAreaClassKeyOptionsJSS
+  => Record options
+  -> CardActionAreaClassKeyJSS
+cardActionAreaClassKeyJSS = unsafeCoerce
 
 cardActionAreaPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (CardActionAreaProps componentProps)

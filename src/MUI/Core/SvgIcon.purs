@@ -1,5 +1,6 @@
 module MUI.Core.SvgIcon where
 
+import MUI.Core (JSS)
 import MUI.Core.Icon.Color as Icon
 import MUI.Core.Icon.FontSize (FontSize)
 import Prim.Row (class Union)
@@ -21,18 +22,21 @@ type SvgIconProps componentProps =
   )
 
 foreign import data SvgIconClassKey :: Type
+foreign import data SvgIconClassKeyJSS :: Type
 foreign import data SvgIconPropsPartial :: Type
 
-type SvgIconClassKeyOptions =
-  ( root :: String
-  , colorPrimary :: String
-  , colorSecondary :: String
-  , colorAction :: String
-  , colorError :: String
-  , colorDisabled :: String
-  , fontSizeInherit :: String
-  , fontSizeSmall :: String
-  , fontSizeLarge :: String
+type SvgIconClassKeyOptionsJSS = SvgIconClassKeyOptionsR JSS
+type SvgIconClassKeyOptions = SvgIconClassKeyOptionsR String
+type SvgIconClassKeyOptionsR a =
+  ( root :: a
+  , colorPrimary :: a
+  , colorSecondary :: a
+  , colorAction :: a
+  , colorError :: a
+  , colorDisabled :: a
+  , fontSizeInherit :: a
+  , fontSizeSmall :: a
+  , fontSizeLarge :: a
   )
 
 svgIconClassKey :: ∀ options options_
@@ -40,6 +44,12 @@ svgIconClassKey :: ∀ options options_
   => Record options
   -> SvgIconClassKey
 svgIconClassKey = unsafeCoerce
+
+svgIconClassKeyJSS :: ∀ options options_
+  . Union options options_ SvgIconClassKeyOptionsJSS
+  => Record options
+  -> SvgIconClassKeyJSS
+svgIconClassKeyJSS = unsafeCoerce
 
 svgIconPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (SvgIconProps componentProps)

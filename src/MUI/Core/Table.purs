@@ -1,5 +1,6 @@
 module MUI.Core.Table where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_table)
@@ -28,15 +29,24 @@ size Small = unsafeCoerce "small"
 size Medium = unsafeCoerce "medium"
 
 foreign import data TableClassKey :: Type
+foreign import data TableClassKeyJSS :: Type
 foreign import data TablePropsPartial :: Type
 
-type TableClassKeyOptions = ( root :: String )
+type TableClassKeyOptionsJSS = TableClassKeyOptionsR JSS 
+type TableClassKeyOptions = TableClassKeyOptionsR String
+type TableClassKeyOptionsR a = ( root :: a )
 
 tableClassKey :: ∀ options options_
   .  Union options options_ TableClassKeyOptions
   => Record options
   -> TableClassKey
 tableClassKey = unsafeCoerce
+
+tableClassKeyJSS :: ∀ options options_
+  .  Union options options_ TableClassKeyOptionsJSS
+  => Record options
+  -> TableClassKeyJSS
+tableClassKeyJSS = unsafeCoerce
 
 tablePropsPartial_component :: ∀ componentProps props props_
   .  Union props props_ (TableProps componentProps)

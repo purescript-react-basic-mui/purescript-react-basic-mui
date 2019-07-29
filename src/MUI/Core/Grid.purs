@@ -1,5 +1,6 @@
 module MUI.Core.Grid where
 
+import MUI.Core (JSS)
 import MUI.Core.Grid.AlignContent (AlignContentProp)
 import MUI.Core.Grid.AlignItems (AlignItemsProp)
 import MUI.Core.Grid.Direction (DirectionProp)
@@ -35,53 +36,56 @@ type GridProps componentProps =
 
 
 foreign import data GridClassKey :: Type
+foreign import data GridClassKeyJSS :: Type
 foreign import data GridPropsPartial :: Type
 
-type GridClassKeyOptions =
-  ( container :: String
-  , item :: String
-  , "direction-xs-column" :: String
-  , "direction-xs-column-reverse" :: String
-  , "direction-xs-row-reverse" :: String
-  , "wrap-xs-nowrap" :: String
-  , "wrap-xs-wrap-reverse" :: String
-  , "align-items-xs-center" :: String
-  , "align-items-xs-flex-start" :: String
-  , "align-items-xs-flex-end" :: String
-  , "align-items-xs-baseline" :: String
-  , "align-content-xs-center" :: String
-  , "align-content-xs-flex-start" :: String
-  , "align-content-xs-flex-end" :: String
-  , "align-content-xs-space-between" :: String
-  , "align-content-xs-space-around" :: String
-  , "justify-xs-center" :: String
-  , "justify-xs-flex-end" :: String
-  , "justify-xs-space-between" :: String
-  , "justify-xs-space-around" :: String
-  , "spacing-xs-1" :: String
-  , "spacing-xs-2" :: String
-  , "spacing-xs-3" :: String
-  , "spacing-xs-4" :: String
-  , "spacing-xs-5" :: String
-  , "spacing-xs-6" :: String
-  , "spacing-xs-7" :: String
-  , "spacing-xs-8" :: String
-  , "spacing-xs-9" :: String
-  , "spacing-xs-10" :: String
-  , "grid-xs-auto" :: String
-  , "grid-xs-true" :: String
-  , "grid-xs-1" :: String
-  , "grid-xs-2" :: String
-  , "grid-xs-3" :: String
-  , "grid-xs-4" :: String
-  , "grid-xs-5" :: String
-  , "grid-xs-6" :: String
-  , "grid-xs-7" :: String
-  , "grid-xs-8" :: String
-  , "grid-xs-9" :: String
-  , "grid-xs-10" :: String
-  , "grid-xs-11" :: String
-  , "grid-xs-12" :: String
+type GridClassKeyOptionsJSS = GridClassKeyOptionsR JSS
+type GridClassKeyOptions = GridClassKeyOptionsR String
+type GridClassKeyOptionsR a =
+  ( container :: a
+  , item :: a
+  , "direction-xs-column" :: a
+  , "direction-xs-column-reverse" :: a
+  , "direction-xs-row-reverse" :: a
+  , "wrap-xs-nowrap" :: a
+  , "wrap-xs-wrap-reverse" :: a
+  , "align-items-xs-center" :: a
+  , "align-items-xs-flex-start" :: a
+  , "align-items-xs-flex-end" :: a
+  , "align-items-xs-baseline" :: a
+  , "align-content-xs-center" :: a
+  , "align-content-xs-flex-start" :: a
+  , "align-content-xs-flex-end" :: a
+  , "align-content-xs-space-between" :: a
+  , "align-content-xs-space-around" :: a
+  , "justify-xs-center" :: a
+  , "justify-xs-flex-end" :: a
+  , "justify-xs-space-between" :: a
+  , "justify-xs-space-around" :: a
+  , "spacing-xs-1" :: a
+  , "spacing-xs-2" :: a
+  , "spacing-xs-3" :: a
+  , "spacing-xs-4" :: a
+  , "spacing-xs-5" :: a
+  , "spacing-xs-6" :: a
+  , "spacing-xs-7" :: a
+  , "spacing-xs-8" :: a
+  , "spacing-xs-9" :: a
+  , "spacing-xs-10" :: a
+  , "grid-xs-auto" :: a
+  , "grid-xs-true" :: a
+  , "grid-xs-1" :: a
+  , "grid-xs-2" :: a
+  , "grid-xs-3" :: a
+  , "grid-xs-4" :: a
+  , "grid-xs-5" :: a
+  , "grid-xs-6" :: a
+  , "grid-xs-7" :: a
+  , "grid-xs-8" :: a
+  , "grid-xs-9" :: a
+  , "grid-xs-10" :: a
+  , "grid-xs-11" :: a
+  , "grid-xs-12" :: a
   )
 
 gridClassKey :: ∀ options options_
@@ -90,6 +94,11 @@ gridClassKey :: ∀ options options_
   -> GridClassKey
 gridClassKey = unsafeCoerce
 
+gridClassKeyJSS :: ∀ options options_
+  . Union options options_ GridClassKeyOptionsJSS
+  => Record options
+  -> GridClassKeyJSS
+gridClassKeyJSS = unsafeCoerce
 
 gridPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (GridProps componentProps)

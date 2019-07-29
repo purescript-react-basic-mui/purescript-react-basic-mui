@@ -1,5 +1,6 @@
 module MUI.Core.ListItemText where
 
+import MUI.Core (JSS)
 import MUI.Core.Typography (TypographyPropsPartial)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
@@ -19,15 +20,18 @@ type ListItemTextProps componentProps =
   )
 
 foreign import data ListItemTextClassKey :: Type
+foreign import data ListItemTextClassKeyJSS :: Type
 foreign import data ListItemTextPropsPartial :: Type
 
-type ListItemTextClassKeyOptions =
-  ( root :: String
-  , multiline :: String
-  , dense :: String
-  , inset :: String
-  , primary :: String
-  , secondary :: String
+type ListItemTextClassKeyOptionsJSS = ListItemTextClassKeyOptionsR JSS
+type ListItemTextClassKeyOptions = ListItemTextClassKeyOptionsR String
+type ListItemTextClassKeyOptionsR a =
+  ( root :: a
+  , multiline :: a
+  , dense :: a
+  , inset :: a
+  , primary :: a
+  , secondary :: a
   )
 
 listItemTextClassKey :: ∀ options options_
@@ -35,6 +39,13 @@ listItemTextClassKey :: ∀ options options_
   => Record options
   -> ListItemTextClassKey
 listItemTextClassKey = unsafeCoerce
+
+listItemTextClassKeyJSS :: ∀ options options_
+  . Union options options_ ListItemTextClassKeyOptionsJSS
+  => Record options
+  -> ListItemTextClassKeyJSS
+listItemTextClassKeyJSS = unsafeCoerce
+
 
 listItemTextPropsPartial :: ∀ props props_
   . Union props props_ (ListItemTextProps Props_div)

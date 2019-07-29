@@ -1,5 +1,6 @@
 module MUI.Core.CardMedia where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -14,11 +15,14 @@ type CardMediaProps componentProps =
   )
 
 foreign import data CardMediaClassKey :: Type
+foreign import data CardMediaClassKeyJSS :: Type
 foreign import data CardMediaPropsPartial :: Type
 
-type CardMediaClassKeyOptions =
-  ( root :: String
-  , media :: String
+type CardMediaClassKeyOptionsJSS = CardMediaClassKeyOptionsR JSS 
+type CardMediaClassKeyOptions = CardMediaClassKeyOptionsR String
+type CardMediaClassKeyOptionsR a =
+  ( root :: a 
+  , media :: a
   )
 
 cardMediaClassKey :: ∀ options options_
@@ -26,6 +30,12 @@ cardMediaClassKey :: ∀ options options_
   => Record options
   -> CardMediaClassKey
 cardMediaClassKey = unsafeCoerce
+
+cardMediaClassKeyJSS :: ∀ options options_
+  . Union options options_ CardMediaClassKeyOptionsJSS
+  => Record options
+  -> CardMediaClassKeyJSS
+cardMediaClassKeyJSS = unsafeCoerce
 
 cardMediaPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (CardMediaProps componentProps)

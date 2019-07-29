@@ -2,6 +2,7 @@ module MUI.Core.Card where
 
 
  
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -20,35 +21,38 @@ type CardProps componentProps =
 foreign import data CardPropsPartial :: Type
 
 foreign import data CardClassKey :: Type
+foreign import data CardClassKeyJSS :: Type
 
-type CardClassKeyOptions =
-  ( root :: String
-  , rounded :: String
-  , elevation0 :: String
-  , elevation1 :: String
-  , elevation2 :: String
-  , elevation3 :: String
-  , elevation4 :: String
-  , elevation5 :: String
-  , elevation6 :: String
-  , elevation7 :: String
-  , elevation8 :: String
-  , elevation9 :: String
-  , elevation10 :: String
-  , elevation11 :: String
-  , elevation12 :: String
-  , elevation13 :: String
-  , elevation14 :: String
-  , elevation15 :: String
-  , elevation16 :: String
-  , elevation17 :: String
-  , elevation18 :: String
-  , elevation19 :: String
-  , elevation20 :: String
-  , elevation21 :: String
-  , elevation22 :: String
-  , elevation23 :: String
-  , elevation24 :: String
+type CardClassKeyOptionsJSS = CardClassKeyOptionsR JSS
+type CardClassKeyOptions = CardClassKeyOptionsR String
+type CardClassKeyOptionsR a =
+  ( root :: a
+  , rounded :: a
+  , elevation0 :: a
+  , elevation1 :: a
+  , elevation2 :: a
+  , elevation3 :: a
+  , elevation4 :: a
+  , elevation5 :: a
+  , elevation6 :: a
+  , elevation7 :: a
+  , elevation8 :: a
+  , elevation9 :: a
+  , elevation10 :: a
+  , elevation11 :: a
+  , elevation12 :: a
+  , elevation13 :: a
+  , elevation14 :: a
+  , elevation15 :: a
+  , elevation16 :: a
+  , elevation17 :: a
+  , elevation18 :: a
+  , elevation19 :: a
+  , elevation20 :: a
+  , elevation21 :: a
+  , elevation22 :: a
+  , elevation23 :: a
+  , elevation24 :: a
   )
 
 cardClassKey :: ∀ options options_
@@ -56,6 +60,12 @@ cardClassKey :: ∀ options options_
   => Record options
   -> CardClassKey
 cardClassKey = unsafeCoerce
+
+cardClassKeyJSS :: ∀ options options_
+  . Union options options_ CardClassKeyOptionsJSS
+  => Record options
+  -> CardClassKeyJSS
+cardClassKeyJSS = unsafeCoerce
 
 cardPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (CardProps componentProps)

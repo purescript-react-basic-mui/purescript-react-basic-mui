@@ -1,5 +1,6 @@
 module MUI.Core.CardActions where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -13,11 +14,14 @@ type CardActionsProps componentProps =
   )
 
 foreign import data CardActionsClassKey :: Type
+foreign import data CardActionsClassKeyJSS :: Type
 foreign import data CardActionsPropsPartial :: Type
 
-type CardActionsClassKeyOptions =
-  ( root :: String
-  , spacing :: String 
+type CardActionsClassKeyOptionsJSS  = CardActionsClassKeyOptionsR JSS
+type CardActionsClassKeyOptions  =  CardActionsClassKeyOptionsR String 
+type CardActionsClassKeyOptionsR a = 
+  ( root :: a 
+  , spacing :: a
   )
 
 cardActionsClassKey :: ∀ options options_
@@ -25,6 +29,12 @@ cardActionsClassKey :: ∀ options options_
   => Record options
   -> CardActionsClassKey
 cardActionsClassKey = unsafeCoerce
+
+cardActionsClassKeyJSS :: ∀ options options_
+  . Union options options_ CardActionsClassKeyOptionsJSS
+  => Record options
+  -> CardActionsClassKeyJSS
+cardActionsClassKeyJSS = unsafeCoerce
 
 cardActionsPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (CardActionsProps componentProps)

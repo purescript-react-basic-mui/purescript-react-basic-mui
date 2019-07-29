@@ -1,5 +1,6 @@
 module MUI.Core.ListItemIcon where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -12,11 +13,14 @@ type ListItemIconProps containerProps =
   )
 
 foreign import data ListItemIconClassKey :: Type
+foreign import data ListItemIconClassKeyJSS :: Type
 foreign import data ListItemIconPropsPartial :: Type
 
-type ListItemIconClassKeyOptions =
-  ( root :: String
-  , alignItemsFlexStart :: String
+type ListItemIconClassKeyOptionsJSS = ListItemIconClassKeyOptionsR JSS
+type ListItemIconClassKeyOptions = ListItemIconClassKeyOptionsR String
+type ListItemIconClassKeyOptionsR a =
+  ( root :: a
+  , alignItemsFlexStart :: a
   )
 
 listItemIconClassKey :: ∀ options options_
@@ -24,6 +28,12 @@ listItemIconClassKey :: ∀ options options_
   => Record options
   -> ListItemIconClassKey
 listItemIconClassKey = unsafeCoerce
+
+listItemIconClassKeyJSS :: ∀ options options_
+  . Union options options_ ListItemIconClassKeyOptionsJSS
+  => Record options
+  -> ListItemIconClassKeyJSS
+listItemIconClassKeyJSS = unsafeCoerce
 
 listItemIconPropsPartial :: ∀ props props_
   . Union props props_ (ListItemIconProps Props_div)

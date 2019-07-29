@@ -1,5 +1,6 @@
 module MUI.Core.Breadcrumbs where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_nav)
@@ -16,15 +17,18 @@ type BreadcrumbsProps componentProps =
   | componentProps
   )
 
-type BreadcrumbsClassKeyOptions =
-  ( root :: String
-  , ol :: String
-  , li :: String
-  , separator :: String
+type BreadcrumbsClassKeyOptionsJSS = BreadcrumbsClassKeyOptionsR JSS
+type BreadcrumbsClassKeyOptions = BreadcrumbsClassKeyOptionsR String
+type BreadcrumbsClassKeyOptionsR a =
+  ( root :: a
+  , ol :: a
+  , li :: a
+  , separator :: a
   )
 
 
 foreign import data BreadcrumbsClassKey :: Type
+foreign import data BreadcrumbsClassKeyJSS :: Type
 foreign import data BreadcrumbsPropsPartial :: Type
 
 breadCrumbsClassKey :: ∀ options options_
@@ -32,6 +36,12 @@ breadCrumbsClassKey :: ∀ options options_
   => Record options
   -> BreadcrumbsClassKey
 breadCrumbsClassKey = unsafeCoerce
+
+breadCrumbsClassKeyJSS :: ∀ options options_
+  . Union options options_ BreadcrumbsClassKeyOptionsJSS
+  => Record options
+  -> BreadcrumbsClassKeyJSS
+breadCrumbsClassKeyJSS = unsafeCoerce
 
 breadCrumbsPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (BreadcrumbsProps componentProps)

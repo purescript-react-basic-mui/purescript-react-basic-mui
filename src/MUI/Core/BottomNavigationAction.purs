@@ -1,6 +1,7 @@
 module MUI.Core.BottomNavigationAction where
 
 import Foreign (Foreign)
+import MUI.Core (JSS)
 import MUI.Core.ButtonBase (ButtonBaseActions, ButtonBaseTypeProp, TouchRippleProps)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
@@ -32,15 +33,18 @@ type BottomNavigationActionProps value componentProps =
 
 foreign import data BottomNavigationActionPropsPartial :: Type
 
-type BottomNavigationActionClassKeyOptions = 
-  ( root :: String
-  , selected :: String
-  , iconOnly :: String
-  , wrapper :: String
-  , label :: String
+type BottomNavigationActionClassKeyOptions = BottomNavigationActionClassKeyOptionsR String
+type BottomNavigationActionClassKeyOptionsJSS  = BottomNavigationActionClassKeyOptionsR JSS
+type BottomNavigationActionClassKeyOptionsR a = 
+  ( root :: a
+  , selected :: a
+  , iconOnly :: a
+  , wrapper :: a
+  , label :: a
   )
 
 foreign import data BottomNavigationActionClassKey :: Type
+foreign import data BottomNavigationActionClassKeyJSS :: Type
 
 
 bottomNavigationActionClassKey :: ∀ options options_
@@ -48,6 +52,12 @@ bottomNavigationActionClassKey :: ∀ options options_
   => Record options
   -> BottomNavigationActionClassKey
 bottomNavigationActionClassKey = unsafeCoerce
+
+bottomNavigationActionClassKeyJSS :: ∀ options options_
+  . Union options options_ BottomNavigationActionClassKeyOptionsJSS
+  => Record options
+  -> BottomNavigationActionClassKeyJSS
+bottomNavigationActionClassKeyJSS = unsafeCoerce
 
 bottomNavigationActionPropsPartial_component :: ∀ value componentProps props props_
   . Union props props_ (BottomNavigationActionProps value componentProps)

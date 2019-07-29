@@ -1,6 +1,7 @@
 module MUI.Core.Backdrop where
 
 import Foreign (Foreign)
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -32,10 +33,13 @@ type BackdropProps componentProps =
 
 foreign import data BackdropPropsPartial :: Type
 foreign import data BackdropClassKey :: Type
+foreign import data BackdropClassKeyJSS :: Type
 
-type BackdropClassKeyOptions = 
-  ( root :: String
-  , invisible :: String
+type BackdropClassKeyOptions = BackdropClassKeyOptionsR String
+type BackdropClassKeyOptionsJSS = BackdropClassKeyOptionsR JSS 
+type BackdropClassKeyOptionsR a = 
+  ( root :: a 
+  , invisible :: a 
   )
 
 backdropClassKey :: ∀ options options_
@@ -44,12 +48,17 @@ backdropClassKey :: ∀ options options_
   -> BackdropClassKey
 backdropClassKey = unsafeCoerce
 
+backdropClassKeyJSS :: ∀ options options_
+  .  Union options options_ BackdropClassKeyOptionsJSS
+  => Record options
+  -> BackdropClassKeyJSS
+backdropClassKeyJSS = unsafeCoerce
+
 backdropPropsPartial :: ∀ props props_
   .  Union props props_ (BackdropProps Props_div)
   => Record props 
   -> BackdropPropsPartial
 backdropPropsPartial = unsafeCoerce
-
 
 backdrop :: ∀ props props_
   .  Union props props_ (BackdropProps Props_div)

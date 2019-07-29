@@ -1,5 +1,6 @@
 module MUI.Core.Drawer where
 
+import MUI.Core (JSS)
 import MUI.Core.Modal (ModalPropsPartial)
 import MUI.Core.Paper (PaperPropsPartial)
 import MUI.Core.Slide (SlidePropsPartial)
@@ -43,21 +44,24 @@ variant Temporary = unsafeCoerce "temporary"
 
 
 foreign import data DrawerClassKey :: Type
+foreign import data DrawerClassKeyJSS :: Type
 foreign import data DrawerPropsPartial :: Type
 
-type DrawerClassKeyOptions =
-  ( root :: String
-  , docked :: String
-  , paper :: String
-  , paperAnchorLeft :: String
-  , paperAnchorRight :: String
-  , paperAnchorTop :: String
-  , paperAnchorBottom :: String
-  , paperAnchorDockedLeft :: String
-  , paperAnchorDockedTop :: String
-  , paperAnchorDockedRight :: String
-  , paperAnchorDockedBottom :: String
-  , modal :: String
+type DrawerClassKeyOptionsJSS = DrawerClassKeyOptionsR JSS
+type DrawerClassKeyOptions = DrawerClassKeyOptionsR String
+type DrawerClassKeyOptionsR a =
+  ( root :: a
+  , docked :: a
+  , paper :: a
+  , paperAnchorLeft :: a
+  , paperAnchorRight :: a
+  , paperAnchorTop :: a
+  , paperAnchorBottom :: a
+  , paperAnchorDockedLeft :: a
+  , paperAnchorDockedTop :: a
+  , paperAnchorDockedRight :: a
+  , paperAnchorDockedBottom :: a
+  , modal :: a
   )
 
 drawerClassKey 
@@ -66,6 +70,14 @@ drawerClassKey
   => Record options
   -> DrawerClassKey
 drawerClassKey = unsafeCoerce
+
+drawerClassKeyJSS 
+  :: ∀ options options_
+  . Union options options_ DrawerClassKeyOptionsJSS
+  => Record options
+  -> DrawerClassKeyJSS
+drawerClassKeyJSS = unsafeCoerce
+
 
 drawerPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (DrawerProps componentProps)

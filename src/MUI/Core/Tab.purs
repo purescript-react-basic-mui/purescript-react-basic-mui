@@ -1,6 +1,7 @@
 module MUI.Core.Tab where
 
 import Foreign (Foreign)
+import MUI.Core (JSS)
 import MUI.Core.ButtonBase (ButtonBaseActions, ButtonBaseTypeProp, TouchRippleProps)
 import Prim.Row (class Union)
 import React.Basic.DOM (Props_button)
@@ -31,26 +32,35 @@ type TabProps value componentProps =
 
 foreign import data TabPropsPartial :: Type
 
-type TabClassKeyOptions =
-  ( root :: String
-  , labelIcon :: String
-  , textColorInherit :: String
-  , textColorPrimary :: String
-  , textColorSecondary :: String
-  , selected :: String
-  , disabled :: String
-  , fullWidth :: String
-  , wrapped :: String
-  , wrapper :: String
+type TabClassKeyOptionsJSS = TabClassKeyOptionsR JSS
+type TabClassKeyOptions = TabClassKeyOptionsR String
+type TabClassKeyOptionsR a =
+  ( root :: a
+  , labelIcon :: a
+  , textColorInherit :: a
+  , textColorPrimary :: a
+  , textColorSecondary :: a
+  , selected :: a
+  , disabled :: a
+  , fullWidth :: a
+  , wrapped :: a
+  , wrapper :: a
   )
 
 foreign import data TabClassKey :: Type
+foreign import data TabClassKeyJSS :: Type
 
 tabClassKey :: ∀ options options_
   . Union options options_ TabClassKeyOptions
   => Record options
   -> TabClassKey
 tabClassKey = unsafeCoerce
+
+tabClassKeyJSS :: ∀ options options_
+  . Union options options_ TabClassKeyOptionsJSS
+  => Record options
+  -> TabClassKeyJSS
+tabClassKeyJSS = unsafeCoerce
 
 tabPartial_component :: ∀ value componentProps props props_
   . Union props props_ (TabProps value componentProps)

@@ -1,5 +1,6 @@
 module MUI.Core.TableRow where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_tr)
@@ -15,14 +16,17 @@ type TableRowProps componentProps =
   )
 
 foreign import data TableRowClassKey :: Type
+foreign import data TableRowClassKeyJSS :: Type
 foreign import data TableRowPropsPartial :: Type
 
-type TableRowClassKeyOptions = 
-  ( root :: String
-  , selected :: String
-  , hover :: String
-  , head :: String
-  , footer :: String
+type TableRowClassKeyOptionsJSS = TableRowClassKeyOptionsR JSS
+type TableRowClassKeyOptions = TableRowClassKeyOptionsR String
+type TableRowClassKeyOptionsR a = 
+  ( root :: a
+  , selected :: a
+  , hover :: a
+  , head :: a
+  , footer :: a
   )
 
 tableRowClassKey :: ∀ options options_
@@ -30,6 +34,12 @@ tableRowClassKey :: ∀ options options_
   => Record options
   -> TableRowClassKey
 tableRowClassKey = unsafeCoerce
+
+tableRowClassKeyJSS :: ∀ options options_
+  .  Union options options_ TableRowClassKeyOptionsJSS
+  => Record options
+  -> TableRowClassKeyJSS
+tableRowClassKeyJSS = unsafeCoerce
 
 tableRowPropsPartial_component :: ∀ componentProps props props_
   .  Union props props_ (TableRowProps componentProps)

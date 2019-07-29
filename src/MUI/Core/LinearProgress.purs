@@ -1,5 +1,6 @@
 module MUI.Core.LinearProgress where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -29,27 +30,30 @@ variant Buffer = unsafeCoerce "buffer"
 variant Query = unsafeCoerce "query"
 
 foreign import data LinearProgressClassKey :: Type
+foreign import data LinearProgressClassKeyJSS :: Type
 foreign import data LinearProgressPropsPartial :: Type
 
-type LinearProgressClassKeyOptions =
-  ( root :: String
-  , colorPrimary :: String
-  , colorSecondary :: String
-  , determinate :: String
-  , indeterminate :: String
-  , buffer :: String
-  , query :: String
-  , dashed :: String
-  , dashedColorPrimary :: String
-  , dashedColorSecondary :: String
-  , bar :: String
-  , barColorPrimary :: String
-  , barColorSecondary :: String
-  , bar1Indeterminate :: String
-  , bar1Determinate :: String
-  , bar1Buffer :: String
-  , bar2Indeterminate :: String
-  , bar2Buffer :: String
+type LinearProgressClassKeyOptionsJSS = LinearProgressClassKeyOptionsR JSS
+type LinearProgressClassKeyOptions = LinearProgressClassKeyOptionsR String
+type LinearProgressClassKeyOptionsR a =
+  ( root :: a
+  , colorPrimary :: a
+  , colorSecondary :: a
+  , determinate :: a
+  , indeterminate :: a
+  , buffer :: a
+  , query :: a
+  , dashed :: a
+  , dashedColorPrimary :: a
+  , dashedColorSecondary :: a
+  , bar :: a
+  , barColorPrimary :: a
+  , barColorSecondary :: a
+  , bar1Indeterminate :: a
+  , bar1Determinate :: a
+  , bar1Buffer :: a
+  , bar2Indeterminate :: a
+  , bar2Buffer :: a
   )
 
 linearProgressClassKey :: ∀ options options_
@@ -57,6 +61,12 @@ linearProgressClassKey :: ∀ options options_
   => Record options
   -> LinearProgressClassKey
 linearProgressClassKey = unsafeCoerce
+
+linearProgressClassKeyJSS :: ∀ options options_
+  . Union options options_ LinearProgressClassKeyOptionsJSS
+  => Record options
+  -> LinearProgressClassKeyJSS
+linearProgressClassKeyJSS = unsafeCoerce
 
 linearProgress :: ∀ props props_
   . Union props props_ (LinearProgressProps Props_div)

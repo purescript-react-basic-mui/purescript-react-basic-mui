@@ -4,6 +4,7 @@ import Prelude
 
 import Effect (Effect)
 import Effect.Uncurried (EffectFn2)
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic.DOM (Props_div)
 import React.Basic.Events (SyntheticEvent)
@@ -53,27 +54,36 @@ scrollButton Off = unsafeCoerce "off"
 
 foreign import data TabsPropsPartial :: Type
 
-type TabsClassKeyOptions =
-  ( root :: String
-  , vertical :: String
-  , flexContainer :: String
-  , flexContainerVertical :: String
-  , centered :: String
-  , scroller :: String
-  , fixed :: String
-  , scrollable :: String
-  , scrollButtons :: String
-  , scrollButtonsDesktop :: String
-  , indicator :: String
+type TabsClassKeyOptionsJSS = TabsClassKeyOptionsR JSS
+type TabsClassKeyOptions = TabsClassKeyOptionsR String
+type TabsClassKeyOptionsR a =
+  ( root :: a
+  , vertical :: a
+  , flexContainer :: a
+  , flexContainerVertical :: a
+  , centered :: a
+  , scroller :: a
+  , fixed :: a
+  , scrollable :: a
+  , scrollButtons :: a
+  , scrollButtonsDesktop :: a
+  , indicator :: a
   )
 
 foreign import data TabsClassKey :: Type
+foreign import data TabsClassKeyJSS :: Type
 
 tabsClassKey :: ∀ options options_
   . Union options options_ TabsClassKeyOptions
   => Record options
   -> TabsClassKey
 tabsClassKey = unsafeCoerce
+
+tabsClassKeyJSS :: ∀ options options_
+  . Union options options_ TabsClassKeyOptionsJSS
+  => Record options
+  -> TabsClassKeyJSS
+tabsClassKeyJSS = unsafeCoerce
 
 tabsPartial_component :: ∀ value componentProps props props_
   . Union props props_ (TabsProps value componentProps)

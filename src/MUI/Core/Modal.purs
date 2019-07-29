@@ -2,6 +2,7 @@ module MUI.Core.Modal where
 
 import Foreign (Foreign)
 import Foreign.Object (Object)
+import MUI.Core (JSS)
 import MUI.Core.Backdrop (BackdropPropsPartial)
 import MUI.Core.Modal.ModalManager (ModalManager)
 import Prim.Row (class Union)
@@ -37,11 +38,14 @@ type ModalProps componentProps =
   )
 
 foreign import data ModalClassKey :: Type
+foreign import data ModalClassKeyJSS :: Type
 foreign import data ModalPropsPartial :: Type
 
-type ModalClassKeyOptions = 
-  ( root :: String
-  , hidden :: String
+type ModalClassKeyOptionsJSS = ModalClassKeyOptionsR JSS
+type ModalClassKeyOptions = ModalClassKeyOptionsR String
+type ModalClassKeyOptionsR a = 
+  ( root :: a 
+  , hidden :: a 
   )
 
 modalClassKey :: ∀ options options_
@@ -49,6 +53,12 @@ modalClassKey :: ∀ options options_
   => Record options
   -> ModalClassKey
 modalClassKey = unsafeCoerce
+
+modalClassKeyJSS :: ∀ options options_
+  . Union options options_ ModalClassKeyOptionsJSS
+  => Record options
+  -> ModalClassKeyJSS
+modalClassKeyJSS = unsafeCoerce
 
 modalPropsPartial :: ∀ options options_
   . Union options options_ (ModalProps Props_div)

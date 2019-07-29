@@ -5,6 +5,7 @@ import Prelude
 import Effect.Uncurried (EffectFn2)
 import Foreign (Foreign)
 import Foreign.Object (Object)
+import MUI.Core (JSS)
 import MUI.Core.IconButton (IconButtonPropsPartial)
 import MUI.Core.Table as Table
 import MUI.Core.TableCell (AlignProp, SortDirectionProp, VariantProp)
@@ -42,19 +43,22 @@ type TablePaginationProps componentProps =
   )
 
 foreign import data TablePaginationClassKey :: Type
+foreign import data TablePaginationClassKeyJSS :: Type
 foreign import data TablePaginationPropsPartial :: Type
 
-type TablePaginationClassKeyOptions =
-  ( root :: String
-  , toolbar :: String
-  , spacer :: String
-  , caption :: String
-  , selectRoot :: String
-  , select :: String
-  , selectIcon :: String
-  , input :: String
-  , menuItem :: String
-  , actions :: String
+type TablePaginationClassKeyOptionsJSS = TablePaginationClassKeyOptionsR JSS
+type TablePaginationClassKeyOptions = TablePaginationClassKeyOptionsR String
+type TablePaginationClassKeyOptionsR a =
+  ( root :: a
+  , toolbar :: a
+  , spacer :: a
+  , caption :: a
+  , selectRoot :: a
+  , select :: a
+  , selectIcon :: a
+  , input :: a
+  , menuItem :: a
+  , actions :: a
   )
 
 tablePaginationClassKey :: ∀ options options_
@@ -62,6 +66,12 @@ tablePaginationClassKey :: ∀ options options_
   => Record options
   -> TablePaginationClassKey
 tablePaginationClassKey = unsafeCoerce
+
+tablePaginationClassKeyJSS :: ∀ options options_
+  . Union options options_ TablePaginationClassKeyOptionsJSS
+  => Record options
+  -> TablePaginationClassKeyJSS
+tablePaginationClassKeyJSS = unsafeCoerce
 
 tablePaginationPropsPartial :: ∀ props props_
   . Union props props_ (TablePaginationProps Props_div)

@@ -1,5 +1,6 @@
 module MUI.Core.Badge where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_span)
@@ -35,23 +36,32 @@ variant Standard = unsafeCoerce "standard"
 variant Dot = unsafeCoerce "dot"
 
 
-type BadgeClassKeyOptions =
-  ( root :: String
-  , badge :: String
-  , colorPrimary :: String
-  , colorSecondary :: String
-  , colorError :: String
-  , invisible :: String
-  , dot :: String
+type BadgeClassKeyOptions = BadgeClassKeyOptionsR String
+type BadgeClassKeyOptionsJSS = BadgeClassKeyOptionsR JSS 
+type BadgeClassKeyOptionsR a =
+  ( root :: a
+  , badge :: a
+  , colorPrimary :: a
+  , colorSecondary :: a
+  , colorError :: a
+  , invisible :: a
+  , dot :: a
   )
 
 foreign import data BadgeClassKey :: Type
+foreign import data BadgeClassKeyJSS :: Type
 
 badgeClassKey :: ∀ options options_
   . Union options options_ BadgeClassKeyOptions
   => Record options
   -> BadgeClassKey
 badgeClassKey = unsafeCoerce
+
+badgeClassKeyJSS :: ∀ options options_
+  . Union options options_ BadgeClassKeyOptionsJSS
+  => Record options
+  -> BadgeClassKeyJSS
+badgeClassKeyJSS = unsafeCoerce
 
 badgePropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (BadgeProps componentProps)

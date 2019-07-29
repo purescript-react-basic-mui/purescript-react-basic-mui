@@ -1,5 +1,6 @@
 module MUI.Core.ButtonGroup where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -42,9 +43,12 @@ variant Contained = unsafeCoerce "contained"
 
 
 foreign import data ButtonGroupClassKey :: Type
+foreign import data ButtonGroupClassKeyJSS :: Type
 foreign import data ButtonGroupPropsPartial :: Type
 
-type ButtonGroupClassKeyOptions =
+type ButtonGroupClassKeyOptionsJSS = ButtonGroupClassKeyOptionsR JSS
+type ButtonGroupClassKeyOptions = ButtonGroupClassKeyOptionsR String
+type ButtonGroupClassKeyOptionsR a =
   ( root :: String
   , contained :: String
   , fullWidth :: String
@@ -62,6 +66,12 @@ buttonGroupClassKey :: ∀ options options_
   => Record options
   -> ButtonGroupClassKey
 buttonGroupClassKey = unsafeCoerce
+
+buttonGroupClassKeyJSS :: ∀ options options_
+  . Union options options_ ButtonGroupClassKeyOptionsJSS
+  => Record options
+  -> ButtonGroupClassKeyJSS
+buttonGroupClassKeyJSS = unsafeCoerce
 
 buttonGroupPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (ButtonGroupProps componentProps)

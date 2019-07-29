@@ -2,6 +2,7 @@ module MUI.Core.Button where
 
 import Effect.Ref (Ref)
 import Foreign (Foreign)
+import MUI.Core (JSS)
 import MUI.Core.ButtonBase (ButtonBaseActions, ButtonBaseTypeProp, TouchRippleProps)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
@@ -54,27 +55,30 @@ variant Text = unsafeCoerce "text"
 variant Outlined = unsafeCoerce "outlined"
 variant Contained = unsafeCoerce "contained"
 
-type ButtonClassKeyOptions =
-  ( root :: String
-  , label :: String
-  , text :: String
-  , textPrimary :: String
-  , textSecondary :: String
-  , outlined :: String
-  , outlinedPrimary :: String
-  , outlinedSecondary :: String
-  , contained :: String
-  , containedPrimary :: String
-  , containedSecondary :: String
-  , focusVisible :: String
-  , disabled :: String
-  , colorInherit :: String
-  , sizeSmall :: String
-  , sizeLarge :: String
-  , fullWidth :: String
+type ButtonClassKeyOptionsJSS = ButtonClassKeyOptionsR JSS
+type ButtonClassKeyOptions = ButtonClassKeyOptionsR String
+type ButtonClassKeyOptionsR a =
+  ( root :: a
+  , label :: a
+  , text :: a
+  , textPrimary :: a
+  , textSecondary :: a
+  , outlined :: a
+  , outlinedPrimary :: a
+  , outlinedSecondary :: a
+  , contained :: a
+  , containedPrimary :: a
+  , containedSecondary :: a
+  , focusVisible :: a
+  , disabled :: a
+  , colorInherit :: a
+  , sizeSmall :: a
+  , sizeLarge :: a
+  , fullWidth :: a
   )
 
 foreign import data ButtonClassKey :: Type
+foreign import data ButtonClassKeyJSS :: Type
 foreign import data ButtonPropsPartial :: Type
 
 buttonClassKey :: ∀ options options_
@@ -82,6 +86,12 @@ buttonClassKey :: ∀ options options_
   => Record options
   -> ButtonClassKey
 buttonClassKey = unsafeCoerce
+
+buttonClassKeyJSS :: ∀ options options_
+  . Union options options_ ButtonClassKeyOptionsJSS
+  => Record options
+  -> ButtonClassKeyJSS
+buttonClassKeyJSS = unsafeCoerce
 
 buttonPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (ButtonProps componentProps)

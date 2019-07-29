@@ -5,6 +5,7 @@ import Prelude
 import Effect (Effect)
 import Foreign (Foreign)
 import Foreign.Object (Object)
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic.DOM (Props_button)
 import React.Basic.Events (EventHandler)
@@ -42,21 +43,30 @@ buttonBaseType Submit = unsafeCoerce "submit"
 buttonBaseType Reset = unsafeCoerce "reset"
 buttonBaseType Button = unsafeCoerce "button"
 
-type ButtonBaseClassKeyOptions =
-  ( root :: String
-  , disabled :: String
-  , focusVisible :: String
+type ButtonBaseClassKeyOptionsJSS = ButtonBaseClassKeyOptionsR JSS
+type ButtonBaseClassKeyOptions = ButtonBaseClassKeyOptionsR String
+type ButtonBaseClassKeyOptionsR a =
+  ( root :: a
+  , disabled :: a
+  , focusVisible :: a
   )
 
 foreign import data ButtonBasePropsPartial :: Type
 
 foreign import data ButtonBaseClassKey :: Type
+foreign import data ButtonBaseClassKeyJSS :: Type
 
 buttonBaseClassKey :: ∀ options options_
   . Union options options_ ButtonBaseClassKeyOptions
   => Record options
   -> ButtonBaseClassKey
 buttonBaseClassKey = unsafeCoerce
+
+buttonBaseClassKeyJSS :: ∀ options options_
+  . Union options options_ ButtonBaseClassKeyOptionsJSS
+  => Record options
+  -> ButtonBaseClassKeyJSS
+buttonBaseClassKeyJSS = unsafeCoerce
 
 buttonBasePartial_component :: ∀ componentProps props props_
   . Union props props_ (ButtonBaseProps componentProps)

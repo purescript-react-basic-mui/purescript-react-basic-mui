@@ -3,6 +3,7 @@ module MUI.Core.BottomNavigation where
 import Prelude
 
 import Effect.Uncurried (EffectFn2)
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -22,13 +23,22 @@ type BottomNavigationProps value componentProps =
 foreign import data BottomNavigationPropsPartial :: Type
 
 foreign import data BottomNavigationClassKey :: Type
-type BottomNavigationClassKeyOptions = ( root :: String )
+foreign import data BottomNavigationClassKeyJSS :: Type
+type BottomNavigationClassKeyOptions = BottomNavigationClassKeyOptionsR String
+type BottomNavigationClassKeyOptionsJSS = BottomNavigationClassKeyOptionsR JSS 
+type BottomNavigationClassKeyOptionsR a = ( root :: a )
 
 bottomNavigationClassKey :: ∀ options options_
   . Union options options_ BottomNavigationClassKeyOptions
   => Record options
   -> BottomNavigationClassKey
 bottomNavigationClassKey = unsafeCoerce
+
+bottomNavigationClassKeyJSS :: ∀ options options_
+  . Union options options_ BottomNavigationClassKeyOptionsJSS
+  => Record options
+  -> BottomNavigationClassKeyJSS
+bottomNavigationClassKeyJSS = unsafeCoerce
 
 bottomNavigationPropsPartial_component :: ∀ value componentProps props props_
   . Union props props_ (BottomNavigationProps value componentProps)

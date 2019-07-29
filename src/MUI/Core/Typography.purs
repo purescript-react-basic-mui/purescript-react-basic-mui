@@ -1,10 +1,11 @@
 module MUI.Core.Typography where
 
-import Prim.Row (class Union)
+import MUI.Core (JSS)
 import MUI.Core.Typography.Align (AlignProp)
 import MUI.Core.Typography.Color (ColorProp)
 import MUI.Core.Typography.Display (DisplayProp)
 import MUI.Core.Typography.Variant (VariantProp)
+import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_h1)
 import Unsafe.Coerce (unsafeCoerce)
@@ -27,37 +28,40 @@ type TypographyProps componentProps =
 
 
 foreign import data TypographyClassKey :: Type
+foreign import data TypographyClassKeyJSS :: Type
 foreign import data TypographyPropsPartial :: Type
 
-type TypographyClassKeyOptions =
-  ( root :: String
-  , h1 :: String
-  , h2 :: String
-  , h3 :: String
-  , h4 :: String
-  , h5 :: String
-  , h6 :: String
-  , subtitle1 :: String
-  , subtitle2 :: String
-  , body1 :: String
-  , body2 :: String
-  , caption :: String
-  , button :: String
-  , overline :: String
-  , srOnly :: String
-  , alignLeft :: String
-  , alignCenter :: String
-  , alignRight :: String
-  , alignJustify :: String
-  , noWrap :: String
-  , gutterBottom :: String
-  , paragraph :: String
-  , colorInherit :: String
-  , colorSecondary :: String
-  , colorTextSecondary :: String
-  , colorError :: String
-  , displayInline :: String
-  , displayBlock' :: String
+type TypographyClassKeyOptionsJSS = TypographyClassKeyOptionsR JSS
+type TypographyClassKeyOptions = TypographyClassKeyOptionsR String
+type TypographyClassKeyOptionsR a =
+  ( root :: a
+  , h1 :: a
+  , h2 :: a
+  , h3 :: a
+  , h4 :: a
+  , h5 :: a
+  , h6 :: a
+  , subtitle1 :: a
+  , subtitle2 :: a
+  , body1 :: a
+  , body2 :: a
+  , caption :: a
+  , button :: a
+  , overline :: a
+  , srOnly :: a
+  , alignLeft :: a
+  , alignCenter :: a
+  , alignRight :: a
+  , alignJustify :: a
+  , noWrap :: a
+  , gutterBottom :: a
+  , paragraph :: a
+  , colorInherit :: a
+  , colorSecondary :: a
+  , colorTextSecondary :: a
+  , colorError :: a
+  , displayInline :: a
+  , displayBlock' :: a
   )
 
 type VariantMapping =
@@ -92,6 +96,12 @@ typographyClassKey :: ∀ options options_
   => Record options
   -> TypographyClassKey
 typographyClassKey = unsafeCoerce
+
+typographyClassKeyJSS :: ∀ options options_
+  . Union options options_ TypographyClassKeyOptionsJSS
+  => Record options
+  -> TypographyClassKeyJSS
+typographyClassKeyJSS = unsafeCoerce
 
 typographyPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (TypographyProps componentProps)

@@ -1,5 +1,6 @@
 module MUI.Core.List where
 
+import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -16,13 +17,16 @@ type ListProps componentProps =
   )
 
 foreign import data ListClassKey :: Type
+foreign import data ListClassKeyJSS :: Type
 foreign import data ListPropsPartial :: Type
 
-type ListClassKeyOptions =
-  ( root :: String
-  , padding :: String
-  , dense :: String
-  , subheader :: String
+type ListClassKeyOptionsJSS = ListClassKeyOptionsR JSS
+type ListClassKeyOptions = ListClassKeyOptionsR String
+type ListClassKeyOptionsR a =
+  ( root :: a
+  , padding :: a
+  , dense :: a
+  , subheader :: a
   )
 
 listClassKey :: ∀ options options_
@@ -30,6 +34,12 @@ listClassKey :: ∀ options options_
   => Record options
   -> ListClassKey
 listClassKey = unsafeCoerce
+
+listClassKeyJSS :: ∀ options options_
+  . Union options options_ ListClassKeyOptionsJSS
+  => Record options
+  -> ListClassKeyJSS
+listClassKeyJSS = unsafeCoerce
 
 listPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (ListProps componentProps)

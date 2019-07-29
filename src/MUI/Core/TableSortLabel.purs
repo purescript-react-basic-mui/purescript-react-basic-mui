@@ -1,6 +1,7 @@
 module MUI.Core.TableSortLabel where
 
 import Foreign (Foreign)
+import MUI.Core (JSS)
 import MUI.Core.ButtonBase (ButtonBaseActions, TouchRippleProps)
 import MUI.Core.ButtonBase as ButtonBase
 import MUI.Core.SvgIcon (SvgIconProps)
@@ -40,14 +41,17 @@ direction Asc = unsafeCoerce "asc"
 direction Desc = unsafeCoerce "desc"
 
 foreign import data TableSortLabelClassKey :: Type
+foreign import data TableSortLabelClassKeyJSS :: Type
 foreign import data TableSortLabelPropsPartial :: Type
 
-type TableSortLabelClassKeyOptions =
-  ( root :: String
-  , active :: String
-  , icon :: String
-  , iconDirectionDesc :: String
-  , iconDirectionAsc :: String
+type TableSortLabelClassKeyOptionsJSS = TableSortLabelClassKeyOptionsR JSS
+type TableSortLabelClassKeyOptions = TableSortLabelClassKeyOptionsR String
+type TableSortLabelClassKeyOptionsR a =
+  ( root :: a
+  , active :: a
+  , icon :: a
+  , iconDirectionDesc :: a
+  , iconDirectionAsc :: a
   )
 
 tableSortLabelClassKey :: ∀ options options_
@@ -55,6 +59,12 @@ tableSortLabelClassKey :: ∀ options options_
   => Record options
   -> TableSortLabelClassKey
 tableSortLabelClassKey = unsafeCoerce
+
+tableSortLabelClassKeyJSS :: ∀ options options_
+  .  Union options options_ TableSortLabelClassKeyOptionsJSS
+  => Record options
+  -> TableSortLabelClassKeyJSS
+tableSortLabelClassKeyJSS = unsafeCoerce
 
 tableSortLabelPropsPartial_component :: ∀ componentProps props props_
   .  Union props props_ (TableSortLabelProps componentProps)

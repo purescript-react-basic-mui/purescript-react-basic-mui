@@ -1,6 +1,7 @@
 module MUI.Core.Link where
 
 
+import MUI.Core (JSS)
 import MUI.Core.Typography (TypographyClassKey, VariantMapping)
 import MUI.Core.Typography.Align (AlignProp)
 import MUI.Core.Typography.Display (DisplayProp)
@@ -46,15 +47,18 @@ underline Hover = unsafeCoerce "hover"
 underline Always = unsafeCoerce "Always"
 
 foreign import data LinkClassKey :: Type
+foreign import data LinkClassKeyJSS :: Type
 foreign import data LinkPropsPartial :: Type
 
-type LinkClassKeyOptions =
-  ( root :: String
-  , underlineNone :: String
-  , underlineHover :: String
-  , underlineAlways :: String
-  , button :: String
-  , focusVisible :: String
+type LinkClassKeyOptionsJSS = LinkClassKeyOptionsR JSS
+type LinkClassKeyOptions = LinkClassKeyOptionsR String
+type LinkClassKeyOptionsR a =
+  ( root :: a
+  , underlineNone :: a
+  , underlineHover :: a
+  , underlineAlways :: a
+  , button :: a
+  , focusVisible :: a
   )
 
 linkClassKey  :: ∀ options options_
@@ -62,6 +66,12 @@ linkClassKey  :: ∀ options options_
   => Record options
   -> LinkClassKey
 linkClassKey = unsafeCoerce
+
+linkClassKeyJSS  :: ∀ options options_
+  . Union options options_ LinkClassKeyOptionsJSS
+  => Record options
+  -> LinkClassKeyJSS
+linkClassKeyJSS = unsafeCoerce
 
 linkPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (LinkProps componentProps)
