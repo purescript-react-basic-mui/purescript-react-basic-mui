@@ -65,7 +65,6 @@ appBarClassKeyJSS :: ∀ options options_
   -> AppBarClassKeyJSS
 appBarClassKeyJSS = unsafeCoerce
 
-
 appBarPropsPartial_component :: ∀ componentProps props props_
   . Union props props_ (AppBarProps componentProps)
   => Record props 
