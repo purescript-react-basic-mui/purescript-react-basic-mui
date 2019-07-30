@@ -1,0 +1,11 @@
+{ "children" : "Array JSX"
+, "classes" : "ExpansionPanelClassKey"
+, "defaultExpanded" : "Boolean"
+, "disabled" : "Boolean"
+, "expanded" : "Boolean"
+, "onChange" : "EffectFn2 SynteticEvent Boolean Unit"
+, "TransitionComponent" : "ReactComponent { | TransitionProps }"
+, "TransitionProps" : "TransitionPropsPartial"
+, "inherits": "PaperProps Props_div"
+, "ClassKey": [ "root", "rounded", "expanded", "disabled" ]
+}
