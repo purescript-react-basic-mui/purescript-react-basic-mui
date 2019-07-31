@@ -2,7 +2,7 @@ module Codegen where
 
 import Prelude
 
-import Codegen.Model (Component, Module(..), PropType(..), Variant(..), classKeyGenericName, classKeyJSSName, classKeyName, classKeyRowJSSName, classKeyRowName, propsRowName)
+import Codegen.Model (Component, Module(..), PropType(..), Variant(..), VariantProp(..), classKeyGenericName, classKeyJSSName, classKeyName, classKeyRowJSSName, classKeyRowName, propsName, propsRowName)
 import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.String as String
@@ -35,10 +35,8 @@ standardModules = Object.fromFoldable
 
 variantModules :: Object (Array String)
 variantModules = Object.fromFoldable
-  [ Tuple "Control.Monad.Except" [ "runExcept" ]
-  , Tuple "Data.Either" [ "either" ]
-  , Tuple "Foreign" [ "readString", "unsafeToForeign" ]
-  , Tuple "Prelude" []
+  [ Tuple "Prelude" []
+  , Tuple "Unsafe.Coerce" ["unsafeCoerce"]
   ]
 
 toObject :: Array (Tuple String (Array String)) -> Object (Array String)
@@ -49,7 +47,7 @@ genImports { props, inherits, variants } = do
   let propsObj = toObject $ Array.catMaybes $ ((Object.toUnfoldable props <#> snd) <#> extractImports) >>= identity
       inheritsObj = toObject $ Array.catMaybes $ extractImports inherits
       modules = propsObj <> inheritsObj
-      allModules = modules <> standardModules <> (if Array.length variants > 0 then variantModules else Object.empty)
+      allModules = modules <> standardModules <> (if Array.length (simpleVariants variants) > 0 then variantModules else Object.empty)
       sorted = (Object.toUnfoldable allModules) # (Array.sortWith fst)
       filtered = Array.filter (\(Tuple moduleName _) -> moduleName /= "Prelude") sorted
       imports = Array.intercalate "\n" 
@@ -91,12 +89,12 @@ genModuleName m = "module MUI." <> go m
     go (Path str next) = str <> "." <> go next
     go (Name name) = name <> " where"
 
-genPureScript :: Component -> Codegen
+genPureScript :: Component -> Array Codegen
 genPureScript component = do
   let moduleName = genModuleName component.moduleName
       imports = genImports component
       props = genProps component
-      variants = genVariants component
+      variants = genSimpleVariants $ simpleVariants component.variants
       classKey = genClassKey component
       classKeyFn = genClassKeyFn component
       classKeyJSSFn = genClassKeyJSSFn component
@@ -116,16 +114,51 @@ genPureScript component = do
         , foreignData
         ]
       file = pureScriptFile component.moduleName
-  Codegen file code
+  [ Codegen file code ] <> (Array.mapMaybe genVariantPureScript component.variants)
 
-genJavaScript :: Component -> Codegen 
-genJavaScript { name, moduleName } = do
-  let code = "exports._" <> name <> " = require(\"@material-ui/" <> (jsPath moduleName) <> "\").default;"
+genVariantPureScript :: Variant -> Maybe Codegen
+genVariantPureScript (SimpleVariant _ _) = Nothing
+genVariantPureScript (ModuleVariant _moduleName name values) = do
+  let moduleName = genModuleName _moduleName 
+  let imports = "import Prelude\n\nimport Unsafe.Coerce (unsafeCoerce)"
+  let body = genSimpleVariant (Tuple name values)
+  let code = Array.intercalate "\n\n" [ moduleName, imports, body ]
+  Just $ Codegen (pureScriptFile _moduleName) code
+
+genVariantJavaScript :: Variant -> Maybe Codegen
+genVariantJavaScript (SimpleVariant _ _) = Nothing
+genVariantJavaScript (ModuleVariant moduleName name _) = do
+  let file = javaScriptFile moduleName
+      code = genVariantJSLine name
+  Just $ Codegen file code
+
+simpleVariants :: Array Variant -> Array (Tuple String (Array VariantProp))
+simpleVariants = Array.mapMaybe extract
+  where
+    extract (SimpleVariant name values ) = Just $ Tuple name values
+    extract _ = Nothing
+
+genJavaScript :: Component -> Array Codegen 
+genJavaScript { name, moduleName, variants } = do
+  let importLine = "exports._" <> name <> " = require(\"@material-ui/" <> (jsPath moduleName) <> "\").default;"
+      code = if Array.length (simpleVariants variants) == 0 
+              then importLine 
+              else importLine <> "\n" <> 
+                (Array.intercalate "\n" $ map genVariantJS variants)
       file = javaScriptFile moduleName
-  Codegen file code
+  [ Codegen file code ] <> (Array.mapMaybe genVariantJavaScript variants)
   where
     jsPath (Path str next) = (String.toLower str) <> "/" <> (jsPath next)
     jsPath (Name n) = n
+
+    genVariantJS (SimpleVariant varName _) = genVariantJSLine varName
+    genVariantJS (ModuleVariant _ varName _) = genVariantJSLine varName
+
+genVariantJSLine :: String -> String
+genVariantJSLine varName = do 
+  let eqLine = "exports._eq" <> varName <> " = function(left){ return function(right){ return left === right }};"
+      ordLine = "exports._ord" <> varName <> " = function(left){ return function(right){ return (left === right) ? 0 : (left > right) ? 1 : -1 }};"
+  eqLine <> "\n" <> ordLine
 
 toType :: PropType -> String
 toType StringProp = "String"
@@ -158,35 +191,46 @@ genProps { name, props, componentTypeVariable, additionalTypeVariables } = do
       if isJust $ Regex.match (unsafeRegex "^[A-Z]" noFlags) fieldName
         then "\"" <> fieldName <> "\""
         else fieldName
-    foreignData = "\n\nforeign import data " <> name <> "Props :: Type"
+    foreignData = "\n\nforeign import data " <> (propsName name) <> " :: Type"
 
-genVariants :: Component -> String
-genVariants { variants } = 
-  Array.intercalate "\n\n" $ map genVariant variants
+genSimpleVariants :: Array (Tuple String (Array VariantProp)) -> String
+genSimpleVariants = Array.intercalate "\n" <<< map genSimpleVariant
 
-genVariant :: Variant -> String
-genVariant (SimpleVariant name values) = do
-    let foreignData = "foreign import data " <> name <> " :: Type"
+genSimpleVariant :: Tuple String (Array VariantProp) -> String
+genSimpleVariant (Tuple name values) = do
     Array.intercalate "\n\n" 
         $ Array.cons (Array.intercalate "\n" [ foreignData, genVariantEqTypeClass, genVariantOrdTypeClass ])
         $ map genVariantFn values
     where
-      genVariantFn fnName = do
+      genVariantFn :: VariantProp -> String 
+      genVariantFn (StringVariant fnName) = do
         let typeDecl = fnName <> " :: " <> name
-        let body = fnName <> " = unsafeCoerce \"" <> fnName <> "\""
+        let body = fnName <> " = unsafeCoerce " <> (show fnName)
         typeDecl <> "\n" <> body
+      genVariantFn (StringNameVariant fnName valueName) = do
+        let typeDecl = fnName <> " :: " <> name
+        let body = fnName <> " = unsafeCoerce " <> (show valueName)
+        typeDecl <> "\n" <> body
+      genVariantFn (NumberVariant fnName number) = do
+        let typeDecl = fnName <> " :: " <> name
+        let body = fnName <> " = unsafeCoerce " <> (show number)
+        typeDecl <> "\n" <> body
+      genVariantFn BooleanVariant = do
+        let typeDecl = "boolean :: Boolean -> " <> name
+        let body = "boolean value = unsafeCoerce value"
+        typeDecl <> "\n" <> body
+
       genVariantEqTypeClass =
-        "instance eq" <> name <> " :: Eq " <> name <> " where" <>"""
-  eq left right = either (\_ -> false) identity $ runExcept do
-    l <- readString $ unsafeToForeign left
-    r <- readString $ unsafeToForeign right
-    pure $ l == r"""
+        "instance eq" <> name <> " :: Eq " <> name <> " where" <> " eq left right = _eq" <> name <> " left right"
       genVariantOrdTypeClass =
-        "instance ord" <> name <> " :: Ord " <> name <> " where" <>"""
-  compare left right = either (\_ -> LT) identity $ runExcept do
-    l <- readString $ unsafeToForeign left
-    r <- readString $ unsafeToForeign right
-    pure $ compare l r"""
+        "instance ord" <> name <> " :: Ord " <> name <> " where" <> " compare left right = compare (" <> "_ord" <> name <> " left right) (" <> "_ord" <> name <> " right left)"
+      foreignData = Array.intercalate "\n"
+        [ "foreign import data " <> name <> " :: Type"
+        , "foreign import _eq" <> name <> " :: " <> name <> " -> " <> name <> " -> Boolean"
+        , "foreign import _ord" <> name <> " :: " <> name <> " -> " <> name <> " -> Int"
+        ]
+
+
 
 
 
@@ -260,13 +304,21 @@ write basePath (Codegen file code) = go basePath file
   where
     go path (Directory name next) = go (path <> "/" <> name) next
     go path (File name) = do
-      FS.mkdir path
-      FS.writeTextFile UTF8 (path <> "/" <> name) code
+      mkDir path
+      let filePath = path <> "/" <> name
+      liftEffect $ log ("Writing: " <> filePath)
+      FS.writeTextFile UTF8 filePath code
+    
+    mkDir path = do
+      exists <- FS.exists path
+      if exists
+        then pure unit
+        else FS.mkdir path
+
 
 codegen :: Component -> Array Codegen
 codegen component =
-  [ genPureScript component
-  , genJavaScript component
-  ]
+  (genPureScript component) <> 
+  (genJavaScript component)
 
 

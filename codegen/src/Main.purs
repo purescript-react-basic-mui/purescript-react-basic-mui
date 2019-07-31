@@ -2,11 +2,13 @@ module Main where
 
 import Prelude
 
-import Codegen ( codegen)
+import Codegen (codegen, write)
 import Codegen.Core.ExpansionPanel as ExpansionPanel
 import Codegen.Core.InputBase as InputBase
 import Codegen.Model (Component)
+import Data.Foldable (traverse_)
 import Effect (Effect)
+import Effect.Aff (launchAff_)
 
 components :: Array Component
 components = 
@@ -15,6 +17,6 @@ components =
   ]
 
 main :: Effect Unit
-main = do
-  let code = map codegen components >>= identity
-  pure unit
+main = launchAff_ do
+  let code = join $ map codegen components
+  traverse_ (write "../src") code

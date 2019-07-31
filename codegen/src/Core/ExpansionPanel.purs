@@ -2,7 +2,7 @@ module Codegen.Core.ExpansionPanel where
 
 import Prelude
 
-import Codegen.Model (Component, Module(..), PropType(..), Variant, arrayJSX, divProps, effectFn2, propsRowName, syntheticEvent)
+import Codegen.Model (Component, Module(..), PropType(..), Variant, arrayJSX, divProps, effectFn2, syntheticEvent)
 import Data.Maybe (Maybe(..))
 import Foreign.Object (Object)
 import Foreign.Object as Object
@@ -16,9 +16,9 @@ props = Object.empty #
   (Object.insert "defaultExpanded" BooleanProp) # 
   (Object.insert "disabled" BooleanProp) #
   (Object.insert "expanded" BooleanProp) #
-  (Object.insert "onChange" $ effectFn2 $ PropList syntheticEvent $ PropList BooleanProp UnitProp) #
-  (Object.insert "TransitionComponent" $ ReactComponent (ImportProp "MUI.Core.Transition" (propsRowName "Transition"))) #
-  (Object.insert "TransitionProps" $ ImportProp "MUI.Core.Transition" "TransitionProps") 
+  (Object.insert "onChange" $ effectFn2 $ PropList syntheticEvent $ PropList BooleanProp UnitProp) 
+--  (Object.insert "TransitionComponent" $ ReactComponent (ImportProp "MUI.Core.Transition" (propsRowName "Transition"))) #
+--  (Object.insert "TransitionProps" $ ImportProp "MUI.Core.Transition" "TransitionProps") 
 
 componentTypeVariable :: Maybe String
 componentTypeVariable = Just "componentProps"
@@ -33,7 +33,7 @@ classKey :: Array String
 classKey = [ "root", "rounded", "expanded", "disabled" ]
 
 moduleName :: Module
-moduleName = Path "Core" (Name name)
+moduleName = Path "MUI" (Path "Core" (Name name))
 
 variants :: Array Variant
 variants = []

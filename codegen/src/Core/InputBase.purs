@@ -2,7 +2,7 @@ module Codegen.Core.InputBase where
 
 import Prelude
 
-import Codegen.Model (Component, Module(..), PropType(..), Variant(..), classKeyName, divProps, eventHandler, jsx, reactDom, standardComponentTypeVariable)
+import Codegen.Model (Component, Module(..), PropType(..), Variant(..), VariantProp(..), classKeyName, divProps, eventHandler, jsx, reactDom, standardComponentTypeVariable)
 import Data.Maybe (Maybe)
 import Foreign.Object (Object)
 import Foreign.Object as Object
@@ -23,7 +23,7 @@ name :: String
 name = "InputBase"
 
 moduleName :: Module 
-moduleName = Path "Core" (Name name)
+moduleName = Path "MUI" (Path "Core" (Name name))
 
 componentTypeVariable :: Maybe String
 componentTypeVariable = standardComponentTypeVariable
@@ -35,7 +35,7 @@ inherits :: PropType
 inherits = divProps
 
 variants :: Array Variant
-variants = [ SimpleVariant "MarginProp" [ "dense", "none" ] ]
+variants = [ SimpleVariant "MarginProp" [ StringVariant "dense", StringVariant "none" ] ]
 
 props :: Object PropType
 props = Object.empty #

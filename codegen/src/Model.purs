@@ -40,8 +40,15 @@ data PropType
   | Local TypeName
   | Done
 
+data VariantProp
+  = BooleanVariant
+  | StringVariant String
+  | StringNameVariant String String
+  | NumberVariant String Number
+
 data Variant 
-  = SimpleVariant String (Array String)
+  = SimpleVariant String (Array VariantProp)
+  | ModuleVariant Module String (Array VariantProp)
 
 standardComponentTypeVariable :: Maybe String
 standardComponentTypeVariable = Just componentProps
@@ -64,13 +71,11 @@ classKeyRowName name = name <> "ClassKeyOptions"
 classKeyRowJSSName :: String -> String
 classKeyRowJSSName name = name <> "ClassKeyJSSOptions"
 
-
 propsName :: String -> String
 propsName name = name <> "Props"
 
 propsRowName :: String -> String
 propsRowName name = name <> "PropsOptions"
-
 
 jsx :: PropType
 jsx = ImportProp "React.Basic" "JSX"
