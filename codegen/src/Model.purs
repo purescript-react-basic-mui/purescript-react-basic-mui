@@ -2,11 +2,23 @@ module Codegen.Model where
 
 import Prelude
 
+import Data.Maybe (Maybe(..))
 import Foreign.Object (Object)
 
-data File
-  = File String
-  | Directory String File
+type Component =
+  { name :: String
+  , moduleName :: Module
+  , props :: Object PropType
+  , componentTypeVariable :: Maybe String
+  , additionalTypeVariables :: Array String
+  , classKey :: Array String
+  , inherits :: PropType
+  , variants :: Array Variant
+  }
+
+data Module
+  = Path String Module
+  | Name String
 
 type ModuleName = String
 type TypeName = String
@@ -20,15 +32,57 @@ data PropType
   | UnitProp
   | ArrayProp PropType
   | ImportProp ModuleName TypeName
-  | ReactComponent RowTypeModuleName RowTypeTypeName
+  | ReactComponent PropType
   | PropList PropType PropType
+  | ParensList PropType PropType
+  | TypeVariable String
+  | RecordType PropType
+  | Local TypeName
   | Done
 
+data Variant 
+  = SimpleVariant String (Array String)
+
+standardComponentTypeVariable :: Maybe String
+standardComponentTypeVariable = Just componentProps
+
+componentProps :: String
+componentProps = "componentProps"
+
+classKeyJSSName :: String -> String
+classKeyJSSName name = name <> "ClassKeyJSS"
+
+classKeyGenericName :: String -> String
+classKeyGenericName name = name <> "ClassKeyGenericOptions"
+
+classKeyName :: String -> String
+classKeyName name = name <> "ClassKey"
+
+classKeyRowName :: String -> String
+classKeyRowName name = name <> "ClassKeyOptions"
+
+classKeyRowJSSName :: String -> String
+classKeyRowJSSName name = name <> "ClassKeyJSSOptions"
+
+
+propsName :: String -> String
+propsName name = name <> "Props"
+
+propsRowName :: String -> String
+propsRowName name = name <> "PropsOptions"
+
+
+jsx :: PropType
+jsx = ImportProp "React.Basic" "JSX"
+
 arrayJSX :: PropType
-arrayJSX = ArrayProp $ ImportProp "React.Basic" "JSX"
+arrayJSX = ArrayProp jsx
+
+reactDom :: String -> PropType
+reactDom = ImportProp "React.Basic.DOM"
 
 divProps :: PropType
-divProps = Done
+divProps = reactDom "Props_div"
 
 effectFn2 :: PropType -> PropType
 effectFn2 = PropList (ImportProp "Effect.Uncurried" "EffectFn2")
@@ -36,10 +90,6 @@ effectFn2 = PropList (ImportProp "Effect.Uncurried" "EffectFn2")
 syntheticEvent :: PropType
 syntheticEvent = ImportProp "React.Basic.Events" "SyntheticEvent"
 
-type Component =
-  { name :: String
-  , js :: File
-  , props :: Object PropType
-  , classKey :: Array String
-  , inherits :: PropType
-  }
+eventHandler :: PropType
+eventHandler = ImportProp "React.Basic.Events" "EventHandler"
+

@@ -2,7 +2,8 @@ module Codegen.Core.ExpansionPanel where
 
 import Prelude
 
-import Codegen.Model (Component, File(..), PropType(..), arrayJSX, divProps, effectFn2, syntheticEvent)
+import Codegen.Model (Component, Module(..), PropType(..), Variant, arrayJSX, divProps, effectFn2, propsRowName, syntheticEvent)
+import Data.Maybe (Maybe(..))
 import Foreign.Object (Object)
 import Foreign.Object as Object
 
@@ -16,17 +17,35 @@ props = Object.empty #
   (Object.insert "disabled" BooleanProp) #
   (Object.insert "expanded" BooleanProp) #
   (Object.insert "onChange" $ effectFn2 $ PropList syntheticEvent $ PropList BooleanProp UnitProp) #
-  (Object.insert "TransitionComponent" $ ReactComponent "MUI.Core.Transition" "TransitionPropsPartial") #
-  (Object.insert "TransitionProps" $ ImportProp "MUI.Core.Transition" "TransitionPropsPartial") 
+  (Object.insert "TransitionComponent" $ ReactComponent (ImportProp "MUI.Core.Transition" (propsRowName "Transition"))) #
+  (Object.insert "TransitionProps" $ ImportProp "MUI.Core.Transition" "TransitionProps") 
+
+componentTypeVariable :: Maybe String
+componentTypeVariable = Just "componentProps"
+
+additionalTypeVariables :: Array String
+additionalTypeVariables = []
 
 inherits :: PropType
-inherits = PropList (ImportProp "MUI.Core.Paper" "PaperProps") divProps
+inherits = ParensList (ImportProp "MUI.Core.Paper" "PaperProps") divProps
 
 classKey :: Array String
 classKey = [ "root", "rounded", "expanded", "disabled" ]
 
-js :: File
-js = Directory "Core" (File name)
+moduleName :: Module
+moduleName = Path "Core" (Name name)
+
+variants :: Array Variant
+variants = []
 
 component :: Component
-component = { name, js, props, classKey, inherits }
+component = 
+  { name
+  , moduleName
+  , props
+  , componentTypeVariable
+  , additionalTypeVariables
+  , classKey
+  , inherits
+  , variants
+  }
