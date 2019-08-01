@@ -1,4 +1,4 @@
-module MUI.MUI.Core.ExpansionPanel where
+module MUI.Core.ExpansionPanel where
 
 import Prelude
 

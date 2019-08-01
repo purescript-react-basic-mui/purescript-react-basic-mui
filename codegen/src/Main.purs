@@ -9,11 +9,13 @@ import Codegen.Model (Component)
 import Data.Foldable (traverse_)
 import Effect (Effect)
 import Effect.Aff (launchAff_)
+import MUI.Core.Grid as Grid
 
 components :: Array Component
 components = 
   [ ExpansionPanel.component
   , InputBase.component
+  , Grid.component
   ]
 
 main :: Effect Unit

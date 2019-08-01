@@ -1,1 +1,1 @@
-exports._ExpansionPanel = require("@material-ui/mui/core/ExpansionPanel").default;
+exports._ExpansionPanel = require("@material-ui/core/ExpansionPanel").default;

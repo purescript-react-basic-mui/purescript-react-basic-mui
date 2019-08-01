@@ -1,4 +1,4 @@
-module MUI.MUI.Core.InputBase where
+module MUI.Core.InputBase where
 
 import Prelude
 

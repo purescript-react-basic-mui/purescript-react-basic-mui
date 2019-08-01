@@ -18,7 +18,7 @@ import MUI.Core.CardHeader (CardHeaderPropsPartial)
 import MUI.Core.CardMedia (CardMediaPropsPartial)
 import MUI.Core.Divider (DividerPropsPartial)
 import MUI.Core.Drawer (DrawerPropsPartial)
-import MUI.Core.Grid (GridPropsPartial)
+import MUI.Core.Grid (GridProps)
 import MUI.Core.Icon (IconPropsPartial)
 import MUI.Core.IconButton (IconButtonPropsPartial)
 import MUI.Core.LinearProgress (LinearProgressPropsPartial)
@@ -86,7 +86,7 @@ type ComponentsProps =
   -- , "MuiFormGroup" :: FormGroupPropsPartial
   -- , "MuiFormHelperText" :: FormHelperTextPropsPartial
   -- , "MuiFormLabel" :: FormLabelPropsPartial
-  , "MuiGrid" :: GridPropsPartial
+  , "MuiGrid" :: GridProps
   -- , "MuiGridList" :: GridListPropsPartial
   -- , "MuiGridListTile" :: GridListTilePropsPartial
   -- , "MuiGridListTileBar" :: GridListTileBarPropsPartial

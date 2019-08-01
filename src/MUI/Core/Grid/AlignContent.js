@@ -1,0 +1,2 @@
+exports._eqAlignContentProp = function(left){ return function(right){ return left === right }};
+exports._ordAlignContentProp = function(left){ return function(right){ return (left === right) ? 0 : (left > right) ? 1 : -1 }};

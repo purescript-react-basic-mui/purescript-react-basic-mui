@@ -83,7 +83,7 @@ javaScriptFile (Name name) = File $ name <> ".js"
 
 
 genModuleName :: Module -> String
-genModuleName m = "module MUI." <> go m 
+genModuleName m = "module " <> go m 
   where
     go :: Module -> String
     go (Path str next) = str <> "." <> go next
@@ -148,7 +148,8 @@ genJavaScript { name, moduleName, variants } = do
       file = javaScriptFile moduleName
   [ Codegen file code ] <> (Array.mapMaybe genVariantJavaScript variants)
   where
-    jsPath (Path str next) = (String.toLower str) <> "/" <> (jsPath next)
+    jsPath (Path str next) | str /= "MUI" = (String.toLower str) <> "/" <> (jsPath next)
+    jsPath (Path str next) = (jsPath next)
     jsPath (Name n) = n
 
     genVariantJS (SimpleVariant varName _) = genVariantJSLine varName
@@ -187,10 +188,7 @@ genProps { name, props, componentTypeVariable, additionalTypeVariables } = do
                   Array.cons (Array.fold [ (handleFieldName fieldName), " :: ", toType propType ]) fields
                 ) props []
     propsBottom = fromMaybe "\n  )" (componentTypeVariable <#> \str -> "\n  | " <> str <> "\n  )")
-    handleFieldName fieldName = 
-      if isJust $ Regex.match (unsafeRegex "^[A-Z]" noFlags) fieldName
-        then "\"" <> fieldName <> "\""
-        else fieldName
+    handleFieldName fieldName = genFieldName fieldName
     foreignData = "\n\nforeign import data " <> (propsName name) <> " :: Type"
 
 genSimpleVariants :: Array (Tuple String (Array VariantProp)) -> String
@@ -231,8 +229,12 @@ genSimpleVariant (Tuple name values) = do
         ]
 
 
-
-
+genFieldName :: String -> String
+genFieldName fieldName =
+  if (isJust $ Regex.match (unsafeRegex "^[A-Z]" noFlags) fieldName) ||
+     (isJust $ Regex.match (unsafeRegex "\\W" noFlags) fieldName)
+      then "\"" <> fieldName <> "\""
+      else fieldName
 
 genClassKey :: Component -> String
 genClassKey { name, classKey } = do
@@ -243,7 +245,7 @@ genClassKey { name, classKey } = do
     foreignClassKey = "foreign import data " <> (classKeyName name) <> " :: Type"
     foreignClassKeyJSS = "foreign import data " <> (classKeyJSSName name) <> " :: Type"
     genericType = "type " <> (classKeyGenericName name) <> " a =\n  ( " <> 
-        (Array.intercalate "\n  , " $ map (\c -> c <> " :: a ") classKey) <>
+        (Array.intercalate "\n  , " $ map (\c -> (genFieldName c) <> " :: a ") classKey) <>
         "\n  )"
 
 genUnionFunction :: String -> String -> String -> String -> String -> String
