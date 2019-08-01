@@ -1,8 +1,8 @@
-module MUI.Core.Grid where
+module Codegen.Core.Grid where
 
 import Prelude
 
-import Codegen.Model (Module(..), PropType(..), Variant(..), VariantProp(..), Component, divProps)
+import Codegen.Model (Component, Module(..), PropType(..), Variant(..), VariantProp(..), arrayJSX, classKeyName, componentProps, divProps)
 import Data.Maybe (Maybe(..))
 import Foreign.Object (Object)
 import Foreign.Object as Object
@@ -26,7 +26,78 @@ variants =
       , StringNameVariant "spaceAround" "space-around"
       ]
     )
-
+  , (ModuleVariant
+      (Path "MUI" (Path "Core" (Path "Grid" (Name "AlignItems")))) 
+      "AlignItemsProp" 
+      [ StringNameVariant "flexStart" "flex-start"
+      , StringVariant "center"
+      , StringNameVariant "flexEnd" "flex-end"
+      , StringVariant "stretch"
+      , StringVariant "baseline"
+      ]
+    )
+  , (ModuleVariant
+      (Path "MUI" (Path "Core" (Path "Grid" (Name "Direction")))) 
+      "DirectionProp" 
+      [ StringVariant "row"
+      , StringNameVariant "rowReverse" "row-reverse"
+      , StringVariant "column"
+      , StringNameVariant "columnReverse" "column-reverse"
+      ]
+    )
+  , (ModuleVariant
+      (Path "MUI" (Path "Core" (Path "Grid" (Name "Justify")))) 
+      "JustifyProp" 
+      [ StringNameVariant "flexStart" "flex-start"
+      , StringVariant "center"
+      , StringNameVariant "flexEnd" "flex-end"
+      , StringNameVariant "spaceBetween" "space-between"
+      , StringNameVariant "spaceAround" "space-around"
+      , StringNameVariant "spaceEvenly" "space-evenly"
+      ]
+    )
+  , (ModuleVariant
+      (Path "MUI" (Path "Core" (Path "Grid" (Name "GridCount")))) 
+      "GridCountProp" 
+      [ BooleanVariant
+      , StringVariant "auto"
+      , NumberVariant "one" 1.0
+      , NumberVariant "two" 2.0
+      , NumberVariant "three" 3.0
+      , NumberVariant "four" 4.0
+      , NumberVariant "five" 5.0
+      , NumberVariant "six" 6.0
+      , NumberVariant "seven" 7.0
+      , NumberVariant "eight" 8.0
+      , NumberVariant "nine" 9.0
+      , NumberVariant "ten" 10.0
+      , NumberVariant "eleven" 11.0
+      , NumberVariant "twelve" 12.0
+      ]
+    )
+  , (ModuleVariant
+      (Path "MUI" (Path "Core" (Path "Grid" (Name "Spacing")))) 
+      "SpacingProp" 
+      [ NumberVariant "one" 1.0
+      , NumberVariant "two" 2.0
+      , NumberVariant "three" 3.0
+      , NumberVariant "four" 4.0
+      , NumberVariant "five" 5.0
+      , NumberVariant "six" 6.0
+      , NumberVariant "seven" 7.0
+      , NumberVariant "eight" 8.0
+      , NumberVariant "nine" 9.0
+      , NumberVariant "ten" 10.0
+      ]
+    )
+  , (ModuleVariant
+      (Path "MUI" (Path "Core" (Path "Grid" (Name "Wrap")))) 
+      "WrapProp" 
+      [ StringVariant "nowrap"
+      , StringVariant "wrap"
+      , StringNameVariant "wrapReverse" "wrap-reverse"
+      ]
+    )
   ]
 
 componentTypeVariable :: Maybe String
@@ -38,25 +109,24 @@ additionalTypeVariables = []
 inherits :: PropType
 inherits = divProps
 
-
 props :: Object PropType
 props = Object.empty #
   (Object.insert "alignContent" (ImportProp "MUI.Core.Grid.AlignContent" "AlignContentProp")) #
---  (Object.insert "alignItems") #
---  (Object.insert "children") #
---  (Object.insert "classes") #
---  (Object.insert "component") #
---  (Object.insert "container") #
---  (Object.insert "direction") #
---  (Object.insert "item") #
---  (Object.insert "justify") #
---  (Object.insert "lg") #
---  (Object.insert "md") #
---  (Object.insert "sm") #
---  (Object.insert "spacing") #
---  (Object.insert "wrap") #
---  (Object.insert "xl") #
---  (Object.insert "xs") #
+  (Object.insert "alignItems" (ImportProp "MUI.Core.Grid.AlignItems" "AlignItemsProp")) #
+  (Object.insert "children" arrayJSX) #
+  (Object.insert "classes" (Local $ classKeyName name)) #
+  (Object.insert "component" (ReactComponent (TypeVariable componentProps))) #
+  (Object.insert "container" BooleanProp) #
+  (Object.insert "direction" (ImportProp "MUI.Core.Grid.Direction" "DirectionProp")) #
+  (Object.insert "item" BooleanProp) #
+  (Object.insert "justify" (ImportProp "MUI.Core.Grid.Justify" "JustifyProp")) #
+  (Object.insert "lg" (ImportProp "MUI.Core.Grid.GridCount" "GridCountProp")) #
+  (Object.insert "md" (ImportProp "MUI.Core.Grid.GridCount" "GridCountProp")) #
+  (Object.insert "sm" (ImportProp "MUI.Core.Grid.GridCount" "GridCountProp")) #
+  (Object.insert "spacing" (ImportProp "MUI.Core.Grid.Spacing" "SpacingProp")) #
+  (Object.insert "wrap" (ImportProp "MUI.Core.Grid.Wrap" "WrapProp")) #
+  (Object.insert "xl" (ImportProp "MUI.Core.Grid.GridCount" "GridCountProp")) #
+  (Object.insert "xs" (ImportProp "MUI.Core.Grid.GridCount" "GridCountProp")) #
   (Object.insert "zeroMinWidth" BooleanProp)
 
 classKey :: Array String

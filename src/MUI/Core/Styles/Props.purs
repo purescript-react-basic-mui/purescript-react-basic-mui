@@ -1,10 +1,10 @@
 module MUI.Core.Styles.Props where
 
-import MUI.Core.AppBar (AppBarPropsPartial)
-import MUI.Core.Avatar (AvatarPropsPartial)
-import MUI.Core.Backdrop (BackdropPropsPartial)
-import MUI.Core.Badge (BadgePropsPartial)
-import MUI.Core.BottomNavigation (BottomNavigationPropsPartial)
+import MUI.Core.AppBar (AppBarProps)
+import MUI.Core.Avatar (AvatarProps)
+import MUI.Core.Backdrop (BackdropProps)
+import MUI.Core.Badge (BadgeProps)
+import MUI.Core.BottomNavigation (BottomNavigationProps)
 import MUI.Core.BottomNavigationAction (BottomNavigationActionPropsPartial)
 import MUI.Core.Breadcrumbs (BreadcrumbsPropsPartial)
 import MUI.Core.Button (ButtonPropsPartial)
@@ -48,11 +48,11 @@ import Unsafe.Coerce (unsafeCoerce)
 
 type ComponentsProps =
   ( 
-    "MuiAppBar" :: AppBarPropsPartial
-  , "MuiAvatar" :: AvatarPropsPartial
-  , "MuiBackdrop" :: BackdropPropsPartial
-  , "MuiBadge" :: BadgePropsPartial
-  , "MuiBottomNavigation" :: BottomNavigationPropsPartial
+    "MuiAppBar" :: AppBarProps
+  , "MuiAvatar" :: AvatarProps
+  , "MuiBackdrop" :: BackdropProps
+  , "MuiBadge" :: BadgeProps
+  , "MuiBottomNavigation" :: BottomNavigationProps
   , "MuiBottomNavigationAction" :: BottomNavigationActionPropsPartial
   , "MuiBreadcrumbs" :: BreadcrumbsPropsPartial
   , "MuiButton" :: ButtonPropsPartial

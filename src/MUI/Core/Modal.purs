@@ -3,7 +3,7 @@ module MUI.Core.Modal where
 import Foreign (Foreign)
 import Foreign.Object (Object)
 import MUI.Core (JSS)
-import MUI.Core.Backdrop (BackdropPropsPartial)
+import MUI.Core.Backdrop (BackdropPropsOptions)
 import MUI.Core.Modal.ModalManager (ModalManager)
 import Prim.Row (class Union)
 import React.Basic (Component, JSX, ReactComponent, element)
@@ -14,9 +14,9 @@ import Unsafe.Coerce (unsafeCoerce)
 type BackdropProps = Object Foreign
 
 type ModalProps componentProps =
-  ( "BackdropComponent" :: Component BackdropProps
-  , "BackdropProps" :: BackdropPropsPartial
-  , children :: Array JSX
+  --( "BackdropComponent" :: Component { | BackdropPropsOptions }
+  --, "BackdropProps" :: BackdropProps
+  ( children :: Array JSX
   , className :: String
   , classes :: ModalClassKey
   , closeAfterTransition :: Boolean

@@ -1,94 +1,100 @@
 module MUI.Core.AppBar where
 
+import Prelude
+
 import MUI.Core (JSS)
+import MUI.Core.Paper (PaperProps)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
-type AppBarProps componentProps =
-  ( children :: Array JSX
+type AppBarPropsOptions componentProps = 
+  ( children :: (Array JSX)
   , classes :: AppBarClassKey
   , color :: ColorProp
   , position :: PositionProp
-  , component :: ReactComponent { | componentProps }
-  , elevation :: Number
-  , square :: Boolean
   | componentProps
   )
 
-foreign import data AppBarPropsPartial :: Type
+foreign import data AppBarProps :: Type
 
 foreign import data ColorProp :: Type
-data Color = Inherit | Primary | Secondary | Default 
-color :: Color -> ColorProp
-color Inherit = unsafeCoerce "inherit"
-color Primary = unsafeCoerce "primary"
-color Secondary = unsafeCoerce "secondary"
-color Default = unsafeCoerce "default"
+foreign import _eqColorProp :: ColorProp -> ColorProp -> Boolean
+foreign import _ordColorProp :: ColorProp -> ColorProp -> Int
+instance eqColorProp :: Eq ColorProp where eq left right = _eqColorProp left right
+instance ordColorProp :: Ord ColorProp where compare left right = compare (_ordColorProp left right) (_ordColorProp right left)
 
+inherit :: ColorProp
+inherit = unsafeCoerce "inherit"
+
+primary :: ColorProp
+primary = unsafeCoerce "primary"
+
+secondary :: ColorProp
+secondary = unsafeCoerce "secondary"
+
+default :: ColorProp
+default = unsafeCoerce "default"
 foreign import data PositionProp :: Type
-data Position = Fixed | Absolute | Sticky | Static | Relative
-position :: Position -> PositionProp
-position Fixed = unsafeCoerce "fixed"
-position Absolute = unsafeCoerce "absolute"
-position Sticky = unsafeCoerce "sticky"
-position Static = unsafeCoerce "static"
-position Relative = unsafeCoerce "relative"
+foreign import _eqPositionProp :: PositionProp -> PositionProp -> Boolean
+foreign import _ordPositionProp :: PositionProp -> PositionProp -> Int
+instance eqPositionProp :: Eq PositionProp where eq left right = _eqPositionProp left right
+instance ordPositionProp :: Ord PositionProp where compare left right = compare (_ordPositionProp left right) (_ordPositionProp right left)
 
+fixed :: PositionProp
+fixed = unsafeCoerce "fixed"
 
-type AppBarClassKeyOptions = AppBarClassKeyOptionsR String
-type AppBarClassKeyOptionsJSS = AppBarClassKeyOptionsR JSS
-type AppBarClassKeyOptionsR a =
-  ( positionFixed :: a
-  , positionAbsolute :: a
-  , positionSticky :: a
-  , positionStatic :: a
-  , positionRelative :: a
-  , colorDefault :: a
-  , colorPrimary :: a
-  , colorSecondary :: a
+absolute :: PositionProp
+absolute = unsafeCoerce "absolute"
+
+sticky :: PositionProp
+sticky = unsafeCoerce "sticky"
+
+static :: PositionProp
+static = unsafeCoerce "static"
+
+relative :: PositionProp
+relative = unsafeCoerce "relative"
+
+type AppBarClassKeyGenericOptions a =
+  ( root :: a 
+  , positionFixed :: a 
+  , positionAbsolute :: a 
+  , positionSticky :: a 
+  , positionStatic :: a 
+  , positionRelative :: a 
+  , colorDefault :: a 
+  , colorPrimary :: a 
+  , colorSecondary :: a 
   )
-
+type AppBarClassKeyOptions = AppBarClassKeyGenericOptions String
+type AppBarClassKeyJSSOptions = AppBarClassKeyGenericOptions JSS
 foreign import data AppBarClassKey :: Type
 foreign import data AppBarClassKeyJSS :: Type
 
-appBarClassKey :: ∀ options options_
-  . Union options options_ AppBarClassKeyOptions
-  => Record options
+appBarClassKey :: ∀  given required
+  .  Union given required (AppBarClassKeyOptions )
+  => Record given
   -> AppBarClassKey
 appBarClassKey = unsafeCoerce
 
-appBarClassKeyJSS :: ∀ options options_
-  . Union options options_ AppBarClassKeyOptionsJSS
-  => Record options
+appBarClassKeyJSS :: ∀  given required
+  .  Union given required (AppBarClassKeyJSSOptions )
+  => Record given
   -> AppBarClassKeyJSS
 appBarClassKeyJSS = unsafeCoerce
 
-appBarPropsPartial_component :: ∀ componentProps props props_
-  . Union props props_ (AppBarProps componentProps)
-  => Record props 
-  -> AppBarPropsPartial
-appBarPropsPartial_component = unsafeCoerce
-
-appBarPropsPartial :: ∀ props props_
-  . Union props props_ (AppBarProps Props_div)
-  => Record props 
-  -> AppBarPropsPartial
-appBarPropsPartial = unsafeCoerce
-
-appBar_component :: ∀ componentProps props props_
-  . Union props props_ (AppBarProps componentProps)
-  => Record props 
-  -> JSX
-appBar_component = element _AppBar
-
-appBar :: ∀ props props_
-  . Union props props_ (AppBarProps Props_div)
-  => Record props 
+appBar :: ∀  given required
+  .  Union given required (AppBarPropsOptions (PaperProps Props_div) )
+  => Record given
   -> JSX
 appBar = element _AppBar
 
-
+appBar_component :: ∀ componentProps given required
+  .  Union given required (AppBarPropsOptions componentProps)
+  => Record given
+  -> JSX
+appBar_component = element _AppBar
 
 foreign import _AppBar :: ∀ a. ReactComponent a

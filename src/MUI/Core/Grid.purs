@@ -2,6 +2,12 @@ module MUI.Core.Grid where
 
 import MUI.Core (JSS)
 import MUI.Core.Grid.AlignContent (AlignContentProp)
+import MUI.Core.Grid.AlignItems (AlignItemsProp)
+import MUI.Core.Grid.Direction (DirectionProp)
+import MUI.Core.Grid.GridCount (GridCountProp)
+import MUI.Core.Grid.Justify (JustifyProp)
+import MUI.Core.Grid.Spacing (SpacingProp)
+import MUI.Core.Grid.Wrap (WrapProp)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -9,6 +15,21 @@ import Unsafe.Coerce (unsafeCoerce)
 
 type GridPropsOptions componentProps = 
   ( alignContent :: AlignContentProp
+  , alignItems :: AlignItemsProp
+  , children :: (Array JSX)
+  , classes :: GridClassKey
+  , component :: ReactComponent { | componentProps }
+  , container :: Boolean
+  , direction :: DirectionProp
+  , item :: Boolean
+  , justify :: JustifyProp
+  , lg :: GridCountProp
+  , md :: GridCountProp
+  , sm :: GridCountProp
+  , spacing :: SpacingProp
+  , wrap :: WrapProp
+  , xl :: GridCountProp
+  , xs :: GridCountProp
   , zeroMinWidth :: Boolean
   | componentProps
   )

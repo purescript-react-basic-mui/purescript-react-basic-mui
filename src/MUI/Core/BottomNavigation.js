@@ -1,1 +1,1 @@
-exports._BottomNavigation = require("@material-ui/core/BottomNavigation");
+exports._BottomNavigation = require("@material-ui/core/BottomNavigation").default;

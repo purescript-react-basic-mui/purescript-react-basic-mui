@@ -1,14 +1,26 @@
 module MUI.Core.Grid.AlignItems where
 
+import Prelude
+
 import Unsafe.Coerce (unsafeCoerce)
 
 foreign import data AlignItemsProp :: Type
+foreign import _eqAlignItemsProp :: AlignItemsProp -> AlignItemsProp -> Boolean
+foreign import _ordAlignItemsProp :: AlignItemsProp -> AlignItemsProp -> Int
+instance eqAlignItemsProp :: Eq AlignItemsProp where eq left right = _eqAlignItemsProp left right
+instance ordAlignItemsProp :: Ord AlignItemsProp where compare left right = compare (_ordAlignItemsProp left right) (_ordAlignItemsProp right left)
 
-data AlignItems = FlexStart | Center | FlexEnd | Stretch | Baseline
+flexStart :: AlignItemsProp
+flexStart = unsafeCoerce "flex-start"
 
-alignItems :: AlignItems -> AlignItemsProp
-alignItems FlexStart = unsafeCoerce "flex-start"
-alignItems Center = unsafeCoerce "center"
-alignItems FlexEnd = unsafeCoerce "flex-end"
-alignItems Stretch = unsafeCoerce "stretch"
-alignItems Baseline = unsafeCoerce "baseline"
+center :: AlignItemsProp
+center = unsafeCoerce "center"
+
+flexEnd :: AlignItemsProp
+flexEnd = unsafeCoerce "flex-end"
+
+stretch :: AlignItemsProp
+stretch = unsafeCoerce "stretch"
+
+baseline :: AlignItemsProp
+baseline = unsafeCoerce "baseline"

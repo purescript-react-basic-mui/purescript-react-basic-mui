@@ -10,8 +10,8 @@ import React.Basic.DOM (Props_div)
 import React.Basic.Events (SyntheticEvent)
 import Unsafe.Coerce (unsafeCoerce)
 
-type BottomNavigationProps value componentProps =
-  ( children :: Array JSX
+type BottomNavigationPropsOptions componentProps value = 
+  ( children :: (Array JSX)
   , classes :: BottomNavigationClassKey
   , component :: ReactComponent { | componentProps }
   , onChange :: EffectFn2 SyntheticEvent value Unit
@@ -20,49 +20,40 @@ type BottomNavigationProps value componentProps =
   | componentProps
   )
 
-foreign import data BottomNavigationPropsPartial :: Type
+foreign import data BottomNavigationProps :: Type
 
+
+
+type BottomNavigationClassKeyGenericOptions a =
+  ( root :: a 
+  )
+type BottomNavigationClassKeyOptions = BottomNavigationClassKeyGenericOptions String
+type BottomNavigationClassKeyJSSOptions = BottomNavigationClassKeyGenericOptions JSS
 foreign import data BottomNavigationClassKey :: Type
 foreign import data BottomNavigationClassKeyJSS :: Type
-type BottomNavigationClassKeyOptions = BottomNavigationClassKeyOptionsR String
-type BottomNavigationClassKeyOptionsJSS = BottomNavigationClassKeyOptionsR JSS 
-type BottomNavigationClassKeyOptionsR a = ( root :: a )
 
-bottomNavigationClassKey :: ∀ options options_
-  . Union options options_ BottomNavigationClassKeyOptions
-  => Record options
+bottomNavigationClassKey :: ∀  given required
+  .  Union given required (BottomNavigationClassKeyOptions )
+  => Record given
   -> BottomNavigationClassKey
 bottomNavigationClassKey = unsafeCoerce
 
-bottomNavigationClassKeyJSS :: ∀ options options_
-  . Union options options_ BottomNavigationClassKeyOptionsJSS
-  => Record options
+bottomNavigationClassKeyJSS :: ∀  given required
+  .  Union given required (BottomNavigationClassKeyJSSOptions )
+  => Record given
   -> BottomNavigationClassKeyJSS
 bottomNavigationClassKeyJSS = unsafeCoerce
 
-bottomNavigationPropsPartial_component :: ∀ value componentProps props props_
-  . Union props props_ (BottomNavigationProps value componentProps)
-  => Record props 
-  -> BottomNavigationPropsPartial
-bottomNavigationPropsPartial_component = unsafeCoerce
-
-bottomNavigationPropsPartial :: ∀ value props props_
-  . Union props props_ (BottomNavigationProps value Props_div)
-  => Record props 
-  -> BottomNavigationPropsPartial
-bottomNavigationPropsPartial = unsafeCoerce
-
-bottomNavigation_component :: ∀ value componentProps props props_
-  . Union props props_ (BottomNavigationProps value componentProps)
-  => Record props 
-  -> JSX
-bottomNavigation_component = element _BottomNavigation
-
-bottomNavigation :: ∀ value props props_
-  . Union props props_ (BottomNavigationProps value Props_div)
-  => Record props 
+bottomNavigation :: ∀ value given required
+  .  Union given required (BottomNavigationPropsOptions Props_div value)
+  => Record given
   -> JSX
 bottomNavigation = element _BottomNavigation
 
+bottomNavigation_component :: ∀ componentProps value given required
+  .  Union given required (BottomNavigationPropsOptions componentProps value)
+  => Record given
+  -> JSX
+bottomNavigation_component = element _BottomNavigation
 
 foreign import _BottomNavigation :: ∀ a. ReactComponent a

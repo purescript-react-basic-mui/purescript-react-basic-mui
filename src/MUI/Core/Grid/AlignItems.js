@@ -1,0 +1,2 @@
+exports._eqAlignItemsProp = function(left){ return function(right){ return left === right }};
+exports._ordAlignItemsProp = function(left){ return function(right){ return (left === right) ? 0 : (left > right) ? 1 : -1 }};

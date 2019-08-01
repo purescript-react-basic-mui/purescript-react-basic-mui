@@ -1,70 +1,54 @@
 module MUI.Core.Backdrop where
 
-import Foreign (Foreign)
 import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
-import React.Basic.Events (EventHandler)
 import Unsafe.Coerce (unsafeCoerce)
 
-type BackdropProps componentProps =
-  ( invisible :: Boolean
-  , children :: Array JSX
-  , classes :: BackdropClassKey
-  , onClick :: EventHandler
+type BackdropPropsOptions componentProps = 
+  ( classes :: BackdropClassKey
+  , invisible :: Boolean
   , open :: Boolean
-  , transitionDuration :: { enter :: Number, exit :: Number }
-  , ref :: Foreign
-  , in :: Boolean
-  , timeout :: Number
-  , onEnter :: EventHandler
-  , onEntering :: EventHandler
-  , onEntered :: EventHandler
-  , onExit :: EventHandler
-  , onExiting :: EventHandler
-  , onExited :: EventHandler
-  , mountOnEnter :: Boolean
-  , unmountOnExit :: Boolean
-  , addEndListener :: EventHandler
+  , transitionDuration :: Number
   | componentProps
   )
 
+foreign import data BackdropProps :: Type
 
-foreign import data BackdropPropsPartial :: Type
-foreign import data BackdropClassKey :: Type
-foreign import data BackdropClassKeyJSS :: Type
 
-type BackdropClassKeyOptions = BackdropClassKeyOptionsR String
-type BackdropClassKeyOptionsJSS = BackdropClassKeyOptionsR JSS 
-type BackdropClassKeyOptionsR a = 
+
+type BackdropClassKeyGenericOptions a =
   ( root :: a 
   , invisible :: a 
   )
+type BackdropClassKeyOptions = BackdropClassKeyGenericOptions String
+type BackdropClassKeyJSSOptions = BackdropClassKeyGenericOptions JSS
+foreign import data BackdropClassKey :: Type
+foreign import data BackdropClassKeyJSS :: Type
 
-backdropClassKey :: ∀ options options_
-  .  Union options options_ BackdropClassKeyOptions
-  => Record options
+backdropClassKey :: ∀  given required
+  .  Union given required (BackdropClassKeyOptions )
+  => Record given
   -> BackdropClassKey
 backdropClassKey = unsafeCoerce
 
-backdropClassKeyJSS :: ∀ options options_
-  .  Union options options_ BackdropClassKeyOptionsJSS
-  => Record options
+backdropClassKeyJSS :: ∀  given required
+  .  Union given required (BackdropClassKeyJSSOptions )
+  => Record given
   -> BackdropClassKeyJSS
 backdropClassKeyJSS = unsafeCoerce
 
-backdropPropsPartial :: ∀ props props_
-  .  Union props props_ (BackdropProps Props_div)
-  => Record props 
-  -> BackdropPropsPartial
-backdropPropsPartial = unsafeCoerce
-
-backdrop :: ∀ props props_
-  .  Union props props_ (BackdropProps Props_div)
-  => Record props 
+backdrop :: ∀  given required
+  .  Union given required (BackdropPropsOptions Props_div )
+  => Record given
   -> JSX
 backdrop = element _Backdrop
 
-foreign import _Backdrop :: ∀ a. ReactComponent a
+backdrop_component :: ∀ componentProps given required
+  .  Union given required (BackdropPropsOptions componentProps)
+  => Record given
+  -> JSX
+backdrop_component = element _Backdrop
 
+foreign import _Backdrop :: ∀ a. ReactComponent a
