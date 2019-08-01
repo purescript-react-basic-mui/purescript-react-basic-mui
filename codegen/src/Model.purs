@@ -14,6 +14,7 @@ type Component =
   , classKey :: Array String
   , inherits :: PropType
   , variants :: Array Variant
+  , extraCode :: Maybe String
   }
 
 data Module

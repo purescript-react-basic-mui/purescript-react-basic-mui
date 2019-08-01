@@ -20,8 +20,6 @@ type AvatarPropsOptions componentProps =
 
 foreign import data AvatarProps :: Type
 
-
-
 type AvatarClassKeyGenericOptions a =
   ( root :: a 
   , colorDefault :: a 

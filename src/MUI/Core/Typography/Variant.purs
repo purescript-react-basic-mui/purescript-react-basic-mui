@@ -1,39 +1,56 @@
 module MUI.Core.Typography.Variant where
 
+import Prelude
+
 import Unsafe.Coerce (unsafeCoerce)
 
 foreign import data VariantProp :: Type
+foreign import _eqVariantProp :: VariantProp -> VariantProp -> Boolean
+foreign import _ordVariantProp :: VariantProp -> VariantProp -> Int
+instance eqVariantProp :: Eq VariantProp where eq _left _right = _eqVariantProp _left _right
+instance ordVariantProp :: Ord VariantProp where compare _left _right = compare (_ordVariantProp _left _right) (_ordVariantProp _right _left)
 
-data Variant
-  = H1
-  | H2
-  | H3
-  | H4
-  | H5
-  | H6
-  | Subtitle1
-  | Subtitle2
-  | Body1
-  | Body2
-  | Caption
-  | Button
-  | Overline
-  | SrOnly
-  | Inherit
+h1 :: VariantProp
+h1 = unsafeCoerce "h1"
 
-variant :: Variant -> VariantProp
-variant H1 = unsafeCoerce "h1"
-variant H2 = unsafeCoerce "h2"
-variant H3 = unsafeCoerce "h3"
-variant H4 = unsafeCoerce "h4"
-variant H5 = unsafeCoerce "h5"
-variant H6 = unsafeCoerce "h6"
-variant Subtitle1 = unsafeCoerce "subtitle1"
-variant Subtitle2 = unsafeCoerce "subtitle2"
-variant Body1 = unsafeCoerce "body1"
-variant Body2 = unsafeCoerce "body2"
-variant Caption = unsafeCoerce "caption"
-variant Button = unsafeCoerce "button"
-variant Overline = unsafeCoerce "overline"
-variant SrOnly = unsafeCoerce "srOnly"
-variant Inherit = unsafeCoerce "inherit"
+h2 :: VariantProp
+h2 = unsafeCoerce "h2"
+
+h3 :: VariantProp
+h3 = unsafeCoerce "h3"
+
+h4 :: VariantProp
+h4 = unsafeCoerce "h4"
+
+h5 :: VariantProp
+h5 = unsafeCoerce "h5"
+
+h6 :: VariantProp
+h6 = unsafeCoerce "h6"
+
+subtitle1 :: VariantProp
+subtitle1 = unsafeCoerce "subtitle1"
+
+subtitle2 :: VariantProp
+subtitle2 = unsafeCoerce "subtitle2"
+
+body1 :: VariantProp
+body1 = unsafeCoerce "body1"
+
+body2 :: VariantProp
+body2 = unsafeCoerce "body2"
+
+caption :: VariantProp
+caption = unsafeCoerce "caption"
+
+button :: VariantProp
+button = unsafeCoerce "button"
+
+overline :: VariantProp
+overline = unsafeCoerce "overline"
+
+srOnly :: VariantProp
+srOnly = unsafeCoerce "srOnly"
+
+inherit :: VariantProp
+inherit = unsafeCoerce "inherit"

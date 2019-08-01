@@ -22,8 +22,6 @@ type BottomNavigationPropsOptions componentProps value =
 
 foreign import data BottomNavigationProps :: Type
 
-
-
 type BottomNavigationClassKeyGenericOptions a =
   ( root :: a 
   )

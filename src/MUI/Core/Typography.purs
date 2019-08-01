@@ -10,9 +10,9 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_h1)
 import Unsafe.Coerce (unsafeCoerce)
 
-type TypographyProps componentProps =
+type TypographyPropsOptions componentProps = 
   ( align :: AlignProp
-  , children :: Array JSX
+  , children :: (Array JSX)
   , classes :: TypographyClassKey
   , color :: ColorProp
   , component :: ReactComponent { | componentProps }
@@ -25,44 +25,7 @@ type TypographyProps componentProps =
   | componentProps
   )
 
-
-
-foreign import data TypographyClassKey :: Type
-foreign import data TypographyClassKeyJSS :: Type
-foreign import data TypographyPropsPartial :: Type
-
-type TypographyClassKeyOptionsJSS = TypographyClassKeyOptionsR JSS
-type TypographyClassKeyOptions = TypographyClassKeyOptionsR String
-type TypographyClassKeyOptionsR a =
-  ( root :: a
-  , h1 :: a
-  , h2 :: a
-  , h3 :: a
-  , h4 :: a
-  , h5 :: a
-  , h6 :: a
-  , subtitle1 :: a
-  , subtitle2 :: a
-  , body1 :: a
-  , body2 :: a
-  , caption :: a
-  , button :: a
-  , overline :: a
-  , srOnly :: a
-  , alignLeft :: a
-  , alignCenter :: a
-  , alignRight :: a
-  , alignJustify :: a
-  , noWrap :: a
-  , gutterBottom :: a
-  , paragraph :: a
-  , colorInherit :: a
-  , colorSecondary :: a
-  , colorTextSecondary :: a
-  , colorError :: a
-  , displayInline :: a
-  , displayBlock' :: a
-  )
+foreign import data TypographyProps :: Type
 
 type VariantMapping =
   { h1 :: String
@@ -77,54 +40,66 @@ type VariantMapping =
   , body2 :: String
   }
 
-variantMapping :: VariantMapping
-variantMapping = 
-  { h1: "h1"
-  , h2: "h2"
-  , h3: "h3"
-  , h4: "h4"
-  , h5: "h5"
-  , h6: "h6"
-  , subtitle1: "h6"
-  , subtitle2: "h6"
-  , body1: "p"
-  , body2: "p"
-  }
 
-typographyClassKey :: ∀ options options_
-  . Union options options_ TypographyClassKeyOptions
-  => Record options
+type TypographyClassKeyGenericOptions a =
+  ( root :: a 
+  , body2 :: a 
+  , body1 :: a 
+  , caption :: a 
+  , button :: a 
+  , h1 :: a 
+  , h2 :: a 
+  , h3 :: a 
+  , h4 :: a 
+  , h5 :: a 
+  , h6 :: a 
+  , subtitle1 :: a 
+  , subtitle2 :: a 
+  , overline :: a 
+  , srOnly :: a 
+  , alignLeft :: a 
+  , alignCenter :: a 
+  , alignRight :: a 
+  , alignJustify :: a 
+  , noWrap :: a 
+  , gutterBottom :: a 
+  , paragraph :: a 
+  , colorInherit :: a 
+  , colorPrimary :: a 
+  , colorSecondary :: a 
+  , colorTextPrimary :: a 
+  , colorTextSecondary :: a 
+  , colorError :: a 
+  , displayInline :: a 
+  , displayBlock :: a 
+  )
+type TypographyClassKeyOptions = TypographyClassKeyGenericOptions String
+type TypographyClassKeyJSSOptions = TypographyClassKeyGenericOptions JSS
+foreign import data TypographyClassKey :: Type
+foreign import data TypographyClassKeyJSS :: Type
+
+typographyClassKey :: ∀  given required
+  .  Union given required (TypographyClassKeyOptions )
+  => Record given
   -> TypographyClassKey
 typographyClassKey = unsafeCoerce
 
-typographyClassKeyJSS :: ∀ options options_
-  . Union options options_ TypographyClassKeyOptionsJSS
-  => Record options
+typographyClassKeyJSS :: ∀  given required
+  .  Union given required (TypographyClassKeyJSSOptions )
+  => Record given
   -> TypographyClassKeyJSS
 typographyClassKeyJSS = unsafeCoerce
 
-typographyPropsPartial_component :: ∀ componentProps props props_
-  . Union props props_ (TypographyProps componentProps)
-  => Record props 
-  -> TypographyPropsPartial 
-typographyPropsPartial_component = unsafeCoerce
-
-typographyPropsPartial :: ∀ props props_
-  . Union props props_ (TypographyProps (Props_h1))
-  => Record props 
-  -> TypographyPropsPartial 
-typographyPropsPartial = unsafeCoerce
-
-typography_component :: ∀ componentProps props props_
-  . Union props props_ (TypographyProps componentProps)
-  => Record props 
-  -> JSX
-typography_component = element _Typography
-
-typography :: ∀ props props_
-  . Union props props_ (TypographyProps (Props_h1))
-  => Record props 
+typography :: ∀  given required
+  .  Union given required (TypographyPropsOptions Props_h1 )
+  => Record given
   -> JSX
 typography = element _Typography
+
+typography_component :: ∀ componentProps given required
+  .  Union given required (TypographyPropsOptions componentProps)
+  => Record given
+  -> JSX
+typography_component = element _Typography
 
 foreign import _Typography :: ∀ a. ReactComponent a

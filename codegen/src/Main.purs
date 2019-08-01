@@ -11,6 +11,7 @@ import Codegen.Core.BottomNavigation as BottomNavigation
 import Codegen.Core.ExpansionPanel as ExpansionPanel
 import Codegen.Core.Grid as Grid
 import Codegen.Core.InputBase as InputBase
+import Codegen.Core.Typography as Typography
 import Codegen.Model (Component)
 import Data.Foldable (traverse_)
 import Effect (Effect)
@@ -26,6 +27,7 @@ components =
   , ExpansionPanel.component
   , InputBase.component
   , Grid.component
+  , Typography.component
   ]
 
 main :: Effect Unit

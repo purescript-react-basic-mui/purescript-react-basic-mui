@@ -41,7 +41,7 @@ import MUI.Core.TableRow (TableRowPropsPartial)
 import MUI.Core.TableSortLabel (TableSortLabelPropsPartial)
 import MUI.Core.Tabs (TabsPropsPartial)
 import MUI.Core.TextField (TextFieldPropsPartial)
-import MUI.Core.Typography (TypographyPropsPartial)
+import MUI.Core.Typography (TypographyProps)
 import Prim.Row (class Union)
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -143,7 +143,7 @@ type ComponentsProps =
   --, "MuiToolbar" :: ToolbarPropsPartial
   -- , "MuiTooltip" :: TooltipPropsPartial
   -- , "MuiTouchRipple" :: TouchRipplePropsPartial
-  , "MuiTypography" :: TypographyPropsPartial
+  , "MuiTypography" :: TypographyProps
   --, "MuiWithWidth" :: WithWidthOptions
   )
 

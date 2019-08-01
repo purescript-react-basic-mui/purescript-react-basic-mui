@@ -13,6 +13,9 @@ name = "Grid"
 moduleName :: Module
 moduleName = Path "MUI" (Path "Core" (Name name))
 
+extraCode :: Maybe String
+extraCode = Nothing
+
 variants :: Array Variant
 variants = 
   [ (ModuleVariant 
@@ -190,4 +193,5 @@ component =
   , classKey
   , inherits
   , variants
+  , extraCode
   }

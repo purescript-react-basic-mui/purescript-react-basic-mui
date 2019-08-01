@@ -45,8 +45,8 @@ foreign import data InputBaseProps :: Type
 foreign import data MarginProp :: Type
 foreign import _eqMarginProp :: MarginProp -> MarginProp -> Boolean
 foreign import _ordMarginProp :: MarginProp -> MarginProp -> Int
-instance eqMarginProp :: Eq MarginProp where eq left right = _eqMarginProp left right
-instance ordMarginProp :: Ord MarginProp where compare left right = compare (_ordMarginProp left right) (_ordMarginProp right left)
+instance eqMarginProp :: Eq MarginProp where eq _left _right = _eqMarginProp _left _right
+instance ordMarginProp :: Ord MarginProp where compare _left _right = compare (_ordMarginProp _left _right) (_ordMarginProp _right _left)
 
 dense :: MarginProp
 dense = unsafeCoerce "dense"

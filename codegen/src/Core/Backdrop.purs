@@ -16,6 +16,9 @@ moduleName = Path "MUI" (Path "Core" (Name name))
 variants :: Array Variant
 variants = []
 
+extraCode :: Maybe String
+extraCode = Nothing
+
 props :: Object PropType
 props = Object.empty #
   (Object.insert "classes" (Local $ classKeyName name)) #
@@ -45,4 +48,5 @@ component =
   , classKey
   , inherits
   , variants
+  , extraCode
   }

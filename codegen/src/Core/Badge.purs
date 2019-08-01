@@ -38,6 +38,9 @@ componentTypeVariable = Just "componentProps"
 additionalTypeVariables :: Array String
 additionalTypeVariables = []
 
+extraCode :: Maybe String
+extraCode = Nothing
+
 props :: Object PropType
 props = Object.empty #
   (Object.insert "badgeContent" jsx) #
@@ -71,5 +74,6 @@ component =
   , classKey
   , inherits
   , variants
+  , extraCode
   }
 

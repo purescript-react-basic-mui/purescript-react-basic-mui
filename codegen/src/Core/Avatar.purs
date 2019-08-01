@@ -16,6 +16,9 @@ moduleName = Path "MUI" (Path "Core" (Name name))
 variants :: Array Variant
 variants = []
 
+extraCode :: Maybe String
+extraCode = Nothing
+
 props :: Object PropType
 props = Object.empty #
   (Object.insert "alt" StringProp) #
@@ -53,5 +56,6 @@ component =
   , classKey
   , inherits
   , variants
+  , extraCode
   }
 

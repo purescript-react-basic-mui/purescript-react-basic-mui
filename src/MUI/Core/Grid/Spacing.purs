@@ -7,8 +7,8 @@ import Unsafe.Coerce (unsafeCoerce)
 foreign import data SpacingProp :: Type
 foreign import _eqSpacingProp :: SpacingProp -> SpacingProp -> Boolean
 foreign import _ordSpacingProp :: SpacingProp -> SpacingProp -> Int
-instance eqSpacingProp :: Eq SpacingProp where eq left right = _eqSpacingProp left right
-instance ordSpacingProp :: Ord SpacingProp where compare left right = compare (_ordSpacingProp left right) (_ordSpacingProp right left)
+instance eqSpacingProp :: Eq SpacingProp where eq _left _right = _eqSpacingProp _left _right
+instance ordSpacingProp :: Ord SpacingProp where compare _left _right = compare (_ordSpacingProp _left _right) (_ordSpacingProp _right _left)
 
 one :: SpacingProp
 one = unsafeCoerce 1.0

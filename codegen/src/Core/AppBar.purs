@@ -48,6 +48,9 @@ componentTypeVariable = Just "componentProps"
 additionalTypeVariables :: Array String
 additionalTypeVariables = []
 
+extraCode :: Maybe String
+extraCode = Nothing
+
 classKey :: Array String
 classKey = 
   [ "root"
@@ -71,5 +74,6 @@ component =
   , classKey
   , inherits
   , variants
+  , extraCode
   }
 

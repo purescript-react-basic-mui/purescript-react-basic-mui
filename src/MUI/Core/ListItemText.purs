@@ -1,7 +1,7 @@
 module MUI.Core.ListItemText where
 
 import MUI.Core (JSS)
-import MUI.Core.Typography (TypographyPropsPartial)
+import MUI.Core.Typography (TypographyProps)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
@@ -13,9 +13,9 @@ type ListItemTextProps componentProps =
   , disableTypography :: Boolean
   , inset :: Boolean
   , primary :: JSX
-  , primaryTypographyProps :: TypographyPropsPartial
+  , primaryTypographyProps :: TypographyProps
   , secondary :: JSX
-  , secondaryTypographyProps :: TypographyPropsPartial
+  , secondaryTypographyProps :: TypographyProps
   | componentProps
   )
 

@@ -22,8 +22,6 @@ type ExpansionPanelPropsOptions componentProps =
 
 foreign import data ExpansionPanelProps :: Type
 
-
-
 type ExpansionPanelClassKeyGenericOptions a =
   ( root :: a 
   , rounded :: a 

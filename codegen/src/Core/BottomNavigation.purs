@@ -17,6 +17,9 @@ moduleName = Path "MUI" (Path "Core" (Name name))
 variants :: Array Variant
 variants = []
 
+extraCode :: Maybe String
+extraCode = Nothing
+
 classKey :: Array String
 classKey = [ "root" ]
 
@@ -48,6 +51,7 @@ component =
   , classKey
   , inherits
   , variants
+  , extraCode
   }
 
 

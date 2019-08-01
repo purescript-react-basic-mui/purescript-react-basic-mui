@@ -26,8 +26,8 @@ foreign import data BadgeProps :: Type
 foreign import data ColorProp :: Type
 foreign import _eqColorProp :: ColorProp -> ColorProp -> Boolean
 foreign import _ordColorProp :: ColorProp -> ColorProp -> Int
-instance eqColorProp :: Eq ColorProp where eq left right = _eqColorProp left right
-instance ordColorProp :: Ord ColorProp where compare left right = compare (_ordColorProp left right) (_ordColorProp right left)
+instance eqColorProp :: Eq ColorProp where eq _left _right = _eqColorProp _left _right
+instance ordColorProp :: Ord ColorProp where compare _left _right = compare (_ordColorProp _left _right) (_ordColorProp _right _left)
 
 default :: ColorProp
 default = unsafeCoerce "default"
@@ -43,8 +43,8 @@ error = unsafeCoerce "error"
 foreign import data VariantProp :: Type
 foreign import _eqVariantProp :: VariantProp -> VariantProp -> Boolean
 foreign import _ordVariantProp :: VariantProp -> VariantProp -> Int
-instance eqVariantProp :: Eq VariantProp where eq left right = _eqVariantProp left right
-instance ordVariantProp :: Ord VariantProp where compare left right = compare (_ordVariantProp left right) (_ordVariantProp right left)
+instance eqVariantProp :: Eq VariantProp where eq _left _right = _eqVariantProp _left _right
+instance ordVariantProp :: Ord VariantProp where compare _left _right = compare (_ordVariantProp _left _right) (_ordVariantProp _right _left)
 
 standard :: VariantProp
 standard = unsafeCoerce "standard"

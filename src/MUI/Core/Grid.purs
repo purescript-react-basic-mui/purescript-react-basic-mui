@@ -36,8 +36,6 @@ type GridPropsOptions componentProps =
 
 foreign import data GridProps :: Type
 
-
-
 type GridClassKeyGenericOptions a =
   ( root :: a 
   , container :: a 

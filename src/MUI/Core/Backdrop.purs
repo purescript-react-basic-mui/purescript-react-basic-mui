@@ -16,8 +16,6 @@ type BackdropPropsOptions componentProps =
 
 foreign import data BackdropProps :: Type
 
-
-
 type BackdropClassKeyGenericOptions a =
   ( root :: a 
   , invisible :: a 

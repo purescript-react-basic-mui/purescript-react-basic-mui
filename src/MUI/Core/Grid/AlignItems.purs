@@ -7,8 +7,8 @@ import Unsafe.Coerce (unsafeCoerce)
 foreign import data AlignItemsProp :: Type
 foreign import _eqAlignItemsProp :: AlignItemsProp -> AlignItemsProp -> Boolean
 foreign import _ordAlignItemsProp :: AlignItemsProp -> AlignItemsProp -> Int
-instance eqAlignItemsProp :: Eq AlignItemsProp where eq left right = _eqAlignItemsProp left right
-instance ordAlignItemsProp :: Ord AlignItemsProp where compare left right = compare (_ordAlignItemsProp left right) (_ordAlignItemsProp right left)
+instance eqAlignItemsProp :: Eq AlignItemsProp where eq _left _right = _eqAlignItemsProp _left _right
+instance ordAlignItemsProp :: Ord AlignItemsProp where compare _left _right = compare (_ordAlignItemsProp _left _right) (_ordAlignItemsProp _right _left)
 
 flexStart :: AlignItemsProp
 flexStart = unsafeCoerce "flex-start"

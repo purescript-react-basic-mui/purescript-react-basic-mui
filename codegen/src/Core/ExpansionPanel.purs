@@ -26,6 +26,9 @@ componentTypeVariable = Just "componentProps"
 additionalTypeVariables :: Array String
 additionalTypeVariables = []
 
+extraCode :: Maybe String
+extraCode = Nothing
+
 inherits :: PropType
 inherits = ParensList (ImportProp "MUI.Core.Paper" "PaperProps") divProps
 
@@ -48,4 +51,5 @@ component =
   , classKey
   , inherits
   , variants
+  , extraCode
   }

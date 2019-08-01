@@ -7,8 +7,8 @@ import Unsafe.Coerce (unsafeCoerce)
 foreign import data AlignContentProp :: Type
 foreign import _eqAlignContentProp :: AlignContentProp -> AlignContentProp -> Boolean
 foreign import _ordAlignContentProp :: AlignContentProp -> AlignContentProp -> Int
-instance eqAlignContentProp :: Eq AlignContentProp where eq left right = _eqAlignContentProp left right
-instance ordAlignContentProp :: Ord AlignContentProp where compare left right = compare (_ordAlignContentProp left right) (_ordAlignContentProp right left)
+instance eqAlignContentProp :: Eq AlignContentProp where eq _left _right = _eqAlignContentProp _left _right
+instance ordAlignContentProp :: Ord AlignContentProp where compare _left _right = compare (_ordAlignContentProp _left _right) (_ordAlignContentProp _right _left)
 
 stretch :: AlignContentProp
 stretch = unsafeCoerce "stretch"

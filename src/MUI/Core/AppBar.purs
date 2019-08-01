@@ -22,8 +22,8 @@ foreign import data AppBarProps :: Type
 foreign import data ColorProp :: Type
 foreign import _eqColorProp :: ColorProp -> ColorProp -> Boolean
 foreign import _ordColorProp :: ColorProp -> ColorProp -> Int
-instance eqColorProp :: Eq ColorProp where eq left right = _eqColorProp left right
-instance ordColorProp :: Ord ColorProp where compare left right = compare (_ordColorProp left right) (_ordColorProp right left)
+instance eqColorProp :: Eq ColorProp where eq _left _right = _eqColorProp _left _right
+instance ordColorProp :: Ord ColorProp where compare _left _right = compare (_ordColorProp _left _right) (_ordColorProp _right _left)
 
 inherit :: ColorProp
 inherit = unsafeCoerce "inherit"
@@ -39,8 +39,8 @@ default = unsafeCoerce "default"
 foreign import data PositionProp :: Type
 foreign import _eqPositionProp :: PositionProp -> PositionProp -> Boolean
 foreign import _ordPositionProp :: PositionProp -> PositionProp -> Int
-instance eqPositionProp :: Eq PositionProp where eq left right = _eqPositionProp left right
-instance ordPositionProp :: Ord PositionProp where compare left right = compare (_ordPositionProp left right) (_ordPositionProp right left)
+instance eqPositionProp :: Eq PositionProp where eq _left _right = _eqPositionProp _left _right
+instance ordPositionProp :: Ord PositionProp where compare _left _right = compare (_ordPositionProp _left _right) (_ordPositionProp _right _left)
 
 fixed :: PositionProp
 fixed = unsafeCoerce "fixed"

@@ -7,8 +7,8 @@ import Unsafe.Coerce (unsafeCoerce)
 foreign import data DirectionProp :: Type
 foreign import _eqDirectionProp :: DirectionProp -> DirectionProp -> Boolean
 foreign import _ordDirectionProp :: DirectionProp -> DirectionProp -> Int
-instance eqDirectionProp :: Eq DirectionProp where eq left right = _eqDirectionProp left right
-instance ordDirectionProp :: Ord DirectionProp where compare left right = compare (_ordDirectionProp left right) (_ordDirectionProp right left)
+instance eqDirectionProp :: Eq DirectionProp where eq _left _right = _eqDirectionProp _left _right
+instance ordDirectionProp :: Ord DirectionProp where compare _left _right = compare (_ordDirectionProp _left _right) (_ordDirectionProp _right _left)
 
 row :: DirectionProp
 row = unsafeCoerce "row"

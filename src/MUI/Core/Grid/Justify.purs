@@ -7,8 +7,8 @@ import Unsafe.Coerce (unsafeCoerce)
 foreign import data JustifyProp :: Type
 foreign import _eqJustifyProp :: JustifyProp -> JustifyProp -> Boolean
 foreign import _ordJustifyProp :: JustifyProp -> JustifyProp -> Int
-instance eqJustifyProp :: Eq JustifyProp where eq left right = _eqJustifyProp left right
-instance ordJustifyProp :: Ord JustifyProp where compare left right = compare (_ordJustifyProp left right) (_ordJustifyProp right left)
+instance eqJustifyProp :: Eq JustifyProp where eq _left _right = _eqJustifyProp _left _right
+instance ordJustifyProp :: Ord JustifyProp where compare _left _right = compare (_ordJustifyProp _left _right) (_ordJustifyProp _right _left)
 
 flexStart :: JustifyProp
 flexStart = unsafeCoerce "flex-start"

@@ -3,7 +3,7 @@ module Codegen.Core.InputBase where
 import Prelude
 
 import Codegen.Model (Component, Module(..), PropType(..), Variant(..), VariantProp(..), classKeyName, divProps, eventHandler, jsx, reactDom, standardComponentTypeVariable)
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe(..))
 import Foreign.Object (Object)
 import Foreign.Object as Object
 
@@ -17,6 +17,7 @@ component =
   , classKey
   , inherits
   , variants
+  , extraCode
   }
 
 name :: String
@@ -27,6 +28,9 @@ moduleName = Path "MUI" (Path "Core" (Name name))
 
 componentTypeVariable :: Maybe String
 componentTypeVariable = standardComponentTypeVariable
+
+extraCode :: Maybe String
+extraCode = Nothing
 
 additionalTypeVariables :: Array String
 additionalTypeVariables = [ "value" ]

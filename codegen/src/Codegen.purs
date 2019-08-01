@@ -94,6 +94,7 @@ genPureScript component = do
   let moduleName = genModuleName component.moduleName
       imports = genImports component
       props = genProps component
+      extraCode = fromMaybe "" component.extraCode
       variants = genSimpleVariants $ simpleVariants component.variants
       classKey = genClassKey component
       classKeyFn = genClassKeyFn component
@@ -102,17 +103,19 @@ genPureScript component = do
       componentFn = genComponentFn component
       foreignData = genForeign component
       code = Array.intercalate "\n\n" 
-        [ moduleName
-        , imports
-        , props
-        , variants
-        , classKey
-        , classKeyFn
-        , classKeyJSSFn
-        , fn
-        , componentFn
-        , foreignData
-        ]
+              $ Array.filter (\str -> str /= "") 
+                  [ moduleName
+                  , imports
+                  , props
+                  , extraCode
+                  , variants
+                  , classKey
+                  , classKeyFn
+                  , classKeyJSSFn
+                  , fn
+                  , componentFn
+                  , foreignData
+                  ]
       file = pureScriptFile component.moduleName
   [ Codegen file code ] <> (Array.mapMaybe genVariantPureScript component.variants)
 
@@ -219,9 +222,9 @@ genSimpleVariant (Tuple name values) = do
         typeDecl <> "\n" <> body
 
       genVariantEqTypeClass =
-        "instance eq" <> name <> " :: Eq " <> name <> " where" <> " eq left right = _eq" <> name <> " left right"
+        "instance eq" <> name <> " :: Eq " <> name <> " where" <> " eq _left _right = _eq" <> name <> " _left _right"
       genVariantOrdTypeClass =
-        "instance ord" <> name <> " :: Ord " <> name <> " where" <> " compare left right = compare (" <> "_ord" <> name <> " left right) (" <> "_ord" <> name <> " right left)"
+        "instance ord" <> name <> " :: Ord " <> name <> " where" <> " compare _left _right = compare (" <> "_ord" <> name <> " _left _right) (" <> "_ord" <> name <> " _right _left)"
       foreignData = Array.intercalate "\n"
         [ "foreign import data " <> name <> " :: Type"
         , "foreign import _eq" <> name <> " :: " <> name <> " -> " <> name <> " -> Boolean"

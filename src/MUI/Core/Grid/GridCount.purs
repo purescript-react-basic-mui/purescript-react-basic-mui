@@ -7,8 +7,8 @@ import Unsafe.Coerce (unsafeCoerce)
 foreign import data GridCountProp :: Type
 foreign import _eqGridCountProp :: GridCountProp -> GridCountProp -> Boolean
 foreign import _ordGridCountProp :: GridCountProp -> GridCountProp -> Int
-instance eqGridCountProp :: Eq GridCountProp where eq left right = _eqGridCountProp left right
-instance ordGridCountProp :: Ord GridCountProp where compare left right = compare (_ordGridCountProp left right) (_ordGridCountProp right left)
+instance eqGridCountProp :: Eq GridCountProp where eq _left _right = _eqGridCountProp _left _right
+instance ordGridCountProp :: Ord GridCountProp where compare _left _right = compare (_ordGridCountProp _left _right) (_ordGridCountProp _right _left)
 
 boolean :: Boolean -> GridCountProp
 boolean value = unsafeCoerce value
