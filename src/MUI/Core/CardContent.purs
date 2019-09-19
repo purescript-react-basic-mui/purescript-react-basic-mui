@@ -1,64 +1,49 @@
 module MUI.Core.CardContent where
 
-
 import MUI.Core (JSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
-type CardContentProps componentProps =
-  ( children :: Array JSX
-  , classes :: CardContentClassKey 
+type CardContentPropsOptions componentProps = 
+  ( classes :: CardContentClassKey
   , component :: ReactComponent { | componentProps }
   | componentProps
   )
 
-foreign import data CardContentPropsPartial :: Type
+foreign import data CardContentProps :: Type
 
+type CardContentClassKeyGenericOptions a =
+  ( root :: a 
+  )
+type CardContentClassKeyOptions = CardContentClassKeyGenericOptions String
+type CardContentClassKeyJSSOptions = CardContentClassKeyGenericOptions JSS
 foreign import data CardContentClassKey :: Type
 foreign import data CardContentClassKeyJSS :: Type
 
-type CardContentClassKeyOptionsJSS = CardContentClassKeyOptionsR JSS
-type CardContentClassKeyOptions = CardContentClassKeyOptionsR String
-type CardContentClassKeyOptionsR a = ( root :: a )
-
-cardContentClassKey :: ∀ options options_
-  . Union options options_ CardContentClassKeyOptions
-  => Record options
+cardContentClassKey :: ∀  given required
+  .  Union given required (CardContentClassKeyOptions )
+  => Record given
   -> CardContentClassKey
 cardContentClassKey = unsafeCoerce
 
-cardContentClassKeyJSS :: ∀ options options_
-  . Union options options_ CardContentClassKeyOptionsJSS
-  => Record options
+cardContentClassKeyJSS :: ∀  given required
+  .  Union given required (CardContentClassKeyJSSOptions )
+  => Record given
   -> CardContentClassKeyJSS
 cardContentClassKeyJSS = unsafeCoerce
 
-cardContentPropsPartial_component :: ∀ componentProps props props_
-  . Union props props_ (CardContentProps componentProps)
-  => Record props 
-  -> CardContentPropsPartial 
-cardContentPropsPartial_component = unsafeCoerce
-
-cardContentPropsPartial :: ∀ props props_
-  . Union props props_ (CardContentProps Props_div)
-  => Record props 
-  -> CardContentPropsPartial 
-cardContentPropsPartial = unsafeCoerce
-
-cardContent_component :: ∀ componentProps props props_
-  . Union props props_ (CardContentProps componentProps)
-  => Record props 
-  -> JSX
-cardContent_component = element _CardContent
-
-cardContent :: ∀ props props_
-  . Union props props_ (CardContentProps Props_div)
-  => Record props 
+cardContent :: ∀  given required
+  .  Union given required (CardContentPropsOptions Props_div )
+  => Record given
   -> JSX
 cardContent = element _CardContent
 
-
+cardContent_component :: ∀ componentProps given required
+  .  Union given required (CardContentPropsOptions componentProps)
+  => Record given
+  -> JSX
+cardContent_component = element _CardContent
 
 foreign import _CardContent :: ∀ a. ReactComponent a

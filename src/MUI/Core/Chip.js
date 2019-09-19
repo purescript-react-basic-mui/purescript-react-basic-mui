@@ -1,0 +1,1 @@
+exports._Chip = require("@material-ui/core/Chip").default;

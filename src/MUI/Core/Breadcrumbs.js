@@ -1,1 +1,1 @@
-exports._Breadcrumbs = require("@material-ui/core/Breadcrumbs");
+exports._Breadcrumbs = require("@material-ui/core/Breadcrumbs").default;

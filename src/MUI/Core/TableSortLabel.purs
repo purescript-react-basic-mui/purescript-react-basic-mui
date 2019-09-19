@@ -2,7 +2,7 @@ module MUI.Core.TableSortLabel where
 
 import Foreign (Foreign)
 import MUI.Core (JSS)
-import MUI.Core.ButtonBase (ButtonBaseActions, TouchRippleProps)
+import MUI.Core.ButtonBase (ButtonBaseActions)
 import MUI.Core.ButtonBase as ButtonBase
 import MUI.Core.SvgIcon (SvgIconProps)
 import Prim.Row (class Union)
@@ -29,7 +29,7 @@ type TableSortLabelProps componentProps =
   , focusRipple :: Boolean
   , focusVisibleClassName :: String
   , onFocusVisible :: EventHandler
-  , "TouchRippleProps" :: TouchRippleProps
+  , "TouchRippleProps" :: Foreign
   , type :: ButtonBase.ButtonBaseTypeProp
   | componentProps
   )

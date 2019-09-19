@@ -2,28 +2,22 @@ module MUI.Core.ButtonBase where
 
 import Prelude
 
-import Effect (Effect)
 import Foreign (Foreign)
-import Foreign.Object (Object)
 import MUI.Core (JSS)
+import MUI.Core.ButtonBase.TouchRipple (TouchRippleProps)
 import Prim.Row (class Union)
+import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_button)
 import React.Basic.Events (EventHandler)
-import React.Basic.Hooks (JSX, ReactComponent, Ref, element)
 import Unsafe.Coerce (unsafeCoerce)
 
-type ButtonBaseActions =
-  { focusVisible :: Effect Unit
-  }
-
-type TouchRippleProps = Object Foreign
-
-type ButtonBaseProps componentProps =
-  ( action :: Ref ButtonBaseActions
-  , buttonRef :: Ref Foreign
+type ButtonBasePropsOptions componentProps = 
+  ( action :: Foreign
+  , buttonRef :: Foreign
   , centerRipple :: Boolean
+  , children :: (Array JSX)
   , classes :: ButtonBaseClassKey
-  , component :: ReactComponent { | componentProps } 
+  , component :: ReactComponent { | componentProps }
   , disabled :: Boolean
   , disableRipple :: Boolean
   , disableTouchRipple :: Boolean
@@ -31,67 +25,63 @@ type ButtonBaseProps componentProps =
   , focusVisibleClassName :: String
   , onFocusVisible :: EventHandler
   , "TouchRippleProps" :: TouchRippleProps
-  , type :: ButtonBaseTypeProp 
+  , type :: TypeProp
   | componentProps
   )
 
-foreign import data ButtonBaseTypeProp :: Type
-data ButtonBaseType = Submit | Reset | Button
+foreign import data ButtonBaseProps :: Type
 
-buttonBaseType :: ButtonBaseType -> ButtonBaseTypeProp
-buttonBaseType Submit = unsafeCoerce "submit"
-buttonBaseType Reset = unsafeCoerce "reset"
-buttonBaseType Button = unsafeCoerce "button"
+type ButtonBaseActions = Foreign
+type ButtonBaseTypeProp = Foreign
 
-type ButtonBaseClassKeyOptionsJSS = ButtonBaseClassKeyOptionsR JSS
-type ButtonBaseClassKeyOptions = ButtonBaseClassKeyOptionsR String
-type ButtonBaseClassKeyOptionsR a =
-  ( root :: a
-  , disabled :: a
-  , focusVisible :: a
+
+foreign import data TypeProp :: Type
+foreign import _eqTypeProp :: TypeProp -> TypeProp -> Boolean
+foreign import _ordTypeProp :: TypeProp -> TypeProp -> Int
+instance eqTypeProp :: Eq TypeProp where eq _left _right = _eqTypeProp _left _right
+instance ordTypeProp :: Ord TypeProp where compare _left _right = compare (_ordTypeProp _left _right) (_ordTypeProp _right _left)
+
+submit :: TypeProp
+submit = unsafeCoerce "submit"
+
+reset :: TypeProp
+reset = unsafeCoerce "reset"
+
+button :: TypeProp
+button = unsafeCoerce "button"
+
+type ButtonBaseClassKeyGenericOptions a =
+  ( root :: a 
+  , disabled :: a 
+  , focusVisible :: a 
   )
-
-foreign import data ButtonBasePropsPartial :: Type
-
+type ButtonBaseClassKeyOptions = ButtonBaseClassKeyGenericOptions String
+type ButtonBaseClassKeyJSSOptions = ButtonBaseClassKeyGenericOptions JSS
 foreign import data ButtonBaseClassKey :: Type
 foreign import data ButtonBaseClassKeyJSS :: Type
 
-buttonBaseClassKey :: ∀ options options_
-  . Union options options_ ButtonBaseClassKeyOptions
-  => Record options
+buttonBaseClassKey :: ∀  given required
+  .  Union given required (ButtonBaseClassKeyOptions )
+  => Record given
   -> ButtonBaseClassKey
 buttonBaseClassKey = unsafeCoerce
 
-buttonBaseClassKeyJSS :: ∀ options options_
-  . Union options options_ ButtonBaseClassKeyOptionsJSS
-  => Record options
+buttonBaseClassKeyJSS :: ∀  given required
+  .  Union given required (ButtonBaseClassKeyJSSOptions )
+  => Record given
   -> ButtonBaseClassKeyJSS
 buttonBaseClassKeyJSS = unsafeCoerce
 
-buttonBasePartial_component :: ∀ componentProps props props_
-  . Union props props_ (ButtonBaseProps componentProps)
-  => Record props 
-  -> ButtonBasePropsPartial
-buttonBasePartial_component = unsafeCoerce
-
-buttonBasePartial :: ∀ props props_
-  . Union props props_ (ButtonBaseProps Props_button)
-  => Record props 
-  -> ButtonBasePropsPartial
-buttonBasePartial = unsafeCoerce
-
-
-buttonBase_component :: ∀ componentProps props props_
-  . Union props props_ (ButtonBaseProps componentProps)
-  => Record props 
-  -> JSX
-buttonBase_component = element _ButtonBase
-
-buttonBase :: ∀ props props_
-  . Union props props_ (ButtonBaseProps Props_button)
-  => Record props 
+buttonBase :: ∀  given required
+  .  Union given required (ButtonBasePropsOptions Props_button )
+  => Record given
   -> JSX
 buttonBase = element _ButtonBase
 
+buttonBase_component :: ∀ componentProps given required
+  .  Union given required (ButtonBasePropsOptions componentProps)
+  => Record given
+  -> JSX
+buttonBase_component = element _ButtonBase
 
 foreign import _ButtonBase :: ∀ a. ReactComponent a

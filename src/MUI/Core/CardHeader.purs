@@ -1,17 +1,16 @@
 module MUI.Core.CardHeader where
 
 import MUI.Core (JSS)
+import MUI.Core.Typography (TypographyProps)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div)
 import Unsafe.Coerce (unsafeCoerce)
 
-type TypographyProps = String
-
-type CardHeaderProps componentProps =
+type CardHeaderPropsOptions componentProps = 
   ( action :: JSX
   , avatar :: JSX
-  , classes :: CardHeaderClassKey 
+  , classes :: CardHeaderClassKey
   , component :: ReactComponent { | componentProps }
   , disableTypography :: Boolean
   , subheader :: JSX
@@ -21,57 +20,43 @@ type CardHeaderProps componentProps =
   | componentProps
   )
 
+foreign import data CardHeaderProps :: Type
+
+type CardHeaderClassKeyGenericOptions a =
+  ( root :: a 
+  , avatar :: a 
+  , action :: a 
+  , content :: a 
+  , title :: a 
+  , subheader :: a 
+  )
+type CardHeaderClassKeyOptions = CardHeaderClassKeyGenericOptions String
+type CardHeaderClassKeyJSSOptions = CardHeaderClassKeyGenericOptions JSS
 foreign import data CardHeaderClassKey :: Type
 foreign import data CardHeaderClassKeyJSS :: Type
 
-foreign import data CardHeaderPropsPartial :: Type
-
-type CardHeaderClassKeyOptionsJSS = CardHeaderClassKeyOptionsR JSS
-type CardHeaderClassKeyOptions = CardHeaderClassKeyOptionsR String
-type CardHeaderClassKeyOptionsR a =
-  ( root :: a
-  , avatar :: a
-  , action :: a
-  , content :: a
-  , title :: a
-  , subheader :: a
-  )
-
-cardHeaderClassKey :: ∀ options options_
-  . Union options options_ CardHeaderClassKeyOptions
-  => Record options
+cardHeaderClassKey :: ∀  given required
+  .  Union given required (CardHeaderClassKeyOptions )
+  => Record given
   -> CardHeaderClassKey
 cardHeaderClassKey = unsafeCoerce
 
-cardHeaderClassKeyJSS :: ∀ options options_
-  . Union options options_ CardHeaderClassKeyOptionsJSS
-  => Record options
+cardHeaderClassKeyJSS :: ∀  given required
+  .  Union given required (CardHeaderClassKeyJSSOptions )
+  => Record given
   -> CardHeaderClassKeyJSS
 cardHeaderClassKeyJSS = unsafeCoerce
 
-cardHeaderPropsPartial_component :: ∀ componentProps props props_
-  . Union props props_ (CardHeaderProps componentProps)
-  => Record props 
-  -> CardHeaderPropsPartial 
-cardHeaderPropsPartial_component = unsafeCoerce
-
-cardHeaderPropsPartial :: ∀ props props_
-  . Union props props_ (CardHeaderProps Props_div)
-  => Record props 
-  -> CardHeaderPropsPartial 
-cardHeaderPropsPartial = unsafeCoerce
-
-cardHeader_component :: ∀ componentProps props props_
-  . Union props props_ (CardHeaderProps componentProps)
-  => Record props 
-  -> JSX
-cardHeader_component = element _CardHeader
-
-cardHeader :: ∀ props props_
-  . Union props props_ (CardHeaderProps Props_div)
-  => Record props 
+cardHeader :: ∀  given required
+  .  Union given required (CardHeaderPropsOptions Props_div )
+  => Record given
   -> JSX
 cardHeader = element _CardHeader
 
+cardHeader_component :: ∀ componentProps given required
+  .  Union given required (CardHeaderPropsOptions componentProps)
+  => Record given
+  -> JSX
+cardHeader_component = element _CardHeader
 
 foreign import _CardHeader :: ∀ a. ReactComponent a

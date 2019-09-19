@@ -1,121 +1,123 @@
 module MUI.Core.Button where
 
-import Effect.Ref (Ref)
-import Foreign (Foreign)
+import Prelude
+
 import MUI.Core (JSS)
-import MUI.Core.ButtonBase (ButtonBaseActions, ButtonBaseTypeProp, TouchRippleProps)
+import MUI.Core.ButtonBase (ButtonBasePropsOptions)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_button)
-import React.Basic.Events (EventHandler)
 import Unsafe.Coerce (unsafeCoerce)
 
-type ButtonProps componentProps =
-  ( action :: Ref ButtonBaseActions
-  , buttonRef :: Ref Foreign
-  , centerRipple :: Boolean
+type ButtonPropsOptions componentProps = 
+  ( children :: (Array JSX)
   , classes :: ButtonClassKey
   , color :: ColorProp
-  , component :: ReactComponent { | componentProps } 
+  , component :: ReactComponent { | componentProps }
   , disabled :: Boolean
   , disableFocusRipple :: Boolean
   , disableRipple :: Boolean
-  , disableTouchRipple :: Boolean
-  , focusRipple :: Boolean
-  , focusVisibleClassName :: String
   , fullWidth :: Boolean
   , href :: String
-  , onFocusVisible :: EventHandler
   , size :: SizeProp
-  , "TouchRippleProps" :: TouchRippleProps
-  , type :: ButtonBaseTypeProp
   , variant :: VariantProp
   | componentProps
   )
 
+foreign import data ButtonProps :: Type
+
 foreign import data ColorProp :: Type
-data Color =  Default | Inherit | Primary | Secondary
-color :: Color -> ColorProp
-color Default = unsafeCoerce "default"
-color Inherit = unsafeCoerce "inherit"
-color Primary = unsafeCoerce "primary"
-color Secondary = unsafeCoerce "secondary"
+foreign import _eqColorProp :: ColorProp -> ColorProp -> Boolean
+foreign import _ordColorProp :: ColorProp -> ColorProp -> Int
+instance eqColorProp :: Eq ColorProp where eq _left _right = _eqColorProp _left _right
+instance ordColorProp :: Ord ColorProp where compare _left _right = compare (_ordColorProp _left _right) (_ordColorProp _right _left)
 
+inherit :: ColorProp
+inherit = unsafeCoerce "inherit"
+
+primary :: ColorProp
+primary = unsafeCoerce "primary"
+
+secondary :: ColorProp
+secondary = unsafeCoerce "secondary"
+
+default :: ColorProp
+default = unsafeCoerce "default"
 foreign import data SizeProp :: Type
-data Size = Small | Medium | Large
-size :: Size -> SizeProp
-size Small = unsafeCoerce "small"
-size Medium = unsafeCoerce "medium"
-size Large = unsafeCoerce "large"
+foreign import _eqSizeProp :: SizeProp -> SizeProp -> Boolean
+foreign import _ordSizeProp :: SizeProp -> SizeProp -> Int
+instance eqSizeProp :: Eq SizeProp where eq _left _right = _eqSizeProp _left _right
+instance ordSizeProp :: Ord SizeProp where compare _left _right = compare (_ordSizeProp _left _right) (_ordSizeProp _right _left)
 
+small :: SizeProp
+small = unsafeCoerce "small"
+
+medium :: SizeProp
+medium = unsafeCoerce "medium"
+
+large :: SizeProp
+large = unsafeCoerce "large"
 foreign import data VariantProp :: Type
-data Variant = Text | Outlined | Contained
-variant :: Variant -> VariantProp
-variant Text = unsafeCoerce "text"
-variant Outlined = unsafeCoerce "outlined"
-variant Contained = unsafeCoerce "contained"
+foreign import _eqVariantProp :: VariantProp -> VariantProp -> Boolean
+foreign import _ordVariantProp :: VariantProp -> VariantProp -> Int
+instance eqVariantProp :: Eq VariantProp where eq _left _right = _eqVariantProp _left _right
+instance ordVariantProp :: Ord VariantProp where compare _left _right = compare (_ordVariantProp _left _right) (_ordVariantProp _right _left)
 
-type ButtonClassKeyOptionsJSS = ButtonClassKeyOptionsR JSS
-type ButtonClassKeyOptions = ButtonClassKeyOptionsR String
-type ButtonClassKeyOptionsR a =
-  ( root :: a
-  , label :: a
-  , text :: a
-  , textPrimary :: a
-  , textSecondary :: a
-  , outlined :: a
-  , outlinedPrimary :: a
-  , outlinedSecondary :: a
-  , contained :: a
-  , containedPrimary :: a
-  , containedSecondary :: a
-  , focusVisible :: a
-  , disabled :: a
-  , colorInherit :: a
-  , sizeSmall :: a
-  , sizeLarge :: a
-  , fullWidth :: a
+text :: VariantProp
+text = unsafeCoerce "text"
+
+outlined :: VariantProp
+outlined = unsafeCoerce "outlined"
+
+contained :: VariantProp
+contained = unsafeCoerce "contained"
+
+type ButtonClassKeyGenericOptions a =
+  ( root :: a 
+  , label :: a 
+  , text :: a 
+  , textPrimary :: a 
+  , textSecondary :: a 
+  , outlined :: a 
+  , outlinedPrimary :: a 
+  , outlinedSecondary :: a 
+  , contained :: a 
+  , containedPrimary :: a 
+  , containedSecondary :: a 
+  , focusVisible :: a 
+  , disabled :: a 
+  , colorInherit :: a 
+  , sizeSmall :: a 
+  , sizeLarge :: a 
+  , fullWidth :: a 
   )
-
+type ButtonClassKeyOptions = ButtonClassKeyGenericOptions String
+type ButtonClassKeyJSSOptions = ButtonClassKeyGenericOptions JSS
 foreign import data ButtonClassKey :: Type
 foreign import data ButtonClassKeyJSS :: Type
-foreign import data ButtonPropsPartial :: Type
 
-buttonClassKey :: ∀ options options_
-  . Union options options_ ButtonClassKeyOptions
-  => Record options
+buttonClassKey :: ∀  given required
+  .  Union given required (ButtonClassKeyOptions )
+  => Record given
   -> ButtonClassKey
 buttonClassKey = unsafeCoerce
 
-buttonClassKeyJSS :: ∀ options options_
-  . Union options options_ ButtonClassKeyOptionsJSS
-  => Record options
+buttonClassKeyJSS :: ∀  given required
+  .  Union given required (ButtonClassKeyJSSOptions )
+  => Record given
   -> ButtonClassKeyJSS
 buttonClassKeyJSS = unsafeCoerce
 
-buttonPropsPartial_component :: ∀ componentProps props props_
-  . Union props props_ (ButtonProps componentProps)
-  => Record props 
-  -> ButtonPropsPartial
-buttonPropsPartial_component = unsafeCoerce
-
-buttonPropsPartial :: ∀ props props_
-  . Union props props_ (ButtonProps Props_button)
-  => Record props 
-  -> ButtonPropsPartial
-buttonPropsPartial = unsafeCoerce
-
-button_component :: ∀ componentProps props props_
-  . Union props props_ (ButtonProps componentProps)
-  => Record props 
-  -> JSX
-button_component = element _Button
-
-button :: ∀ props props_
-  . Union props props_ (ButtonProps Props_button)
-  => Record props 
+button :: ∀  given required
+  .  Union given required (ButtonPropsOptions (ButtonBasePropsOptions Props_button) )
+  => Record given
   -> JSX
 button = element _Button
 
+button_component :: ∀ componentProps given required
+  .  Union given required (ButtonPropsOptions componentProps)
+  => Record given
+  -> JSX
+button_component = element _Button
 
 foreign import _Button :: ∀ a. ReactComponent a

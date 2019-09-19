@@ -1,1 +1,1 @@
-exports._BottomNavigationAction = require("@material-ui/core/BottomNavigationAction");
+exports._BottomNavigationAction = require("@material-ui/core/BottomNavigationAction").default;

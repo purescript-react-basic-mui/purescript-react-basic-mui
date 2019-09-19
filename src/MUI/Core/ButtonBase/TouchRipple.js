@@ -1,0 +1,1 @@
+exports._TouchRipple = require("@material-ui/core/buttonbase/TouchRipple").default;

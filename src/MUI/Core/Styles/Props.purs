@@ -5,17 +5,17 @@ import MUI.Core.Avatar (AvatarProps)
 import MUI.Core.Backdrop (BackdropProps)
 import MUI.Core.Badge (BadgeProps)
 import MUI.Core.BottomNavigation (BottomNavigationProps)
-import MUI.Core.BottomNavigationAction (BottomNavigationActionPropsPartial)
-import MUI.Core.Breadcrumbs (BreadcrumbsPropsPartial)
-import MUI.Core.Button (ButtonPropsPartial)
-import MUI.Core.ButtonBase (ButtonBasePropsPartial)
-import MUI.Core.ButtonGroup (ButtonGroupPropsPartial)
-import MUI.Core.Card (CardPropsPartial)
-import MUI.Core.CardActionArea (CardActionAreaPropsPartial)
-import MUI.Core.CardActions (CardActionsPropsPartial)
-import MUI.Core.CardContent (CardContentPropsPartial)
-import MUI.Core.CardHeader (CardHeaderPropsPartial)
-import MUI.Core.CardMedia (CardMediaPropsPartial)
+import MUI.Core.BottomNavigationAction (BottomNavigationActionProps)
+import MUI.Core.Breadcrumbs (BreadcrumbsProps)
+-- import MUI.Core.Button (ButtonProps)
+-- import MUI.Core.ButtonBase (ButtonBaseProps)
+-- import MUI.Core.ButtonGroup (ButtonGroupProps)
+import MUI.Core.Card (CardProps)
+import MUI.Core.CardActionArea (CardActionAreaProps)
+import MUI.Core.CardActions (CardActionsProps)
+import MUI.Core.CardContent (CardContentProps)
+import MUI.Core.CardHeader (CardHeaderProps)
+import MUI.Core.CardMedia (CardMediaProps)
 import MUI.Core.Divider (DividerPropsPartial)
 import MUI.Core.Drawer (DrawerPropsPartial)
 import MUI.Core.Grid (GridProps)
@@ -53,17 +53,17 @@ type ComponentsProps =
   , "MuiBackdrop" :: BackdropProps
   , "MuiBadge" :: BadgeProps
   , "MuiBottomNavigation" :: BottomNavigationProps
-  , "MuiBottomNavigationAction" :: BottomNavigationActionPropsPartial
-  , "MuiBreadcrumbs" :: BreadcrumbsPropsPartial
-  , "MuiButton" :: ButtonPropsPartial
-  , "MuiButtonBase" :: ButtonBasePropsPartial
-  , "MuiButtonGroup" :: ButtonGroupPropsPartial
-  , "MuiCard" :: CardPropsPartial
-  , "MuiCardActionArea" :: CardActionAreaPropsPartial
-  , "MuiCardActions" :: CardActionsPropsPartial
-  , "MuiCardContent" :: CardContentPropsPartial
-  , "MuiCardHeader" :: CardHeaderPropsPartial
-  , "MuiCardMedia" :: CardMediaPropsPartial
+  , "MuiBottomNavigationAction" :: BottomNavigationActionProps
+  , "MuiBreadcrumbs" :: BreadcrumbsProps
+--  , "MuiButton" :: ButtonProps
+--  , "MuiButtonBase" :: ButtonBaseProps
+--  , "MuiButtonGroup" :: ButtonGroupProps
+  , "MuiCard" :: CardProps
+  , "MuiCardActionArea" :: CardActionAreaProps
+  , "MuiCardActions" :: CardActionsProps
+  , "MuiCardContent" :: CardContentProps
+  , "MuiCardHeader" :: CardHeaderProps
+  , "MuiCardMedia" :: CardMediaProps
   -- , "MuiCheckbox" :: CheckboxPropsPartial
   -- , "MuiChip" :: ChipPropsPartial
   -- , "MuiCircularProgress" :: CircularProgressPropsPartial

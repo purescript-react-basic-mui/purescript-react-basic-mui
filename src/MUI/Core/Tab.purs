@@ -2,7 +2,7 @@ module MUI.Core.Tab where
 
 import Foreign (Foreign)
 import MUI.Core (JSS)
-import MUI.Core.ButtonBase (ButtonBaseActions, ButtonBaseTypeProp, TouchRippleProps)
+import MUI.Core.ButtonBase (ButtonBaseActions, ButtonBaseTypeProp)
 import Prim.Row (class Union)
 import React.Basic.DOM (Props_button)
 import React.Basic.Events (EventHandler)
@@ -23,7 +23,7 @@ type TabProps value componentProps =
   , icon :: JSX
   , label :: JSX
   , onFocusVisible :: EventHandler
-  , "TouchRippleProps" :: TouchRippleProps
+  , "TouchRippleProps" :: Foreign
   , type :: ButtonBaseTypeProp
   , wrapped :: Boolean
   , value :: value

@@ -6,8 +6,8 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_nav)
 import Unsafe.Coerce (unsafeCoerce)
 
-type BreadcrumbsProps componentProps =
-  ( children :: Array JSX
+type BreadcrumbsPropsOptions componentProps = 
+  ( children :: (Array JSX)
   , classes :: BreadcrumbsClassKey
   , component :: ReactComponent { | componentProps }
   , itemsAfterCollapse :: Number
@@ -17,54 +17,41 @@ type BreadcrumbsProps componentProps =
   | componentProps
   )
 
-type BreadcrumbsClassKeyOptionsJSS = BreadcrumbsClassKeyOptionsR JSS
-type BreadcrumbsClassKeyOptions = BreadcrumbsClassKeyOptionsR String
-type BreadcrumbsClassKeyOptionsR a =
-  ( root :: a
-  , ol :: a
-  , li :: a
-  , separator :: a
+foreign import data BreadcrumbsProps :: Type
+
+type BreadcrumbsClassKeyGenericOptions a =
+  ( root :: a 
+  , ol :: a 
+  , li :: a 
+  , separator :: a 
   )
-
-
+type BreadcrumbsClassKeyOptions = BreadcrumbsClassKeyGenericOptions String
+type BreadcrumbsClassKeyJSSOptions = BreadcrumbsClassKeyGenericOptions JSS
 foreign import data BreadcrumbsClassKey :: Type
 foreign import data BreadcrumbsClassKeyJSS :: Type
-foreign import data BreadcrumbsPropsPartial :: Type
 
-breadCrumbsClassKey :: ∀ options options_
-  . Union options options_ BreadcrumbsClassKeyOptions
-  => Record options
+breadcrumbsClassKey :: ∀  given required
+  .  Union given required (BreadcrumbsClassKeyOptions )
+  => Record given
   -> BreadcrumbsClassKey
-breadCrumbsClassKey = unsafeCoerce
+breadcrumbsClassKey = unsafeCoerce
 
-breadCrumbsClassKeyJSS :: ∀ options options_
-  . Union options options_ BreadcrumbsClassKeyOptionsJSS
-  => Record options
+breadcrumbsClassKeyJSS :: ∀  given required
+  .  Union given required (BreadcrumbsClassKeyJSSOptions )
+  => Record given
   -> BreadcrumbsClassKeyJSS
-breadCrumbsClassKeyJSS = unsafeCoerce
+breadcrumbsClassKeyJSS = unsafeCoerce
 
-breadCrumbsPropsPartial_component :: ∀ componentProps props props_
-  . Union props props_ (BreadcrumbsProps componentProps)
-  => Record props 
-  -> BreadcrumbsPropsPartial
-breadCrumbsPropsPartial_component = unsafeCoerce
-
-breadCrumbsPropsPartial :: ∀ props props_
-  . Union props props_ (BreadcrumbsProps Props_nav)
-  => Record props 
-  -> BreadcrumbsPropsPartial
-breadCrumbsPropsPartial = unsafeCoerce
-
-breadCrumbs_component :: ∀ componentProps props props_
-  . Union props props_ (BreadcrumbsProps componentProps)
-  => Record props 
+breadcrumbs :: ∀  given required
+  .  Union given required (BreadcrumbsPropsOptions Props_nav )
+  => Record given
   -> JSX
-breadCrumbs_component = element _Breadcrumbs
+breadcrumbs = element _Breadcrumbs
 
-breadCrumbs :: ∀ props props_
-  . Union props props_ (BreadcrumbsProps Props_nav)
-  => Record props 
+breadcrumbs_component :: ∀ componentProps given required
+  .  Union given required (BreadcrumbsPropsOptions componentProps)
+  => Record given
   -> JSX
-breadCrumbs = element _Breadcrumbs
+breadcrumbs_component = element _Breadcrumbs
 
 foreign import _Breadcrumbs :: ∀ a. ReactComponent a

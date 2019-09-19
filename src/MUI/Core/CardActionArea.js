@@ -1,1 +1,1 @@
-exports._CardActionArea = require("@material-ui/core/CardActionArea");
+exports._CardActionArea = require("@material-ui/core/CardActionArea").default;

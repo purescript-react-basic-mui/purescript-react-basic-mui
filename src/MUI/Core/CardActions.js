@@ -1,1 +1,1 @@
-exports._CardActions = require("@material-ui/core/CardActions");
+exports._CardActions = require("@material-ui/core/CardActions").default;
