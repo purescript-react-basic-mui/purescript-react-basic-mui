@@ -9,6 +9,7 @@ import Codegen.Core.Backdrop as Backdrop
 import Codegen.Core.Badge as Badge
 import Codegen.Core.BottomNavigation as BottomNavigation
 import Codegen.Core.BottomNavigationAction as BottomNavigationAction
+import Codegen.Core.Box as Box
 import Codegen.Core.Breadcrumbs as Breadcrumbs
 import Codegen.Core.Button as Button
 import Codegen.Core.ButtonBase as ButtonBase
@@ -40,6 +41,7 @@ components =
   , Badge.component
   , BottomNavigation.component
   , BottomNavigationAction.component
+  , Box.component
   , Breadcrumbs.component
   , ButtonBase.component
   , TouchRipple.component
