@@ -21,4 +21,4 @@ h1Typography = do
 
 The standard `typography` function in `MUI.Core.Typography` hardcodes the underlying navite component to Material UI's default. Often you want to override this for a variety of reasons, so we offer the `typography_component` function that allows you to do this, but using this function for this purpose will require you to annotation the component's type to help the compiler.
 
-The `Union` type class in PureScript is a great way to "fake" Typescript's Union types, but it can only be practically used on the types at the first level of nesting in a RowType. When a type variable occurs in the type parameter of a type, like it is in `Typography`'s `component :: React { | componentProps }` field, you have to guide the compiler with a type annotation.
+The `Union` type class in PureScript is a great way to "fake" Typescript's Union/Optional types, but it can only be practically used on the types at the first level of nesting in a RowType. When a type variable occurs in the type parameter of a type, like it is in `Typography`'s `component :: React { | componentProps }` field, you have to guide the compiler with a type annotation.
