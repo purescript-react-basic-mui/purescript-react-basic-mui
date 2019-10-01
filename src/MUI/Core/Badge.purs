@@ -1,93 +1,52 @@
 module MUI.Core.Badge where
 
-import Prelude
+import MUI.Core (JSS) as MUI.Core
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, Props_div, ReactComponent) as React.Basic
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import Unsafe.Coerce (unsafeCoerce)
+foreign import data Variant :: Type
 
-type BadgePropsOptions componentProps = 
-  ( badgeContent :: JSX
-  , children :: (Array JSX)
-  , classes :: BadgeClassKey
-  , color :: ColorProp
-  , component :: ReactComponent { | componentProps }
-  , invisible :: Boolean
-  , max :: Number
-  , showZero :: Boolean
-  , variant :: VariantProp
-  | componentProps
-  )
+variant :: { dot ∷ Variant, standard ∷ Variant }
+variant = { dot: Unsafe.Coerce.unsafeCoerce "dot", standard: Unsafe.Coerce.unsafeCoerce "standard" }
 
-foreign import data BadgeProps :: Type
+foreign import data Color :: Type
 
-foreign import data ColorProp :: Type
-foreign import _eqColorProp :: ColorProp -> ColorProp -> Boolean
-foreign import _ordColorProp :: ColorProp -> ColorProp -> Int
-instance eqColorProp :: Eq ColorProp where eq _left _right = _eqColorProp _left _right
-instance ordColorProp :: Ord ColorProp where compare _left _right = compare (_ordColorProp _left _right) (_ordColorProp _right _left)
+color :: { default ∷ Color, error ∷ Color, primary ∷ Color, secondary ∷ Color }
+color = { default: Unsafe.Coerce.unsafeCoerce "default", error: Unsafe.Coerce.unsafeCoerce "error", primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary" }
 
-default :: ColorProp
-default = unsafeCoerce "default"
+foreign import data Vertical :: Type
 
-primary :: ColorProp
-primary = unsafeCoerce "primary"
+vertical :: { bottom ∷ Vertical, top ∷ Vertical }
+vertical = { bottom: Unsafe.Coerce.unsafeCoerce "bottom", top: Unsafe.Coerce.unsafeCoerce "top" }
 
-secondary :: ColorProp
-secondary = unsafeCoerce "secondary"
+foreign import data Horizontal :: Type
 
-error :: ColorProp
-error = unsafeCoerce "error"
-foreign import data VariantProp :: Type
-foreign import _eqVariantProp :: VariantProp -> VariantProp -> Boolean
-foreign import _ordVariantProp :: VariantProp -> VariantProp -> Int
-instance eqVariantProp :: Eq VariantProp where eq _left _right = _eqVariantProp _left _right
-instance ordVariantProp :: Ord VariantProp where compare _left _right = compare (_ordVariantProp _left _right) (_ordVariantProp _right _left)
+horizontal :: { left ∷ Horizontal, right ∷ Horizontal }
+horizontal = { left: Unsafe.Coerce.unsafeCoerce "left", right: Unsafe.Coerce.unsafeCoerce "right" }
 
-standard :: VariantProp
-standard = unsafeCoerce "standard"
+type PropsOptions componentProps = { anchorOrigin ∷ { horizontal ∷ Horizontal, vertical ∷ Vertical }, badgeContent ∷ React.Basic.JSX, children ∷ Array (React.Basic.JSX), classes ∷ ClassKey, color ∷ Color, component ∷ React.Basic.ReactComponent {  | componentProps }, invisible ∷ Boolean, max ∷ Number, showZero ∷ Boolean, variant ∷ Variant | componentProps }
 
-dot :: VariantProp
-dot = unsafeCoerce "dot"
+type ClassKeyGenericOptions a = ( anchorOriginBottomLeftRectangle ∷ a, anchorOriginBottomRightCircle ∷ a, anchorOriginBottomRightRectangle ∷ a, anchorOriginTopLeftCircle ∷ a, anchorOriginTopLeftRectangle ∷ a, anchorOriginTopRightCircle ∷ a, anchorOriginTopRightRectangle ∷ a, badge ∷ a, colorError ∷ a, colorPrimary ∷ a, colorSecondary ∷ a, dot ∷ a, invisible ∷ a, root ∷ a )
 
-type BadgeClassKeyGenericOptions a =
-  ( root :: a 
-  , badge :: a 
-  , colorPrimary :: a 
-  , colorSecondary :: a 
-  , colorError :: a 
-  , invisible :: a 
-  , dot :: a 
-  )
-type BadgeClassKeyOptions = BadgeClassKeyGenericOptions String
-type BadgeClassKeyJSSOptions = BadgeClassKeyGenericOptions JSS
-foreign import data BadgeClassKey :: Type
-foreign import data BadgeClassKeyJSS :: Type
+type ClassKeyOptions  = ClassKeyGenericOptions String
 
-badgeClassKey :: ∀  given required
-  .  Union given required (BadgeClassKeyOptions )
-  => Record given
-  -> BadgeClassKey
-badgeClassKey = unsafeCoerce
+foreign import data ClassKey :: Type
 
-badgeClassKeyJSS :: ∀  given required
-  .  Union given required (BadgeClassKeyJSSOptions )
-  => Record given
-  -> BadgeClassKeyJSS
-badgeClassKeyJSS = unsafeCoerce
+classKey :: ∀ required given. Prim.Row.Union given required ClassKeyOptions ⇒ Record given → ClassKey
+classKey = Unsafe.Coerce.unsafeCoerce
 
-badge :: ∀  given required
-  .  Union given required (BadgePropsOptions Props_div )
-  => Record given
-  -> JSX
-badge = element _Badge
+type ClassKeyOptionsJSS  = ClassKeyGenericOptions MUI.Core.JSS
 
-badge_component :: ∀ componentProps given required
-  .  Union given required (BadgePropsOptions componentProps)
-  => Record given
-  -> JSX
-badge_component = element _Badge
+foreign import data ClassKeyJSS :: Type
 
-foreign import _Badge :: ∀ a. ReactComponent a
+classKeyJSS :: ∀ required given. Prim.Row.Union given required ClassKeyOptionsJSS ⇒ Record given → ClassKeyJSS
+classKeyJSS = Unsafe.Coerce.unsafeCoerce
+
+foreign import _Component :: ∀ a. React.Basic.ReactComponent a
+
+component :: ∀ required given. Prim.Row.Union given required (PropsOptions React.Basic.Props_div) ⇒ Record given → ClassKeyJSS
+component = React.Basic.element _Component
+
+component :: ∀ required given componentProps. Prim.Row.Union given required (PropsOptions componentProps) ⇒ Record given → ClassKeyJSS
+component = React.Basic.element _Component

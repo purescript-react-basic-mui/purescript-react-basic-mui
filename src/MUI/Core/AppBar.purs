@@ -1,100 +1,43 @@
 module MUI.Core.AppBar where
 
-import Prelude
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Paper (PaperProps) as MUI.Core.Paper
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, Props_div, ReactComponent) as React.Basic
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-import MUI.Core (JSS)
-import MUI.Core.Paper (PaperProps)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import Unsafe.Coerce (unsafeCoerce)
+foreign import data Position :: Type
 
-type AppBarPropsOptions componentProps = 
-  ( children :: (Array JSX)
-  , classes :: AppBarClassKey
-  , color :: ColorProp
-  , position :: PositionProp
-  | componentProps
-  )
+position :: { absolute ∷ Position, fixed ∷ Position, relative ∷ Position, static ∷ Position, sticky ∷ Position }
+position = { absolute: Unsafe.Coerce.unsafeCoerce "absolute", fixed: Unsafe.Coerce.unsafeCoerce "fixed", relative: Unsafe.Coerce.unsafeCoerce "relative", static: Unsafe.Coerce.unsafeCoerce "static", sticky: Unsafe.Coerce.unsafeCoerce "sticky" }
 
-foreign import data AppBarProps :: Type
+foreign import data Color :: Type
 
-foreign import data ColorProp :: Type
-foreign import _eqColorProp :: ColorProp -> ColorProp -> Boolean
-foreign import _ordColorProp :: ColorProp -> ColorProp -> Int
-instance eqColorProp :: Eq ColorProp where eq _left _right = _eqColorProp _left _right
-instance ordColorProp :: Ord ColorProp where compare _left _right = compare (_ordColorProp _left _right) (_ordColorProp _right _left)
+color :: { default ∷ Color, inherit ∷ Color, primary ∷ Color, secondary ∷ Color }
+color = { default: Unsafe.Coerce.unsafeCoerce "default", inherit: Unsafe.Coerce.unsafeCoerce "inherit", primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary" }
 
-inherit :: ColorProp
-inherit = unsafeCoerce "inherit"
+type PropsOptions componentProps = { children ∷ Array (React.Basic.JSX), classes ∷ ClassKey, color ∷ Color, position ∷ Position | componentProps }
 
-primary :: ColorProp
-primary = unsafeCoerce "primary"
+type ClassKeyGenericOptions a = ( colorDefault ∷ a, colorPrimary ∷ a, colorSecondary ∷ a, positionAbsolute ∷ a, positionFixed ∷ a, positionRelative ∷ a, positionStatic ∷ a, positionSticky ∷ a, root ∷ a )
 
-secondary :: ColorProp
-secondary = unsafeCoerce "secondary"
+type ClassKeyOptions  = ClassKeyGenericOptions String
 
-default :: ColorProp
-default = unsafeCoerce "default"
-foreign import data PositionProp :: Type
-foreign import _eqPositionProp :: PositionProp -> PositionProp -> Boolean
-foreign import _ordPositionProp :: PositionProp -> PositionProp -> Int
-instance eqPositionProp :: Eq PositionProp where eq _left _right = _eqPositionProp _left _right
-instance ordPositionProp :: Ord PositionProp where compare _left _right = compare (_ordPositionProp _left _right) (_ordPositionProp _right _left)
+foreign import data ClassKey :: Type
 
-fixed :: PositionProp
-fixed = unsafeCoerce "fixed"
+classKey :: ∀ required given. Prim.Row.Union given required ClassKeyOptions ⇒ Record given → ClassKey
+classKey = Unsafe.Coerce.unsafeCoerce
 
-absolute :: PositionProp
-absolute = unsafeCoerce "absolute"
+type ClassKeyOptionsJSS  = ClassKeyGenericOptions MUI.Core.JSS
 
-sticky :: PositionProp
-sticky = unsafeCoerce "sticky"
+foreign import data ClassKeyJSS :: Type
 
-static :: PositionProp
-static = unsafeCoerce "static"
+classKeyJSS :: ∀ required given. Prim.Row.Union given required ClassKeyOptionsJSS ⇒ Record given → ClassKeyJSS
+classKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-relative :: PositionProp
-relative = unsafeCoerce "relative"
+foreign import _Component :: ∀ a. React.Basic.ReactComponent a
 
-type AppBarClassKeyGenericOptions a =
-  ( root :: a 
-  , positionFixed :: a 
-  , positionAbsolute :: a 
-  , positionSticky :: a 
-  , positionStatic :: a 
-  , positionRelative :: a 
-  , colorDefault :: a 
-  , colorPrimary :: a 
-  , colorSecondary :: a 
-  )
-type AppBarClassKeyOptions = AppBarClassKeyGenericOptions String
-type AppBarClassKeyJSSOptions = AppBarClassKeyGenericOptions JSS
-foreign import data AppBarClassKey :: Type
-foreign import data AppBarClassKeyJSS :: Type
+component :: ∀ required given. Prim.Row.Union given required (PropsOptions (MUI.Core.Paper.PaperProps React.Basic.Props_div)) ⇒ Record given → ClassKeyJSS
+component = React.Basic.element _Component
 
-appBarClassKey :: ∀  given required
-  .  Union given required (AppBarClassKeyOptions )
-  => Record given
-  -> AppBarClassKey
-appBarClassKey = unsafeCoerce
-
-appBarClassKeyJSS :: ∀  given required
-  .  Union given required (AppBarClassKeyJSSOptions )
-  => Record given
-  -> AppBarClassKeyJSS
-appBarClassKeyJSS = unsafeCoerce
-
-appBar :: ∀  given required
-  .  Union given required (AppBarPropsOptions (PaperProps Props_div) )
-  => Record given
-  -> JSX
-appBar = element _AppBar
-
-appBar_component :: ∀ componentProps given required
-  .  Union given required (AppBarPropsOptions componentProps)
-  => Record given
-  -> JSX
-appBar_component = element _AppBar
-
-foreign import _AppBar :: ∀ a. ReactComponent a
+component :: ∀ required given componentProps. Prim.Row.Union given required (PropsOptions componentProps) ⇒ Record given → ClassKeyJSS
+component = React.Basic.element _Component
