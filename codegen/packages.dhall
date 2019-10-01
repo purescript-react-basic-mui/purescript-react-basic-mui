@@ -116,6 +116,80 @@ let upstream =
 
 let overrides = {=}
 
-let additions = {=}
+let additions =
+  { matryoshka =
+    { dependencies =
+        [ "fixed-points"
+        , "free"
+        , "prelude"
+        , "profunctor"
+        , "transformers"
+        ]
+    , repo = "https://github.com/slamdata/purescript-matryoshka.git"
+    , version = "v0.4.0"
+    }
+  , pattern-arrows =
+    { dependencies =
+        [ "control"
+        , "nonempty"
+        , "prelude"
+        , "profunctor"
+        ]
+    , repo = "https://github.com/paluh/purescript-pattern-arrows.git"
+    , version = "v0.1.0"
+    }
+  , pprint =
+    { dependencies =
+        [ "arrays"
+        , "strings"
+        , "unfoldable"
+        ]
+    , repo = "https://github.com/paf31/purescript-pprint.git"
+    , version = "v5.0.0"
+    }
+  , strings-extra =
+    { dependencies =
+        [ "arrays"
+        , "either"
+        , "foldable-traversable"
+        , "maybe"
+        , "partial"
+        , "prelude"
+        , "strings"
+        , "unfoldable"
+        , "unicode"
+        ]
+    , repo = "https://github.com/purescript-contrib/purescript-strings-extra.git"
+    , version = "v2.0.0"
+    }
+  , moldy =
+    { dependencies =
+        [ "foldable-traversable"
+        , "prelude"
+        , "strings"
+        ]
+    , repo = "https://github.com/paluh/purescript-moldy.git"
+    , version = "master"
+    }
+  , read-dts =
+    { dependencies =
+      [ "console"
+      , "debug"
+      , "effect"
+      , "freet"
+      , "foreign"
+      , "foreign-object"
+      , "matryoshka"
+      , "node-fs-aff"
+      , "pprint"
+      , "profunctor"
+      , "profunctor-lenses"
+      , "psci-support"
+      , "variant"
+      ]
+    , repo = "https://github.com/lambdaterms/purescript-read-dts.git"
+    , version = "master"
+    }
+  }
 
 in  upstream // overrides // additions

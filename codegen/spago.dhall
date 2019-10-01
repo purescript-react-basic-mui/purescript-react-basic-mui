@@ -8,9 +8,19 @@ You can edit this file as you like.
     [ "console"
     , "debug"
     , "effect"
-    , "psci-support"
+    , "freet"
+    , "filterable"
+    , "generics-rep"
     , "node-fs-aff"
+    , "moldy"
+    , "pattern-arrows"
+    , "pprint"
+    , "psci-support"
+    , "heterogeneous"
+    , "read-dts"
+    , "record-extra"
     , "simple-json"
+    , "strings-extra"
     ]
 , packages =
     ./packages.dhall
