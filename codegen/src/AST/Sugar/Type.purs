@@ -14,6 +14,9 @@ import Data.Map (Map)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, wrap)
 import Data.String (Pattern(..), split)
+import Data.Typelevel.Num (class Nat)
+import Data.Vec (Vec)
+import Data.Vec (toArray) as Vec
 import Heterogeneous.Folding (class HFoldl, hfoldl)
 import Prim.RowList (class RowToList)
 import Record.Extra (class MapRecord, mapRecord)
@@ -37,6 +40,24 @@ constrained ∷ String → Array Type → Type → Type
 constrained s params =
   roll <<< TypeConstrained { className: name' s, params }
 
+
+
+-- -- | Turns given record of strings into a record of type variables
+-- -- | which are passed to type building function.
+-- -- | Finally wrap its result with `ForAll`.
+-- -- |
+-- -- | ```
+-- -- | signature = forAll { g: "given", r: "required"} \{ g, r } →
+-- -- |  let
+-- -- |    fun = arr (recordApply g) (constructor "ResultType")
+-- -- |  in
+-- -- |    constrained "Prim.Row.Union" [ g, r, constructor "FinalRow" ] fun
+-- -- |
+-- -- | ```
+-- -- | Gives us:
+-- -- |
+-- -- | ∀ required given. Prim.Row.Union given required FinalRow ⇒ Record given → ResultType
+-- -- |
 forAll ∷ ∀ idents il names nl vars
   . HFoldl (List Ident → Ident → List Ident) (List Ident) (Record idents) (List Ident)
   ⇒ RowToList names nl
@@ -54,6 +75,15 @@ forAll names cont =
     idents = Array.fromFoldable (toList varsRecord)
   in
     roll (TypeForall idents (cont varsRecord'))
+
+-- forAll ∷ ∀ n. Nat n ⇒ Vec n String → (Vec n Type → Type) → Type
+-- forAll names cont =
+--   let
+--     idents = map Ident names
+--     vars = map (roll <<< TypeVar) idents
+--   in
+--     roll (TypeForall (Vec.toArray idents) (cont vars))
+-- 
 
 forAll' ∷ String → (Type → Type) → Type
 forAll' n cont =

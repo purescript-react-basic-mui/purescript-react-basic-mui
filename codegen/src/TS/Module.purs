@@ -41,6 +41,7 @@ import Prelude
 import Codegen.AST (Declaration(..)) as AST
 import Codegen.AST (Expr, ExprF(..), Ident(..), RowF(..), RowLabel, Type, TypeF(..), TypeName(..), Union(..), UnionMember(..))
 import Codegen.AST.Sugar.Expr (app, boolean, ident, number, string) as Expr
+import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (ExceptT(..), mapExceptT, withExceptT)
 import Control.Monad.State (State, modify_)
@@ -63,7 +64,6 @@ import Data.String (contains) as String
 import Data.String.Extra (camelCase, pascalCase)
 import Data.Traversable (for, sequence)
 import Data.Tuple (Tuple(..))
-import Effect (Effect)
 import Matryoshka (AlgebraM)
 import ReadDTS.AST (Application') as ReadDTS
 import ReadDTS.AST (TypeConstructor(..), build) as ReadDTS.AST
@@ -84,7 +84,7 @@ type Declarations = Map LocalTypeName Declaration
 -- | so called "default instances".
 declarations
   :: { path :: String , source :: Maybe String }
-  -> ExceptT (Array String) Effect Declarations
+  -> M Declarations
 declarations file = do
   typeConstructors <- ExceptT $ ReadDTS.AST.build { strictNullChecks: false } file
   let

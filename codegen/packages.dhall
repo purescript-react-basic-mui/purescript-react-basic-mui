@@ -128,15 +128,23 @@ let additions =
     , repo = "https://github.com/slamdata/purescript-matryoshka.git"
     , version = "v0.4.0"
     }
-  , pattern-arrows =
+  , moldy =
     { dependencies =
-        [ "control"
-        , "nonempty"
+        [ "foldable-traversable"
         , "prelude"
-        , "profunctor"
+        , "strings"
         ]
-    , repo = "https://github.com/paluh/purescript-pattern-arrows.git"
-    , version = "v0.1.0"
+    , repo = "https://github.com/paluh/purescript-moldy.git"
+    , version = "master"
+    }
+  , node-fs-extra =
+    { dependencies =
+        [ "aff-promise"
+        , "node-path"
+        , "node-buffer"
+        ]
+    , repo = "https://github.com/nonbili/purescript-node-fs-extra.git"
+    , version = "v0.1.2"
     }
   , pprint =
     { dependencies =
@@ -146,30 +154,6 @@ let additions =
         ]
     , repo = "https://github.com/paf31/purescript-pprint.git"
     , version = "v5.0.0"
-    }
-  , strings-extra =
-    { dependencies =
-        [ "arrays"
-        , "either"
-        , "foldable-traversable"
-        , "maybe"
-        , "partial"
-        , "prelude"
-        , "strings"
-        , "unfoldable"
-        , "unicode"
-        ]
-    , repo = "https://github.com/purescript-contrib/purescript-strings-extra.git"
-    , version = "v2.0.0"
-    }
-  , moldy =
-    { dependencies =
-        [ "foldable-traversable"
-        , "prelude"
-        , "strings"
-        ]
-    , repo = "https://github.com/paluh/purescript-moldy.git"
-    , version = "master"
     }
   , read-dts =
     { dependencies =
@@ -189,6 +173,21 @@ let additions =
       ]
     , repo = "https://github.com/lambdaterms/purescript-read-dts.git"
     , version = "master"
+    }
+  , strings-extra =
+    { dependencies =
+        [ "arrays"
+        , "either"
+        , "foldable-traversable"
+        , "maybe"
+        , "partial"
+        , "prelude"
+        , "strings"
+        , "unfoldable"
+        , "unicode"
+        ]
+    , repo = "https://github.com/purescript-contrib/purescript-strings-extra.git"
+    , version = "v2.0.0"
     }
   }
 

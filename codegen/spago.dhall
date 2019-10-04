@@ -13,14 +13,16 @@ You can edit this file as you like.
     , "generics-rep"
     , "node-fs-aff"
     , "moldy"
-    , "pattern-arrows"
+    , "optparse"
     , "pprint"
     , "psci-support"
     , "heterogeneous"
+    , "node-fs-extra"
     , "read-dts"
     , "record-extra"
     , "simple-json"
     , "strings-extra"
+    , "sized-vectors"
     ]
 , packages =
     ./packages.dhall

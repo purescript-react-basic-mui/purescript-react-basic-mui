@@ -42,6 +42,7 @@ type Component =
     , generate ∷ Array RowLabel
     , vars ∷ Array Ident
     }
+  , tsc :: { strictNullChecks ∷ Boolean }
   }
 
 -- | TODO: Update required

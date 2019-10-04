@@ -10,8 +10,8 @@ import Codegen.AST.Sugar.Type (app, arr, constructor, record, row, string) as Ty
 import Codegen.AST.Sugar.Type (arr, forAll, row) as T
 import Codegen.AST.Sugar.Type (constrained, forAll, forAll', recordApply)
 import Codegen.Model (Component, psImportPath, reactComponentApply)
-import Codegen.TS.Module (astAlgebra, PossibleType(..), declarations, unionDeclarations) as TS.Module
-import Codegen.TS.Module (declarations, exprUnsafeCoerce)
+import Codegen.TS.Module (PossibleType(..), astAlgebra, declarations, exprUnsafeCoerce, unionDeclarations) as TS.Module
+import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.State (runState)
@@ -22,6 +22,7 @@ import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Functor.Mu (roll)
 import Data.List (List(..), singleton, snoc) as List
 import Data.List (List)
+import Data.Map (Map)
 import Data.Map (filterKeys, fromFoldable, lookup, singleton) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
@@ -37,7 +38,8 @@ import Heterogeneous.Folding (class FoldlRecord, class HFoldl, ConstFolding(..),
 import Matryoshka (cata, cataM)
 import Node.FS (FileFlags(..))
 import Prim.RowList (class RowToList)
-import ReadDTS.Instantiation (TypeF(..)) as Instantation
+import ReadDTS.Instantiation (Property) as Instntiation
+import ReadDTS.Instantiation (Type, TypeF(..), Property) as Instantiation
 import ReadDTS.Instantiation.Pretty (pprintTypeName)
 import Record.Extra (class MapRecord, mapRecord)
 
@@ -50,22 +52,37 @@ tsImportPath component =
 
 psModuleName ∷ ComponentName → ModuleName
 psModuleName component = ModuleName $ "MUI.Core." <> component
---   { name ∷ String
---   , moduleName ∷ ModuleName
---   , propsType ∷
---     { baseRow ∷ Maybe Row
---     , generate ∷ Array RowLabel
---     , vars ∷ Array AST.Ident
---     }
---   , componentTypeVariables ∷ Array AST.Ident
---   -- , additionalTypeVariables ∷ Array String
---   -- , classKey ∷ Array String
---   -- , inherits ∷ PropType
---   -- , variants ∷ Array Variant
---   , extraCode ∷ Maybe (Array Declaration)
+
+componentProps ∷ ComponentName → M (Map String (Instantiation.Property Instantiation.Type))
+componentProps componentName = do
+  tsDeclarations ← TS.Module.declarations
+    { path: instanceModulePath
+    , source: Just source
+    }
+  case Map.lookup instanceTypeName tsDeclarations of
+    Nothing → throwError $ Array.singleton $ line
+      ["Unable to find generated props instance type:", show instanceTypeName ]
+    Just { defaultInstance: Mu.In (Instantiation.Object n props) } →
+      pure props
+    Just { defaultInstance } → throwError $ Array.singleton $ lines
+      [ line
+        ["Props instance type" , show instanceTypeName
+        , "is not an object. Derived type is: ", show $ cata pprintTypeName defaultInstance
+        ]
+      , "Generated ts source code was:"
+      , source
+      ]
+  where
+    propsTypeName = componentName <> "Props"
+    instanceTypeName = propsTypeName <> "Instance"
+    instanceModulePath = instanceTypeName <> ".d.ts"
+    -- | This approach is described in `Codegen.Typescript.Module`
+    source = lines $
+      [ line ["import", "{",  propsTypeName, "}", "from", show $ tsImportPath componentName ]
+      , line ["export type", instanceTypeName, "=", propsTypeName <> ";"]
+      ]
 
 -- componentAST ∷ ComponentName → Maybe AST.Row → Set AST.RowLabel → ExceptT (Array String) Effect AST.Module
-type M a = ExceptT (Array String) Effect a
 componentAST ∷ Component → M AST.Module
 componentAST { name: componentName, inherits, propsType: { base, generate, vars }} = do
   tsDeclarations ← TS.Module.declarations
@@ -76,7 +93,7 @@ componentAST { name: componentName, inherits, propsType: { base, generate, vars 
     Nothing → throwError $ Array.singleton $ line
       ["Unable to find generated props instance type:", show instanceTypeName ]
     Just { defaultInstance } → case defaultInstance of
-        Mu.In (Instantation.Object n props) → do
+        Mu.In (Instantiation.Object n props) → do
           { prop: classesProp, declarations: classesDeclarations } ← if "classes" `Array.elem` generate
             then classesPropAST inherits props
             else pure { prop: Nothing, declarations: List.Nil }
@@ -86,7 +103,7 @@ componentAST { name: componentName, inherits, propsType: { base, generate, vars 
             props' = Map.filterKeys ((&&) <$> (not <<< eq "classes") <*> (_ `Array.elem` generate)) props
             -- | Create an new "Object" type from them
             -- | for AST generation.
-            obj = roll $ Instantation.Object n props'
+            obj = roll $ Instantiation.Object n props'
             types = flip runState mempty <<< runExceptT <<< cataM TS.Module.astAlgebra $ obj
 
           case types of
@@ -123,7 +140,7 @@ componentAST { name: componentName, inherits, propsType: { base, generate, vars 
               ]
             (Tuple (Left err) _) → throwError [ err ]
 
-        Mu.In Instantation.Any → throwError $ Array.singleton $ lines
+        Mu.In Instantiation.Any → throwError $ Array.singleton $ lines
           [ line ["Props instance type is derived to be 'any' for" , show instanceTypeName]
           , line
             [ "Is it possible that your component path is broken"
@@ -151,10 +168,6 @@ componentAST { name: componentName, inherits, propsType: { base, generate, vars 
       , line ["export type", instanceTypeName, "=", propsTypeName <> ";"]
       ]
 
-line = joinWith " "
-
-lines = joinWith "\n"
-
 -- | Generates all declarations related to classes.
 -- |
 -- | We are extracting classes directly from AST of a Props object.
@@ -163,9 +176,10 @@ lines = joinWith "\n"
 -- | before running `astAlgebra` on it. Classes record
 -- | does not translate directly to any expected PS
 -- | construct because it contains `any` types.
+-- |
 classesPropAST ∷ _ → _ → M _
 classesPropAST inherits props = case Map.lookup "classes" props of
-  Just { "type": Mu.In (Instantation.Object _ classesProps) } → do
+  Just { "type": Mu.In (Instantiation.Object _ classesProps) } → do
     let
       classesNames = Map.Internal.keys classesProps
       binder = Ident "a"
@@ -212,7 +226,7 @@ classesPropAST inherits props = case Map.lookup "classes" props of
             in
               constrained "Prim.Row.Union" [ g, r, classKeyOptionsType.constructor ] fun
         in
-          declValue ident exprUnsafeCoerce (Just signature)
+          declValue ident TS.Module.exprUnsafeCoerce (Just signature)
 
       classKeyJSSType = declForeignData (TypeName "ClassKeyJSS")
       classKeyJSSValue =
@@ -224,7 +238,7 @@ classesPropAST inherits props = case Map.lookup "classes" props of
             in
               constrained "Prim.Row.Union" [ g, r, classKeyJSSOptionsType.constructor ] fun
         in
-          declValue ident exprUnsafeCoerce (Just signature)
+          declValue ident TS.Module.exprUnsafeCoerce (Just signature)
 
       componentValue = declForeignValue (Ident "_Component") (forAll' "a" \a → reactComponentApply [a])
 
@@ -263,7 +277,7 @@ classesPropAST inherits props = case Map.lookup "classes" props of
               constrained "Prim.Row.Union" [ g, r, u] fun
         in
           declValue
-            (Ident "component")
+            (Ident "component'")
             (Expr.app (Expr.ident "React.Basic.element") componentValue.var)
             (Just signature)
     let
@@ -283,3 +297,10 @@ classesPropAST inherits props = case Map.lookup "classes" props of
     pure { declarations, prop: Just classKeyType.constructor }
   c → throwError $ Array.singleton $ line
     [ show "classses", "prop is missing or has wrong type:", "_", "in instance object"]
+
+line ∷ Array String → String
+line = joinWith " "
+
+lines ∷ Array String → String
+lines = joinWith "\n"
+
