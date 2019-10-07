@@ -66,7 +66,7 @@ components =
         { extraCode: Nothing
         , inherits: Just $ Type.app
             (Type.constructor "MUI.Core.Paper.PaperProps")
-            [Type.constructor "React.Basic.Props_div"]
+            [Type.constructor "React.Basic.DOM.Props_div"]
         , name: "AppBar"
         , modulePath: Path "MUI" (Path "Core" (Name "AppBar"))
         , propsType:

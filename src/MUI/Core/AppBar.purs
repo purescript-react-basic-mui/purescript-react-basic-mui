@@ -3,7 +3,8 @@ module MUI.Core.AppBar where
 import MUI.Core (JSS) as MUI.Core
 import MUI.Core.Paper (PaperProps) as MUI.Core.Paper
 import Prim.Row (class Union) as Prim.Row
-import React.Basic (element, JSX, Props_div, ReactComponent) as React.Basic
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
 foreign import data Position :: Type
@@ -16,28 +17,28 @@ foreign import data Color :: Type
 color :: { default ∷ Color, inherit ∷ Color, primary ∷ Color, secondary ∷ Color }
 color = { default: Unsafe.Coerce.unsafeCoerce "default", inherit: Unsafe.Coerce.unsafeCoerce "inherit", primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary" }
 
-type PropsOptions componentProps = { children ∷ Array (React.Basic.JSX), classes ∷ ClassKey, color ∷ Color, position ∷ Position | componentProps }
+type AppBarPropsOptions componentProps = ( children ∷ Array (React.Basic.JSX), classes ∷ AppBarClassKey, color ∷ Color, position ∷ Position | componentProps )
 
-type ClassKeyGenericOptions a = ( colorDefault ∷ a, colorPrimary ∷ a, colorSecondary ∷ a, positionAbsolute ∷ a, positionFixed ∷ a, positionRelative ∷ a, positionStatic ∷ a, positionSticky ∷ a, root ∷ a )
+type AppBarClassKeyGenericOptions a = ( colorDefault ∷ a, colorPrimary ∷ a, colorSecondary ∷ a, positionAbsolute ∷ a, positionFixed ∷ a, positionRelative ∷ a, positionStatic ∷ a, positionSticky ∷ a, root ∷ a )
 
-type ClassKeyOptions  = ClassKeyGenericOptions String
+type AppBarClassKeyOptions  = AppBarClassKeyGenericOptions String
 
-foreign import data ClassKey :: Type
+foreign import data AppBarClassKey :: Type
 
-classKey :: ∀ required given. Prim.Row.Union given required ClassKeyOptions ⇒ Record given → ClassKey
-classKey = Unsafe.Coerce.unsafeCoerce
+appBarClassKey :: ∀ required given. Prim.Row.Union given required AppBarClassKeyOptions ⇒ Record given → AppBarClassKey
+appBarClassKey = Unsafe.Coerce.unsafeCoerce
 
-type ClassKeyOptionsJSS  = ClassKeyGenericOptions MUI.Core.JSS
+type AppBarClassKeyOptionsJSS  = AppBarClassKeyGenericOptions MUI.Core.JSS
 
-foreign import data ClassKeyJSS :: Type
+foreign import data AppBarClassKeyJSS :: Type
 
-classKeyJSS :: ∀ required given. Prim.Row.Union given required ClassKeyOptionsJSS ⇒ Record given → ClassKeyJSS
-classKeyJSS = Unsafe.Coerce.unsafeCoerce
+appBarClassKeyJSS :: ∀ required given. Prim.Row.Union given required AppBarClassKeyOptionsJSS ⇒ Record given → AppBarClassKeyJSS
+appBarClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-foreign import _Component :: ∀ a. React.Basic.ReactComponent a
+foreign import _AppBar :: ∀ a. React.Basic.ReactComponent a
 
-component :: ∀ required given. Prim.Row.Union given required (PropsOptions (MUI.Core.Paper.PaperProps React.Basic.Props_div)) ⇒ Record given → ClassKeyJSS
-component = React.Basic.element _Component
+appBar :: ∀ required given. Prim.Row.Union given required (AppBarPropsOptions (MUI.Core.Paper.PaperProps React.Basic.DOM.Props_div)) ⇒ Record given → React.Basic.JSX
+appBar = React.Basic.element _AppBar
 
-component :: ∀ required given componentProps. Prim.Row.Union given required (PropsOptions componentProps) ⇒ Record given → ClassKeyJSS
-component = React.Basic.element _Component
+appBar_component :: ∀ required given componentProps. Prim.Row.Union given required (AppBarPropsOptions componentProps) ⇒ Record given → React.Basic.JSX
+appBar_component = React.Basic.element _AppBar

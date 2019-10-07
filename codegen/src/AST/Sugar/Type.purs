@@ -14,9 +14,6 @@ import Data.Map (Map)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, wrap)
 import Data.String (Pattern(..), split)
-import Data.Typelevel.Num (class Nat)
-import Data.Vec (Vec)
-import Data.Vec (toArray) as Vec
 import Heterogeneous.Folding (class HFoldl, hfoldl)
 import Prim.RowList (class RowToList)
 import Record.Extra (class MapRecord, mapRecord)
@@ -122,11 +119,11 @@ recordApply v = roll $ TypeApp
 row ∷ Map RowLabel Type → Maybe (Either Ident (QualifiedName TypeName)) → Row
 row labels tail = Row $ { labels: labels, tail }
 
-rowType ∷ Row → Type
-rowType = roll <<< TypeRow
-
 string ∷ Type
 string = roll TypeString
+
+typeRow ∷ Row → Type
+typeRow = roll <<< TypeRow
 
 var ∷ Ident → Type
 var = roll <<< TypeVar

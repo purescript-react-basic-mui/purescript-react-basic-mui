@@ -2,46 +2,38 @@ module Codegen.TS.MUI where
 
 import Prelude
 
-import Codegen.AST (ClassName(..), Declaration(..), Ident(..), ModuleName(..), Row, Type, TypeF(..), TypeName(..))
-import Codegen.AST (Declaration(..), Module(..), ModuleName(..), RowF(..), TypeName(..), Union(..)) as AST
+import Codegen.AST (Declaration, Ident(..), ModuleName(..), TypeF(..), TypeName(..))
+import Codegen.AST (Module(..), RowF(..), Type, TypeName(..), Union(..)) as AST
 import Codegen.AST.Sugar (declForeignData, declForeignValue, declType, declValue)
 import Codegen.AST.Sugar.Expr (app, ident) as Expr
-import Codegen.AST.Sugar.Type (app, arr, constructor, record, row, string) as Type
-import Codegen.AST.Sugar.Type (arr, forAll, row) as T
+import Codegen.AST.Sugar.Type (app, arr, constructor, record, row, string, typeRow) as Type
+import Codegen.AST.Sugar.Type (arr, row) as T
 import Codegen.AST.Sugar.Type (constrained, forAll, forAll', recordApply)
-import Codegen.Model (Component, psImportPath, reactComponentApply)
+import Codegen.Model (Component, reactComponentApply)
+import Codegen.Model (jsx) as Model
 import Codegen.TS.Module (PossibleType(..), astAlgebra, declarations, exprUnsafeCoerce, unionDeclarations) as TS.Module
 import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
-import Control.Monad.Except (ExceptT, runExceptT)
+import Control.Monad.Except (runExceptT)
 import Control.Monad.State (runState)
-import Data.Array (elem, fromFoldable, singleton, toUnfoldable) as Array
+import Data.Array (elem, singleton, toUnfoldable) as Array
 import Data.Either (Either(..))
-import Data.Foldable (class Foldable, foldr, intercalate)
+import Data.Foldable (foldr)
 import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Functor.Mu (roll)
-import Data.List (List(..), singleton, snoc) as List
+import Data.List (List(..), singleton) as List
 import Data.List (List)
 import Data.Map (Map)
 import Data.Map (filterKeys, fromFoldable, lookup, singleton) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Moldy (Moldy(..))
-import Data.Newtype (unwrap)
-import Data.Predicate (Predicate(..))
 import Data.String (joinWith)
+import Data.String.Extra (camelCase, pascalCase)
 import Data.Traversable (for)
 import Data.Tuple (Tuple(..))
-import Debug.Trace (traceM)
-import Effect (Effect)
-import Heterogeneous.Folding (class FoldlRecord, class HFoldl, ConstFolding(..), hfoldl)
 import Matryoshka (cata, cataM)
-import Node.FS (FileFlags(..))
-import Prim.RowList (class RowToList)
-import ReadDTS.Instantiation (Property) as Instntiation
-import ReadDTS.Instantiation (Type, TypeF(..), Property) as Instantiation
+import ReadDTS.Instantiation (Property, TypeF(..), Type) as Instantiation
 import ReadDTS.Instantiation.Pretty (pprintTypeName)
-import Record.Extra (class MapRecord, mapRecord)
 
 type ComponentName = String
 type TsImportPath = String
@@ -94,10 +86,6 @@ componentAST { name: componentName, inherits, propsType: { base, generate, vars 
       ["Unable to find generated props instance type:", show instanceTypeName ]
     Just { defaultInstance } → case defaultInstance of
         Mu.In (Instantiation.Object n props) → do
-          { prop: classesProp, declarations: classesDeclarations } ← if "classes" `Array.elem` generate
-            then classesPropAST inherits props
-            else pure { prop: Nothing, declarations: List.Nil }
-
           let
             -- | Take only a subset of props using given label set.
             props' = Map.filterKeys ((&&) <$> (not <<< eq "classes") <*> (_ `Array.elem` generate)) props
@@ -108,14 +96,16 @@ componentAST { name: componentName, inherits, propsType: { base, generate, vars 
 
           case types of
             Tuple (Right (TS.Module.ProperType (Mu.In (TypeRecord (AST.Row { labels, tail: Nothing }))))) unions → do
+              classes ← if "classes" `Array.elem` generate
+                then Just <$> classesPropAST componentName (Map.lookup "classes" props)
+                else pure Nothing
+
               let
                 AST.Row base' = fromMaybe (T.row mempty Nothing) base
-                classes = case classesProp of
-                  Just p → Map.singleton "classes" p
-                  Nothing -> mempty
-                c' = Type.record $ Type.row (classes <> labels <> base'.labels) base'.tail
-                propsTypeDecl = AST.DeclType
-                  { typeName: AST.TypeName "PropsOptions", "type": c', vars }
+                classesProp = maybe mempty (Map.singleton "classes" <<< _.prop) classes
+                c' = Type.typeRow $ Type.row (classesProp <> labels <> base'.labels) base'.tail
+                propsTypeDecl = declType (AST.TypeName $ componentName <> "PropsOptions") vars c'
+                decls = List.Cons (propsTypeDecl.declaration )
 
               unions' ← for unions $ case _ of
                 AST.Union { moduleName: Just _, name } _ → throwError $
@@ -126,7 +116,14 @@ componentAST { name: componentName, inherits, propsType: { base, generate, vars 
               let
                 step { "type": union, constructors } res =
                   List.Cons union (List.Cons constructors res)
-                declarations = foldr step (List.singleton propsTypeDecl) unions' <> classesDeclarations
+                -- | Our final component module consists of:
+                -- | * unions declrations
+                -- | * classes realted declarations
+                -- | * component constructor + foreign component import
+                declarations
+                  = foldr step (List.singleton propsTypeDecl.declaration) unions'
+                  <> maybe mempty _.declarations classes
+                  <> componentConstructorsAST propsTypeDecl.constructor inherits componentName
 
               pure $ AST.Module $
                 { declarations
@@ -168,6 +165,56 @@ componentAST { name: componentName, inherits, propsType: { base, generate, vars 
       , line ["export type", instanceTypeName, "=", propsTypeName <> ";"]
       ]
 
+componentConstructorsAST ∷ AST.Type → Maybe AST.Type → ComponentName → List Declaration
+componentConstructorsAST propsConstructor inherits componentName =
+  let
+    componentName' = camelCase componentName
+    componentValue = declForeignValue (Ident ("_" <> componentName)) (forAll' "a" \a → reactComponentApply [a])
+
+    -- | appBar :: ∀  given required
+    -- |   .  Union given required (AppBarPropsOptions (PaperProps Props_div) )
+    -- |   => Record given
+    -- |   -> JSX
+    -- | appBar = element _AppBar
+    componentConstructor =
+      let
+        signature = forAll { g: "given", r: "required"} $ \{ g, r } →
+          let
+            fun = Type.arr (recordApply g) Model.jsx
+            inherits' = case inherits of
+              Nothing → Type.constructor "React.Basic.DOM.Props_div"
+              Just t → t
+            u = Type.app propsConstructor [ inherits' ]
+          in
+            constrained "Prim.Row.Union" [ g, r, u] fun
+      in
+        declValue
+          (Ident componentName')
+          (Expr.app (Expr.ident "React.Basic.element") componentValue.var)
+          (Just signature)
+
+    componentConstructor' =
+      let
+        signature = forAll { c: "componentProps", g: "given", r: "required"} $ \{ c, g, r } →
+          let
+            fun = Type.arr (recordApply g) Model.jsx
+            inherits' = case inherits of
+              Nothing → Type.constructor "React.Basic.Props_div"
+              Just t → t
+            u = Type.app propsConstructor [ c ]
+          in
+            constrained "Prim.Row.Union" [ g, r, u] fun
+      in
+        declValue
+          (Ident $ componentName' <> "_component")
+          (Expr.app (Expr.ident "React.Basic.element") componentValue.var)
+          (Just signature)
+  in Array.toUnfoldable
+    [ componentValue.declaration
+    , componentConstructor.declaration
+    , componentConstructor'.declaration
+    ]
+
 -- | Generates all declarations related to classes.
 -- |
 -- | We are extracting classes directly from AST of a Props object.
@@ -177,10 +224,11 @@ componentAST { name: componentName, inherits, propsType: { base, generate, vars 
 -- | does not translate directly to any expected PS
 -- | construct because it contains `any` types.
 -- |
-classesPropAST ∷ _ → _ → M _
-classesPropAST inherits props = case Map.lookup "classes" props of
+classesPropAST ∷ ComponentName → Maybe (Instantiation.Property Instantiation.Type) → M { declarations ∷ List Declaration, prop ∷ AST.Type }
+classesPropAST componentName = case _ of
   Just { "type": Mu.In (Instantiation.Object _ classesProps) } → do
     let
+      componentName' = camelCase componentName
       classesNames = Map.Internal.keys classesProps
       binder = Ident "a"
       var = roll $ TypeVar binder
@@ -196,15 +244,19 @@ classesPropAST inherits props = case Map.lookup "classes" props of
         $ classesNames
 
       classKeyGenericOptionsType = declType
-        (TypeName "ClassKeyGenericOptions")
+        (TypeName $ componentName <> "ClassKeyGenericOptions")
         [ binder ]
         classesGenericOptionsRow
 
       classKeyJSSOptionsType = declType
-        (TypeName "ClassKeyOptionsJSS") [] (Type.app classKeyGenericOptionsType.constructor [ Type.constructor "MUI.Core.JSS" ])
+        (TypeName $ componentName <> "ClassKeyOptionsJSS")
+        []
+        (Type.app classKeyGenericOptionsType.constructor [ Type.constructor "MUI.Core.JSS" ])
 
       classKeyOptionsType = declType
-        (TypeName "ClassKeyOptions") [] (Type.app classKeyGenericOptionsType.constructor [ Type.string ])
+        (TypeName $ componentName <> "ClassKeyOptions")
+        []
+        (Type.app classKeyGenericOptionsType.constructor [ Type.string ])
 
       -- | Construct a type and related constructor function which which looks like this:
       -- | ```
@@ -216,10 +268,10 @@ classesPropAST inherits props = case Map.lookup "classes" props of
       -- |  -> BadgeClassKey
       -- | classKey = unsafeCoerce
       -- | ```
-      classKeyType = declForeignData (TypeName "ClassKey")
+      classKeyType = declForeignData (TypeName $ componentName <> "ClassKey")
       classKeyValue =
         let
-          ident = Ident "classKey"
+          ident = Ident $ componentName' <> "ClassKey"
           signature = forAll { g: "given", r: "required"} $ \{ g, r } →
             let
               fun = T.arr (recordApply g) classKeyType.constructor
@@ -228,10 +280,10 @@ classesPropAST inherits props = case Map.lookup "classes" props of
         in
           declValue ident TS.Module.exprUnsafeCoerce (Just signature)
 
-      classKeyJSSType = declForeignData (TypeName "ClassKeyJSS")
+      classKeyJSSType = declForeignData (TypeName $ componentName <> "ClassKeyJSS")
       classKeyJSSValue =
         let
-          ident = Ident "classKeyJSS"
+          ident = Ident $ componentName' <> "ClassKeyJSS"
           signature = forAll { g: "given", r: "required"} $ \{ g, r } →
             let
               fun = T.arr (recordApply g) classKeyJSSType.constructor
@@ -240,46 +292,6 @@ classesPropAST inherits props = case Map.lookup "classes" props of
         in
           declValue ident TS.Module.exprUnsafeCoerce (Just signature)
 
-      componentValue = declForeignValue (Ident "_Component") (forAll' "a" \a → reactComponentApply [a])
-
-      -- | appBar :: ∀  given required
-      -- |   .  Union given required (AppBarPropsOptions (PaperProps Props_div) )
-      -- |   => Record given
-      -- |   -> JSX
-      -- | appBar = element _AppBar
-      componentConstructor =
-        let
-          signature = forAll { g: "given", r: "required"} $ \{ g, r } →
-            let
-              fun = Type.arr (recordApply g) classKeyJSSType.constructor
-              inherits' = case inherits of
-                Nothing → Type.constructor "React.Basic.Props_div"
-                Just t → t
-              u = Type.app (Type.constructor "PropsOptions") [ inherits' ]
-            in
-              constrained "Prim.Row.Union" [ g, r, u] fun
-        in
-          declValue
-            (Ident "component")
-            (Expr.app (Expr.ident "React.Basic.element") componentValue.var)
-            (Just signature)
-
-      componentConstructor' =
-        let
-          signature = forAll { c: "componentProps", g: "given", r: "required"} $ \{ c, g, r } →
-            let
-              fun = Type.arr (recordApply g) classKeyJSSType.constructor
-              inherits' = case inherits of
-                Nothing → Type.constructor "React.Basic.Props_div"
-                Just t → t
-              u = Type.app (Type.constructor "PropsOptions") [ c ]
-            in
-              constrained "Prim.Row.Union" [ g, r, u] fun
-        in
-          declValue
-            (Ident "component'")
-            (Expr.app (Expr.ident "React.Basic.element") componentValue.var)
-            (Just signature)
     let
       declarations :: List _
       declarations = Array.toUnfoldable
@@ -290,11 +302,8 @@ classesPropAST inherits props = case Map.lookup "classes" props of
         , classKeyJSSOptionsType.declaration
         , classKeyJSSType.declaration
         , classKeyJSSValue.declaration
-        , componentValue.declaration
-        , componentConstructor.declaration
-        , componentConstructor'.declaration
         ]
-    pure { declarations, prop: Just classKeyType.constructor }
+    pure { declarations, prop: classKeyType.constructor }
   c → throwError $ Array.singleton $ line
     [ show "classses", "prop is missing or has wrong type:", "_", "in instance object"]
 

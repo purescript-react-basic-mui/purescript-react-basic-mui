@@ -2,7 +2,8 @@ module MUI.Core.Badge where
 
 import MUI.Core (JSS) as MUI.Core
 import Prim.Row (class Union) as Prim.Row
-import React.Basic (element, JSX, Props_div, ReactComponent) as React.Basic
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
 foreign import data Variant :: Type
@@ -25,28 +26,28 @@ foreign import data Horizontal :: Type
 horizontal :: { left ∷ Horizontal, right ∷ Horizontal }
 horizontal = { left: Unsafe.Coerce.unsafeCoerce "left", right: Unsafe.Coerce.unsafeCoerce "right" }
 
-type PropsOptions componentProps = { anchorOrigin ∷ { horizontal ∷ Horizontal, vertical ∷ Vertical }, badgeContent ∷ React.Basic.JSX, children ∷ Array (React.Basic.JSX), classes ∷ ClassKey, color ∷ Color, component ∷ React.Basic.ReactComponent {  | componentProps }, invisible ∷ Boolean, max ∷ Number, showZero ∷ Boolean, variant ∷ Variant | componentProps }
+type BadgePropsOptions componentProps = ( anchorOrigin ∷ { horizontal ∷ Horizontal, vertical ∷ Vertical }, badgeContent ∷ React.Basic.JSX, children ∷ Array (React.Basic.JSX), classes ∷ BadgeClassKey, color ∷ Color, component ∷ React.Basic.ReactComponent {  | componentProps }, invisible ∷ Boolean, max ∷ Number, showZero ∷ Boolean, variant ∷ Variant | componentProps )
 
-type ClassKeyGenericOptions a = ( anchorOriginBottomLeftRectangle ∷ a, anchorOriginBottomRightCircle ∷ a, anchorOriginBottomRightRectangle ∷ a, anchorOriginTopLeftCircle ∷ a, anchorOriginTopLeftRectangle ∷ a, anchorOriginTopRightCircle ∷ a, anchorOriginTopRightRectangle ∷ a, badge ∷ a, colorError ∷ a, colorPrimary ∷ a, colorSecondary ∷ a, dot ∷ a, invisible ∷ a, root ∷ a )
+type BadgeClassKeyGenericOptions a = ( anchorOriginBottomLeftRectangle ∷ a, anchorOriginBottomRightCircle ∷ a, anchorOriginBottomRightRectangle ∷ a, anchorOriginTopLeftCircle ∷ a, anchorOriginTopLeftRectangle ∷ a, anchorOriginTopRightCircle ∷ a, anchorOriginTopRightRectangle ∷ a, badge ∷ a, colorError ∷ a, colorPrimary ∷ a, colorSecondary ∷ a, dot ∷ a, invisible ∷ a, root ∷ a )
 
-type ClassKeyOptions  = ClassKeyGenericOptions String
+type BadgeClassKeyOptions  = BadgeClassKeyGenericOptions String
 
-foreign import data ClassKey :: Type
+foreign import data BadgeClassKey :: Type
 
-classKey :: ∀ required given. Prim.Row.Union given required ClassKeyOptions ⇒ Record given → ClassKey
-classKey = Unsafe.Coerce.unsafeCoerce
+badgeClassKey :: ∀ required given. Prim.Row.Union given required BadgeClassKeyOptions ⇒ Record given → BadgeClassKey
+badgeClassKey = Unsafe.Coerce.unsafeCoerce
 
-type ClassKeyOptionsJSS  = ClassKeyGenericOptions MUI.Core.JSS
+type BadgeClassKeyOptionsJSS  = BadgeClassKeyGenericOptions MUI.Core.JSS
 
-foreign import data ClassKeyJSS :: Type
+foreign import data BadgeClassKeyJSS :: Type
 
-classKeyJSS :: ∀ required given. Prim.Row.Union given required ClassKeyOptionsJSS ⇒ Record given → ClassKeyJSS
-classKeyJSS = Unsafe.Coerce.unsafeCoerce
+badgeClassKeyJSS :: ∀ required given. Prim.Row.Union given required BadgeClassKeyOptionsJSS ⇒ Record given → BadgeClassKeyJSS
+badgeClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-foreign import _Component :: ∀ a. React.Basic.ReactComponent a
+foreign import _Badge :: ∀ a. React.Basic.ReactComponent a
 
-component :: ∀ required given. Prim.Row.Union given required (PropsOptions React.Basic.Props_div) ⇒ Record given → ClassKeyJSS
-component = React.Basic.element _Component
+badge :: ∀ required given. Prim.Row.Union given required (BadgePropsOptions React.Basic.DOM.Props_div) ⇒ Record given → React.Basic.JSX
+badge = React.Basic.element _Badge
 
-component :: ∀ required given componentProps. Prim.Row.Union given required (PropsOptions componentProps) ⇒ Record given → ClassKeyJSS
-component = React.Basic.element _Component
+badge_component :: ∀ required given componentProps. Prim.Row.Union given required (BadgePropsOptions componentProps) ⇒ Record given → React.Basic.JSX
+badge_component = React.Basic.element _Badge
