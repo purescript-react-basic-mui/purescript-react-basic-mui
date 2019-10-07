@@ -170,7 +170,9 @@ componentConstructorsAST propsConstructor inherits componentName =
   let
     componentName' = camelCase componentName
     componentValue = declForeignValue (Ident ("_" <> componentName)) (forAll' "a" \a → reactComponentApply [a])
+    inherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") inherits
 
+    -- | For example:
     -- | appBar :: ∀  given required
     -- |   .  Union given required (AppBarPropsOptions (PaperProps Props_div) )
     -- |   => Record given
@@ -181,9 +183,6 @@ componentConstructorsAST propsConstructor inherits componentName =
         signature = forAll { g: "given", r: "required"} $ \{ g, r } →
           let
             fun = Type.arr (recordApply g) Model.jsx
-            inherits' = case inherits of
-              Nothing → Type.constructor "React.Basic.DOM.Props_div"
-              Just t → t
             u = Type.app propsConstructor [ inherits' ]
           in
             constrained "Prim.Row.Union" [ g, r, u] fun
@@ -193,14 +192,17 @@ componentConstructorsAST propsConstructor inherits componentName =
           (Expr.app (Expr.ident "React.Basic.element") componentValue.var)
           (Just signature)
 
+    -- | For example:
+    -- | appBar :: ∀  componentProps given required
+    -- |   .  Union given required (AppBarPropsOptions componentProps)
+    -- |   => Record given
+    -- |   -> JSX
+    -- | appBar = element _AppBar
     componentConstructor' =
       let
         signature = forAll { c: "componentProps", g: "given", r: "required"} $ \{ c, g, r } →
           let
             fun = Type.arr (recordApply g) Model.jsx
-            inherits' = case inherits of
-              Nothing → Type.constructor "React.Basic.Props_div"
-              Just t → t
             u = Type.app propsConstructor [ c ]
           in
             constrained "Prim.Row.Union" [ g, r, u] fun
