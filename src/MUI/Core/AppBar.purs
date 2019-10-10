@@ -17,7 +17,9 @@ foreign import data Color :: Type
 color :: { default ∷ Color, inherit ∷ Color, primary ∷ Color, secondary ∷ Color }
 color = { default: Unsafe.Coerce.unsafeCoerce "default", inherit: Unsafe.Coerce.unsafeCoerce "inherit", primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary" }
 
-type AppBarPropsOptions componentProps = ( children ∷ Array (React.Basic.JSX), classes ∷ AppBarClassKey, color ∷ Color, position ∷ Position | componentProps )
+type AppBarPropsOptions componentProps = ( children ∷ Array React.Basic.JSX, classes ∷ AppBarClassKey, color ∷ Color, position ∷ Position | componentProps )
+
+foreign import data AppBarProps :: Type
 
 type AppBarClassKeyGenericOptions a = ( colorDefault ∷ a, colorPrimary ∷ a, colorSecondary ∷ a, positionAbsolute ∷ a, positionFixed ∷ a, positionRelative ∷ a, positionStatic ∷ a, positionSticky ∷ a, root ∷ a )
 

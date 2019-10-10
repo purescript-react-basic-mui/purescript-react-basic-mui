@@ -26,7 +26,9 @@ foreign import data Horizontal :: Type
 horizontal :: { left ∷ Horizontal, right ∷ Horizontal }
 horizontal = { left: Unsafe.Coerce.unsafeCoerce "left", right: Unsafe.Coerce.unsafeCoerce "right" }
 
-type BadgePropsOptions componentProps = ( anchorOrigin ∷ { horizontal ∷ Horizontal, vertical ∷ Vertical }, badgeContent ∷ React.Basic.JSX, children ∷ Array (React.Basic.JSX), classes ∷ BadgeClassKey, color ∷ Color, component ∷ React.Basic.ReactComponent {  | componentProps }, invisible ∷ Boolean, max ∷ Number, showZero ∷ Boolean, variant ∷ Variant | componentProps )
+type BadgePropsOptions componentProps = ( anchorOrigin ∷ { horizontal ∷ Horizontal, vertical ∷ Vertical }, badgeContent ∷ React.Basic.JSX, children ∷ Array React.Basic.JSX, classes ∷ BadgeClassKey, color ∷ Color, component ∷ React.Basic.ReactComponent {  | componentProps }, invisible ∷ Boolean, max ∷ Number, showZero ∷ Boolean, variant ∷ Variant | componentProps )
+
+foreign import data BadgeProps :: Type
 
 type BadgeClassKeyGenericOptions a = ( anchorOriginBottomLeftRectangle ∷ a, anchorOriginBottomRightCircle ∷ a, anchorOriginBottomRightRectangle ∷ a, anchorOriginTopLeftCircle ∷ a, anchorOriginTopLeftRectangle ∷ a, anchorOriginTopRightCircle ∷ a, anchorOriginTopRightRectangle ∷ a, badge ∷ a, colorError ∷ a, colorPrimary ∷ a, colorSecondary ∷ a, dot ∷ a, invisible ∷ a, root ∷ a )
 

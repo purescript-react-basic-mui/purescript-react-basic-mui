@@ -1,87 +1,47 @@
 module MUI.Core.ButtonBase where
 
-import Prelude
+import Foreign (Foreign) as Foreign
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.ButtonBase.TouchRipple (TouchRippleProps) as MUI.Core.ButtonBase.TouchRipple
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_button) as React.Basic.DOM
+import React.Basic.Events (EventHandler) as React.Basic.Events
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-import Foreign (Foreign)
-import MUI.Core (JSS)
-import MUI.Core.ButtonBase.TouchRipple (TouchRippleProps)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_button)
-import React.Basic.Events (EventHandler)
-import Unsafe.Coerce (unsafeCoerce)
+foreign import data Type_ :: Type
 
-type ButtonBasePropsOptions componentProps = 
-  ( action :: Foreign
-  , buttonRef :: Foreign
-  , centerRipple :: Boolean
-  , children :: (Array JSX)
-  , classes :: ButtonBaseClassKey
-  , component :: ReactComponent { | componentProps }
-  , disabled :: Boolean
-  , disableRipple :: Boolean
-  , disableTouchRipple :: Boolean
-  , focusRipple :: Boolean
-  , focusVisibleClassName :: String
-  , onFocusVisible :: EventHandler
-  , "TouchRippleProps" :: TouchRippleProps
-  , type :: TypeProp
-  | componentProps
-  )
+type_ :: { button ∷ Type_, reset ∷ Type_, submit ∷ Type_ }
+type_ = { button: Unsafe.Coerce.unsafeCoerce "button", reset: Unsafe.Coerce.unsafeCoerce "reset", submit: Unsafe.Coerce.unsafeCoerce "submit" }
+
+type ButtonBaseActions  = Foreign.Foreign
+
+type ButtonBaseTypeProp  = Foreign.Foreign
+
+type ButtonBasePropsOptions componentProps = ( "TouchRippleProps" ∷ MUI.Core.ButtonBase.TouchRipple.TouchRippleProps, action ∷ Foreign.Foreign, buttonRef ∷ Foreign.Foreign, centerRipple ∷ Boolean, children ∷ Array React.Basic.JSX, classes ∷ ButtonBaseClassKey, color ∷ String, component ∷ React.Basic.ReactComponent {  | componentProps }, disableRipple ∷ Boolean, disabled ∷ Boolean, focusRipple ∷ Boolean, onFocusVisible ∷ React.Basic.Events.EventHandler, "type" ∷ Type_ | componentProps )
 
 foreign import data ButtonBaseProps :: Type
 
-type ButtonBaseActions = Foreign
-type ButtonBaseTypeProp = Foreign
+type ButtonBaseClassKeyGenericOptions a = ( disabled ∷ a, focusVisible ∷ a, root ∷ a )
 
+type ButtonBaseClassKeyOptions  = ButtonBaseClassKeyGenericOptions String
 
-foreign import data TypeProp :: Type
-foreign import _eqTypeProp :: TypeProp -> TypeProp -> Boolean
-foreign import _ordTypeProp :: TypeProp -> TypeProp -> Int
-instance eqTypeProp :: Eq TypeProp where eq _left _right = _eqTypeProp _left _right
-instance ordTypeProp :: Ord TypeProp where compare _left _right = compare (_ordTypeProp _left _right) (_ordTypeProp _right _left)
-
-submit :: TypeProp
-submit = unsafeCoerce "submit"
-
-reset :: TypeProp
-reset = unsafeCoerce "reset"
-
-button :: TypeProp
-button = unsafeCoerce "button"
-
-type ButtonBaseClassKeyGenericOptions a =
-  ( root :: a 
-  , disabled :: a 
-  , focusVisible :: a 
-  )
-type ButtonBaseClassKeyOptions = ButtonBaseClassKeyGenericOptions String
-type ButtonBaseClassKeyJSSOptions = ButtonBaseClassKeyGenericOptions JSS
 foreign import data ButtonBaseClassKey :: Type
+
+buttonBaseClassKey :: ∀ required given. Prim.Row.Union given required ButtonBaseClassKeyOptions ⇒ Record given → ButtonBaseClassKey
+buttonBaseClassKey = Unsafe.Coerce.unsafeCoerce
+
+type ButtonBaseClassKeyOptionsJSS  = ButtonBaseClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data ButtonBaseClassKeyJSS :: Type
 
-buttonBaseClassKey :: ∀  given required
-  .  Union given required (ButtonBaseClassKeyOptions )
-  => Record given
-  -> ButtonBaseClassKey
-buttonBaseClassKey = unsafeCoerce
+buttonBaseClassKeyJSS :: ∀ required given. Prim.Row.Union given required ButtonBaseClassKeyOptionsJSS ⇒ Record given → ButtonBaseClassKeyJSS
+buttonBaseClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-buttonBaseClassKeyJSS :: ∀  given required
-  .  Union given required (ButtonBaseClassKeyJSSOptions )
-  => Record given
-  -> ButtonBaseClassKeyJSS
-buttonBaseClassKeyJSS = unsafeCoerce
+foreign import _ButtonBase :: ∀ a. React.Basic.ReactComponent a
 
-buttonBase :: ∀  given required
-  .  Union given required (ButtonBasePropsOptions Props_button )
-  => Record given
-  -> JSX
-buttonBase = element _ButtonBase
+buttonBase :: ∀ required given. Prim.Row.Union given required (ButtonBasePropsOptions (ButtonBasePropsOptions React.Basic.DOM.Props_button)) ⇒ Record given → React.Basic.JSX
+buttonBase = React.Basic.element _ButtonBase
 
-buttonBase_component :: ∀ componentProps given required
-  .  Union given required (ButtonBasePropsOptions componentProps)
-  => Record given
-  -> JSX
-buttonBase_component = element _ButtonBase
-
-foreign import _ButtonBase :: ∀ a. ReactComponent a
+buttonBase_component :: ∀ required given componentProps. Prim.Row.Union given required (ButtonBasePropsOptions componentProps) ⇒ Record given → React.Basic.JSX
+buttonBase_component = React.Basic.element _ButtonBase

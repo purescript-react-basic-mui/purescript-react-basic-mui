@@ -1,54 +1,35 @@
 module MUI.Core.ButtonBase.TouchRipple where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_span)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_span) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type TouchRipplePropsOptions componentProps = 
-  ( center :: Boolean
-  | componentProps
-  )
+type TouchRipplePropsOptions componentProps = ( classes ∷ TouchRippleClassKey | componentProps )
 
 foreign import data TouchRippleProps :: Type
 
-type TouchRippleClassKeyGenericOptions a =
-  ( root :: a 
-  , ripple :: a 
-  , rippleVisible :: a 
-  , ripplePulsate :: a 
-  , child :: a 
-  , childLeaving :: a 
-  , childPulsate :: a 
-  )
-type TouchRippleClassKeyOptions = TouchRippleClassKeyGenericOptions String
-type TouchRippleClassKeyJSSOptions = TouchRippleClassKeyGenericOptions JSS
+type TouchRippleClassKeyGenericOptions a = ( child ∷ a, childLeaving ∷ a, childPulsate ∷ a, ripple ∷ a, ripplePulsate ∷ a, rippleVisible ∷ a, root ∷ a )
+
+type TouchRippleClassKeyOptions  = TouchRippleClassKeyGenericOptions String
+
 foreign import data TouchRippleClassKey :: Type
+
+touchRippleClassKey :: ∀ required given. Prim.Row.Union given required TouchRippleClassKeyOptions ⇒ Record given → TouchRippleClassKey
+touchRippleClassKey = Unsafe.Coerce.unsafeCoerce
+
+type TouchRippleClassKeyOptionsJSS  = TouchRippleClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data TouchRippleClassKeyJSS :: Type
 
-touchRippleClassKey :: ∀  given required
-  .  Union given required (TouchRippleClassKeyOptions )
-  => Record given
-  -> TouchRippleClassKey
-touchRippleClassKey = unsafeCoerce
+touchRippleClassKeyJSS :: ∀ required given. Prim.Row.Union given required TouchRippleClassKeyOptionsJSS ⇒ Record given → TouchRippleClassKeyJSS
+touchRippleClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-touchRippleClassKeyJSS :: ∀  given required
-  .  Union given required (TouchRippleClassKeyJSSOptions )
-  => Record given
-  -> TouchRippleClassKeyJSS
-touchRippleClassKeyJSS = unsafeCoerce
+foreign import _TouchRipple :: ∀ a. React.Basic.ReactComponent a
 
-touchRipple :: ∀  given required
-  .  Union given required (TouchRipplePropsOptions Props_span )
-  => Record given
-  -> JSX
-touchRipple = element _TouchRipple
+touchRipple :: ∀ required given. Prim.Row.Union given required (TouchRipplePropsOptions React.Basic.DOM.Props_span) ⇒ Record given → React.Basic.JSX
+touchRipple = React.Basic.element _TouchRipple
 
-touchRipple_component :: ∀ componentProps given required
-  .  Union given required (TouchRipplePropsOptions componentProps)
-  => Record given
-  -> JSX
-touchRipple_component = element _TouchRipple
-
-foreign import _TouchRipple :: ∀ a. ReactComponent a
+touchRipple_component :: ∀ required given componentProps. Prim.Row.Union given required (TouchRipplePropsOptions componentProps) ⇒ Record given → React.Basic.JSX
+touchRipple_component = React.Basic.element _TouchRipple
