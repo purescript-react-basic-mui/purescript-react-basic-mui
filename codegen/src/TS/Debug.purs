@@ -26,3 +26,9 @@ traceType :: forall m. DebugWarning => Monad m => TraceMode -> Instantiation.Typ
 traceType traceMode t = traceM $ case traceMode of
   FullType -> Instantiation.Pretty.pprint t
   TypeNameOnly -> cata pprintTypeName t
+
+traceIntersectionTypes ∷ ∀ m. DebugWarning ⇒ Monad m ⇒ TraceMode → Instantiation.Type → m Unit
+traceIntersectionTypes traceMode (Mu.In (Instantiation.Intersection a b)) = do
+  traceType traceMode a
+  traceIntersectionTypes traceMode b
+traceIntersectionTypes traceMode t = traceType traceMode t

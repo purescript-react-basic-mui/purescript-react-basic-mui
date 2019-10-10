@@ -6,10 +6,10 @@ import Codegen.AST (Declaration, Ident(..), ModuleName(..), TypeF(..), TypeName(
 import Codegen.AST (Module(..), RowF(..), Type, TypeName(..), Union(..)) as AST
 import Codegen.AST.Sugar (declForeignData, declForeignValue, declType, declValue)
 import Codegen.AST.Sugar.Expr (app, ident) as Expr
-import Codegen.AST.Sugar.Type (app, arr, constructor, record, row, string, typeRow) as Type
-import Codegen.AST.Sugar.Type (arr, row) as T
+import Codegen.AST.Sugar.Type (app, arr, constructor, row, string, typeRow) as Type
+import Codegen.AST.Sugar.Type (arr) as T
 import Codegen.AST.Sugar.Type (constrained, forAll, forAll', recordApply)
-import Codegen.Model (Component, reactComponentApply)
+import Codegen.Model (Component, ModulePath, jsImportPath, psImportPath, reactComponentApply)
 import Codegen.Model (jsx) as Model
 import Codegen.TS.Module (PossibleType(..), astAlgebra, declarations, exprUnsafeCoerce, unionDeclarations) as TS.Module
 import Codegen.TS.Types (M)
@@ -21,32 +21,43 @@ import Data.Either (Either(..))
 import Data.Foldable (foldr)
 import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Functor.Mu (roll)
-import Data.List (List(..), singleton) as List
+import Data.List (List(..), fromFoldable) as List
 import Data.List (List)
 import Data.Map (Map)
 import Data.Map (filterKeys, fromFoldable, lookup, singleton) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.String (joinWith)
-import Data.String.Extra (camelCase, pascalCase)
+import Data.String (Pattern(..), joinWith)
+import Data.String (replace) as String
+import Data.String.Extra (camelCase)
+import Data.String.Pattern (Replacement(..))
 import Data.Traversable (for)
 import Data.Tuple (Tuple(..))
 import Matryoshka (cata, cataM)
-import ReadDTS.Instantiation (Property, TypeF(..), Type) as Instantiation
+import ReadDTS.Instantiation (Property, Type, TypeF(..)) as Instantiation
 import ReadDTS.Instantiation.Pretty (pprintTypeName)
 
 type ComponentName = String
 type TsImportPath = String
 
-tsImportPath ∷ ComponentName → TsImportPath
-tsImportPath component =
-  "@material-ui/core/" <> component <> "/" <> component
+tsImportPath ∷ ModulePath → TsImportPath
+tsImportPath modulePath =
+  String.replace pattern replacement (jsImportPath modulePath)
+  where
+    pattern = Pattern "MUI/Core/"
+    replacement = Replacement "@material-ui/core/"
 
-psModuleName ∷ ComponentName → ModuleName
-psModuleName component = ModuleName $ "MUI.Core." <> component
+propsTypeName ∷ ComponentName → String
+propsTypeName componentName = componentName <> "Props"
 
-componentProps ∷ ComponentName → M (Map String (Instantiation.Property Instantiation.Type))
-componentProps componentName = do
+componentProps
+  ∷ ComponentName
+  → ModulePath
+  → M
+    { fqn ∷ String
+    , props ∷ Map String (Instantiation.Property Instantiation.Type)
+    }
+componentProps componentName modulePath = do
   tsDeclarations ← TS.Module.declarations
     { path: instanceModulePath
     , source: Just source
@@ -54,8 +65,8 @@ componentProps componentName = do
   case Map.lookup instanceTypeName tsDeclarations of
     Nothing → throwError $ Array.singleton $ line
       ["Unable to find generated props instance type:", show instanceTypeName ]
-    Just { defaultInstance: Mu.In (Instantiation.Object n props) } →
-      pure props
+    Just { defaultInstance: Mu.In (Instantiation.Object n props), typeConstructor } → do
+      pure { fqn: n, props }
     Just { defaultInstance } → throwError $ Array.singleton $ lines
       [ line
         ["Props instance type" , show instanceTypeName
@@ -65,105 +76,77 @@ componentProps componentName = do
       , source
       ]
   where
-    propsTypeName = componentName <> "Props"
-    instanceTypeName = propsTypeName <> "Instance"
+    propsName = propsTypeName componentName
+    instanceTypeName = propsName <> "Instance"
     instanceModulePath = instanceTypeName <> ".d.ts"
     -- | This approach is described in `Codegen.Typescript.Module`
     source = lines $
-      [ line ["import", "{",  propsTypeName, "}", "from", show $ tsImportPath componentName ]
-      , line ["export type", instanceTypeName, "=", propsTypeName <> ";"]
+      [ line ["import", "{",  propsName, "}", "from", show $ tsImportPath modulePath ]
+      -- | Interface extending forces ts type checker to resolve all type fields.
+      -- | It won't work with just type aliasing :-(
+      , line ["export interface ", instanceTypeName, "extends", propsName <> " {};"]
       ]
 
--- componentAST ∷ ComponentName → Maybe AST.Row → Set AST.RowLabel → ExceptT (Array String) Effect AST.Module
 componentAST ∷ Component → M AST.Module
-componentAST { name: componentName, inherits, propsType: { base, generate, vars }} = do
-  tsDeclarations ← TS.Module.declarations
-    { path: instanceModulePath
-    , source: Just source
-    }
-  case Map.lookup instanceTypeName tsDeclarations of
-    Nothing → throwError $ Array.singleton $ line
-      ["Unable to find generated props instance type:", show instanceTypeName ]
-    Just { defaultInstance } → case defaultInstance of
-        Mu.In (Instantiation.Object n props) → do
-          let
-            -- | Take only a subset of props using given label set.
-            props' = Map.filterKeys ((&&) <$> (not <<< eq "classes") <*> (_ `Array.elem` generate)) props
-            -- | Create an new "Object" type from them
-            -- | for AST generation.
-            obj = roll $ Instantiation.Object n props'
-            types = flip runState mempty <<< runExceptT <<< cataM TS.Module.astAlgebra $ obj
+componentAST { extraCode, name: componentName, inherits, modulePath, propsType: { base: { row: base, vars }, generate }} = do
+  { fqn, props } ← componentProps componentName modulePath
+  let
+    -- | Take only a subset of props using given label set.
+    props' = Map.filterKeys ((&&) <$> (not <<< eq "classes") <*> (_ `Array.elem` generate)) props
+    -- | Create an new "Object" type from them
+    -- | for AST generation.
+    obj ∷ Instantiation.Type
+    obj = roll $ Instantiation.Object fqn props'
+    objInstance = flip runState mempty <<< runExceptT <<< cataM TS.Module.astAlgebra $ obj
 
-          case types of
-            Tuple (Right (TS.Module.ProperType (Mu.In (TypeRecord (AST.Row { labels, tail: Nothing }))))) unions → do
-              classes ← if "classes" `Array.elem` generate
-                then Just <$> classesPropAST componentName (Map.lookup "classes" props)
-                else pure Nothing
+  case objInstance of
+    Tuple (Right (TS.Module.ProperType (Mu.In (TypeRecord (AST.Row { labels, tail: Nothing }))))) unions → do
+      classes ← if "classes" `Array.elem` generate
+        then Just <$> classesPropAST componentName (Map.lookup "classes" props)
+        else pure Nothing
 
-              let
-                AST.Row base' = fromMaybe (T.row mempty Nothing) base
-                classesProp = maybe mempty (Map.singleton "classes" <<< _.prop) classes
-                c' = Type.typeRow $ Type.row (classesProp <> labels <> base'.labels) base'.tail
-                propsTypeDecl = declType (AST.TypeName $ componentName <> "PropsOptions") vars c'
-                decls = List.Cons (propsTypeDecl.declaration )
+      let
+        AST.Row base' = base
+        classesProp = maybe mempty (Map.singleton "classes" <<< _.prop) classes
+        c' = Type.typeRow $ Type.row (classesProp <> labels <> base'.labels) base'.tail
+        propsOptionsTypeDecl = declType (AST.TypeName $ propsName <> "Options") vars c'
+        propsTypeDecl = declForeignData (AST.TypeName $ propsName)
 
-              unions' ← for unions $ case _ of
-                AST.Union { moduleName: Just _, name } _ → throwError $
-                  [ "External union generation not implmented yet..." ]
-                AST.Union { moduleName: Nothing, name } members →
-                  pure $ TS.Module.unionDeclarations name members
+        propsDeclarations
+          = List.Cons (propsOptionsTypeDecl.declaration )
+          $ List.Cons (propsTypeDecl.declaration)
+          $ List.Nil
 
-              let
-                step { "type": union, constructors } res =
-                  List.Cons union (List.Cons constructors res)
-                -- | Our final component module consists of:
-                -- | * unions declrations
-                -- | * classes realted declarations
-                -- | * component constructor + foreign component import
-                declarations
-                  = foldr step (List.singleton propsTypeDecl.declaration) unions'
-                  <> maybe mempty _.declarations classes
-                  <> componentConstructorsAST propsTypeDecl.constructor inherits componentName
+      unions' ← for unions $ case _ of
+        AST.Union { moduleName: Just _, name } _ → throwError $
+          [ "External union generation not implmented yet..." ]
+        AST.Union { moduleName: Nothing, name } members →
+          pure $ TS.Module.unionDeclarations name members
 
-              pure $ AST.Module $
-                { declarations
-                , moduleName: psModuleName componentName
-                }
+      let
+        step { "type": union, constructors } res =
+          List.Cons union (List.Cons constructors res)
+        -- | Our final component module consists of:
+        -- | * unions declrations
+        -- | * classes realted declarations
+        -- | * component constructor + foreign component import
+        declarations
+          = foldr step List.Nil unions'
+          <> maybe mempty List.fromFoldable extraCode
+          <> propsDeclarations
+          <> maybe mempty _.declarations classes
+          <> componentConstructorsAST propsOptionsTypeDecl.constructor inherits componentName
 
-            (Tuple (Right result) _) → throwError $ Array.singleton $ line $
-              ["Expecting object type for props instance"
-              , show instanceTypeName, "but got"
-              , show result
-              ]
-            (Tuple (Left err) _) → throwError [ err ]
+      pure $ AST.Module $
+        { declarations
+        , moduleName: ModuleName $ psImportPath modulePath
+        }
 
-        Mu.In Instantiation.Any → throwError $ Array.singleton $ lines
-          [ line ["Props instance type is derived to be 'any' for" , show instanceTypeName]
-          , line
-            [ "Is it possible that your component path is broken"
-            , "or exported props type has different name?"
-            ]
-          , "Generated ts source code was:"
-          , source
-         ]
-
-        otherwise → throwError $ Array.singleton $ lines
-          [ line
-            ["Props instance type" , show instanceTypeName
-            , "is not an object. Derived type is: ", show $ cata pprintTypeName defaultInstance
-            ]
-          , "Generated ts source code was:"
-          , source
-          ]
+    (Tuple (Right result) _) → throwError $ Array.singleton $ line $
+      ["Expecting object type as a result of props instantiation: " , show result ]
+    (Tuple (Left err) _) → throwError [ err ]
   where
-    propsTypeName = componentName <> "Props"
-    instanceTypeName = propsTypeName <> "Instance"
-    instanceModulePath = instanceTypeName <> ".d.ts"
-    -- | This approach is described in `Codegen.Typescript.Module`
-    source = lines $
-      [ line ["import", "{",  propsTypeName, "}", "from", show $ tsImportPath componentName ]
-      , line ["export type", instanceTypeName, "=", propsTypeName <> ";"]
-      ]
+    propsName = propsTypeName componentName
 
 componentConstructorsAST ∷ AST.Type → Maybe AST.Type → ComponentName → List Declaration
 componentConstructorsAST propsConstructor inherits componentName =
@@ -173,10 +156,10 @@ componentConstructorsAST propsConstructor inherits componentName =
     inherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") inherits
 
     -- | For example:
-    -- | appBar :: ∀  given required
+    -- | appBar ∷ ∀  given required
     -- |   .  Union given required (AppBarPropsOptions (PaperProps Props_div) )
-    -- |   => Record given
-    -- |   -> JSX
+    -- |   ⇒ Record given
+    -- |   → JSX
     -- | appBar = element _AppBar
     componentConstructor =
       let
@@ -193,10 +176,10 @@ componentConstructorsAST propsConstructor inherits componentName =
           (Just signature)
 
     -- | For example:
-    -- | appBar :: ∀  componentProps given required
+    -- | appBar ∷ ∀  componentProps given required
     -- |   .  Union given required (AppBarPropsOptions componentProps)
-    -- |   => Record given
-    -- |   -> JSX
+    -- |   ⇒ Record given
+    -- |   → JSX
     -- | appBar = element _AppBar
     componentConstructor' =
       let
@@ -235,7 +218,7 @@ classesPropAST componentName = case _ of
       binder = Ident "a"
       var = roll $ TypeVar binder
       -- Construct row type which looks like this:
-      -- `type ClassKeyOptions a = ( root :: a, colorPrimary :: a)`
+      -- `type ClassKeyOptions a = ( root ∷ a, colorPrimary ∷ a)`
 
       classesGenericOptionsRow
         = roll
@@ -264,10 +247,10 @@ classesPropAST componentName = case _ of
       -- | ```
       -- | foreign import data BadgeClassKey
       -- |
-      -- | classKey :: ∀  given required
+      -- | classKey ∷ ∀  given required
       -- |  .  Union given required (BadgeClassKeyOptions )
-      -- |  => Record given
-      -- |  -> BadgeClassKey
+      -- |  ⇒ Record given
+      -- |  → BadgeClassKey
       -- | classKey = unsafeCoerce
       -- | ```
       classKeyType = declForeignData (TypeName $ componentName <> "ClassKey")
@@ -295,7 +278,7 @@ classesPropAST componentName = case _ of
           declValue ident TS.Module.exprUnsafeCoerce (Just signature)
 
     let
-      declarations :: List _
+      declarations ∷ List _
       declarations = Array.toUnfoldable
         [ classKeyGenericOptionsType.declaration
         , classKeyOptionsType.declaration

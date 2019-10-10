@@ -280,3 +280,12 @@ instance semigroupImports ∷ Semigroup Imports where
 instance monoidImports ∷ Monoid Imports where
   mempty = Imports mempty
 
+reservedNames ∷ Set String
+reservedNames = Set.fromFoldable
+  [ "ado" , "case" , "class" , "data"
+  , "derive" , "do" , "else" , "false"
+  , "forall" , "foreign" , "import" , "if"
+  , "in" , "infix" , "infixl" , "infixr"
+  , "instance" , "let" , "module" , "newtype"
+  , "of" , "true" , "type" , "where"
+  ]

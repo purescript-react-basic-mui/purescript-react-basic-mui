@@ -2,7 +2,7 @@ module Codegen.Model where
 
 import Prelude
 
-import Codegen.AST (Declaration, Ident, QualifiedName, Row, RowLabel, Type, TypeName)
+import Codegen.AST (Declaration, Ident, Row, RowLabel, Type)
 import Codegen.AST.Sugar.Type (app, array, constructor) as Type
 import Data.Foldable (intercalate)
 import Data.Generic.Rep (class Generic)
@@ -33,16 +33,15 @@ import Data.Moldy (class Moldable, Moldy(..), moldMap, moldlDefault, moldrDefaul
 -- |   - Sometimes code needs to be added to an individual component. For example, in `Typography` this is used to add a type called `VariantMapping`
 
 type Component =
-  { extraCode ∷ Maybe (Array Declaration)
-  , inherits ∷ Maybe Type
-  , name ∷ String
-  , modulePath ∷ ModulePath
-  , propsType ∷
-    { base ∷ Maybe Row
-    , generate ∷ Array RowLabel
-    , vars ∷ Array Ident
+  { extraCode :: Maybe (Array Declaration)
+  , inherits :: Maybe Type
+  , name :: String
+  , modulePath :: ModulePath
+  , propsType ::
+    { base :: { vars :: Array Ident, row :: Row }
+    , generate :: Array RowLabel
     }
-  , tsc :: { strictNullChecks ∷ Boolean }
+  , tsc :: { strictNullChecks :: Boolean }
   }
 
 -- | TODO: Update required
@@ -69,16 +68,16 @@ instance moldableModulePath :: Moldable ModulePath String where
   moldl f z m = moldlDefault f z m
   moldr f z m = moldrDefault f z m
 
-psImportPath ∷ ModulePath → String
+psImportPath :: ModulePath -> String
 psImportPath modulePath = intercalate "." (Moldy identity modulePath)
 
-psModulePath ∷ ModulePath → String
+psModulePath :: ModulePath -> String
 psModulePath = (_ <> ".purs") <<< psImportPath
 
-jsImportPath ∷ ModulePath → String
+jsImportPath :: ModulePath -> String
 jsImportPath modulePath = intercalate "/" (Moldy identity modulePath)
 
-jsModulePath ∷ ModulePath → String
+jsModulePath :: ModulePath -> String
 jsModulePath = (_ <> ".js") <<< jsImportPath
 
 jsx :: Type
@@ -87,7 +86,7 @@ jsx = Type.constructor "React.Basic.JSX"
 arrayJSX :: Type
 arrayJSX = Type.array $ jsx
 
-reactComponentApply ∷ Array Type → Type
+reactComponentApply :: Array Type -> Type
 reactComponentApply = Type.app (Type.constructor "React.Basic.ReactComponent")
 
 divProps :: Type
@@ -98,6 +97,6 @@ divProps = Type.constructor "React.Basic.DOM.Props_div"
 -- 
 -- syntheticEvent :: PropType
 -- syntheticEvent = ImportProp "React.Basic.Events" "SyntheticEvent"
--- 
--- eventHandler :: PropType
--- eventHandler = ImportProp "React.Basic.Events" "EventHandler"
+
+eventHandler :: Type
+eventHandler = Type.constructor "React.Basic.Events.EventHandler"

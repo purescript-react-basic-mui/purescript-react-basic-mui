@@ -3,8 +3,9 @@ module Codegen.AST.Printers where
 import Prelude
 
 import Codegen.AST.Imports (declarationImports, importsDeclarations)
-import Codegen.AST.Types (Declaration(..), Expr, ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), QualifiedName, RowF(..), TypeF(..), TypeName(..))
+import Codegen.AST.Types (Declaration(..), Expr, ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), QualifiedName, RowF(..), TypeF(..), TypeName(..), reservedNames)
 import Data.Array (cons, fromFoldable) as Array
+import Data.Char.Unicode (isUpper)
 import Data.Either (Either(..))
 import Data.Foldable (foldMap, intercalate)
 import Data.Functor.Mu (Mu(..)) as Mu
@@ -12,7 +13,9 @@ import Data.List (intercalate) as List
 import Data.Map (toUnfoldable) as Map
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, unwrap)
+import Data.Set (member) as Set
 import Data.String (joinWith)
+import Data.String.CodeUnits (uncons) as SCU
 import Data.Tuple (Tuple(..), snd)
 import Matryoshka (Algebra, GAlgebra, cata, para)
 
@@ -103,7 +106,7 @@ data PrintingContext = StandAlone | InApplication
 printType ∷ Algebra TypeF (PrintingContext → String)
 printType = case _ of
   TypeApp l params -> parens (line $ Array.cons (l InApplication) (map (_ $ InApplication) params))
-  TypeArray t -> parens $ "Array (" <> t StandAlone <> ")"
+  TypeArray t -> parens $ "Array "  <> t StandAlone
   TypeArr f a -> parens $ f StandAlone <> " → " <> a StandAlone
   TypeBoolean -> const "Boolean"
   TypeConstructor qn -> const $ printQualifiedName qn
@@ -122,7 +125,13 @@ printType = case _ of
     printRow (Row { labels, tail }) = intercalate ", " labels' <> tail'
       where
         labels' ∷ Array String
-        labels' = map (\(Tuple n t) → n <> " ∷ " <> t StandAlone) <<< Map.toUnfoldable $ labels
+        labels' = map (\(Tuple n t) → label n <> " ∷ " <> t StandAlone) <<< Map.toUnfoldable $ labels
+
+        label l = case SCU.uncons l of
+          Just { head } → if isUpper head || l `Set.member` reservedNames
+            then show l
+            else l
+          Nothing → l
 
         tail' = case tail of
           Nothing → mempty

@@ -41,13 +41,16 @@ import Prelude
 import Codegen.AST (Declaration(..)) as AST
 import Codegen.AST (Expr, ExprF(..), Ident(..), RowF(..), RowLabel, Type, TypeF(..), TypeName(..), Union(..), UnionMember(..))
 import Codegen.AST.Sugar.Expr (app, boolean, ident, number, string) as Expr
+import Codegen.AST.Types (reservedNames)
 import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (ExceptT(..), mapExceptT, withExceptT)
 import Control.Monad.State (State, modify_)
 import Data.Array (catMaybes)
 import Data.Array (singleton) as Array
+import Data.Char.Unicode (toLower) as Unicode
 import Data.Either (Either(..))
+import Data.Foldable (foldMap)
 import Data.Functor.Mu (roll)
 import Data.FunctorWithIndex (mapWithIndex)
 import Data.Generic.Rep (class Generic)
@@ -59,9 +62,11 @@ import Data.Map (fromFoldable, lookup) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Newtype (unwrap)
+import Data.Set (fromFoldable, member) as Set
 import Data.String (Pattern(..))
 import Data.String (contains) as String
-import Data.String.Extra (camelCase, pascalCase)
+import Data.String.CodeUnits (fromCharArray, singleton, toCharArray, uncons) as SCU
+import Data.String.Extra (pascalCase)
 import Data.Traversable (for, sequence)
 import Data.Tuple (Tuple(..))
 import Matryoshka (AlgebraM)
@@ -150,8 +155,15 @@ union (Just l) props = case props of
         "Unable to build a variant from non variant props for: " <> l <> ", " <> show p
     -- | Currently building only local variants
     pure $ Right $ Union
-      { name: TypeName (pascalCase l), moduleName: Nothing }
+      { name: TypeName $ typeName l, moduleName: Nothing }
       props'
+  where
+    -- | TOD:
+    -- | * Guard against scope naming collisions too
+    typeName label = if label `Set.member` reservedNames
+      then (pascalCase label) <> "_"
+      else pascalCase label
+
 union Nothing _ = throwError
   "Unable to build anonymous Union..."
 
@@ -172,7 +184,6 @@ union' label vps = union label vps >>= case _ of
       throwError "External variants not implemented yet"
     modify_ (List.Cons v)
     pure $ roll $ TypeConstructor $ qn
-
 
 -- | Given a TypeScript type representation try to build an AST for it.
 -- |
@@ -271,11 +282,20 @@ unionDeclarations typeName@(TypeName name) members =
   { "type": AST.DeclForeignData { typeName } -- , "kind": Nothing }
   , constructors: AST.DeclValue
     { expr
-    , ident: Ident (camelCase name)
+    , ident: Ident (downfirst name)
     , signature: Just signature
     }
   }
   where
+    downfirst :: String -> String
+    downfirst =
+      SCU.uncons >>> foldMap \{ head, tail } ->
+        SCU.singleton (Unicode.toLower head) <> toUnicodeLower tail
+
+    toUnicodeLower :: String -> String
+    toUnicodeLower =
+      SCU.toCharArray >>> map Unicode.toLower >>> SCU.fromCharArray
+
     member (UnionBoolean b) = Tuple (show b) $ exprUnsafeCoerceApp (Expr.boolean b)
     member (UnionString s) = Tuple s $ exprUnsafeCoerceApp (Expr.string s)
     member (UnionStringName n s) = Tuple n $ exprUnsafeCoerceApp (Expr.string s)
