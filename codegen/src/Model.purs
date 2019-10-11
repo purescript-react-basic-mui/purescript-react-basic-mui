@@ -67,7 +67,7 @@ iconPath ∷ Icon → ModulePath
 iconPath (Icon s) = Name s
 
 iconFullPath ∷ Icon → ModulePath
-iconFullPath icon = Path "MUI" (Path "Icon" (iconPath icon))
+iconFullPath icon = Path "MUI" (Path "Icons" (iconPath icon))
 
 -- | This ADT is used to describe the name of the Purescript module. It's also used to determine file names and generate FFI.
 -- | Because it's used for FFI generation, it should mimic the structure of `@material-ui`. For example, when writing the
