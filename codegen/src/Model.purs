@@ -33,26 +33,48 @@ import Data.Moldy (class Moldable, Moldy(..), moldMap, moldlDefault, moldrDefaul
 -- |   - Sometimes code needs to be added to an individual component. For example, in `Typography` this is used to add a type called `VariantMapping`
 
 type Component =
-  { extraCode :: Maybe (Array Declaration)
+  { extraDeclarations :: Array Declaration
   , inherits :: Maybe Type
-  , name :: String
+  -- | `ModulePath` value relative to `@material-ui/core/`
   , modulePath :: ModulePath
   , propsType ::
-    { base :: { vars :: Array Ident, row :: Row }
+    { base :: { row ∷ Row, vars :: Array Ident }
     , generate :: Array RowLabel
     }
   , tsc :: { strictNullChecks :: Boolean }
   }
 
--- | TODO: Update required
--- |
+type ComponentName = String
+
+componentName ∷ Component → ComponentName
+componentName = pathName <<< _.modulePath
+
+componentFullPath ∷ Component → ModulePath
+componentFullPath { modulePath } = Path "MUI" (Path "Core" modulePath)
+
+type IconName = String
+-- | We should probably have here `ModulePath` for consistency
+-- | but icons are located directly under `@material-ui/icons/`
+-- | so we can use string to simplify some processing and FFI.
+newtype Icon = Icon IconName
+derive instance eqIcon ∷ Eq Icon
+
+iconName ∷ Icon → IconName
+iconName (Icon s) = s
+
+-- | Module path relative to `@material-ui/icons`
+iconPath ∷ Icon → ModulePath
+iconPath (Icon s) = Name s
+
+iconFullPath ∷ Icon → ModulePath
+iconFullPath icon = Path "MUI" (Path "Icon" (iconPath icon))
+
 -- | This ADT is used to describe the name of the Purescript module. It's also used to determine file names and generate FFI.
 -- | Because it's used for FFI generation, it should mimic the structure of `@material-ui`. For example, when writing the
 -- | `Typography` component, it's JS import is `@material-ui/core/Typography` so the correct value for module is
 -- | `Path "MUI" (Path "Core" (Name "Typography"))`. Node that `MUI` will be removed in the FFI, so you get FFI that looks like
 -- | `exports._Typography = require("@material-ui/core/Typography").default;`. That said, the module name in the generated 
 -- | PureScript will be `MUI.Core.Typography`
-
 data ModulePath
   = Path String ModulePath
   | Name String
@@ -68,17 +90,15 @@ instance moldableModulePath :: Moldable ModulePath String where
   moldl f z m = moldlDefault f z m
   moldr f z m = moldrDefault f z m
 
+pathName ∷ ModulePath → String
+pathName (Name n) = n
+pathName (Path _ p) = pathName p
+
 psImportPath :: ModulePath -> String
 psImportPath modulePath = intercalate "." (Moldy identity modulePath)
 
-psModulePath :: ModulePath -> String
-psModulePath = (_ <> ".purs") <<< psImportPath
-
 jsImportPath :: ModulePath -> String
 jsImportPath modulePath = intercalate "/" (Moldy identity modulePath)
-
-jsModulePath :: ModulePath -> String
-jsModulePath = (_ <> ".js") <<< jsImportPath
 
 jsx :: Type
 jsx = Type.constructor "React.Basic.JSX"

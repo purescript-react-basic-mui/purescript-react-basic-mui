@@ -2,12 +2,13 @@ module Main where
 
 import Prelude
 
-import Codegen (Codegen(..), codegen)
-import Codegen (javaScriptFile, pureScriptFile, write) as Codegen
+import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconPSFile, icons)
+import Codegen (component, icon, write) as Codegen
 import Codegen.AST (Ident(..), ModuleName(..), TypeF(..), TypeName(..))
 import Codegen.AST.Sugar (declType)
 import Codegen.AST.Sugar.Type (app, constructor, record, row) as Type
-import Codegen.Model (Component, ModulePath(..), arrayJSX, eventHandler, jsx, psImportPath, reactComponentApply)
+import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, eventHandler, iconName, jsx, psImportPath, reactComponentApply)
+import Codegen.Model (componentName) as Model
 import Codegen.TS.MUI (componentProps) as TS.MUI
 import Codegen.TS.MUI (propsTypeName)
 import Control.Alt ((<|>))
@@ -32,13 +33,14 @@ import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class.Console (log)
+import Global.Unsafe (unsafeStringify)
 import Matryoshka (cata)
 import Node.Path (FilePath)
 import Options.Applicative (Parser, ReadM, command, eitherReader, execParser, flag', fullDesc, help, helper, info, long, metavar, option, progDesc, readerError, short, strOption, subparser, value, (<**>))
 import Options.Applicative.Types (readerAsk)
 import ReadDTS.Instantiation.Pretty (pprintTypeName)
 
-components ∷ Array Component
+components :: Array Component
 components =
   let
     children = Tuple "children" arrayJSX
@@ -56,17 +58,19 @@ components =
       , vars: [ componentPropsIdent ] <> extraVars
       }
 
+    emptyBase = basePropsRow [] mempty
+
     simpleComponent { inherits, name, propsType } =
-      { extraCode: Nothing
+      { extraDeclarations: []
       , inherits: inherits
-      , name
-      , modulePath: Path "MUI" (Path "Core" (Name name))
+      -- , name
+      , modulePath: (Name name)
       , propsType
       , tsc: { strictNullChecks: false }
       }
 
     touchRippleType =
-      { path: Path "MUI" (Path "Core" (Path "ButtonBase" (Name "TouchRipple")))
+      { path: (Path "ButtonBase" (Name "TouchRipple"))
       , name: "TouchRipple"
       }
 
@@ -98,23 +102,20 @@ components =
             ]
           }
         }
-    button =
-      let
-        -- | `children` and `component` are taken from `buttonBase`
-        base = basePropsRow [] mempty
-      in simpleComponent
-        { inherits: Just $ Type.app
-          (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
-          [Type.constructor "React.Basic.DOM.Props_button"]
-        , name: "Button"
-        , propsType:
-          { base
-          , generate:
-            [ "classes", "color", "disabled", "disableFocusRipple"
-            , "disableRipple", "fullWidth", "href", "size", "variant"
-            ]
-          }
+    -- | `children` and `component` are taken from `buttonBase`
+    button = simpleComponent
+      { inherits: Just $ Type.app
+        (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
+        [Type.constructor "React.Basic.DOM.Props_button"]
+      , name: "Button"
+      , propsType:
+        { base: emptyBase
+        , generate:
+          [ "classes", "color", "disabled", "disableFocusRipple"
+          , "disableRipple", "fullWidth", "href", "size", "variant"
+          ]
         }
+      }
     buttonBase =
       let
         base = basePropsRow [] $ Map.fromFoldable
@@ -123,69 +124,63 @@ components =
           , children
           , component
           , Tuple "onFocusVisible" eventHandler
+          -- | XXX: Provide some sugar for generating relative imports
+          -- | between components
           , Tuple "TouchRippleProps" $ roll $ TypeConstructor
-            { moduleName: Just $ ModuleName (psImportPath touchRippleType.path)
+            { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
             , name: TypeName $ (propsTypeName touchRippleType.name)
             }
           ]
         buttonBaseActions = declType (TypeName "ButtonBaseActions") [] foreignType
         buttonBaseTypeProps = declType (TypeName "ButtonBaseTypeProp") [] foreignType
-        name = "ButtonBase"
       in
-        { extraCode: Just $
+        { extraDeclarations:
           [ buttonBaseActions.declaration
           , buttonBaseTypeProps.declaration
           ]
         , inherits: Just $ Type.app
           (Type.constructor "ButtonBasePropsOptions")
           [Type.constructor "React.Basic.DOM.Props_button"]
-        , modulePath: Path "MUI" (Path "Core" (Name name))
-        , name
+        , modulePath: Name "ButtonBase"
         , propsType:
           { base
           , generate:
             [ "centerRipple", "classes", "color", "disabled", "disableFocusRipple"
             , "disableRipple", "focusRipple", "focustVisibleClassName"
-            , "fullWidth", "href", "size", "variant", "type"
+            , "fullWidth", "href", "size", "type", "variant"
             ]
           }
         , tsc: { strictNullChecks: false }
         }
-    fab =
-      let
-        base = basePropsRow [] mempty
-      in simpleComponent
-        { inherits: Just $ Type.app
-            (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
-            [Type.constructor "React.Basic.DOM.Props_button"]
-        , name: "Fab"
-        , propsType:
-          { base
-          , generate:
-            ["classes", "color", "disabled", "disableFocusRipple"
-            , "href", "size", "variant"
-            ]
-          }
+    fab = simpleComponent
+      { inherits: Just $ Type.app
+          (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
+          [Type.constructor "React.Basic.DOM.Props_button"]
+      , name: "Fab"
+      , propsType:
+        { base: emptyBase
+        , generate:
+          ["classes", "color", "disabled", "disableFocusRipple"
+          , "href", "size", "variant"
+          ]
         }
+      }
     touchRipple =
-      let
-        base = basePropsRow [] mempty
-      in
-        { extraCode: Nothing
-        , inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
-        , name: touchRippleType.name
-        , modulePath: touchRippleType.path
-        , propsType:
-          { base
-          , generate: [ "center", "classes" ]
-          }
-        , tsc: { strictNullChecks: false }
+      { extraDeclarations: []
+      , inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
+      -- , name: touchRippleType.name
+      , modulePath: touchRippleType.path
+      , propsType:
+        { base: emptyBase
+        , generate: [ "center", "classes" ]
         }
+      , tsc: { strictNullChecks: false }
+      }
   in
     [ appBar, badge, buttonBase, button, fab, touchRipple ]
 
 -- | XXX: Can we cleanup this last traverse?
-multiString :: ∀ a. Pattern -> ReadM a → ReadM (Array a)
+multiString :: ∀ a. Pattern -> ReadM a -> ReadM (Array a)
 multiString splitPattern read = do
   s ← readerAsk
   elems ←
@@ -198,7 +193,7 @@ multiString splitPattern read = do
     read' = unwrap read
   wrap $ for elems \elem → lift $ runReaderT read' elem
 
-componentOption ∷ Parser Component
+componentOption :: Parser Component
 componentOption =
   option componentRead (long "component" <> short 'c')
 
@@ -212,7 +207,25 @@ componentRead = eitherReader $ \s -> case s `Map.lookup` components' of
     , intercalate ", " (map show <<< List.sort <<< Map.Internal.keys $ components') <> "."
     ]
   where
-    components' = Map.fromFoldable $ map (\c → Tuple c.name c) components
+    step c = Tuple (Model.componentName c) c
+    components' = Map.fromFoldable $ map step components
+
+iconOption :: Parser Icon
+iconOption =
+  option iconRead (long "icon" <> short 'i')
+
+iconRead :: ReadM Icon
+iconRead = eitherReader $ \s -> case s `Map.lookup` icons' of
+  Just c → pure c
+  otherwise → Left $ intercalate " "
+    [ "Unkown icon name"
+    , show s
+    ,". Please use one of:"
+    , intercalate ", " (List.sort <<< Map.Internal.keys $ icons') <> "."
+    ]
+  where
+    step i = Tuple (iconName i) i
+    icons' = Map.fromFoldable $ map step icons
 
 commaSeparatedComponentList :: Parser (Array Component)
 commaSeparatedComponentList = option (multiString (Pattern ",") componentRead)
@@ -252,22 +265,38 @@ genOutput = directory <|> stdout
       <> short 's'
       <> help "Print component to stdout"
 
+genTarget ∷ Parser GenTarget
+genTarget = genComponent <|> genComponents <|> genIcon
+  where
+    genComponent = map GenComponent componentOption
+    genComponents = flag' GenComponents $
+      long "all-components"
+      <> short 'a'
+      <> help "Codegen all components"
+    genIcon = map GenIcon iconOption
+
 genOptions :: Parser Options
-genOptions = map Generate $ { component: _, output: _ }
-  <$> (Just <$> componentOption <|> pure Nothing)
+genOptions = map Generate $ { target: _, output: _ }
+  <$> genTarget
   <*> ((Just <$> genOutput) <|> pure Nothing)
+
+data GenTarget
+  = GenComponents
+  | GenComponent Component
+  -- | GenIcons
+  | GenIcon Icon
 
 data Options
   = ShowPropsCommand
-    { component ∷ Component
-    , skip ∷ Array Component
+    { component :: Component
+    , skip :: Array Component
     }
   | Generate
-    { component ∷ Maybe Component
-    , output ∷ Maybe GenOutput
+    { target :: GenTarget
+    , output :: Maybe GenOutput
     }
 
-options ∷ Parser Options
+options :: Parser Options
 options = subparser $
   command "codegen" (info genOptions (progDesc "Codegen all or a given module"))
   <> command "show-props" (info showPropsOptions (progDesc "Show information about props for a given component"))
@@ -280,13 +309,14 @@ main = do
     -- | For sure we want to keep track of the naming collisions
     -- | during codegen so maye we can just require that
     -- | we would have an unique naming strategy.
-    writeModules dir modulePath code = launchAff_ $ do
+    writeComponentModules dir component code = launchAff_ $ do
       let
-        js = Codegen (Codegen.javaScriptFile modulePath) code.js
-        ps = Codegen (Codegen.pureScriptFile modulePath) code.ps
+        js = Codegen (componentJSFile component) code.js
+        ps = Codegen (componentPSFile component) code.ps
       Codegen.write dir js
       Codegen.write dir ps
-    codegenComponent component output = runExceptT (codegen component) >>= case _ of
+
+    codegenComponent component output = runExceptT (Codegen.component component) >>= case _ of
         Right code → case output of
           Just Stdout → do
             log "\nPureScript:"
@@ -294,17 +324,36 @@ main = do
             log "\nJavasScript:"
             log code.js
           Just (Directory d) → do
-            writeModules d component.modulePath code
+            writeComponentModules d component code
           Nothing → do
-            writeModules "../src" component.modulePath code
+            writeComponentModules "../src" component code
         Left err → log $ "Codegen errors: " <> intercalate "\n" err
 
+    writeIconModules dir icon code = launchAff_ $ do
+      let
+        js = Codegen (iconJSFile icon) code.js
+        ps = Codegen (iconPSFile icon) code.ps
+      Codegen.write dir js
+      Codegen.write dir ps
+
+    iconCodegen icon = case _ of
+      Just Stdout → do
+        log "\nPureScript:"
+        log code.ps
+        log "\nJavasScript:"
+        log code.js
+      Just (Directory d) → do
+        writeIconModules d icon code
+      Nothing → do
+        writeIconModules "../src" icon code
+      where
+        code = Codegen.icon icon
   case opts of
     ShowPropsCommand { component, skip } → do
       let
         getProps = do
-          { props: c } ← TS.MUI.componentProps component.name component.modulePath
-          s <- traverse (\s → TS.MUI.componentProps s.name s.modulePath) skip <#> map _.props
+          { props: c } ← TS.MUI.componentProps component
+          s <- traverse (\s → TS.MUI.componentProps s) skip <#> map _.props
           pure { component: c, skip: s }
       runExceptT getProps >>= case _ of
         Right { component: cProps, skip: s } → do
@@ -318,8 +367,10 @@ main = do
               $ Map.filterWithKey (\k v → k `Set.member` keys) cProps
           log $ intercalate "\n" props
         Left err → log $ intercalate "\n" err
-    Generate { component: Just component, output } →
+    Generate { target: GenComponent component, output } →
       codegenComponent component output
-    Generate { output } → for_ components \component →
+    Generate { target: GenComponents, output } → for_ components \component →
       codegenComponent component output
+    Generate { target: GenIcon i, output } →
+      iconCodegen i output
 

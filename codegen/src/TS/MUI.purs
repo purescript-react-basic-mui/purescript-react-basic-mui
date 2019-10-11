@@ -3,14 +3,14 @@ module Codegen.TS.MUI where
 import Prelude
 
 import Codegen.AST (Declaration, Ident(..), ModuleName(..), TypeF(..), TypeName(..))
-import Codegen.AST (Module(..), RowF(..), Type, TypeName(..), Union(..)) as AST
+import Codegen.AST (Module(..), RowF(..), Type, TypeName(..), Union(..), Expr) as AST
 import Codegen.AST.Sugar (declForeignData, declForeignValue, declType, declValue)
 import Codegen.AST.Sugar.Expr (app, ident) as Expr
 import Codegen.AST.Sugar.Type (app, arr, constructor, row, string, typeRow) as Type
 import Codegen.AST.Sugar.Type (arr) as T
 import Codegen.AST.Sugar.Type (constrained, forAll, forAll', recordApply)
-import Codegen.Model (Component, ModulePath, jsImportPath, psImportPath, reactComponentApply)
-import Codegen.Model (jsx) as Model
+import Codegen.Model (Component, ModulePath, ComponentName, componentFullPath, jsImportPath, pathName, psImportPath, reactComponentApply)
+import Codegen.Model (componentName, jsx) as Model
 import Codegen.TS.Module (PossibleType(..), astAlgebra, declarations, exprUnsafeCoerce, unionDeclarations) as TS.Module
 import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
@@ -37,27 +37,27 @@ import Matryoshka (cata, cataM)
 import ReadDTS.Instantiation (Property, Type, TypeF(..)) as Instantiation
 import ReadDTS.Instantiation.Pretty (pprintTypeName)
 
-type ComponentName = String
 type TsImportPath = String
 
 tsImportPath ∷ ModulePath → TsImportPath
-tsImportPath modulePath =
-  String.replace pattern replacement (jsImportPath modulePath)
-  where
-    pattern = Pattern "MUI/Core/"
-    replacement = Replacement "@material-ui/core/"
+tsImportPath modulePath = "@material-ui/core/" <> (jsImportPath modulePath)
 
 propsTypeName ∷ ComponentName → String
 propsTypeName componentName = componentName <> "Props"
 
+foreignReactComponentDecl :: ComponentName -> { declaration :: Declaration , ident ∷ Ident, var :: AST.Expr }
+foreignReactComponentDecl componentName = { declaration, ident, var }
+  where
+  ident = Ident ("_" <> componentName)
+  { declaration, var } = declForeignValue (ident) (forAll' "a" \a → reactComponentApply [a])
+
 componentProps
-  ∷ ComponentName
-  → ModulePath
+  ∷ Component
   → M
     { fqn ∷ String
     , props ∷ Map String (Instantiation.Property Instantiation.Type)
     }
-componentProps componentName modulePath = do
+componentProps component@{ modulePath } = do
   tsDeclarations ← TS.Module.declarations
     { path: instanceModulePath
     , source: Just source
@@ -76,6 +76,7 @@ componentProps componentName modulePath = do
       , source
       ]
   where
+    componentName = Model.componentName component
     propsName = propsTypeName componentName
     instanceTypeName = propsName <> "Instance"
     instanceModulePath = instanceTypeName <> ".d.ts"
@@ -88,8 +89,8 @@ componentProps componentName modulePath = do
       ]
 
 componentAST ∷ Component → M AST.Module
-componentAST { extraCode, name: componentName, inherits, modulePath, propsType: { base: { row: base, vars }, generate }} = do
-  { fqn, props } ← componentProps componentName modulePath
+componentAST component@{ extraDeclarations, inherits, modulePath, propsType: { base: { row: base, vars }, generate }} = do
+  { fqn, props } ← componentProps component
   let
     -- | Take only a subset of props using given label set.
     props' = Map.filterKeys ((&&) <$> (not <<< eq "classes") <*> (_ `Array.elem` generate)) props
@@ -132,27 +133,28 @@ componentAST { extraCode, name: componentName, inherits, modulePath, propsType: 
         -- | * component constructor + foreign component import
         declarations
           = foldr step List.Nil unions'
-          <> maybe mempty List.fromFoldable extraCode
+          <> List.fromFoldable extraDeclarations
           <> propsDeclarations
           <> maybe mempty _.declarations classes
           <> componentConstructorsAST propsOptionsTypeDecl.constructor inherits componentName
 
       pure $ AST.Module $
         { declarations
-        , moduleName: ModuleName $ psImportPath modulePath
+        , moduleName: ModuleName $ psImportPath (componentFullPath component)
         }
 
     (Tuple (Right result) _) → throwError $ Array.singleton $ line $
       ["Expecting object type as a result of props instantiation: " , show result ]
     (Tuple (Left err) _) → throwError [ err ]
   where
+    componentName = Model.componentName component
     propsName = propsTypeName componentName
 
 componentConstructorsAST ∷ AST.Type → Maybe AST.Type → ComponentName → List Declaration
 componentConstructorsAST propsConstructor inherits componentName =
   let
     componentName' = camelCase componentName
-    componentValue = declForeignValue (Ident ("_" <> componentName)) (forAll' "a" \a → reactComponentApply [a])
+    componentValue = foreignReactComponentDecl componentName
     inherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") inherits
 
     -- | For example:
