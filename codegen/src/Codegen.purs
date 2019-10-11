@@ -5,16 +5,12 @@ import Prelude
 import Codegen.AST (Ident(..), Module(..), ModuleName(..)) as AST
 import Codegen.AST.Printers (printModule)
 import Codegen.AST.Sugar.Type (constructor) as Type
-import Codegen.Model (Component, Icon(..), ModulePath(..), iconFullPath, psImportPath)
-import Codegen.Model (ModulePath(..), componentFullPath, componentName, iconFullPath, iconName) as Model
+import Codegen.Model (Component, Icon, ModulePath(..), iconFullPath, psImportPath)
+import Codegen.Model (componentFullPath, componentName, iconFullPath, iconName) as Model
 import Codegen.TS (M) as TS
 import Codegen.TS.MUI (componentAST) as TS.MUI
 import Codegen.TS.MUI (componentConstructorsAST, foreignReactComponentDecl)
-import Codegen.TS.Module (declarations)
-import Data.Foldable (intercalate)
-import Data.List (List(..), fromFoldable) as List
 import Data.Maybe (Maybe(..))
-import Data.Moldy (Moldy(..))
 import Data.String (toLower) as String
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)

@@ -15,8 +15,8 @@ import Control.Alt ((<|>))
 import Control.Monad.Except (runExceptT)
 import Control.Monad.Reader (runReaderT)
 import Control.Monad.Trans.Class (lift)
+import Data.Array (cons, null, sort) as Array
 import Data.Array (filter)
-import Data.Array (null, sort) as Array
 import Data.Either (Either(..))
 import Data.Foldable (for_, intercalate)
 import Data.Functor.Mu (roll)
@@ -33,7 +33,6 @@ import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class.Console (log)
-import Global.Unsafe (unsafeStringify)
 import Matryoshka (cata)
 import Node.Path (FilePath)
 import Options.Applicative (Parser, ReadM, command, eitherReader, execParser, flag', fullDesc, help, helper, info, long, metavar, option, progDesc, readerError, short, strOption, subparser, value, (<**>))
@@ -165,6 +164,34 @@ components =
           ]
         }
       }
+    menu =
+      let
+        -- | Still missing: anchorEl, onClose, MenuListProps, PopoverClasses, transitionDuration
+        handler n = Tuple n eventHandler
+        base = basePropsRow [] $ Map.fromFoldable $ Array.cons children $ map handler
+          ["onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting"]
+      in simpleComponent
+        { inherits: Nothing -- | We should inherit from Popover here
+        , name: "Menu"
+        , propsType:
+          { base
+          , generate: [ "autoFocus", "classes", "disableAutoFocusItem", "open", "variant" ]
+          }
+        }
+    menuItem =
+      let
+        base = basePropsRow [] $ Map.fromFoldable
+          [ children
+          , component
+          ]
+      in simpleComponent
+        { inherits: Nothing -- | TODO: inherit from `ListItem`
+        , name: "MenuItem"
+        , propsType:
+          { base
+          , generate: [ "classes", "dense", "disableGutters" ]
+          }
+        }
     touchRipple =
       { extraDeclarations: []
       , inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
@@ -177,7 +204,7 @@ components =
       , tsc: { strictNullChecks: false }
       }
   in
-    [ appBar, badge, buttonBase, button, fab, touchRipple ]
+    [ appBar, badge, buttonBase, button, fab, menu, menuItem, touchRipple ]
 
 -- | XXX: Can we cleanup this last traverse?
 multiString :: ∀ a. Pattern -> ReadM a -> ReadM (Array a)

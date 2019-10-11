@@ -9,7 +9,7 @@ import Codegen.AST.Sugar.Expr (app, ident) as Expr
 import Codegen.AST.Sugar.Type (app, arr, constructor, row, string, typeRow) as Type
 import Codegen.AST.Sugar.Type (arr) as T
 import Codegen.AST.Sugar.Type (constrained, forAll, forAll', recordApply)
-import Codegen.Model (Component, ModulePath, ComponentName, componentFullPath, jsImportPath, pathName, psImportPath, reactComponentApply)
+import Codegen.Model (Component, ComponentName, ModulePath, componentFullPath, jsImportPath, psImportPath, reactComponentApply)
 import Codegen.Model (componentName, jsx) as Model
 import Codegen.TS.Module (PossibleType(..), astAlgebra, declarations, exprUnsafeCoerce, unionDeclarations) as TS.Module
 import Codegen.TS.Types (M)
@@ -27,10 +27,8 @@ import Data.Map (Map)
 import Data.Map (filterKeys, fromFoldable, lookup, singleton) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.String (Pattern(..), joinWith)
-import Data.String (replace) as String
+import Data.String (joinWith)
 import Data.String.Extra (camelCase)
-import Data.String.Pattern (Replacement(..))
 import Data.Traversable (for)
 import Data.Tuple (Tuple(..))
 import Matryoshka (cata, cataM)
