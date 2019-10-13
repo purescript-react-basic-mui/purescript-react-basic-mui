@@ -1,0 +1,1 @@
+exports.menu = require('@material-ui/icons/Menu').default;

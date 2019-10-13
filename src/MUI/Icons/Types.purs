@@ -1,4 +1,4 @@
-module MUI.Icon
+module MUI.Icons.Types
   ( icon
   , iconWithStyles
   , Icon
@@ -13,20 +13,23 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_svg)
 import Unsafe.Coerce (unsafeCoerce)
 
-newtype Icon (name ∷ Symbol) = Icon (∀ props. ReactComponent props)
+newtype Icon = Icon (∀ props. ReactComponent props)
+
+toComponent ∷ ∀ props. Icon → ReactComponent props
+toComponent (Icon c) = c
 
 icon
-  :: ∀ given icon required
+  :: ∀ given required
   . Union given required (SvgIconProps Props_svg)
-  ⇒ Icon icon
+  ⇒ Icon
   → Record given
   → JSX
 icon (Icon i) = element i
 
-iconWithStyles ∷ ∀ jss jss_ required given icon
+iconWithStyles ∷ ∀ jss jss_ required given
   . Union given required (SvgIconProps Props_svg)
   ⇒ Union jss jss_ SvgIconClassKeyOptionsJSS
-  ⇒ Icon icon
+  ⇒ Icon
   → (Theme → Record jss)
   → Record given
   → JSX

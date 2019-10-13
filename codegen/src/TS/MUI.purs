@@ -148,6 +148,8 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: { b
     componentName = Model.componentName component
     propsName = propsTypeName componentName
 
+-- | TODO: This is codegen doesn't use typescript AST at all
+-- | so we should move it up.
 componentConstructorsAST ∷ AST.Type → Maybe AST.Type → ComponentName → List Declaration
 componentConstructorsAST propsConstructor inherits componentName =
   let

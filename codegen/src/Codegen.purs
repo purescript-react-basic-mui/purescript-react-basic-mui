@@ -2,16 +2,18 @@ module Codegen where
 
 import Prelude
 
-import Codegen.AST (Ident(..), Module(..), ModuleName(..)) as AST
+import Codegen.AST (Ident(..))
+import Codegen.AST (Module(..), ModuleName(..)) as AST
 import Codegen.AST.Printers (printModule)
-import Codegen.AST.Sugar.Type (constructor) as Type
+import Codegen.AST.Sugar (declForeignValue)
+import Codegen.AST.Sugar.Type (app, constructor) as Type
 import Codegen.Model (Component, Icon, ModulePath(..), iconFullPath, psImportPath)
 import Codegen.Model (componentFullPath, componentName, iconFullPath, iconName) as Model
 import Codegen.TS (M) as TS
 import Codegen.TS.MUI (componentAST) as TS.MUI
-import Codegen.TS.MUI (componentConstructorsAST, foreignReactComponentDecl)
-import Data.Maybe (Maybe(..))
+import Data.List (singleton) as List
 import Data.String (toLower) as String
+import Data.String.Extra (camelCase)
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
 import Effect.Class.Console (log)
@@ -86,16 +88,20 @@ icon :: Icon -> { ps :: String, js :: String }
 icon i = { ps, js }
   where
     iconName = Model.iconName i
+    iconName' = camelCase iconName
 
     svgIconProps = Type.constructor "MUI.Core.SvgIcon.SvgIconProps"
     props_svg = Type.constructor "React.Basic.DOM.Props_svg"
-    declarations = componentConstructorsAST svgIconProps (Just props_svg) iconName
+    props = Type.app svgIconProps [ props_svg ]
 
-    -- | TODO: Same as above - this should be intergrated into module codegen
-    rc@{ ident: AST.Ident ffiName } = foreignReactComponentDecl iconName
-    js = "exports." <> ffiName <> " = " <> "require('@material-ui/icons/" <> iconName <> "').default;"
+    iconType = Type.constructor "MUI.Icons.Types.Icon"
+    iconComponent = declForeignValue (Ident iconName') iconType
+
+    -- | For example:
+    -- | foreign import menu ∷ MUI.Icons.Types.Icon
+    js = "exports." <> iconName' <> " = " <> "require('@material-ui/icons/" <> iconName <> "').default;"
 
     ps = printModule $ AST.Module
-      { declarations
+      { declarations: List.singleton iconComponent.declaration
       , moduleName: AST.ModuleName $ psImportPath (iconFullPath i)
       }

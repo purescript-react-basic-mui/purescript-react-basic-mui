@@ -170,15 +170,14 @@ instance showUnion :: Show Union where
   show = genericShow
 
 -- | XXX: We should be able to handle also more general
--- | `UnionType TypeF` too.
--- | An open question is if we can really provide matching
--- | helpers ala argonaut `caseJson`.
+-- | `UnionConstructor Type` too.
 data UnionMember
   = UnionBoolean Boolean
   | UnionString String
   | UnionStringName String String
   | UnionNull
   | UnionNumber String Number
+  -- | UnionConstructor Type
   | UnionUndefined
 derive instance eqUnionMember :: Eq UnionMember
 derive instance ordUnionMember :: Ord UnionMember

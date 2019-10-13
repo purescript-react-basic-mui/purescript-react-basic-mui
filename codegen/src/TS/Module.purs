@@ -62,7 +62,7 @@ import Data.Map (fromFoldable, lookup) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Newtype (unwrap)
-import Data.Set (fromFoldable, member) as Set
+import Data.Set (member) as Set
 import Data.String (Pattern(..))
 import Data.String (contains) as String
 import Data.String.CodeUnits (fromCharArray, singleton, toCharArray, uncons) as SCU
