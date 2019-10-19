@@ -155,25 +155,26 @@ let additions =
     , repo = "https://github.com/paf31/purescript-pprint.git"
     , version = "v5.0.0"
     }
-  , read-dts =
-    { dependencies =
-      [ "console"
-      , "debug"
-      , "effect"
-      , "freet"
-      , "foreign"
-      , "foreign-object"
-      , "matryoshka"
-      , "node-fs-aff"
-      , "pprint"
-      , "profunctor"
-      , "profunctor-lenses"
-      , "psci-support"
-      , "variant"
-      ]
-    , repo = "https://github.com/lambdaterms/purescript-read-dts.git"
-    , version = "master"
-    }
+  , read-dts = ../../purescript-read-dts/spago.dhall as Location
+  -- , read-dts =
+  --   { dependencies =
+  --     [ "console"
+  --     , "debug"
+  --     , "effect"
+  --     , "freet"
+  --     , "foreign"
+  --     , "foreign-object"
+  --     , "matryoshka"
+  --     , "node-fs-aff"
+  --     , "pprint"
+  --     , "profunctor"
+  --     , "profunctor-lenses"
+  --     , "psci-support"
+  --     , "variant"
+  --     ]
+  --   , repo = "https://github.com/lambdaterms/purescript-read-dts.git"
+  --   , version = "master"
+  --   }
   , strings-extra =
     { dependencies =
         [ "arrays"

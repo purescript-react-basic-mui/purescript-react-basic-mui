@@ -175,7 +175,7 @@ components =
         , name: "Menu"
         , propsType:
           { base
-          , generate: [ "autoFocus", "classes", "disableAutoFocusItem", "open", "variant" ]
+          , generate: [ "autoFocus", "classes", "disableAutoFocusItem", "open", "transitionDuration", "variant" ]
           }
         }
     menuItem =

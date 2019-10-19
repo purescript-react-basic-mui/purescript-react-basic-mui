@@ -39,22 +39,27 @@ module Codegen.TS.Module where
 import Prelude
 
 import Codegen.AST (Declaration(..)) as AST
-import Codegen.AST (Expr, ExprF(..), Ident(..), RowF(..), RowLabel, Type, TypeF(..), TypeName(..), Union(..), UnionMember(..))
+import Codegen.AST (Expr, ExprF(..), Ident(..), RowF(..), RowLabel, Type, TypeF(..), TypeName(..), Union(..))
 import Codegen.AST.Sugar.Expr (app, boolean, ident, number, string) as Expr
-import Codegen.AST.Types (reservedNames)
+import Codegen.AST.Sugar.Type (arr) as Type
+import Codegen.AST.Types (UnionMember(..), reservedNames)
 import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (ExceptT(..), mapExceptT, withExceptT)
-import Control.Monad.State (State, modify_)
+import Control.Monad.State (State, get, modify_, put)
+import Control.Monad.State.Trans (evalStateT)
+import Control.Monad.Trans.Class (lift)
 import Data.Array (catMaybes)
 import Data.Array (singleton) as Array
 import Data.Char.Unicode (toLower) as Unicode
 import Data.Either (Either(..))
 import Data.Foldable (foldMap)
-import Data.Functor.Mu (roll)
+import Data.Functor.Mu (roll, unroll)
 import Data.FunctorWithIndex (mapWithIndex)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
+import Data.Lens (_2, over, view)
+import Data.Lens.Record (prop)
 import Data.List (List(..)) as List
 import Data.List (List)
 import Data.Map (Map)
@@ -74,6 +79,7 @@ import ReadDTS.AST (Application') as ReadDTS
 import ReadDTS.AST (TypeConstructor(..), build) as ReadDTS.AST
 import ReadDTS.Instantiation (Type, instantiate) as ReadDTS.Instantiation
 import ReadDTS.Instantiation (TypeF(..)) as Instantiation
+import Type.Prelude (SProxy(..))
 
 type Declaration =
   { defaultInstance :: ReadDTS.Instantiation.Type
@@ -140,23 +146,48 @@ union
   :: Maybe RowLabel
   -> Array PossibleType
   -> ComponentAlgebraM (Either Type Union)
-union (Just l) props = case props of
+union (Just l) props = do
+  -- | XXX: This flow can be a bit broken when we consider
+  -- |      `strictNullChecks: true` because we are going to
+  -- |      get types here.
+  -- |
   -- | Typescript (in its strict mode) handles optional field through
   -- | union with `undefined` value.  Do we really want to IGNORE this
   -- | on PS side and pretend that everything is optional?
   -- | This is dirty hack to ignore `undefined`:
   -- |
-  -- | [ UnionMember UnionUndefined, ProperType t ] -> pure $ Left $ t
-  -- | [ ProperType t, UnionMember UnionUndefined ] -> pure $ Left $ t
-  otherwise -> do
-    props' <- for props $ case _ of
-      UnionMember p -> pure p
-      p -> throwError $
-        "Unable to build a variant from non variant props for: " <> l <> ", " <> show p
-    -- | Currently building only local variants
-    pure $ Right $ Union
-      { name: TypeName $ typeName l, moduleName: Nothing }
-      props'
+  -- | case props of
+  -- |   [ UnionMember UnionUndefined, ProperType t ] -> pure $ Left $ t
+  -- |   [ ProperType t, UnionMember UnionUndefined ] -> pure $ Left $ t
+  -- |   ...
+  props' <- flip evalStateT 0 $ for props $ case _ of
+    UnionMember p -> pure p
+    ProperType t -> do
+      -- | Really naive naming convention but maybe it will
+      -- | somewhat work in "most" simple scenarios
+      n ← case unroll t of
+        TypeNumber → pure "number"
+        TypeString → pure "string"
+        t' → do
+          idx ← get
+          put (idx + 1)
+          let
+            n = case t' of
+              TypeRecord _ → "record"
+              otherwise → l
+            n' =
+              if idx > 0
+                then (n <> show idx)
+                else n
+          pure n'
+      pure $ UnionConstructor n t
+
+    p -> lift $ throwError $
+      "Unable to build a variant from non variant props for: " <> l <> ", " <> show p
+  -- | Currently building only local variants
+  pure $ Right $ Union
+    { name: TypeName $ typeName l, moduleName: Nothing }
+    props'
   where
     -- | TOD:
     -- | * Guard against scope naming collisions too
@@ -290,30 +321,33 @@ unionDeclarations typeName@(TypeName name) members =
     downfirst :: String -> String
     downfirst =
       SCU.uncons >>> foldMap \{ head, tail } ->
-        SCU.singleton (Unicode.toLower head) <> toUnicodeLower tail
+        SCU.singleton (Unicode.toLower head) <> tail
 
     toUnicodeLower :: String -> String
     toUnicodeLower =
       SCU.toCharArray >>> map Unicode.toLower >>> SCU.fromCharArray
 
-    member (UnionBoolean b) = Tuple (show b) $ exprUnsafeCoerceApp (Expr.boolean b)
-    member (UnionString s) = Tuple s $ exprUnsafeCoerceApp (Expr.string s)
-    member (UnionStringName n s) = Tuple n $ exprUnsafeCoerceApp (Expr.string s)
-    member UnionNull = Tuple "null" $ exprUnsafeCoerceApp exprNull
-    member (UnionNumber n v) = Tuple n $ exprUnsafeCoerceApp (Expr.number v)
-    member UnionUndefined = Tuple "undefined" $ exprUnsafeCoerceApp exprUndefined
+    type_ = roll $ TypeConstructor { name: typeName, moduleName: Nothing }
+    literalValue expr = { sig: type_, expr }
+
+    member (UnionBoolean b) = Tuple (show b) $ literalValue $ exprUnsafeCoerceApp (Expr.boolean b)
+    member (UnionString s) = Tuple s $ literalValue $ exprUnsafeCoerceApp (Expr.string s)
+    member (UnionStringName n s) = Tuple n $ literalValue $ exprUnsafeCoerceApp (Expr.string s)
+    member UnionNull = Tuple "null" $ literalValue $ exprUnsafeCoerceApp exprNull
+    member (UnionNumber n v) = Tuple n $ literalValue $ exprUnsafeCoerceApp (Expr.number v)
+    member UnionUndefined = Tuple "undefined" $ literalValue $ exprUnsafeCoerceApp exprUndefined
+    member (UnionConstructor n t) = Tuple n $ { sig: Type.arr t type_, expr: exprUnsafeCoerce }
 
     members' = Map.fromFoldable $ map member members
-    expr = roll $ ExprRecord $ members'
+    _expr = prop (SProxy ∷ SProxy "expr")
+    _sig = prop (SProxy ∷ SProxy "sig")
+    expr = roll $ ExprRecord $ map (view _expr) $ members'
 
-    type_ = roll $ TypeConstructor { name: typeName, moduleName: Nothing }
     signature
       = roll
       <<< TypeRecord
       <<< Row
       <<< { tail: Nothing, labels: _ }
-      <<< Map.fromFoldable
-      <<< map (flip Tuple type_ )
-      <<< Map.Internal.keys
+      <<< map (view _sig)
       $ members'
 
