@@ -6,30 +6,30 @@ import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_span) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type TouchRipplePropsOptions componentProps = ( classes ∷ TouchRippleClassKey | componentProps )
+type TouchRipplePropsOptions componentProps = ( classes :: TouchRippleClassKey | componentProps )
 
 foreign import data TouchRippleProps :: Type
 
-type TouchRippleClassKeyGenericOptions a = ( child ∷ a, childLeaving ∷ a, childPulsate ∷ a, ripple ∷ a, ripplePulsate ∷ a, rippleVisible ∷ a, root ∷ a )
+type TouchRippleClassKeyGenericOptions a = ( child :: a, childLeaving :: a, childPulsate :: a, ripple :: a, ripplePulsate :: a, rippleVisible :: a, root :: a )
 
 type TouchRippleClassKeyOptions  = TouchRippleClassKeyGenericOptions String
 
 foreign import data TouchRippleClassKey :: Type
 
-touchRippleClassKey :: ∀ required given. Prim.Row.Union given required TouchRippleClassKeyOptions ⇒ Record given → TouchRippleClassKey
+touchRippleClassKey :: ∀ required given. Prim.Row.Union given required TouchRippleClassKeyOptions => Record given -> TouchRippleClassKey
 touchRippleClassKey = Unsafe.Coerce.unsafeCoerce
 
 type TouchRippleClassKeyOptionsJSS  = TouchRippleClassKeyGenericOptions MUI.Core.JSS
 
 foreign import data TouchRippleClassKeyJSS :: Type
 
-touchRippleClassKeyJSS :: ∀ required given. Prim.Row.Union given required TouchRippleClassKeyOptionsJSS ⇒ Record given → TouchRippleClassKeyJSS
+touchRippleClassKeyJSS :: ∀ required given. Prim.Row.Union given required TouchRippleClassKeyOptionsJSS => Record given -> TouchRippleClassKeyJSS
 touchRippleClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
 foreign import _TouchRipple :: ∀ a. React.Basic.ReactComponent a
 
-touchRipple :: ∀ required given. Prim.Row.Union given required (TouchRipplePropsOptions React.Basic.DOM.Props_span) ⇒ Record given → React.Basic.JSX
+touchRipple :: ∀ required given. Prim.Row.Union given required (TouchRipplePropsOptions React.Basic.DOM.Props_span) => Record given -> React.Basic.JSX
 touchRipple = React.Basic.element _TouchRipple
 
-touchRipple_component :: ∀ required given componentProps. Prim.Row.Union given required (TouchRipplePropsOptions componentProps) ⇒ Record given → React.Basic.JSX
+touchRipple_component :: ∀ required given componentProps. Prim.Row.Union given required (TouchRipplePropsOptions componentProps) => Record given -> React.Basic.JSX
 touchRipple_component = React.Basic.element _TouchRipple

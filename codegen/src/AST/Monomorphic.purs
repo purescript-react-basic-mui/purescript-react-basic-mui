@@ -15,26 +15,26 @@ import Data.String (joinWith)
 import Matryoshka (cata)
 
 -- | Try to build a monomorphic type for a give expression.
-build ∷ ExprF (TypeF Type) → Either String (TypeF Type)
+build :: ExprF (TypeF Type) -> Either String (TypeF Type)
 build = case _ of
-  ExprBoolean _ → pure $ TypeBoolean
-  ExprApp x y → case x of
-    (TypeArr arg res) | roll y == arg → pure $ unroll res
-    otherwise → throwError $
+  ExprBoolean _ -> pure $ TypeBoolean
+  ExprApp x y -> case x of
+    (TypeArr arg res) | roll y == arg -> pure $ unroll res
+    otherwise -> throwError $
       "Unable to unify types in application: "
       <> "(" <> cata printType (roll x) Printers.StandAlone <> ") "
       <> "(" <> cata printType (roll y) Printers.StandAlone <> ")"
-  ExprArray types → case Array.uncons types of
-    Nothing → throwError "Polymorphic array expression []"
-    Just { head, tail } →
+  ExprArray types -> case Array.uncons types of
+    Nothing -> throwError "Polymorphic array expression []"
+    Just { head, tail } ->
       if all (eq (roll head) <<< roll) tail
         then pure head
         else throwError
           $ "Fail to unify array expressions: "
-          <> joinWith ", " (map (\t → cata printType (roll t) Printers.StandAlone) types)
-  ExprIdent x → throwError $
+          <> joinWith ", " (map (\t -> cata printType (roll t) Printers.StandAlone) types)
+  ExprIdent x -> throwError $
     "Unable to handle polymorphic variable"
-  ExprNumber n → pure $ TypeNumber
-  ExprRecord props → pure $ TypeRecord (Row { labels: map roll props, tail: Nothing })
-  ExprString s → pure $ TypeString
+  ExprNumber n -> pure $ TypeNumber
+  ExprRecord props -> pure $ TypeRecord (Row { labels: map roll props, tail: Nothing })
+  ExprString s -> pure $ TypeString
 

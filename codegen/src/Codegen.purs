@@ -98,7 +98,7 @@ icon i = { ps, js }
     iconComponent = declForeignValue (Ident iconName') iconType
 
     -- | For example:
-    -- | foreign import menu ∷ MUI.Icons.Types.Icon
+    -- | foreign import menu :: MUI.Icons.Types.Icon
     js = "exports." <> iconName' <> " = " <> "require('@material-ui/icons/" <> iconName <> "').default;"
 
     ps = printModule $ AST.Module

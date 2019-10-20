@@ -10,41 +10,41 @@ import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
 foreign import data Variant :: Type
 
-variant :: { menu ∷ Variant, selectedMenu ∷ Variant }
+variant :: { menu :: Variant, selectedMenu :: Variant }
 variant = { menu: Unsafe.Coerce.unsafeCoerce "menu", selectedMenu: Unsafe.Coerce.unsafeCoerce "selectedMenu" }
 
 foreign import data TransitionDuration :: Type
 
-transitionDuration :: { auto ∷ TransitionDuration, number ∷ Number → TransitionDuration, record ∷ { appear ∷ Number, enter ∷ Number, exit ∷ Number } → TransitionDuration }
+transitionDuration :: { auto :: TransitionDuration, number :: Number -> TransitionDuration, record :: { appear :: Number, enter :: Number, exit :: Number } -> TransitionDuration }
 transitionDuration = { auto: Unsafe.Coerce.unsafeCoerce "auto", number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce }
 
 instance eqVariant :: Eq Variant where
   eq = MUI.Core.shallowEq
 
-type MenuPropsOptions componentProps = ( autoFocus ∷ Boolean, children ∷ Array React.Basic.JSX, classes ∷ MenuClassKey, disableAutoFocusItem ∷ Boolean, onEnter ∷ React.Basic.Events.EventHandler, onEntered ∷ React.Basic.Events.EventHandler, onEntering ∷ React.Basic.Events.EventHandler, onExit ∷ React.Basic.Events.EventHandler, onExited ∷ React.Basic.Events.EventHandler, onExiting ∷ React.Basic.Events.EventHandler, open ∷ Boolean, transitionDuration ∷ TransitionDuration, variant ∷ Variant | componentProps )
+type MenuPropsOptions componentProps = ( autoFocus :: Boolean, children :: Array React.Basic.JSX, classes :: MenuClassKey, disableAutoFocusItem :: Boolean, onEnter :: React.Basic.Events.EventHandler, onEntered :: React.Basic.Events.EventHandler, onEntering :: React.Basic.Events.EventHandler, onExit :: React.Basic.Events.EventHandler, onExited :: React.Basic.Events.EventHandler, onExiting :: React.Basic.Events.EventHandler, open :: Boolean, transitionDuration :: TransitionDuration, variant :: Variant | componentProps )
 
 foreign import data MenuProps :: Type
 
-type MenuClassKeyGenericOptions a = ( list ∷ a, paper ∷ a )
+type MenuClassKeyGenericOptions a = ( list :: a, paper :: a )
 
 type MenuClassKeyOptions  = MenuClassKeyGenericOptions String
 
 foreign import data MenuClassKey :: Type
 
-menuClassKey :: ∀ required given. Prim.Row.Union given required MenuClassKeyOptions ⇒ Record given → MenuClassKey
+menuClassKey :: ∀ required given. Prim.Row.Union given required MenuClassKeyOptions => Record given -> MenuClassKey
 menuClassKey = Unsafe.Coerce.unsafeCoerce
 
 type MenuClassKeyOptionsJSS  = MenuClassKeyGenericOptions MUI.Core.JSS
 
 foreign import data MenuClassKeyJSS :: Type
 
-menuClassKeyJSS :: ∀ required given. Prim.Row.Union given required MenuClassKeyOptionsJSS ⇒ Record given → MenuClassKeyJSS
+menuClassKeyJSS :: ∀ required given. Prim.Row.Union given required MenuClassKeyOptionsJSS => Record given -> MenuClassKeyJSS
 menuClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
 foreign import _Menu :: ∀ a. React.Basic.ReactComponent a
 
-menu :: ∀ required given. Prim.Row.Union given required (MenuPropsOptions React.Basic.DOM.Props_div) ⇒ Record given → React.Basic.JSX
+menu :: ∀ required given. Prim.Row.Union given required (MenuPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
 menu = React.Basic.element _Menu
 
-menu_component :: ∀ required given componentProps. Prim.Row.Union given required (MenuPropsOptions componentProps) ⇒ Record given → React.Basic.JSX
+menu_component :: ∀ required given componentProps. Prim.Row.Union given required (MenuPropsOptions componentProps) => Record given -> React.Basic.JSX
 menu_component = React.Basic.element _Menu

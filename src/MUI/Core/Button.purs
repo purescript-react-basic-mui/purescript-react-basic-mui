@@ -10,17 +10,17 @@ import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
 foreign import data Variant :: Type
 
-variant :: { contained ∷ Variant, outlined ∷ Variant, text ∷ Variant }
+variant :: { contained :: Variant, outlined :: Variant, text :: Variant }
 variant = { contained: Unsafe.Coerce.unsafeCoerce "contained", outlined: Unsafe.Coerce.unsafeCoerce "outlined", text: Unsafe.Coerce.unsafeCoerce "text" }
 
 foreign import data Size :: Type
 
-size :: { large ∷ Size, medium ∷ Size, small ∷ Size }
+size :: { large :: Size, medium :: Size, small :: Size }
 size = { large: Unsafe.Coerce.unsafeCoerce "large", medium: Unsafe.Coerce.unsafeCoerce "medium", small: Unsafe.Coerce.unsafeCoerce "small" }
 
 foreign import data Color :: Type
 
-color :: { default ∷ Color, inherit ∷ Color, primary ∷ Color, secondary ∷ Color }
+color :: { default :: Color, inherit :: Color, primary :: Color, secondary :: Color }
 color = { default: Unsafe.Coerce.unsafeCoerce "default", inherit: Unsafe.Coerce.unsafeCoerce "inherit", primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary" }
 
 instance eqColor :: Eq Color where
@@ -32,30 +32,30 @@ instance eqSize :: Eq Size where
 instance eqVariant :: Eq Variant where
   eq = MUI.Core.shallowEq
 
-type ButtonPropsOptions componentProps = ( classes ∷ ButtonClassKey, color ∷ Color, disableFocusRipple ∷ Boolean, disableRipple ∷ Boolean, disabled ∷ Boolean, fullWidth ∷ Boolean, href ∷ String, size ∷ Size, variant ∷ Variant | componentProps )
+type ButtonPropsOptions componentProps = ( classes :: ButtonClassKey, color :: Color, disableFocusRipple :: Boolean, disableRipple :: Boolean, disabled :: Boolean, fullWidth :: Boolean, href :: String, size :: Size, variant :: Variant | componentProps )
 
 foreign import data ButtonProps :: Type
 
-type ButtonClassKeyGenericOptions a = ( colorInherit ∷ a, contained ∷ a, containedPrimary ∷ a, containedSecondary ∷ a, disabled ∷ a, focusVisible ∷ a, fullWidth ∷ a, label ∷ a, outlined ∷ a, outlinedPrimary ∷ a, outlinedSecondary ∷ a, root ∷ a, sizeLarge ∷ a, sizeSmall ∷ a, text ∷ a, textPrimary ∷ a, textSecondary ∷ a )
+type ButtonClassKeyGenericOptions a = ( colorInherit :: a, contained :: a, containedPrimary :: a, containedSecondary :: a, disabled :: a, focusVisible :: a, fullWidth :: a, label :: a, outlined :: a, outlinedPrimary :: a, outlinedSecondary :: a, root :: a, sizeLarge :: a, sizeSmall :: a, text :: a, textPrimary :: a, textSecondary :: a )
 
 type ButtonClassKeyOptions  = ButtonClassKeyGenericOptions String
 
 foreign import data ButtonClassKey :: Type
 
-buttonClassKey :: ∀ required given. Prim.Row.Union given required ButtonClassKeyOptions ⇒ Record given → ButtonClassKey
+buttonClassKey :: ∀ required given. Prim.Row.Union given required ButtonClassKeyOptions => Record given -> ButtonClassKey
 buttonClassKey = Unsafe.Coerce.unsafeCoerce
 
 type ButtonClassKeyOptionsJSS  = ButtonClassKeyGenericOptions MUI.Core.JSS
 
 foreign import data ButtonClassKeyJSS :: Type
 
-buttonClassKeyJSS :: ∀ required given. Prim.Row.Union given required ButtonClassKeyOptionsJSS ⇒ Record given → ButtonClassKeyJSS
+buttonClassKeyJSS :: ∀ required given. Prim.Row.Union given required ButtonClassKeyOptionsJSS => Record given -> ButtonClassKeyJSS
 buttonClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
 foreign import _Button :: ∀ a. React.Basic.ReactComponent a
 
-button :: ∀ required given. Prim.Row.Union given required (ButtonPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) ⇒ Record given → React.Basic.JSX
+button :: ∀ required given. Prim.Row.Union given required (ButtonPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Record given -> React.Basic.JSX
 button = React.Basic.element _Button
 
-button_component :: ∀ required given componentProps. Prim.Row.Union given required (ButtonPropsOptions componentProps) ⇒ Record given → React.Basic.JSX
+button_component :: ∀ required given componentProps. Prim.Row.Union given required (ButtonPropsOptions componentProps) => Record given -> React.Basic.JSX
 button_component = React.Basic.element _Button

@@ -37,35 +37,35 @@ import ReadDTS.Instantiation.Pretty (pprintTypeName)
 
 type TsImportPath = String
 
-tsImportPath ∷ ModulePath → TsImportPath
+tsImportPath :: ModulePath -> TsImportPath
 tsImportPath modulePath = "@material-ui/core/" <> (jsImportPath modulePath)
 
-propsTypeName ∷ ComponentName → String
+propsTypeName :: ComponentName -> String
 propsTypeName componentName = componentName <> "Props"
 
-foreignReactComponentDecl :: ComponentName -> { declaration :: Declaration , ident ∷ Ident, var :: AST.Expr }
+foreignReactComponentDecl :: ComponentName -> { declaration :: Declaration , ident :: Ident, var :: AST.Expr }
 foreignReactComponentDecl componentName = { declaration, ident, var }
   where
   ident = Ident ("_" <> componentName)
-  { declaration, var } = declForeignValue (ident) (forAll' "a" \a → reactComponentApply [a])
+  { declaration, var } = declForeignValue (ident) (forAll' "a" \a -> reactComponentApply [a])
 
 componentProps
-  ∷ Component
-  → M
-    { fqn ∷ String
-    , props ∷ Map String (Instantiation.Property Instantiation.Type)
+  :: Component
+  -> M
+    { fqn :: String
+    , props :: Map String (Instantiation.Property Instantiation.Type)
     }
 componentProps component@{ modulePath } = do
-  tsDeclarations ← TS.Module.declarations
+  tsDeclarations <- TS.Module.declarations
     { path: instanceModulePath
     , source: Just source
     }
   case Map.lookup instanceTypeName tsDeclarations of
-    Nothing → throwError $ Array.singleton $ line
+    Nothing -> throwError $ Array.singleton $ line
       ["Unable to find generated props instance type:", show instanceTypeName ]
-    Just { defaultInstance: Mu.In (Instantiation.Object n props), typeConstructor } → do
+    Just { defaultInstance: Mu.In (Instantiation.Object n props), typeConstructor } -> do
       pure { fqn: n, props }
-    Just { defaultInstance } → throwError $ Array.singleton $ lines
+    Just { defaultInstance } -> throwError $ Array.singleton $ lines
       [ line
         ["Props instance type" , show instanceTypeName
         , "is not an object. Derived type is: ", show $ cata pprintTypeName defaultInstance
@@ -86,21 +86,21 @@ componentProps component@{ modulePath } = do
       , line ["export interface ", instanceTypeName, "extends", propsName <> " {};"]
       ]
 
-componentAST ∷ Component → M AST.Module
+componentAST :: Component -> M AST.Module
 componentAST component@{ extraDeclarations, inherits, modulePath, propsType: { base: { row: base, vars }, generate }} = do
-  { fqn, props } ← componentProps component
+  { fqn, props } <- componentProps component
   let
     -- | Take only a subset of props using given label set.
     props' = Map.filterKeys ((&&) <$> (not <<< eq "classes") <*> (_ `Array.elem` generate)) props
     -- | Create an new "Object" type from them
     -- | for AST generation.
-    obj ∷ Instantiation.Type
+    obj :: Instantiation.Type
     obj = roll $ Instantiation.Object fqn props'
     objInstance = flip runState mempty <<< runExceptT <<< cataM TS.Module.astAlgebra $ obj
 
   case objInstance of
-    Tuple (Right (TS.Module.ProperType (Mu.In (TypeRecord (AST.Row { labels, tail: Nothing }))))) unions → do
-      classes ← if "classes" `Array.elem` generate
+    Tuple (Right (TS.Module.ProperType (Mu.In (TypeRecord (AST.Row { labels, tail: Nothing }))))) unions -> do
+      classes <- if "classes" `Array.elem` generate
         then Just <$> classesPropAST componentName (Map.lookup "classes" props)
         else pure Nothing
 
@@ -116,10 +116,10 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: { b
           $ List.Cons (propsTypeDecl.declaration)
           $ List.Nil
 
-      unions' ← for unions $ case _ of
-        AST.Union { moduleName: Just _, name } _ → throwError $
+      unions' <- for unions $ case _ of
+        AST.Union { moduleName: Just _, name } _ -> throwError $
           [ "External union generation not implmented yet..." ]
-        AST.Union { moduleName: Nothing, name } members →
+        AST.Union { moduleName: Nothing, name } members ->
           pure $ TS.Module.unionDeclarations name members
 
       let
@@ -141,16 +141,16 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: { b
         , moduleName: ModuleName $ psImportPath (componentFullPath component)
         }
 
-    (Tuple (Right result) _) → throwError $ Array.singleton $ line $
+    (Tuple (Right result) _) -> throwError $ Array.singleton $ line $
       ["Expecting object type as a result of props instantiation: " , show result ]
-    (Tuple (Left err) _) → throwError [ err ]
+    (Tuple (Left err) _) -> throwError [ err ]
   where
     componentName = Model.componentName component
     propsName = propsTypeName componentName
 
 -- | TODO: This is codegen doesn't use typescript AST at all
 -- | so we should move it up.
-componentConstructorsAST ∷ AST.Type → Maybe AST.Type → ComponentName → List Declaration
+componentConstructorsAST :: AST.Type -> Maybe AST.Type -> ComponentName -> List Declaration
 componentConstructorsAST propsConstructor inherits componentName =
   let
     componentName' = camelCase componentName
@@ -158,14 +158,14 @@ componentConstructorsAST propsConstructor inherits componentName =
     inherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") inherits
 
     -- | For example:
-    -- | appBar ∷ ∀  given required
+    -- | appBar :: ∀  given required
     -- |   .  Union given required (AppBarPropsOptions (PaperProps Props_div) )
-    -- |   ⇒ Record given
-    -- |   → JSX
+    -- |   => Record given
+    -- |   -> JSX
     -- | appBar = element _AppBar
     componentConstructor =
       let
-        signature = forAll { g: "given", r: "required"} $ \{ g, r } →
+        signature = forAll { g: "given", r: "required"} $ \{ g, r } ->
           let
             fun = Type.arr (recordApply g) Model.jsx
             u = Type.app propsConstructor [ inherits' ]
@@ -179,14 +179,14 @@ componentConstructorsAST propsConstructor inherits componentName =
           (Just signature)
 
     -- | For example:
-    -- | appBar ∷ ∀  componentProps given required
+    -- | appBar :: ∀  componentProps given required
     -- |   .  Union given required (AppBarPropsOptions componentProps)
-    -- |   ⇒ Record given
-    -- |   → JSX
+    -- |   => Record given
+    -- |   -> JSX
     -- | appBar = element _AppBar
     componentConstructor' =
       let
-        signature = forAll { c: "componentProps", g: "given", r: "required"} $ \{ c, g, r } →
+        signature = forAll { c: "componentProps", g: "given", r: "required"} $ \{ c, g, r } ->
           let
             fun = Type.arr (recordApply g) Model.jsx
             u = Type.app propsConstructor [ c ]
@@ -213,16 +213,16 @@ componentConstructorsAST propsConstructor inherits componentName =
 -- | does not translate directly to any expected PS
 -- | construct because it contains `any` types.
 -- |
-classesPropAST ∷ ComponentName → Maybe (Instantiation.Property Instantiation.Type) → M { declarations ∷ List Declaration, prop ∷ AST.Type }
+classesPropAST :: ComponentName -> Maybe (Instantiation.Property Instantiation.Type) -> M { declarations :: List Declaration, prop :: AST.Type }
 classesPropAST componentName = case _ of
-  Just { "type": Mu.In (Instantiation.Object _ classesProps) } → do
+  Just { "type": Mu.In (Instantiation.Object _ classesProps) } -> do
     let
       componentName' = camelCase componentName
       classesNames = Map.Internal.keys classesProps
       binder = Ident "a"
       var = roll $ TypeVar binder
       -- Construct row type which looks like this:
-      -- `type ClassKeyOptions a = ( root ∷ a, colorPrimary ∷ a)`
+      -- `type ClassKeyOptions a = ( root :: a, colorPrimary :: a)`
 
       classesGenericOptionsRow
         = roll
@@ -251,17 +251,17 @@ classesPropAST componentName = case _ of
       -- | ```
       -- | foreign import data BadgeClassKey
       -- |
-      -- | classKey ∷ ∀  given required
+      -- | classKey :: ∀  given required
       -- |  .  Union given required (BadgeClassKeyOptions )
-      -- |  ⇒ Record given
-      -- |  → BadgeClassKey
+      -- |  => Record given
+      -- |  -> BadgeClassKey
       -- | classKey = unsafeCoerce
       -- | ```
       classKeyType = declForeignData (TypeName $ componentName <> "ClassKey")
       classKeyValue =
         let
           ident = Ident $ componentName' <> "ClassKey"
-          signature = forAll { g: "given", r: "required"} $ \{ g, r } →
+          signature = forAll { g: "given", r: "required"} $ \{ g, r } ->
             let
               fun = T.arr (recordApply g) classKeyType.constructor
             in
@@ -273,7 +273,7 @@ classesPropAST componentName = case _ of
       classKeyJSSValue =
         let
           ident = Ident $ componentName' <> "ClassKeyJSS"
-          signature = forAll { g: "given", r: "required"} $ \{ g, r } →
+          signature = forAll { g: "given", r: "required"} $ \{ g, r } ->
             let
               fun = T.arr (recordApply g) classKeyJSSType.constructor
             in
@@ -282,7 +282,7 @@ classesPropAST componentName = case _ of
           declValue ident [] TS.Module.exprUnsafeCoerce (Just signature)
 
     let
-      declarations ∷ List _
+      declarations :: List _
       declarations = Array.toUnfoldable
         [ classKeyGenericOptionsType.declaration
         , classKeyOptionsType.declaration
@@ -293,12 +293,12 @@ classesPropAST componentName = case _ of
         , classKeyJSSValue.declaration
         ]
     pure { declarations, prop: classKeyType.constructor }
-  c → throwError $ Array.singleton $ line
+  c -> throwError $ Array.singleton $ line
     [ show "classses", "prop is missing or has wrong type:", "_", "in instance object"]
 
-line ∷ Array String → String
+line :: Array String -> String
 line = joinWith " "
 
-lines ∷ Array String → String
+lines :: Array String -> String
 lines = joinWith "\n"
 

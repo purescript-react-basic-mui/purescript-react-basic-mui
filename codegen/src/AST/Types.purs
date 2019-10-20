@@ -32,11 +32,11 @@ newtype Module = Module
   }
 
 newtype ModuleName = ModuleName String
-derive instance newtypeModuleName ∷ Newtype ModuleName _
-derive instance genericModuleName ∷ Generic ModuleName _
-derive instance eqModuleName ∷ Eq ModuleName
-derive instance ordModuleName ∷ Ord ModuleName
-instance showModuleName ∷ Show ModuleName where
+derive instance newtypeModuleName :: Newtype ModuleName _
+derive instance genericModuleName :: Generic ModuleName _
+derive instance eqModuleName :: Eq ModuleName
+derive instance ordModuleName :: Ord ModuleName
+instance showModuleName :: Show ModuleName where
   show = genericShow
 
 type QualifiedName a =
@@ -55,7 +55,7 @@ instance showTypeName :: Show TypeName where
 type QualifiedTypeName = QualifiedName TypeName
 
 type Constraint ref
-  = { className ∷ QualifiedName ClassName, params ∷ Array ref }
+  = { className :: QualifiedName ClassName, params :: Array ref }
 
 data TypeF ref
   = TypeApp ref (Array ref)
@@ -214,7 +214,7 @@ instance showRowType :: Show ref => Show (RowF ref) where
   show p = genericShow p
 
 derive instance functorRowF :: Functor RowF
-derive instance eqRow ∷ Eq ref ⇒ Eq (RowF ref)
+derive instance eqRow :: Eq ref => Eq (RowF ref)
 
 instance foldableRowF :: Foldable RowF where
   foldMap f (Row { labels }) = foldMap f labels
@@ -317,7 +317,7 @@ data Declaration
     }
   | DeclForeignValue { ident :: Ident, type :: Type }
   | DeclForeignData { typeName :: TypeName } -- , "kind" :: Maybe KindName }
-  | DeclType { typeName ∷ TypeName, "type" ∷ Type, vars ∷ Array Ident }
+  | DeclType { typeName :: TypeName, "type" :: Type, vars :: Array Ident }
   | DeclValue ValueBindingFields
 
 newtype ClassName = ClassName String
@@ -343,22 +343,22 @@ newtype ImportDecl = ImportDecl
   { moduleName :: ModuleName
   , names :: List Import
   }
-derive instance newtypeImportDecl ∷ Newtype ImportDecl _
-derive instance genericImportDecl ∷ Generic ImportDecl _
-derive instance eqImportDecl ∷ Eq ImportDecl
-derive instance ordImportDecl ∷ Ord ImportDecl
-instance showImportDecl ∷ Show ImportDecl where
+derive instance newtypeImportDecl :: Newtype ImportDecl _
+derive instance genericImportDecl :: Generic ImportDecl _
+derive instance eqImportDecl :: Eq ImportDecl
+derive instance ordImportDecl :: Ord ImportDecl
+instance showImportDecl :: Show ImportDecl where
   show = genericShow
 
 newtype Imports = Imports (Map ModuleName (Set Import))
 
-instance semigroupImports ∷ Semigroup Imports where
+instance semigroupImports :: Semigroup Imports where
   append (Imports i1) (Imports i2) = Imports $ Map.unionWith Set.union i1 i2
 
-instance monoidImports ∷ Monoid Imports where
+instance monoidImports :: Monoid Imports where
   mempty = Imports mempty
 
-reservedNames ∷ Set String
+reservedNames :: Set String
 reservedNames = Set.fromFoldable
   [ "ado" , "case" , "class" , "data"
   , "derive" , "do" , "else" , "false"

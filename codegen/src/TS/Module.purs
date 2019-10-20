@@ -166,16 +166,16 @@ union (Just l) props = do
     ProperType t -> do
       -- | Really naive naming convention but maybe it will
       -- | somewhat work in "most" simple scenarios
-      n ← case unroll t of
-        TypeNumber → pure "number"
-        TypeString → pure "string"
-        t' → do
-          idx ← get
+      n <- case unroll t of
+        TypeNumber -> pure "number"
+        TypeString -> pure "string"
+        t' -> do
+          idx <- get
           put (idx + 1)
           let
             n = case t' of
-              TypeRecord _ → "record"
-              otherwise → l
+              TypeRecord _ -> "record"
+              otherwise -> l
             n' =
               if idx > 0
                 then (n <> show idx)
@@ -295,7 +295,7 @@ exprUnsafeCoerceApp = Expr.app exprUnsafeCoerce
 exprUndefined :: Expr
 exprUndefined = Expr.ident "Foreign.NullOrUndefined.undefined"
 
-exprNull ∷ Expr
+exprNull :: Expr
 exprNull = Expr.ident "Foreign.NullOrUndefined.null"
 
 -- | Creates declarations for an union:
@@ -360,8 +360,8 @@ unionDeclarations typeName@(TypeName name) members =
     member (UnionConstructor n t) = Tuple n $ { sig: Type.arr t type_, expr: exprUnsafeCoerce }
 
     members' = Map.fromFoldable $ map member members
-    _expr = prop (SProxy ∷ SProxy "expr")
-    _sig = prop (SProxy ∷ SProxy "sig")
+    _expr = prop (SProxy :: SProxy "expr")
+    _sig = prop (SProxy :: SProxy "sig")
     expr = roll $ ExprRecord $ map (view _expr) $ members'
 
     signature

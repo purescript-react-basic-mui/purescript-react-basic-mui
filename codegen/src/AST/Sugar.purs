@@ -19,7 +19,7 @@ declType typeName vars body =
   in
     { declaration, constructor }
 
-declForeignData ∷ TypeName → { declaration ∷ Declaration, constructor ∷ Type }
+declForeignData :: TypeName -> { declaration :: Declaration, constructor :: Type }
 declForeignData typeName =
   let
     declaration = DeclForeignData { typeName }
@@ -27,10 +27,10 @@ declForeignData typeName =
   in
     { declaration, constructor }
 
-valueBindingFields ∷ Ident → Array Ident → Expr → Maybe Type → ValueBindingFields
+valueBindingFields :: Ident -> Array Ident -> Expr -> Maybe Type -> ValueBindingFields
 valueBindingFields name binders expr signature = { value: { binders, expr, name }, signature }
 
-declValue ∷ Ident → Array Ident → Expr → Maybe Type → { declaration ∷ Declaration, var ∷ Expr }
+declValue :: Ident -> Array Ident -> Expr -> Maybe Type -> { declaration :: Declaration, var :: Expr }
 declValue name binders expr signature =
   let
     declaration = DeclValue (valueBindingFields name binders expr signature)
@@ -38,7 +38,7 @@ declValue name binders expr signature =
   in
     { declaration, var }
 
-declForeignValue ∷ Ident → Type → { declaration ∷ Declaration, var ∷ Expr }
+declForeignValue :: Ident -> Type -> { declaration :: Declaration, var :: Expr }
 declForeignValue ident t =
   let
     declaration = DeclForeignValue { ident, "type": t }
@@ -46,7 +46,7 @@ declForeignValue ident t =
   in
     { declaration, var }
 
-declInstance ∷ QualifiedName ClassName → Array Type → Array ValueBindingFields → Declaration
+declInstance :: QualifiedName ClassName -> Array Type -> Array ValueBindingFields -> Declaration
 declInstance className types body = DeclInstance
   { head:
     { className

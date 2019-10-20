@@ -3,7 +3,7 @@ module Codegen.AST.Printers where
 import Prelude
 
 import Codegen.AST.Imports (declarationImports, importsDeclarations)
-import Codegen.AST.Types (Declaration(..), Expr, ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), QualifiedName, RowF(..), TypeF(..), TypeName(..), reservedNames)
+import Codegen.AST.Types (Declaration(..), Expr, ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), QualifiedName, RowF(..), TypeF(..), TypeName(..), ValueBindingFields, reservedNames)
 import Data.Array (cons, fromFoldable) as Array
 import Data.Char.Unicode (isUpper)
 import Data.Either (Either(..))
@@ -19,13 +19,13 @@ import Data.String.CodeUnits (uncons) as SCU
 import Data.Tuple (Tuple(..), snd)
 import Matryoshka (Algebra, GAlgebra, cata, para)
 
-lines ∷ Array String → String
+lines :: Array String -> String
 lines = joinWith "\n"
 
-line ∷ Array String → String
+line :: Array String -> String
 line = joinWith " "
 
-printModule ∷ Module → String
+printModule :: Module -> String
 printModule (Module { moduleName, declarations }) = lines $
   [ printModuleHead moduleName
   , ""
@@ -36,7 +36,7 @@ printModule (Module { moduleName, declarations }) = lines $
   where
     imports = importsDeclarations <<< foldMap (declarationImports) $ declarations
 
-printImport ∷ ImportDecl → String
+printImport :: ImportDecl -> String
 printImport (ImportDecl { moduleName: ModuleName "Prelude" }) = "import Prelude"
 printImport (ImportDecl { moduleName, names }) = line
   [ "import"
@@ -48,7 +48,7 @@ printImport (ImportDecl { moduleName, names }) = line
   where
     mn = printModuleName moduleName
 
-    printName ∷ Import → String
+    printName :: Import -> String
     printName (ImportValue s) = unwrap s
     printName (ImportClass s) = "class " <> unwrap s
     printName (ImportType s) = unwrap s
@@ -57,7 +57,7 @@ printModuleHead :: ModuleName -> String
 printModuleHead moduleName =
   line ["module", printModuleName moduleName, "where" ]
 
-printDeclaration ∷ Declaration → String
+printDeclaration :: Declaration -> String
 printDeclaration (DeclForeignData { typeName: TypeName name }) = -- , "kind": k }) =
   line [ "foreign import data", name, "::", "Type" ] -- fromMaybe "Type" k
 printDeclaration (DeclForeignValue { ident: Ident ident, "type": t }) = -- , "kind": k }) =
@@ -73,56 +73,57 @@ printDeclaration (DeclValue v) = printValueBindingFields v
 printDeclaration (DeclType { typeName, "type": t, vars }) =
   line ["type", unwrap typeName, line $ (map unwrap) vars, "=", cata printType t StandAlone]
 
+printValueBindingFields :: ValueBindingFields -> String
 printValueBindingFields { value: { binders, name: Ident name, expr }, signature } =
   case signature of
-    Nothing → v
-    Just s →
+    Nothing -> v
+    Just s ->
       name <> " :: " <> cata printType s StandAlone
       <> "\n"
       <> v
   where
     v = name <> line (map unwrap binders) <> " = " <> para printExpr expr
 
-printModuleName ∷ ModuleName → String
+printModuleName :: ModuleName -> String
 printModuleName (ModuleName n) = n
 
-printQualifiedName ∷ ∀ n. Newtype n String ⇒ QualifiedName n → String
+printQualifiedName :: ∀ n. Newtype n String => QualifiedName n -> String
 printQualifiedName { moduleName: Nothing, name } = unwrap name
 printQualifiedName { moduleName: Just m, name } = case m of
-  (ModuleName "Prelude") → unwrap name
-  otherwise → printModuleName m <> "." <> unwrap name
+  (ModuleName "Prelude") -> unwrap name
+  otherwise -> printModuleName m <> "." <> unwrap name
 
 -- | We are using here GAlgebra to get
 -- | a bit nicer output for an application but
 -- | probably we should just use the same strategy
 -- | as in case of `printType` and pass printing context.
-printExpr ∷ GAlgebra (Tuple Expr) ExprF String
+printExpr :: GAlgebra (Tuple Expr) ExprF String
 printExpr = case _ of
-  ExprBoolean b → show $ b
-  ExprApp (Tuple (Mu.In (ExprApp _ _)) x) y → "(" <> x <> ") (" <> snd y <> ")"
-  ExprApp x (Tuple (Mu.In (ExprApp _ _)) y) → snd x <> ") (" <> y <> ")"
-  ExprApp x y → snd x <> " " <> snd y
-  ExprArray arr → "[" <> intercalate ", " (map snd arr) <> "]"
-  ExprIdent x → printQualifiedName x
-  ExprNumber n →  show n
-  ExprRecord props → "{ " <> intercalate ", " props' <> " }"
+  ExprBoolean b -> show $ b
+  ExprApp (Tuple (Mu.In (ExprApp _ _)) x) y -> "(" <> x <> ") (" <> snd y <> ")"
+  ExprApp x (Tuple (Mu.In (ExprApp _ _)) y) -> snd x <> ") (" <> y <> ")"
+  ExprApp x y -> snd x <> " " <> snd y
+  ExprArray arr -> "[" <> intercalate ", " (map snd arr) <> "]"
+  ExprIdent x -> printQualifiedName x
+  ExprNumber n ->  show n
+  ExprRecord props -> "{ " <> intercalate ", " props' <> " }"
     where
-      props' ∷ Array String
-      props' = map (\(Tuple n v) → n <> ": " <> snd v) <<< Map.toUnfoldable $ props
-  ExprString s → show s
+      props' :: Array String
+      props' = map (\(Tuple n v) -> n <> ": " <> snd v) <<< Map.toUnfoldable $ props
+  ExprString s -> show s
 
 data PrintingContext = StandAlone | InApplication
 
-printType ∷ Algebra TypeF (PrintingContext → String)
+printType :: Algebra TypeF (PrintingContext -> String)
 printType = case _ of
   TypeApp l params -> parens (line $ Array.cons (l InApplication) (map (_ $ InApplication) params))
   TypeArray t -> parens $ "Array "  <> t StandAlone
-  TypeArr f a -> parens $ f StandAlone <> " → " <> a StandAlone
+  TypeArr f a -> parens $ f StandAlone <> " -> " <> a StandAlone
   TypeBoolean -> const "Boolean"
   TypeConstructor qn -> const $ printQualifiedName qn
   TypeConstrained { className, params } t -> const $
-    printQualifiedName className <> " " <> line (map (_ $ InApplication) params) <> " ⇒ " <> t StandAlone
-  TypeForall vs t → const $ "∀" <> " " <> line (map unwrap vs) <> "." <> " " <> t StandAlone
+    printQualifiedName className <> " " <> line (map (_ $ InApplication) params) <> " => " <> t StandAlone
+  TypeForall vs t -> const $ "∀" <> " " <> line (map unwrap vs) <> "." <> " " <> t StandAlone
   TypeNumber -> const "Number"
   TypeRecord r -> const $ "{ " <> printRow r <> " }"
   TypeRow r -> const $ "( " <> printRow r <> " )"
@@ -134,16 +135,16 @@ printType = case _ of
 
     printRow (Row { labels, tail }) = intercalate ", " labels' <> tail'
       where
-        labels' ∷ Array String
-        labels' = map (\(Tuple n t) → label n <> " ∷ " <> t StandAlone) <<< Map.toUnfoldable $ labels
+        labels' :: Array String
+        labels' = map (\(Tuple n t) -> label n <> " :: " <> t StandAlone) <<< Map.toUnfoldable $ labels
 
         label l = case SCU.uncons l of
-          Just { head } → if isUpper head || l `Set.member` reservedNames
+          Just { head } -> if isUpper head || l `Set.member` reservedNames
             then show l
             else l
-          Nothing → l
+          Nothing -> l
 
         tail' = case tail of
-          Nothing → mempty
-          Just (Left ident) → " | " <> unwrap ident
-          Just (Right qn) → " | " <> printQualifiedName qn
+          Nothing -> mempty
+          Just (Left ident) -> " | " <> unwrap ident
+          Just (Right qn) -> " | " <> printQualifiedName qn

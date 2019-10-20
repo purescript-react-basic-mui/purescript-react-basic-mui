@@ -209,8 +209,8 @@ components =
 -- | XXX: Can we cleanup this last traverse?
 multiString :: ∀ a. Pattern -> ReadM a -> ReadM (Array a)
 multiString splitPattern read = do
-  s ← readerAsk
-  elems ←
+  s <- readerAsk
+  elems <-
     let
      strArray = filter (not <<< String.null) $ split splitPattern s
     in if Array.null strArray
@@ -218,7 +218,7 @@ multiString splitPattern read = do
       else pure strArray
   let
     read' = unwrap read
-  wrap $ for elems \elem → lift $ runReaderT read' elem
+  wrap $ for elems \elem -> lift $ runReaderT read' elem
 
 componentOption :: Parser Component
 componentOption =
@@ -226,8 +226,8 @@ componentOption =
 
 componentRead :: ReadM Component
 componentRead = eitherReader $ \s -> case s `Map.lookup` components' of
-  Just c → pure c
-  otherwise → Left $ intercalate " "
+  Just c -> pure c
+  otherwise -> Left $ intercalate " "
     [ "Unkown component name"
     , show s
     ,". Please use one of:"
@@ -243,8 +243,8 @@ iconOption =
 
 iconRead :: ReadM Icon
 iconRead = eitherReader $ \s -> case s `Map.lookup` icons' of
-  Just c → pure c
-  otherwise → Left $ intercalate " "
+  Just c -> pure c
+  otherwise -> Left $ intercalate " "
     [ "Unkown icon name"
     , show s
     ,". Please use one of:"
@@ -292,7 +292,7 @@ genOutput = directory <|> stdout
       <> short 's'
       <> help "Print component to stdout"
 
-genTarget ∷ Parser GenTarget
+genTarget :: Parser GenTarget
 genTarget = genComponent <|> genComponents <|> genIcon
   where
     genComponent = map GenComponent componentOption
@@ -330,7 +330,7 @@ options = subparser $
 
 main :: Effect Unit
 main = do
-  opts ← execParser (info (options <**> helper) fullDesc)
+  opts <- execParser (info (options <**> helper) fullDesc)
   let
     -- | Should I bring back multimodule handling logic?
     -- | For sure we want to keep track of the naming collisions
@@ -344,17 +344,17 @@ main = do
       Codegen.write dir ps
 
     codegenComponent component output = runExceptT (Codegen.component component) >>= case _ of
-        Right code → case output of
-          Just Stdout → do
+        Right code -> case output of
+          Just Stdout -> do
             log "\nPureScript:"
             log code.ps
             log "\nJavaScript:"
             log code.js
-          Just (Directory d) → do
+          Just (Directory d) -> do
             writeComponentModules d component code
-          Nothing → do
+          Nothing -> do
             writeComponentModules "../src" component code
-        Left err → log $ "Codegen errors: " <> intercalate "\n" err
+        Left err -> log $ "Codegen errors: " <> intercalate "\n" err
 
     writeIconModules dir icon code = launchAff_ $ do
       let
@@ -364,40 +364,40 @@ main = do
       Codegen.write dir ps
 
     iconCodegen icon = case _ of
-      Just Stdout → do
+      Just Stdout -> do
         log "\nPureScript:"
         log code.ps
         log "\nJavasScript:"
         log code.js
-      Just (Directory d) → do
+      Just (Directory d) -> do
         writeIconModules d icon code
-      Nothing → do
+      Nothing -> do
         writeIconModules "../src" icon code
       where
         code = Codegen.icon icon
   case opts of
-    ShowPropsCommand { component, skip } → do
+    ShowPropsCommand { component, skip } -> do
       let
         getProps = do
-          { props: c } ← TS.MUI.componentProps component
-          s <- traverse (\s → TS.MUI.componentProps s) skip <#> map _.props
+          { props: c } <- TS.MUI.componentProps component
+          s <- traverse (\s -> TS.MUI.componentProps s) skip <#> map _.props
           pure { component: c, skip: s }
       runExceptT getProps >>= case _ of
-        Right { component: cProps, skip: s } → do
+        Right { component: cProps, skip: s } -> do
           let
             cKeys = Map.keys cProps
             sKeys = Set.unions (map Map.keys s)
             keys = cKeys `Set.difference` sKeys
             props = Array.sort
-              $ map (\(Tuple k v) → k <> " : " <> cata pprintTypeName v.type)
+              $ map (\(Tuple k v) -> k <> " : " <> cata pprintTypeName v.type)
               $ Map.toUnfoldable
-              $ Map.filterWithKey (\k v → k `Set.member` keys) cProps
+              $ Map.filterWithKey (\k v -> k `Set.member` keys) cProps
           log $ intercalate "\n" props
-        Left err → log $ intercalate "\n" err
-    Generate { target: GenComponent component, output } →
+        Left err -> log $ intercalate "\n" err
+    Generate { target: GenComponent component, output } ->
       codegenComponent component output
-    Generate { target: GenComponents, output } → for_ components \component →
+    Generate { target: GenComponents, output } -> for_ components \component ->
       codegenComponent component output
-    Generate { target: GenIcon i, output } →
+    Generate { target: GenIcon i, output } ->
       iconCodegen i output
 

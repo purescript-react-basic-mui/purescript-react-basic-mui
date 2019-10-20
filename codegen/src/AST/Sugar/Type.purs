@@ -18,22 +18,22 @@ import Heterogeneous.Folding (class HFoldl, hfoldl)
 import Prim.RowList (class RowToList)
 import Record.Extra (class MapRecord, mapRecord)
 
-app ∷ Type → Array Type → Type
+app :: Type -> Array Type -> Type
 app n = roll <<< TypeApp n
 
-arr ∷ Type → Type → Type
+arr :: Type -> Type -> Type
 arr f = roll <<< TypeArr f
 
-array ∷ Type → Type
+array :: Type -> Type
 array = roll <<< TypeArray
 
-boolean ∷ Type
+boolean :: Type
 boolean = roll TypeBoolean
 
-constructor ∷ String → Type
+constructor :: String -> Type
 constructor = roll <<< TypeConstructor <<< name
 
-constrained ∷ String → Array Type → Type → Type
+constrained :: String -> Array Type -> Type -> Type
 constrained s params =
   roll <<< TypeConstrained { className: name' s, params }
 
@@ -44,7 +44,7 @@ constrained s params =
 -- -- | Finally wrap its result with `ForAll`.
 -- -- |
 -- -- | ```
--- -- | signature = forAll { g: "given", r: "required"} \{ g, r } →
+-- -- | signature = forAll { g: "given", r: "required"} \{ g, r } ->
 -- -- |  let
 -- -- |    fun = arr (recordApply g) (constructor "ResultType")
 -- -- |  in
@@ -53,27 +53,27 @@ constrained s params =
 -- -- | ```
 -- -- | Gives us:
 -- -- |
--- -- | ∀ required given. Prim.Row.Union given required FinalRow ⇒ Record given → ResultType
+-- -- | ∀ required given. Prim.Row.Union given required FinalRow => Record given -> ResultType
 -- -- |
-forAll ∷ ∀ idents il names nl vars
-  . HFoldl (List Ident → Ident → List Ident) (List Ident) (Record idents) (List Ident)
-  ⇒ RowToList names nl
-  ⇒ RowToList idents il
-  ⇒ MapRecord nl names String Ident () idents
-  ⇒ MapRecord il idents Ident Type () vars
-  ⇒ Record names
-  → (Record vars → Type)
-  → Type
+forAll :: ∀ idents il names nl vars
+  . HFoldl (List Ident -> Ident -> List Ident) (List Ident) (Record idents) (List Ident)
+  => RowToList names nl
+  => RowToList idents il
+  => MapRecord nl names String Ident () idents
+  => MapRecord il idents Ident Type () vars
+  => Record names
+  -> (Record vars -> Type)
+  -> Type
 forAll names cont =
   let
     varsRecord = mapRecord Ident names
-    toList = hfoldl (flip List.Cons ∷ List Ident → Ident → List Ident) (List.Nil ∷ List Ident)
+    toList = hfoldl (flip List.Cons :: List Ident -> Ident -> List Ident) (List.Nil :: List Ident)
     varsRecord' = mapRecord (roll <<< TypeVar) varsRecord
     idents = Array.fromFoldable (toList varsRecord)
   in
     roll (TypeForall idents (cont varsRecord'))
 
--- forAll ∷ ∀ n. Nat n ⇒ Vec n String → (Vec n Type → Type) → Type
+-- forAll :: ∀ n. Nat n => Vec n String -> (Vec n Type -> Type) -> Type
 -- forAll names cont =
 --   let
 --     idents = map Ident names
@@ -82,7 +82,7 @@ forAll names cont =
 --     roll (TypeForall (Vec.toArray idents) (cont vars))
 -- 
 
-forAll' ∷ String → (Type → Type) → Type
+forAll' :: String -> (Type -> Type) -> Type
 forAll' n cont =
   let
     ident = Ident n
@@ -90,41 +90,41 @@ forAll' n cont =
   in
     roll (TypeForall [ ident ] (cont v))
 
-name ∷ String → QualifiedName TypeName
+name :: String -> QualifiedName TypeName
 name = name'
 
-name' ∷ ∀ n. Newtype n String ⇒ String → QualifiedName n
+name' :: ∀ n. Newtype n String => String -> QualifiedName n
 name' n = qn n
   where
     qn = split (Pattern ".") >>> unsnoc >>> case _ of
-      Just { init, last } →
+      Just { init, last } ->
         { name: wrap last
         , moduleName: case init of
-            [] → Nothing
-            otherwise → Just $ ModuleName $ intercalate "." init
+            [] -> Nothing
+            otherwise -> Just $ ModuleName $ intercalate "." init
         }
-      Nothing → { name: wrap n, moduleName: Nothing }
+      Nothing -> { name: wrap n, moduleName: Nothing }
 
-number ∷ Type
+number :: Type
 number = roll TypeNumber
 
-record ∷ Row → Type
+record :: Row -> Type
 record = roll <<< TypeRecord
 
-recordApply ∷ Type → Type
+recordApply :: Type -> Type
 recordApply v = roll $ TypeApp
   (constructor "Record")
   [ v ]
 
-row ∷ Map RowLabel Type → Maybe (Either Ident (QualifiedName TypeName)) → Row
+row :: Map RowLabel Type -> Maybe (Either Ident (QualifiedName TypeName)) -> Row
 row labels tail = Row $ { labels: labels, tail }
 
-string ∷ Type
+string :: Type
 string = roll TypeString
 
-typeRow ∷ Row → Type
+typeRow :: Row -> Type
 typeRow = roll <<< TypeRow
 
-var ∷ Ident → Type
+var :: Ident -> Type
 var = roll <<< TypeVar
 

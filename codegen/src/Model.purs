@@ -38,7 +38,7 @@ type Component =
   -- | `ModulePath` value relative to `@material-ui/core/`
   , modulePath :: ModulePath
   , propsType ::
-    { base :: { row ∷ Row, vars :: Array Ident }
+    { base :: { row :: Row, vars :: Array Ident }
     , generate :: Array RowLabel
     }
   , tsc :: { strictNullChecks :: Boolean }
@@ -46,10 +46,10 @@ type Component =
 
 type ComponentName = String
 
-componentName ∷ Component → ComponentName
+componentName :: Component -> ComponentName
 componentName = pathName <<< _.modulePath
 
-componentFullPath ∷ Component → ModulePath
+componentFullPath :: Component -> ModulePath
 componentFullPath { modulePath } = Path "MUI" (Path "Core" modulePath)
 
 type IconName = String
@@ -57,16 +57,16 @@ type IconName = String
 -- | but icons are located directly under `@material-ui/icons/`
 -- | so we can use string to simplify some processing and FFI.
 newtype Icon = Icon IconName
-derive instance eqIcon ∷ Eq Icon
+derive instance eqIcon :: Eq Icon
 
-iconName ∷ Icon → IconName
+iconName :: Icon -> IconName
 iconName (Icon s) = s
 
 -- | Module path relative to `@material-ui/icons`
-iconPath ∷ Icon → ModulePath
+iconPath :: Icon -> ModulePath
 iconPath (Icon s) = Name s
 
-iconFullPath ∷ Icon → ModulePath
+iconFullPath :: Icon -> ModulePath
 iconFullPath icon = Path "MUI" (Path "Icons" (iconPath icon))
 
 -- | This ADT is used to describe the name of the Purescript module. It's also used to determine file names and generate FFI.
@@ -90,7 +90,7 @@ instance moldableModulePath :: Moldable ModulePath String where
   moldl f z m = moldlDefault f z m
   moldr f z m = moldrDefault f z m
 
-pathName ∷ ModulePath → String
+pathName :: ModulePath -> String
 pathName (Name n) = n
 pathName (Path _ p) = pathName p
 
