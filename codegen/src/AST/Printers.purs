@@ -37,6 +37,7 @@ printModule (Module { moduleName, declarations }) = lines $
     imports = importsDeclarations <<< foldMap (declarationImports) $ declarations
 
 printImport ∷ ImportDecl → String
+printImport (ImportDecl { moduleName: ModuleName "Prelude" }) = "import Prelude"
 printImport (ImportDecl { moduleName, names }) = line
   [ "import"
   , mn
@@ -61,7 +62,18 @@ printDeclaration (DeclForeignData { typeName: TypeName name }) = -- , "kind": k 
   line [ "foreign import data", name, "::", "Type" ] -- fromMaybe "Type" k
 printDeclaration (DeclForeignValue { ident: Ident ident, "type": t }) = -- , "kind": k }) =
   line [ "foreign import", ident, "::", cata printType t StandAlone ] -- fromMaybe "Type" k
-printDeclaration (DeclValue { ident: Ident name, expr, signature }) =
+printDeclaration (DeclInstance { head, body }) = lines $ Array.cons h (map (indent <<< printValueBindingFields) body)
+  where
+    indent = append "  "
+    h = line
+      [ "instance", unwrap head.name, "::", printQualifiedName head.className
+      , line (map (flip (cata printType) InApplication) head.types), "where"
+      ]
+printDeclaration (DeclValue v) = printValueBindingFields v
+printDeclaration (DeclType { typeName, "type": t, vars }) =
+  line ["type", unwrap typeName, line $ (map unwrap) vars, "=", cata printType t StandAlone]
+
+printValueBindingFields { value: { binders, name: Ident name, expr }, signature } =
   case signature of
     Nothing → v
     Just s →
@@ -69,18 +81,16 @@ printDeclaration (DeclValue { ident: Ident name, expr, signature }) =
       <> "\n"
       <> v
   where
-    v = name <> " = " <> para printExpr expr
-printDeclaration (DeclType { typeName, "type": t, vars }) =
-  line ["type", unwrap typeName, line $ (map unwrap) vars, "=", cata printType t StandAlone]
-printDeclaration _ = "UNSUPPORTED YET"
+    v = name <> line (map unwrap binders) <> " = " <> para printExpr expr
 
 printModuleName ∷ ModuleName → String
 printModuleName (ModuleName n) = n
 
 printQualifiedName ∷ ∀ n. Newtype n String ⇒ QualifiedName n → String
 printQualifiedName { moduleName: Nothing, name } = unwrap name
-printQualifiedName { moduleName: Just m, name } =
-  printModuleName m <> "." <> unwrap name
+printQualifiedName { moduleName: Just m, name } = case m of
+  (ModuleName "Prelude") → unwrap name
+  otherwise → printModuleName m <> "." <> unwrap name
 
 -- | We are using here GAlgebra to get
 -- | a bit nicer output for an application but

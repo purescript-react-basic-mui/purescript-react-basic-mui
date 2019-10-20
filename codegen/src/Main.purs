@@ -348,7 +348,7 @@ main = do
           Just Stdout → do
             log "\nPureScript:"
             log code.ps
-            log "\nJavasScript:"
+            log "\nJavaScript:"
             log code.js
           Just (Directory d) → do
             writeComponentModules d component code

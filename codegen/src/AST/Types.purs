@@ -80,7 +80,7 @@ instance showPropType :: Show ref => Show (TypeF ref) where
   show p = genericShow p
 
 -- | This is __literal__ equality check which doesn't
--- | take into account variable renaming etc.
+-- | take into an account variable renaming etc.
 -- | It is used only by `AST.Monomorphic` so it
 -- | seems working there.
 -- | Should we drop this trivial instance?
@@ -294,17 +294,31 @@ instance traversableExprF :: Traversable ExprF where
 
 type Expr = Mu ExprF
 
+-- | Original CST type name doesn't contain a signature.
+-- | Also the rest of the structure is radically simplified
+-- | here to cover only current codegen cases.
+type ValueBindingFields =
+  { value ::
+    { name :: Ident
+    , binders :: Array Ident
+    , expr :: Expr
+    }
+  , signature :: Maybe Type
+  }
+
 data Declaration
-  = DeclDerive
-    { ident :: Ident
-    -- , instConstraints :: Maybe (OneOrDelimited (Constraint a), SourceToken)
-    , className :: QualifiedName ClassName
-    , typeName :: QualifiedName TypeName
+  = DeclInstance
+    { head ::
+      { name :: Ident
+      , className :: QualifiedName ClassName
+      , types :: Array Type
+      }
+    , body :: Array ValueBindingFields
     }
   | DeclForeignValue { ident :: Ident, type :: Type }
   | DeclForeignData { typeName :: TypeName } -- , "kind" :: Maybe KindName }
   | DeclType { typeName ∷ TypeName, "type" ∷ Type, vars ∷ Array Ident }
-  | DeclValue { ident :: Ident, expr :: Expr, signature :: Maybe Type }
+  | DeclValue ValueBindingFields
 
 newtype ClassName = ClassName String
 derive instance newtypeClassName :: Newtype ClassName _

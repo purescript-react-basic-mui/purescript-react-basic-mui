@@ -23,3 +23,5 @@ jss :: ∀ r. { | r } -> JSS
 jss = unsafeCoerce
 
 foreign import data JSS :: Type
+
+foreign import shallowEq :: ∀ a. a -> a -> Boolean

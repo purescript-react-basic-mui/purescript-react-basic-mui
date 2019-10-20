@@ -40,8 +40,10 @@ import Prelude
 
 import Codegen.AST (Declaration(..)) as AST
 import Codegen.AST (Expr, ExprF(..), Ident(..), RowF(..), RowLabel, Type, TypeF(..), TypeName(..), Union(..))
+import Codegen.AST.Sugar (declInstance, valueBindingFields)
 import Codegen.AST.Sugar.Expr (app, boolean, ident, number, string) as Expr
 import Codegen.AST.Sugar.Type (arr) as Type
+import Codegen.AST.Sugar.Type (name')
 import Codegen.AST.Types (UnionMember(..), reservedNames)
 import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
@@ -53,18 +55,17 @@ import Data.Array (catMaybes)
 import Data.Array (singleton) as Array
 import Data.Char.Unicode (toLower) as Unicode
 import Data.Either (Either(..))
-import Data.Foldable (foldMap)
+import Data.Foldable (all, foldMap)
 import Data.Functor.Mu (roll, unroll)
 import Data.FunctorWithIndex (mapWithIndex)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
-import Data.Lens (_2, over, view)
+import Data.Lens (view)
 import Data.Lens.Record (prop)
-import Data.List (List(..)) as List
+import Data.List (List(..), singleton) as List
 import Data.List (List)
 import Data.Map (Map)
 import Data.Map (fromFoldable, lookup) as Map
-import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Newtype (unwrap)
 import Data.Set (member) as Set
@@ -301,21 +302,27 @@ exprNull = Expr.ident "Foreign.NullOrUndefined.null"
 -- | * a foreign type declaration for given `Union`
 -- | * a record value declaration which contains "constructors"
 -- |  for this union type
+-- | * an Eq instance for trivial cases
 -- |
 -- | All declarations are built in local module contex.
 unionDeclarations
   :: TypeName
   -> Array UnionMember
   -> { constructors :: AST.Declaration
+     , instances :: List AST.Declaration
      , type :: AST.Declaration
      }
 unionDeclarations typeName@(TypeName name) members =
   { "type": AST.DeclForeignData { typeName } -- , "kind": Nothing }
   , constructors: AST.DeclValue
-    { expr
-    , ident: Ident (downfirst name)
+    { value:
+      { expr
+      , binders: []
+      , name: Ident (downfirst name)
+      }
     , signature: Just signature
     }
+  , instances
   }
   where
     downfirst :: String -> String
@@ -328,7 +335,21 @@ unionDeclarations typeName@(TypeName name) members =
       SCU.toCharArray >>> map Unicode.toLower >>> SCU.fromCharArray
 
     type_ = roll $ TypeConstructor { name: typeName, moduleName: Nothing }
-    literalValue expr = { sig: type_, expr }
+    literalValue e = { sig: type_, expr: e }
+
+    isConstructor (UnionConstructor _ _) = true
+    isConstructor _ = false
+
+    -- | We are able to provide Eq instance based on `shallowEq`
+    -- | easily whenever there are only literal members of a given
+    -- | union.
+    instances = if all (not <<< isConstructor) members
+      then List.singleton $
+        declInstance
+          (name' "Prelude.Eq")
+          [ type_ ]
+          [ valueBindingFields (Ident "eq") [] (roll $ ExprIdent (name' "MUI.Core.shallowEq")) Nothing ]
+      else mempty
 
     member (UnionBoolean b) = Tuple (show b) $ literalValue $ exprUnsafeCoerceApp (Expr.boolean b)
     member (UnionString s) = Tuple s $ literalValue $ exprUnsafeCoerceApp (Expr.string s)

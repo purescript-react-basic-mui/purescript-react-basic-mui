@@ -4,11 +4,11 @@ import Prelude
 
 import Codegen.AST.Types (ClassName, Declaration(..), ExprF(..), Import(..), ImportDecl(..), Imports(..), ModuleName, QualifiedName, RowF(..), TypeF(..), TypeName)
 import Data.Either (hush)
-import Data.Foldable (fold)
+import Data.Foldable (fold, foldMap)
 import Data.List (List)
 import Data.List (fromFoldable) as List
 import Data.Map (singleton, toUnfoldable) as Map
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Set (singleton) as Set
 import Data.Tuple (Tuple(..))
 import Matryoshka (Algebra, cata)
@@ -23,20 +23,22 @@ importsSingleton moduleName import_ =
   Imports (Map.singleton moduleName (Set.singleton import_))
 
 declarationImports ∷ Declaration → Imports
-declarationImports (DeclDerive { className, typeName }) = ti <> ci
-  where
-    ti = fromMaybe mempty $ qualifiedTypeNameImport typeName
-    ci = fromMaybe mempty $ qualifiedClassNameImport className
 declarationImports (DeclForeignValue { ident, "type": t }) =
   cata typeImportsAlgebra t
--- | Add kind handling here
+declarationImports (DeclInstance { head: { className, types }, body }) =
+  bei <> bst <> ti <> ci
+  where
+    bei = foldMap (cata exprImportsAlgebra <<< _.value.expr) body
+    bst = foldMap (maybe mempty (cata typeImportsAlgebra) <<< _.signature) body
+    ti = foldMap (cata typeImportsAlgebra) types
+    ci = fromMaybe mempty $ qualifiedClassNameImport className
 declarationImports (DeclForeignData { typeName }) = mempty
 declarationImports (DeclType { typeName, "type": t }) =
   cata typeImportsAlgebra t
-declarationImports (DeclValue { expr, signature: Just s }) =
-  cata typeImportsAlgebra s <> cata exprImportsAlgebra expr
-declarationImports (DeclValue { expr, signature: Nothing }) =
-  cata exprImportsAlgebra expr
+declarationImports (DeclValue { value, signature: Just s }) =
+  cata typeImportsAlgebra s <> cata exprImportsAlgebra value.expr
+declarationImports (DeclValue { value, signature: Nothing }) =
+  cata exprImportsAlgebra value.expr
 
 typeImportsAlgebra ∷ Algebra TypeF Imports
 typeImportsAlgebra = case _ of

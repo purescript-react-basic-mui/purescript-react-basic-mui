@@ -123,8 +123,8 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: { b
           pure $ TS.Module.unionDeclarations name members
 
       let
-        step { "type": union, constructors } res =
-          List.Cons union (List.Cons constructors res)
+        step { "type": union, constructors, instances } res =
+          List.Cons union (List.Cons constructors res) <> instances
         -- | Our final component module consists of:
         -- | * unions declrations
         -- | * classes realted declarations
@@ -174,6 +174,7 @@ componentConstructorsAST propsConstructor inherits componentName =
       in
         declValue
           (Ident componentName')
+          []
           (Expr.app (Expr.ident "React.Basic.element") componentValue.var)
           (Just signature)
 
@@ -194,6 +195,7 @@ componentConstructorsAST propsConstructor inherits componentName =
       in
         declValue
           (Ident $ componentName' <> "_component")
+          []
           (Expr.app (Expr.ident "React.Basic.element") componentValue.var)
           (Just signature)
   in Array.toUnfoldable
@@ -265,7 +267,7 @@ classesPropAST componentName = case _ of
             in
               constrained "Prim.Row.Union" [ g, r, classKeyOptionsType.constructor ] fun
         in
-          declValue ident TS.Module.exprUnsafeCoerce (Just signature)
+          declValue ident [] TS.Module.exprUnsafeCoerce (Just signature)
 
       classKeyJSSType = declForeignData (TypeName $ componentName <> "ClassKeyJSS")
       classKeyJSSValue =
@@ -277,7 +279,7 @@ classesPropAST componentName = case _ of
             in
               constrained "Prim.Row.Union" [ g, r, classKeyJSSOptionsType.constructor ] fun
         in
-          declValue ident TS.Module.exprUnsafeCoerce (Just signature)
+          declValue ident [] TS.Module.exprUnsafeCoerce (Just signature)
 
     let
       declarations ∷ List _

@@ -2,9 +2,13 @@ module Codegen.AST.Sugar where
 
 import Prelude
 
-import Codegen.AST.Types (Declaration(..), Expr, ExprF(..), Ident, Type, TypeF(..), TypeName)
+import Codegen.AST.Printers (PrintingContext(..), printQualifiedName, printType)
+import Codegen.AST.Types (ClassName, Declaration(..), Expr, ExprF(..), Ident(..), QualifiedName, Type, TypeF(..), TypeName, ValueBindingFields)
+import Data.Foldable (foldMap)
 import Data.Functor.Mu (roll)
 import Data.Maybe (Maybe(..))
+import Data.String.Extra (camelCase)
+import Matryoshka.Fold (cata)
 
 declType :: TypeName -> Array Ident -> Type -> { declaration :: Declaration , constructor :: Type }
 declType typeName vars body =
@@ -23,12 +27,14 @@ declForeignData typeName =
   in
     { declaration, constructor }
 
-declValue ∷ Ident → Expr → Maybe Type → { declaration ∷ Declaration, var ∷ Expr }
-declValue ident expr signature =
+valueBindingFields ∷ Ident → Array Ident → Expr → Maybe Type → ValueBindingFields
+valueBindingFields name binders expr signature = { value: { binders, expr, name }, signature }
+
+declValue ∷ Ident → Array Ident → Expr → Maybe Type → { declaration ∷ Declaration, var ∷ Expr }
+declValue name binders expr signature =
   let
-    declaration = DeclValue
-      { ident, expr, signature }
-    var = roll $ ExprIdent { name: ident, moduleName: Nothing }
+    declaration = DeclValue (valueBindingFields name binders expr signature)
+    var = roll $ ExprIdent { name, moduleName: Nothing }
   in
     { declaration, var }
 
@@ -39,3 +45,15 @@ declForeignValue ident t =
     var = roll $ ExprIdent { name: ident, moduleName: Nothing }
   in
     { declaration, var }
+
+declInstance ∷ QualifiedName ClassName → Array Type → Array ValueBindingFields → Declaration
+declInstance className types body = DeclInstance
+  { head:
+    { className
+    , name: Ident $ camelCase $
+        printQualifiedName className <> foldMap (flip (cata printType) StandAlone) types
+    , types
+    }
+  , body
+  }
+
