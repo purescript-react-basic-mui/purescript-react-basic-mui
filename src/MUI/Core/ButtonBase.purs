@@ -1,8 +1,9 @@
 module MUI.Core.ButtonBase where
 
 import Foreign (Foreign) as Foreign
-import MUI.Core (JSS) as MUI.Core
+import MUI.Core (shallowEq, JSS) as MUI.Core
 import MUI.Core.ButtonBase.TouchRipple (TouchRippleProps) as MUI.Core.ButtonBase.TouchRipple
+import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_button) as React.Basic.DOM
@@ -12,16 +13,16 @@ import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 foreign import data Type_ :: Type
 
 type_ :: { button ∷ Type_, reset ∷ Type_, submit ∷ Type_ }
-type_ = {
-  button: Unsafe.Coerce.unsafeCoerce "button",
-  reset: Unsafe.Coerce.unsafeCoerce "reset", submit: Unsafe.Coerce.unsafeCoerce "submit" }
+type_ = { button: Unsafe.Coerce.unsafeCoerce "button", reset: Unsafe.Coerce.unsafeCoerce "reset", submit: Unsafe.Coerce.unsafeCoerce "submit" }
+
+instance eqType :: Eq Type_ where
+  eq = MUI.Core.shallowEq
 
 type ButtonBaseActions  = Foreign.Foreign
 
 type ButtonBaseTypeProp  = Foreign.Foreign
 
-type ButtonBasePropsOptions componentProps = ( "TouchRippleProps" ∷ MUI.Core.ButtonBase.TouchRipple.TouchRippleProps
-  , action ∷ Foreign.Foreign, buttonRef ∷ Foreign.Foreign, centerRipple ∷ Boolean, children ∷ Array React.Basic.JSX, classes ∷ ButtonBaseClassKey, color ∷ String, component ∷ React.Basic.ReactComponent {  | componentProps }, disableRipple ∷ Boolean, disabled ∷ Boolean, focusRipple ∷ Boolean, onFocusVisible ∷ React.Basic.Events.EventHandler, "type" ∷ Type_ | componentProps )
+type ButtonBasePropsOptions componentProps = ( "TouchRippleProps" ∷ MUI.Core.ButtonBase.TouchRipple.TouchRippleProps, action ∷ Foreign.Foreign, buttonRef ∷ Foreign.Foreign, centerRipple ∷ Boolean, children ∷ Array React.Basic.JSX, classes ∷ ButtonBaseClassKey, color ∷ String, component ∷ React.Basic.ReactComponent {  | componentProps }, disableRipple ∷ Boolean, disabled ∷ Boolean, focusRipple ∷ Boolean, onFocusVisible ∷ React.Basic.Events.EventHandler, "type" ∷ Type_ | componentProps )
 
 foreign import data ButtonBaseProps :: Type
 

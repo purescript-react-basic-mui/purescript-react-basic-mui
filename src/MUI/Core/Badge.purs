@@ -1,6 +1,7 @@
 module MUI.Core.Badge where
 
-import MUI.Core (JSS) as MUI.Core
+import MUI.Core (shallowEq, JSS) as MUI.Core
+import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
@@ -25,6 +26,18 @@ foreign import data Horizontal :: Type
 
 horizontal :: { left ∷ Horizontal, right ∷ Horizontal }
 horizontal = { left: Unsafe.Coerce.unsafeCoerce "left", right: Unsafe.Coerce.unsafeCoerce "right" }
+
+instance eqHorizontal :: Eq Horizontal where
+  eq = MUI.Core.shallowEq
+
+instance eqVertical :: Eq Vertical where
+  eq = MUI.Core.shallowEq
+
+instance eqColor :: Eq Color where
+  eq = MUI.Core.shallowEq
+
+instance eqVariant :: Eq Variant where
+  eq = MUI.Core.shallowEq
 
 type BadgePropsOptions componentProps = ( anchorOrigin ∷ { horizontal ∷ Horizontal, vertical ∷ Vertical }, badgeContent ∷ React.Basic.JSX, children ∷ Array React.Basic.JSX, classes ∷ BadgeClassKey, color ∷ Color, component ∷ React.Basic.ReactComponent {  | componentProps }, invisible ∷ Boolean, max ∷ Number, showZero ∷ Boolean, variant ∷ Variant | componentProps )
 

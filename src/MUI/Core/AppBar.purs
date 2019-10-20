@@ -1,7 +1,8 @@
 module MUI.Core.AppBar where
 
-import MUI.Core (JSS) as MUI.Core
+import MUI.Core (shallowEq, JSS) as MUI.Core
 import MUI.Core.Paper (PaperProps) as MUI.Core.Paper
+import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
@@ -16,6 +17,12 @@ foreign import data Color :: Type
 
 color :: { default ∷ Color, inherit ∷ Color, primary ∷ Color, secondary ∷ Color }
 color = { default: Unsafe.Coerce.unsafeCoerce "default", inherit: Unsafe.Coerce.unsafeCoerce "inherit", primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary" }
+
+instance eqColor :: Eq Color where
+  eq = MUI.Core.shallowEq
+
+instance eqPosition :: Eq Position where
+  eq = MUI.Core.shallowEq
 
 type AppBarPropsOptions componentProps = ( children ∷ Array React.Basic.JSX, classes ∷ AppBarClassKey, color ∷ Color, position ∷ Position | componentProps )
 

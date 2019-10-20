@@ -1,6 +1,7 @@
 module MUI.Core.Menu where
 
-import MUI.Core (JSS) as MUI.Core
+import MUI.Core (shallowEq, JSS) as MUI.Core
+import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
@@ -16,6 +17,9 @@ foreign import data TransitionDuration :: Type
 
 transitionDuration :: { auto ∷ TransitionDuration, number ∷ Number → TransitionDuration, record ∷ { appear ∷ Number, enter ∷ Number, exit ∷ Number } → TransitionDuration }
 transitionDuration = { auto: Unsafe.Coerce.unsafeCoerce "auto", number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce }
+
+instance eqVariant :: Eq Variant where
+  eq = MUI.Core.shallowEq
 
 type MenuPropsOptions componentProps = ( autoFocus ∷ Boolean, children ∷ Array React.Basic.JSX, classes ∷ MenuClassKey, disableAutoFocusItem ∷ Boolean, onEnter ∷ React.Basic.Events.EventHandler, onEntered ∷ React.Basic.Events.EventHandler, onEntering ∷ React.Basic.Events.EventHandler, onExit ∷ React.Basic.Events.EventHandler, onExited ∷ React.Basic.Events.EventHandler, onExiting ∷ React.Basic.Events.EventHandler, open ∷ Boolean, transitionDuration ∷ TransitionDuration, variant ∷ Variant | componentProps )
 
