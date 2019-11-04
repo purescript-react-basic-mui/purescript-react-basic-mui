@@ -164,6 +164,34 @@ components =
           ]
         }
       }
+    gridList =
+      let
+        base = basePropsRow [] $ Map.fromFoldable
+          [ children
+          , component
+          ]
+        in simpleComponent
+          { inherits: Nothing
+          , name: "GridList"
+          , propsType:
+            { base
+            , generate: [ "cellHeight", "classes", "cols", "spacing" ]
+            }
+          }
+    gridListTile =
+      let
+        base = basePropsRow [] $ Map.fromFoldable
+          [ children
+          , component
+          ]
+        in simpleComponent
+          { inherits: Nothing
+          , name: "GridListTile"
+          , propsType:
+            { base
+            , generate: [ "classes", "cols", "rows" ]
+            }
+          }
     menu =
       let
         -- | Still missing: anchorEl, onClose, MenuListProps, PopoverClasses, transitionDuration
@@ -204,7 +232,7 @@ components =
       , tsc: { strictNullChecks: false }
       }
   in
-    [ appBar, badge, buttonBase, button, fab, menu, menuItem, touchRipple ]
+    [ appBar, badge, buttonBase, button, fab, gridList, gridListTile, menu, menuItem, touchRipple ]
 
 -- | XXX: Can we cleanup this last traverse?
 multiString :: ∀ a. Pattern -> ReadM a -> ReadM (Array a)
