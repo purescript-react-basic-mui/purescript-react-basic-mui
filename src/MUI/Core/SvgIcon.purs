@@ -5,7 +5,8 @@ import MUI.Core.Icon.Color as Icon
 import MUI.Core.Icon.FontSize (FontSize)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_svg)
+import React.Basic.DOM.Internal (SharedSVGProps)
+import React.Basic.DOM.SVG (Props_svg)
 import Unsafe.Coerce (unsafeCoerce)
 
 type SvgIconProps componentProps =
@@ -58,7 +59,7 @@ svgIconPropsPartial_component :: ∀ componentProps props props_
 svgIconPropsPartial_component = unsafeCoerce
 
 svgIconPropsPartial :: ∀ props props_
-  . Union props props_ (SvgIconProps Props_svg)
+  . Union props props_ (SvgIconProps (SharedSVGProps Props_svg))
   => Record props 
   -> SvgIconPropsPartial 
 svgIconPropsPartial = unsafeCoerce
@@ -71,7 +72,7 @@ svgIcon_component :: ∀ componentProps props props_
 svgIcon_component = element _SvgIcon
 
 svgIcon :: ∀ props props_
-  . Union props props_ (SvgIconProps Props_svg)
+  . Union props props_ (SvgIconProps (SharedSVGProps Props_svg))
   => Record props 
   -> JSX
 svgIcon = element _SvgIcon

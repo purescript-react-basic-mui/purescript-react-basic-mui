@@ -10,7 +10,7 @@ import MUI.Core.Styles.CreateMuiTheme (Theme)
 import MUI.Core.SvgIcon (SvgIconProps, SvgIconClassKeyOptionsJSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_svg)
+import React.Basic.DOM.SVG (Props_svg)
 import Unsafe.Coerce (unsafeCoerce)
 
 newtype Icon = Icon (∀ props. ReactComponent props)

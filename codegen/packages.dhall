@@ -155,6 +155,7 @@ let additions =
     , repo = "https://github.com/paf31/purescript-pprint.git"
     , version = "v5.0.0"
     }
+  , react-basic = upstream.react-basic // { version = "df358364ece1cd4760429afae0bcca0eb518eb03" }
   , read-dts =
     { dependencies =
       [ "console"
