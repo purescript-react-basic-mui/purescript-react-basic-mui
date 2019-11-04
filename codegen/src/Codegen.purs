@@ -6,7 +6,7 @@ import Codegen.AST (Ident(..))
 import Codegen.AST (Module(..), ModuleName(..)) as AST
 import Codegen.AST.Printers (printModule)
 import Codegen.AST.Sugar (declForeignValue)
-import Codegen.AST.Sugar.Type (app, constructor) as Type
+import Codegen.AST.Sugar.Type (constructor) as Type
 import Codegen.Model (Component, Icon, ModulePath(..), iconFullPath, psImportPath)
 import Codegen.Model (componentFullPath, componentName, iconFullPath, iconName) as Model
 import Codegen.TS (M) as TS
@@ -89,10 +89,6 @@ icon i = { ps, js }
   where
     iconName = Model.iconName i
     iconName' = camelCase iconName
-
-    svgIconProps = Type.constructor "MUI.Core.SvgIcon.SvgIconProps"
-    props_svg = Type.constructor "React.Basic.DOM.Props_svg"
-    props = Type.app svgIconProps [ props_svg ]
 
     iconType = Type.constructor "MUI.Icons.Types.Icon"
     iconComponent = declForeignValue (Ident iconName') iconType

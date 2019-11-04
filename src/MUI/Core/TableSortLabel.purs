@@ -8,6 +8,7 @@ import MUI.Core.SvgIcon (SvgIconProps)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_span)
+import React.Basic.DOM.Internal (SharedSVGProps)
 import React.Basic.DOM.SVG (Props_svg)
 import React.Basic.Events (EventHandler)
 import React.Basic.Hooks (Ref)
@@ -19,7 +20,7 @@ type TableSortLabelProps componentProps =
   , classes :: TableSortLabelClassKey
   , direction :: DirectionProp
   , hideSortIcon :: Boolean
-  , "IconComponent" :: ReactComponent { | (SvgIconProps Props_svg) }
+  , "IconComponent" :: ReactComponent { | (SvgIconProps (SharedSVGProps Props_svg)) }
   , action :: Ref ButtonBaseActions
   , buttonRef :: Ref Foreign
   , centerRipple :: Boolean

@@ -10,6 +10,7 @@ import MUI.Core.Styles.CreateMuiTheme (Theme)
 import MUI.Core.SvgIcon (SvgIconProps, SvgIconClassKeyOptionsJSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.DOM.Internal (SharedSVGProps)
 import React.Basic.DOM.SVG (Props_svg)
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -27,7 +28,7 @@ icon
 icon (Icon i) = element i
 
 iconWithStyles :: ∀ jss jss_ required given
-  . Union given required (SvgIconProps Props_svg)
+  . Union given required (SvgIconProps (SharedSVGProps Props_svg))
   => Union jss jss_ SvgIconClassKeyOptionsJSS
   => Icon
   -> (Theme -> Record jss)
