@@ -15,8 +15,8 @@ import Control.Alt ((<|>))
 import Control.Monad.Except (runExceptT)
 import Control.Monad.Reader (runReaderT)
 import Control.Monad.Trans.Class (lift)
-import Data.Array (cons, null, sort) as Array
 import Data.Array (filter)
+import Data.Array (null, sort) as Array
 import Data.Either (Either(..))
 import Data.Foldable (for_, intercalate)
 import Data.Functor.Mu (roll)
@@ -43,6 +43,8 @@ components :: Array Component
 components =
   let
     children = Tuple "children" arrayJSX
+    effect result = Type.app (Type.constructor "Effect.Effect") [ result ]
+    effectUnit = effect (Type.constructor "Prelude.Unit")
 
     foreignType = Type.constructor "Foreign.Foreign"
     -- | variable used For example:
@@ -151,6 +153,20 @@ components =
           }
         , tsc: { strictNullChecks: false }
         }
+    clickAwayListener =
+      let
+        onClickAway = Tuple "onClickAway" effectUnit
+        -- | Single jsx node is required
+        children = Tuple "children" jsx
+        base = basePropsRow [] $ Map.fromFoldable [ children, onClickAway ]
+      in simpleComponent
+        { inherits: Nothing
+        , name: "ClickAwayListener"
+        , propsType:
+          { base
+          , generate: [ "mouseEvent", "touchEvent" ]
+          }
+        }
     fab = simpleComponent
       { inherits: Just $ Type.app
           (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
@@ -195,9 +211,14 @@ components =
     menu =
       let
         -- | Still missing: anchorEl, onClose, MenuListProps, PopoverClasses, transitionDuration
-        handler n = Tuple n eventHandler
-        base = basePropsRow [] $ Map.fromFoldable $ Array.cons children $ map handler
-          ["onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting"]
+        handler n = Tuple n effectUnit
+        handlers = map handler
+          ["onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting"]
+        -- | I'm not sure what is the difference between `React.Element` and `DOM.Element`
+        nullable = Type.constructor "Data.Nullable.Nullable"
+        domElement = Type.constructor "Web.DOM.Element"
+        anchorEl = Tuple "anchorEl" $ Type.app nullable [ domElement ]
+        base = basePropsRow [] $ Map.fromFoldable $ [ anchorEl, children ] <> handlers
       in simpleComponent
         { inherits: Nothing -- | We should inherit from Popover here
         , name: "Menu"
@@ -232,7 +253,7 @@ components =
       , tsc: { strictNullChecks: false }
       }
   in
-    [ appBar, badge, buttonBase, button, fab, gridList, gridListTile, menu, menuItem, touchRipple ]
+    [ appBar, badge, buttonBase, button, clickAwayListener, fab, gridList, gridListTile, menu, menuItem, touchRipple ]
 
 -- | XXX: Can we cleanup this last traverse?
 multiString :: ∀ a. Pattern -> ReadM a -> ReadM (Array a)
