@@ -1,12 +1,13 @@
 module MUI.Core.Button where
 
-import MUI.Core (shallowEq, JSS) as MUI.Core
+import MUI.Core (JSS) as MUI.Core
 import MUI.Core.ButtonBase (ButtonBasePropsOptions) as MUI.Core.ButtonBase
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_button) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
 foreign import data Variant :: Type
 
@@ -24,13 +25,13 @@ color :: { default :: Color, inherit :: Color, primary :: Color, secondary :: Co
 color = { default: Unsafe.Coerce.unsafeCoerce "default", inherit: Unsafe.Coerce.unsafeCoerce "inherit", primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary" }
 
 instance eqColor :: Eq Color where
-  eq = MUI.Core.shallowEq
+  eq = Unsafe.Reference.unsafeRefEq
 
 instance eqSize :: Eq Size where
-  eq = MUI.Core.shallowEq
+  eq = Unsafe.Reference.unsafeRefEq
 
 instance eqVariant :: Eq Variant where
-  eq = MUI.Core.shallowEq
+  eq = Unsafe.Reference.unsafeRefEq
 
 type ButtonPropsOptions componentProps = ( classes :: ButtonClassKey, color :: Color, disableFocusRipple :: Boolean, disableRipple :: Boolean, disabled :: Boolean, fullWidth :: Boolean, href :: String, size :: Size, variant :: Variant | componentProps )
 

@@ -1,0 +1,1 @@
+exports._Dialog = require("@material-ui/core/Dialog").default;

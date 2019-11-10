@@ -348,7 +348,7 @@ unionDeclarations typeName@(TypeName name) members =
         declInstance
           (name' "Prelude.Eq")
           [ type_ ]
-          [ valueBindingFields (Ident "eq") [] (roll $ ExprIdent (name' "MUI.Core.shallowEq")) Nothing ]
+          [ valueBindingFields (Ident "eq") [] (roll $ ExprIdent (name' "Unsafe.Reference.unsafeRefEq")) Nothing ]
       else mempty
 
     member (UnionBoolean b) = Tuple (show b) $ literalValue $ exprUnsafeCoerceApp (Expr.boolean b)

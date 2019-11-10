@@ -210,6 +210,7 @@ newtype RowF ref
     , tail :: Maybe (Either Ident QualifiedTypeName)
     }
 derive instance genericRowType :: Generic (RowF ref) _
+derive instance newtypeRowF :: Newtype (RowF ref) _
 instance showRowType :: Show ref => Show (RowF ref) where
   show p = genericShow p
 

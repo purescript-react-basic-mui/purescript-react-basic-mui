@@ -2,12 +2,13 @@ module MUI.Core.Menu where
 
 import Data.Nullable (Nullable) as Data.Nullable
 import Effect (Effect) as Effect
-import MUI.Core (shallowEq, JSS) as MUI.Core
+import MUI.Core (JSS) as MUI.Core
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 import Web.DOM (Element) as Web.DOM
 
 foreign import data Variant :: Type
@@ -21,7 +22,7 @@ transitionDuration :: { auto :: TransitionDuration, number :: Number -> Transiti
 transitionDuration = { auto: Unsafe.Coerce.unsafeCoerce "auto", number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce }
 
 instance eqVariant :: Eq Variant where
-  eq = MUI.Core.shallowEq
+  eq = Unsafe.Reference.unsafeRefEq
 
 type MenuPropsOptions componentProps = ( anchorEl :: Data.Nullable.Nullable Web.DOM.Element, autoFocus :: Boolean, children :: Array React.Basic.JSX, classes :: MenuClassKey, disableAutoFocusItem :: Boolean, onClose :: Effect.Effect Unit, onEnter :: Effect.Effect Unit, onEntered :: Effect.Effect Unit, onEntering :: Effect.Effect Unit, onExit :: Effect.Effect Unit, onExited :: Effect.Effect Unit, onExiting :: Effect.Effect Unit, open :: Boolean, transitionDuration :: TransitionDuration, variant :: Variant | componentProps )
 

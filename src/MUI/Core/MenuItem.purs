@@ -6,7 +6,7 @@ import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type MenuItemPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: MenuItemClassKey, component :: React.Basic.ReactComponent {  | componentProps }, dense :: Boolean, disableGutters :: Boolean | componentProps )
+type MenuItemPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: MenuItemClassKey, dense :: Boolean, disableGutters :: Boolean | componentProps )
 
 foreign import data MenuItemProps :: Type
 

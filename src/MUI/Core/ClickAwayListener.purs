@@ -1,12 +1,12 @@
 module MUI.Core.ClickAwayListener where
 
 import Effect (Effect) as Effect
-import MUI.Core (shallowEq) as MUI.Core
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
 foreign import data TouchEvent :: Type
 
@@ -19,10 +19,10 @@ mouseEvent :: { "false" :: MouseEvent, onClick :: MouseEvent, onMouseDown :: Mou
 mouseEvent = { false: Unsafe.Coerce.unsafeCoerce false, onClick: Unsafe.Coerce.unsafeCoerce "onClick", onMouseDown: Unsafe.Coerce.unsafeCoerce "onMouseDown", onMouseUp: Unsafe.Coerce.unsafeCoerce "onMouseUp" }
 
 instance eqMouseEvent :: Eq MouseEvent where
-  eq = MUI.Core.shallowEq
+  eq = Unsafe.Reference.unsafeRefEq
 
 instance eqTouchEvent :: Eq TouchEvent where
-  eq = MUI.Core.shallowEq
+  eq = Unsafe.Reference.unsafeRefEq
 
 type ClickAwayListenerPropsOptions componentProps = ( children :: React.Basic.JSX, mouseEvent :: MouseEvent, onClickAway :: Effect.Effect Unit, touchEvent :: TouchEvent | componentProps )
 

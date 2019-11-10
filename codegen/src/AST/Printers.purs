@@ -6,7 +6,7 @@ import Codegen.AST.Imports (declarationImports, importsDeclarations)
 import Codegen.AST.Types (Declaration(..), Expr, ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), QualifiedName, RowF(..), TypeF(..), TypeName(..), ValueBindingFields, reservedNames)
 import Data.Array (cons, fromFoldable) as Array
 import Data.Char.Unicode (isUpper)
-import Data.Either (Either(..))
+import Data.Either (Either(..), fromRight)
 import Data.Foldable (foldMap, intercalate)
 import Data.Functor.Mu (Mu(..)) as Mu
 import Data.List (intercalate) as List
@@ -16,8 +16,12 @@ import Data.Newtype (class Newtype, unwrap)
 import Data.Set (member) as Set
 import Data.String (joinWith)
 import Data.String.CodeUnits (uncons) as SCU
+import Data.String.Regex (Regex, regex)
+import Data.String.Regex (test) as Regex
+import Data.String.Regex.Flags (noFlags) as Regex.Flags
 import Data.Tuple (Tuple(..), snd)
 import Matryoshka (Algebra, GAlgebra, cata, para)
+import Partial.Unsafe (unsafePartial)
 
 lines :: Array String -> String
 lines = joinWith "\n"
@@ -138,8 +142,11 @@ printType = case _ of
         labels' :: Array String
         labels' = map (\(Tuple n t) -> label n <> " :: " <> t StandAlone) <<< Map.toUnfoldable $ labels
 
+        alphanumRegex :: Regex
+        alphanumRegex = unsafePartial $ fromRight $ regex "^[A-Za-z0-9_]*$" Regex.Flags.noFlags
+
         label l = case SCU.uncons l of
-          Just { head } -> if isUpper head || l `Set.member` reservedNames
+          Just { head } -> if isUpper head || l `Set.member` reservedNames || not (Regex.test alphanumRegex l)
             then show l
             else l
           Nothing -> l

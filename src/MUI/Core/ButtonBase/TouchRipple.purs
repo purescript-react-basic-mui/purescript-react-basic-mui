@@ -6,7 +6,7 @@ import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_span) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type TouchRipplePropsOptions componentProps = ( classes :: TouchRippleClassKey | componentProps )
+type TouchRipplePropsOptions componentProps = ( center :: Boolean, classes :: TouchRippleClassKey | componentProps )
 
 foreign import data TouchRippleProps :: Type
 
