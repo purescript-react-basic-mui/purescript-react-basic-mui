@@ -16,7 +16,8 @@ import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.State (runState)
-import Data.Array (elem, singleton, toUnfoldable) as Array
+import Data.Array (any)
+import Data.Array (any, elem, filter, fromFoldable, null, singleton, toUnfoldable) as Array
 import Data.Either (Either(..))
 import Data.Foldable (foldr)
 import Data.Functor.Mu (Mu(..)) as Mu
@@ -24,9 +25,11 @@ import Data.Functor.Mu (roll)
 import Data.List (List(..), fromFoldable) as List
 import Data.List (List)
 import Data.Map (Map)
-import Data.Map (filterKeys, fromFoldable, lookup, singleton) as Map
+import Data.Map (filterKeys, fromFoldable, keys, lookup, singleton) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
+import Data.Newtype (unwrap)
+import Data.Set (isEmpty, member) as Set
 import Data.String (joinWith)
 import Data.String.Extra (camelCase)
 import Data.Traversable (for)
@@ -89,6 +92,17 @@ componentProps component@{ modulePath } = do
 componentAST :: Component -> M AST.Module
 componentAST component@{ extraDeclarations, inherits, modulePath, propsType: { base: { row: base, vars }, generate }} = do
   { fqn, props } <- componentProps component
+  let
+    missingFromGenerate = Array.filter (not <<< flip Set.member (Map.keys props)) generate
+  when (not <<< Array.null $ missingFromGenerate) do
+    throwError $ [ "Properties listed for generation but not found in component props:" <> show missingFromGenerate ]
+
+  let
+    propsNamesFromBase = Array.fromFoldable <<< Map.keys <<< _.labels <<< unwrap $ base
+    missingFromBase = Array.filter (not <<< flip Set.member (Map.keys props)) propsNamesFromBase
+  when (not <<< Array.null $ missingFromBase) do
+    throwError $ [ "Properties listed in base row but not found in component props:" <> show missingFromBase ]
+
   let
     -- | Take only a subset of props using given label set.
     props' = Map.filterKeys ((&&) <$> (not <<< eq "classes") <*> (_ `Array.elem` generate)) props

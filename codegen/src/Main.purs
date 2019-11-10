@@ -45,6 +45,7 @@ components =
     children = Tuple "children" arrayJSX
     effect result = Type.app (Type.constructor "Effect.Effect") [ result ]
     effectUnit = effect (Type.constructor "Prelude.Unit")
+    handlerProp name = Tuple name effectUnit
 
     foreignType = Type.constructor "Foreign.Foreign"
     -- | variable used For example:
@@ -123,7 +124,9 @@ components =
           [ Tuple "action" foreignType
           , Tuple "buttonRef" foreignType
           , children
-          , component
+          -- XXX: We are catching material ui documentation / type error here.
+          -- MenuItem doesn't contain `component` prop.
+          -- , component
           , Tuple "onFocusVisible" eventHandler
           -- | XXX: Provide some sugar for generating relative imports
           -- | between components
@@ -146,9 +149,9 @@ components =
         , propsType:
           { base
           , generate:
-            [ "centerRipple", "classes", "color", "disabled", "disableFocusRipple"
-            , "disableRipple", "focusRipple", "focustVisibleClassName"
-            , "fullWidth", "href", "size", "type", "variant"
+            [ "centerRipple", "classes", "color", "disabled"
+            , "disableRipple", "focusRipple", "focusVisibleClassName"
+            , "type"
             ]
           }
         , tsc: { strictNullChecks: false }
@@ -157,8 +160,8 @@ components =
       let
         onClickAway = Tuple "onClickAway" effectUnit
         -- | Single jsx node is required
-        children = Tuple "children" jsx
-        base = basePropsRow [] $ Map.fromFoldable [ children, onClickAway ]
+        child = Tuple "children" jsx
+        base = basePropsRow [] $ Map.fromFoldable [ child, onClickAway ]
       in simpleComponent
         { inherits: Nothing
         , name: "ClickAwayListener"
@@ -167,6 +170,54 @@ components =
           , generate: [ "mouseEvent", "touchEvent" ]
           }
         }
+    dialog =
+      let
+        -- | TODO:
+        -- | * `ModalProps` inheritance - I want to go back to this after Modal component
+        -- | migration.
+        -- | * `PaperComponent`, `PaperProps`, `TransitionComponent`, `TransitionDuration`
+        handlers = map handlerProp
+          [ "onBackdropClick", "onClose", "onEnter", "onEntered", "onEntering"
+          , "onEscapeKeyDown", "onExit", "onExited", "onExiting"]
+        base = basePropsRow [] $ Map.fromFoldable $ [ children ] <> handlers
+      in simpleComponent
+        { inherits: Nothing
+        , name: "Dialog"
+        , propsType:
+          { base
+          , generate:
+            [ "aria-describedby", "aria-labelledby"
+            , "classes", "disableBackdropClick"
+            , "disableEscapeKeyDown", "fullScreen"
+            , "fullWidth", "maxWidth", "open"
+            , "scroll", "transitionDuration"
+            ]
+          }
+        }
+    dialogActions = simpleComponent
+      { inherits: Nothing
+      , name: "DialogActions"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable [ children ]
+        , generate: [ "classes", "disableSpacing" ]
+        }
+      }
+    dialogContent = simpleComponent
+      { inherits: Nothing
+      , name: "DialogContent"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable [ children ]
+        , generate: [ "classes", "dividers" ]
+        }
+      }
+    dialogTitle = simpleComponent
+      { inherits: Nothing
+      , name: "DialogTitle"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable [ children ]
+        , generate: [ "classes", "disableTypography" ]
+        }
+      }
     fab = simpleComponent
       { inherits: Just $ Type.app
           (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
@@ -211,8 +262,7 @@ components =
     menu =
       let
         -- | Still missing: anchorEl, onClose, MenuListProps, PopoverClasses, transitionDuration
-        handler n = Tuple n effectUnit
-        handlers = map handler
+        handlers = map handlerProp
           ["onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting"]
         -- | I'm not sure what is the difference between `React.Element` and `DOM.Element`
         nullable = Type.constructor "Data.Nullable.Nullable"
@@ -231,7 +281,9 @@ components =
       let
         base = basePropsRow [] $ Map.fromFoldable
           [ children
-          , component
+          -- XXX: We are catching material ui documentation / type error here.
+          -- MenuItem doesn't contain `component` prop.
+          -- , component
           ]
       in simpleComponent
         { inherits: Nothing -- | TODO: inherit from `ListItem`
@@ -253,7 +305,10 @@ components =
       , tsc: { strictNullChecks: false }
       }
   in
-    [ appBar, badge, buttonBase, button, clickAwayListener, fab, gridList, gridListTile, menu, menuItem, touchRipple ]
+    [ appBar, badge, buttonBase, button, clickAwayListener, dialog
+    , dialogActions, dialogContent, dialogTitle, fab, gridList
+    , gridListTile, menu, menuItem, touchRipple
+    ]
 
 -- | XXX: Can we cleanup this last traverse?
 multiString :: ∀ a. Pattern -> ReadM a -> ReadM (Array a)
@@ -403,7 +458,9 @@ main = do
             writeComponentModules d component code
           Nothing -> do
             writeComponentModules "../src" component code
-        Left err -> log $ "Codegen errors: " <> intercalate "\n" err
+        Left err -> do
+          log $ "\n" <> (psImportPath $ component.modulePath) <> ":"
+          log $ "Codegen errors: " <> intercalate "\n" err
 
     writeIconModules dir icon code = launchAff_ $ do
       let
