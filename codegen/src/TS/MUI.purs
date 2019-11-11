@@ -6,9 +6,9 @@ import Codegen.AST (Declaration, Ident(..), ModuleName(..), TypeF(..), TypeName(
 import Codegen.AST (Module(..), RowF(..), Type, TypeName(..), Union(..), Expr) as AST
 import Codegen.AST.Sugar (declForeignData, declForeignValue, declType, declValue)
 import Codegen.AST.Sugar.Expr (app, ident) as Expr
-import Codegen.AST.Sugar.Type (app, arr, constructor, row, string, typeRow) as Type
+import Codegen.AST.Sugar.Type (app, arr, constructor, row, string, typeRow, var) as Type
 import Codegen.AST.Sugar.Type (arr) as T
-import Codegen.AST.Sugar.Type (constrained, forAll, forAll', recordApply)
+import Codegen.AST.Sugar.Type (constrained, forAll, forAll', forAllWith, recordApply)
 import Codegen.Model (Component, ComponentName, ModulePath, componentFullPath, jsImportPath, psImportPath, reactComponentApply)
 import Codegen.Model (componentName, jsx) as Model
 import Codegen.TS.Module (PossibleType(..), astAlgebra, declarations, exprUnsafeCoerce, unionDeclarations) as TS.Module
@@ -16,7 +16,7 @@ import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.State (runState)
-import Data.Array (elem, filter, fromFoldable, null, singleton, toUnfoldable) as Array
+import Data.Array (elem, filter, fromFoldable, null, singleton, tail, toUnfoldable) as Array
 import Data.Either (Either(..))
 import Data.Foldable (foldr)
 import Data.Functor.Mu (Mu(..)) as Mu
@@ -33,6 +33,7 @@ import Data.String (joinWith)
 import Data.String.Extra (camelCase)
 import Data.Traversable (for)
 import Data.Tuple (Tuple(..))
+import Data.Unfoldable (fromMaybe) as Unfoldable
 import Matryoshka (cata, cataM)
 import ReadDTS.Instantiation (Property, Type, TypeF(..)) as Instantiation
 import ReadDTS.Instantiation.Pretty (pprintTypeName)
@@ -89,7 +90,7 @@ componentProps component@{ modulePath } = do
       ]
 
 componentAST :: Component -> M AST.Module
-componentAST component@{ extraDeclarations, inherits, modulePath, propsType: { base: { row: base, vars }, generate }} = do
+componentAST component@{ extraDeclarations, inherits, modulePath, propsType: propsType@{ base: { row: base, vars }, generate }} = do
   { fqn, props } <- componentProps component
   let
     missingFromGenerate = Array.filter (not <<< flip Set.member (Map.keys props)) generate
@@ -124,12 +125,37 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: { b
         propsOptionsTypeDecl = declType (AST.TypeName $ propsName <> "Options") vars c'
         propsTypeDecl = declForeignData (AST.TypeName $ propsName)
 
+        -- For example:
+        --
+        -- foreign import data ModalPropsPartial ∷ Type
+        -- modalPropsPartial :: ∀ options options_
+        --   . Union options options_ (ModalProps Props_div x)
+        --   => Record options
+        --   -> ModalPropsPartial
+        -- modalPropsPartial = unsafeCoerce
         propsPartial = declForeignData (AST.TypeName $ propsName <> "Partial")
+        propsPartialConstructor =
+          let
+            vars' = join (Unfoldable.fromMaybe (Array.tail propsType.base.vars))
+            signature = forAllWith vars' { o: "options", o_: "options_"} $ \{ o, o_ } ->
+              let
+                inherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") inherits
+                u = Type.app propsOptionsTypeDecl.constructor ([ inherits' ] <> (map Type.var vars'))
+                fun = Type.arr (recordApply o) propsPartial.constructor
+              in
+                constrained "Prim.Row.Union" [ o, o_, u] fun
+          in
+            declValue
+              (Ident $ camelCase $ propsName <> "Partial")
+              []
+              TS.Module.exprUnsafeCoerce
+              (Just signature)
 
         propsDeclarations
           = List.Cons (propsOptionsTypeDecl.declaration )
           $ List.Cons (propsTypeDecl.declaration)
           $ List.Cons (propsPartial.declaration)
+          $ List.Cons (propsPartialConstructor.declaration)
           $ List.Nil
 
       unions' <- for unions $ case _ of
