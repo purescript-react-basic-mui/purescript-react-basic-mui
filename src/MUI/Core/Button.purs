@@ -37,7 +37,7 @@ type ButtonPropsOptions componentProps = ( classes :: ButtonClassKey, color :: C
 
 foreign import data ButtonProps :: Type
 
-type ButtonClassKeyGenericOptions a = ( colorInherit :: a, contained :: a, containedPrimary :: a, containedSecondary :: a, disabled :: a, focusVisible :: a, fullWidth :: a, label :: a, outlined :: a, outlinedPrimary :: a, outlinedSecondary :: a, root :: a, sizeLarge :: a, sizeSmall :: a, text :: a, textPrimary :: a, textSecondary :: a )
+type ButtonClassKeyGenericOptions a = ( colorInherit :: a, contained :: a, containedPrimary :: a, containedSecondary :: a, containedSizeLarge :: a, containedSizeSmall :: a, disabled :: a, endIcon :: a, focusVisible :: a, fullWidth :: a, iconSizeLarge :: a, iconSizeMedium :: a, iconSizeSmall :: a, label :: a, outlined :: a, outlinedPrimary :: a, outlinedSecondary :: a, outlinedSizeLarge :: a, outlinedSizeSmall :: a, root :: a, sizeLarge :: a, sizeSmall :: a, startIcon :: a, text :: a, textPrimary :: a, textSecondary :: a, textSizeLarge :: a, textSizeSmall :: a )
 
 type ButtonClassKeyOptions  = ButtonClassKeyGenericOptions String
 

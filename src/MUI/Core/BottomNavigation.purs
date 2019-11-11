@@ -1,57 +1,37 @@
 module MUI.Core.BottomNavigation where
 
+import Effect (Effect) as Effect
+import MUI.Core (JSS) as MUI.Core
 import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-import Effect.Uncurried (EffectFn2)
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import React.Basic.Events (SyntheticEvent)
-import Unsafe.Coerce (unsafeCoerce)
-
-type BottomNavigationPropsOptions componentProps value = 
-  ( children :: (Array JSX)
-  , classes :: BottomNavigationClassKey
-  , component :: ReactComponent { | componentProps }
-  , onChange :: EffectFn2 SyntheticEvent value Unit
-  , showLabels :: Boolean
-  , value :: value
-  | componentProps
-  )
+type BottomNavigationPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: BottomNavigationClassKey, component :: React.Basic.ReactComponent {  | componentProps }, onChange :: Effect.Effect Unit, showLabels :: Boolean | componentProps )
 
 foreign import data BottomNavigationProps :: Type
 
-type BottomNavigationClassKeyGenericOptions a =
-  ( root :: a 
-  )
-type BottomNavigationClassKeyOptions = BottomNavigationClassKeyGenericOptions String
-type BottomNavigationClassKeyJSSOptions = BottomNavigationClassKeyGenericOptions JSS
+type BottomNavigationClassKeyGenericOptions a = ( root :: a )
+
+type BottomNavigationClassKeyOptions  = BottomNavigationClassKeyGenericOptions String
+
 foreign import data BottomNavigationClassKey :: Type
+
+bottomNavigationClassKey :: ∀ required given. Prim.Row.Union given required BottomNavigationClassKeyOptions => Record given -> BottomNavigationClassKey
+bottomNavigationClassKey = Unsafe.Coerce.unsafeCoerce
+
+type BottomNavigationClassKeyOptionsJSS  = BottomNavigationClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data BottomNavigationClassKeyJSS :: Type
 
-bottomNavigationClassKey :: ∀  given required
-  .  Union given required (BottomNavigationClassKeyOptions )
-  => Record given
-  -> BottomNavigationClassKey
-bottomNavigationClassKey = unsafeCoerce
+bottomNavigationClassKeyJSS :: ∀ required given. Prim.Row.Union given required BottomNavigationClassKeyOptionsJSS => Record given -> BottomNavigationClassKeyJSS
+bottomNavigationClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-bottomNavigationClassKeyJSS :: ∀  given required
-  .  Union given required (BottomNavigationClassKeyJSSOptions )
-  => Record given
-  -> BottomNavigationClassKeyJSS
-bottomNavigationClassKeyJSS = unsafeCoerce
+foreign import _BottomNavigation :: ∀ a. React.Basic.ReactComponent a
 
-bottomNavigation :: ∀ value given required
-  .  Union given required (BottomNavigationPropsOptions Props_div value)
-  => Record given
-  -> JSX
-bottomNavigation = element _BottomNavigation
+bottomNavigation :: ∀ required given. Prim.Row.Union given required (BottomNavigationPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+bottomNavigation = React.Basic.element _BottomNavigation
 
-bottomNavigation_component :: ∀ componentProps value given required
-  .  Union given required (BottomNavigationPropsOptions componentProps value)
-  => Record given
-  -> JSX
-bottomNavigation_component = element _BottomNavigation
-
-foreign import _BottomNavigation :: ∀ a. ReactComponent a
+bottomNavigation_component :: ∀ required given componentProps. Prim.Row.Union given required (BottomNavigationPropsOptions componentProps) => Record given -> React.Basic.JSX
+bottomNavigation_component = React.Basic.element _BottomNavigation

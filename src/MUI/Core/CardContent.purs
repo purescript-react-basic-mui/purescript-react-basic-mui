@@ -1,49 +1,35 @@
 module MUI.Core.CardContent where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type CardContentPropsOptions componentProps = 
-  ( classes :: CardContentClassKey
-  , component :: ReactComponent { | componentProps }
-  | componentProps
-  )
+type CardContentPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: CardContentClassKey, component :: React.Basic.ReactComponent {  | componentProps } | componentProps )
 
 foreign import data CardContentProps :: Type
 
-type CardContentClassKeyGenericOptions a =
-  ( root :: a 
-  )
-type CardContentClassKeyOptions = CardContentClassKeyGenericOptions String
-type CardContentClassKeyJSSOptions = CardContentClassKeyGenericOptions JSS
+type CardContentClassKeyGenericOptions a = ( root :: a )
+
+type CardContentClassKeyOptions  = CardContentClassKeyGenericOptions String
+
 foreign import data CardContentClassKey :: Type
+
+cardContentClassKey :: ∀ required given. Prim.Row.Union given required CardContentClassKeyOptions => Record given -> CardContentClassKey
+cardContentClassKey = Unsafe.Coerce.unsafeCoerce
+
+type CardContentClassKeyOptionsJSS  = CardContentClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data CardContentClassKeyJSS :: Type
 
-cardContentClassKey :: ∀  given required
-  .  Union given required (CardContentClassKeyOptions )
-  => Record given
-  -> CardContentClassKey
-cardContentClassKey = unsafeCoerce
+cardContentClassKeyJSS :: ∀ required given. Prim.Row.Union given required CardContentClassKeyOptionsJSS => Record given -> CardContentClassKeyJSS
+cardContentClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-cardContentClassKeyJSS :: ∀  given required
-  .  Union given required (CardContentClassKeyJSSOptions )
-  => Record given
-  -> CardContentClassKeyJSS
-cardContentClassKeyJSS = unsafeCoerce
+foreign import _CardContent :: ∀ a. React.Basic.ReactComponent a
 
-cardContent :: ∀  given required
-  .  Union given required (CardContentPropsOptions Props_div )
-  => Record given
-  -> JSX
-cardContent = element _CardContent
+cardContent :: ∀ required given. Prim.Row.Union given required (CardContentPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+cardContent = React.Basic.element _CardContent
 
-cardContent_component :: ∀ componentProps given required
-  .  Union given required (CardContentPropsOptions componentProps)
-  => Record given
-  -> JSX
-cardContent_component = element _CardContent
-
-foreign import _CardContent :: ∀ a. ReactComponent a
+cardContent_component :: ∀ required given componentProps. Prim.Row.Union given required (CardContentPropsOptions componentProps) => Record given -> React.Basic.JSX
+cardContent_component = React.Basic.element _CardContent

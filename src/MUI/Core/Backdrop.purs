@@ -1,52 +1,41 @@
 module MUI.Core.Backdrop where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Fade (FadePropsOptions) as MUI.Core.Fade
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type BackdropPropsOptions componentProps = 
-  ( classes :: BackdropClassKey
-  , invisible :: Boolean
-  , open :: Boolean
-  , transitionDuration :: Number
-  | componentProps
-  )
+foreign import data TransitionDuration :: Type
+
+transitionDuration :: { number :: Number -> TransitionDuration, record :: { appear :: Number, enter :: Number, exit :: Number } -> TransitionDuration }
+transitionDuration = { number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce }
+
+type BackdropPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: BackdropClassKey, invisible :: Boolean, open :: Boolean, transitionDuration :: TransitionDuration | componentProps )
 
 foreign import data BackdropProps :: Type
 
-type BackdropClassKeyGenericOptions a =
-  ( root :: a 
-  , invisible :: a 
-  )
-type BackdropClassKeyOptions = BackdropClassKeyGenericOptions String
-type BackdropClassKeyJSSOptions = BackdropClassKeyGenericOptions JSS
+type BackdropClassKeyGenericOptions a = ( invisible :: a, root :: a )
+
+type BackdropClassKeyOptions  = BackdropClassKeyGenericOptions String
+
 foreign import data BackdropClassKey :: Type
+
+backdropClassKey :: ∀ required given. Prim.Row.Union given required BackdropClassKeyOptions => Record given -> BackdropClassKey
+backdropClassKey = Unsafe.Coerce.unsafeCoerce
+
+type BackdropClassKeyOptionsJSS  = BackdropClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data BackdropClassKeyJSS :: Type
 
-backdropClassKey :: ∀  given required
-  .  Union given required (BackdropClassKeyOptions )
-  => Record given
-  -> BackdropClassKey
-backdropClassKey = unsafeCoerce
+backdropClassKeyJSS :: ∀ required given. Prim.Row.Union given required BackdropClassKeyOptionsJSS => Record given -> BackdropClassKeyJSS
+backdropClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-backdropClassKeyJSS :: ∀  given required
-  .  Union given required (BackdropClassKeyJSSOptions )
-  => Record given
-  -> BackdropClassKeyJSS
-backdropClassKeyJSS = unsafeCoerce
+foreign import _Backdrop :: ∀ a. React.Basic.ReactComponent a
 
-backdrop :: ∀  given required
-  .  Union given required (BackdropPropsOptions Props_div )
-  => Record given
-  -> JSX
-backdrop = element _Backdrop
+backdrop :: ∀ required given. Prim.Row.Union given required (BackdropPropsOptions (MUI.Core.Fade.FadePropsOptions React.Basic.DOM.Props_div)) => Record given -> React.Basic.JSX
+backdrop = React.Basic.element _Backdrop
 
-backdrop_component :: ∀ componentProps given required
-  .  Union given required (BackdropPropsOptions componentProps)
-  => Record given
-  -> JSX
-backdrop_component = element _Backdrop
-
-foreign import _Backdrop :: ∀ a. ReactComponent a
+backdrop_component :: ∀ required given componentProps. Prim.Row.Union given required (BackdropPropsOptions componentProps) => Record given -> React.Basic.JSX
+backdrop_component = React.Basic.element _Backdrop

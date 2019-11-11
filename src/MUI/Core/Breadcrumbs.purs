@@ -1,57 +1,36 @@
 module MUI.Core.Breadcrumbs where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_nav)
-import Unsafe.Coerce (unsafeCoerce)
+import Foreign (Foreign) as Foreign
+import MUI.Core (JSS) as MUI.Core
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type BreadcrumbsPropsOptions componentProps = 
-  ( children :: (Array JSX)
-  , classes :: BreadcrumbsClassKey
-  , component :: ReactComponent { | componentProps }
-  , itemsAfterCollapse :: Number
-  , itemsBeforeCollapse :: Number
-  , maxItems :: Number
-  , separator :: JSX
-  | componentProps
-  )
+type BreadcrumbsPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: BreadcrumbsClassKey, itemsAfterCollapse :: Number, itemsBeforeCollapse :: Number, maxItems :: Number, ref :: Foreign.Foreign, separator :: React.Basic.JSX | componentProps )
 
 foreign import data BreadcrumbsProps :: Type
 
-type BreadcrumbsClassKeyGenericOptions a =
-  ( root :: a 
-  , ol :: a 
-  , li :: a 
-  , separator :: a 
-  )
-type BreadcrumbsClassKeyOptions = BreadcrumbsClassKeyGenericOptions String
-type BreadcrumbsClassKeyJSSOptions = BreadcrumbsClassKeyGenericOptions JSS
+type BreadcrumbsClassKeyGenericOptions a = ( li :: a, ol :: a, root :: a, separator :: a )
+
+type BreadcrumbsClassKeyOptions  = BreadcrumbsClassKeyGenericOptions String
+
 foreign import data BreadcrumbsClassKey :: Type
+
+breadcrumbsClassKey :: ∀ required given. Prim.Row.Union given required BreadcrumbsClassKeyOptions => Record given -> BreadcrumbsClassKey
+breadcrumbsClassKey = Unsafe.Coerce.unsafeCoerce
+
+type BreadcrumbsClassKeyOptionsJSS  = BreadcrumbsClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data BreadcrumbsClassKeyJSS :: Type
 
-breadcrumbsClassKey :: ∀  given required
-  .  Union given required (BreadcrumbsClassKeyOptions )
-  => Record given
-  -> BreadcrumbsClassKey
-breadcrumbsClassKey = unsafeCoerce
+breadcrumbsClassKeyJSS :: ∀ required given. Prim.Row.Union given required BreadcrumbsClassKeyOptionsJSS => Record given -> BreadcrumbsClassKeyJSS
+breadcrumbsClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-breadcrumbsClassKeyJSS :: ∀  given required
-  .  Union given required (BreadcrumbsClassKeyJSSOptions )
-  => Record given
-  -> BreadcrumbsClassKeyJSS
-breadcrumbsClassKeyJSS = unsafeCoerce
+foreign import _Breadcrumbs :: ∀ a. React.Basic.ReactComponent a
 
-breadcrumbs :: ∀  given required
-  .  Union given required (BreadcrumbsPropsOptions Props_nav )
-  => Record given
-  -> JSX
-breadcrumbs = element _Breadcrumbs
+breadcrumbs :: ∀ required given. Prim.Row.Union given required (BreadcrumbsPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+breadcrumbs = React.Basic.element _Breadcrumbs
 
-breadcrumbs_component :: ∀ componentProps given required
-  .  Union given required (BreadcrumbsPropsOptions componentProps)
-  => Record given
-  -> JSX
-breadcrumbs_component = element _Breadcrumbs
-
-foreign import _Breadcrumbs :: ∀ a. ReactComponent a
+breadcrumbs_component :: ∀ required given componentProps. Prim.Row.Union given required (BreadcrumbsPropsOptions componentProps) => Record given -> React.Basic.JSX
+breadcrumbs_component = React.Basic.element _Breadcrumbs

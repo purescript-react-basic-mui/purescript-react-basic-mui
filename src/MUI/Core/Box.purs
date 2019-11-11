@@ -1,50 +1,18 @@
 module MUI.Core.Box where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
 
-type BoxPropsOptions componentProps = 
-  ( clone :: Boolean
-  , component :: ReactComponent { | componentProps }
-  , css :: JSS
-  | componentProps
-  )
+type BoxPropsOptions componentProps = ( children :: Array React.Basic.JSX, clone :: Boolean, component :: React.Basic.ReactComponent {  | componentProps }, css :: MUI.Core.JSS | componentProps )
 
 foreign import data BoxProps :: Type
 
-type BoxClassKeyGenericOptions a =
-  ( root :: a 
-  )
-type BoxClassKeyOptions = BoxClassKeyGenericOptions String
-type BoxClassKeyJSSOptions = BoxClassKeyGenericOptions JSS
-foreign import data BoxClassKey :: Type
-foreign import data BoxClassKeyJSS :: Type
+foreign import _Box :: ∀ a. React.Basic.ReactComponent a
 
-boxClassKey :: ∀  given required
-  .  Union given required (BoxClassKeyOptions )
-  => Record given
-  -> BoxClassKey
-boxClassKey = unsafeCoerce
+box :: ∀ required given. Prim.Row.Union given required (BoxPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+box = React.Basic.element _Box
 
-boxClassKeyJSS :: ∀  given required
-  .  Union given required (BoxClassKeyJSSOptions )
-  => Record given
-  -> BoxClassKeyJSS
-boxClassKeyJSS = unsafeCoerce
-
-box :: ∀  given required
-  .  Union given required (BoxPropsOptions Props_div )
-  => Record given
-  -> JSX
-box = element _Box
-
-box_component :: ∀ componentProps given required
-  .  Union given required (BoxPropsOptions componentProps)
-  => Record given
-  -> JSX
-box_component = element _Box
-
-foreign import _Box :: ∀ a. ReactComponent a
+box_component :: ∀ required given componentProps. Prim.Row.Union given required (BoxPropsOptions componentProps) => Record given -> React.Basic.JSX
+box_component = React.Basic.element _Box

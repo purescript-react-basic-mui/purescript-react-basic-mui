@@ -48,11 +48,15 @@ components =
     handlerProp name = Tuple name effectUnit
 
     foreignType = Type.constructor "Foreign.Foreign"
+    jss = Type.constructor "MUI.Core.JSS"
     -- | variable used For example:
     -- | type AppBarPropsOptions componentProps = (... | componentProps)
     componentPropsIdent = Ident "componentProps"
 
     component = Tuple "component" $ reactComponentApply
+        [ Type.record <<< Type.row mempty $ Just $ Left componentPropsIdent ]
+
+    defaultComponent = Tuple "defaultComponent" $ reactComponentApply
         [ Type.record <<< Type.row mempty $ Just $ Left componentPropsIdent ]
 
     basePropsRow extraVars props =
@@ -86,6 +90,35 @@ components =
         , generate: ["classes", "color", "position"]
         }
       }
+
+    avatar = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      , name: "Avatar"
+      , propsType: 
+          { base: basePropsRow [] $ Map.fromFoldable []
+          , generate: [ 
+              "alt"
+            , "classes"
+            -- not sure what to do here, "imgProps"
+            , "sizes"
+            , "src"
+            , "srcSet"
+            , "variant"
+            ]
+          }
+      }
+
+    backdrop = simpleComponent
+      { inherits: Just $ Type.app
+          (Type.constructor "MUI.Core.Fade.FadePropsOptions")
+          [Type.constructor "React.Basic.DOM.Props_div"]
+      , name: "Backdrop"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable [ children ]
+        , generate: [ "classes", "invisible", "open", "transitionDuration" ]
+        }
+      }
+
     badge =
       let
         base = basePropsRow [] $ Map.fromFoldable
@@ -105,6 +138,40 @@ components =
           }
         }
     -- | `children` and `component` are taken from `buttonBase`
+
+    bottomNavigation = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      , name: "BottomNavigation"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable $ [ children, component ] <> (map handlerProp ["onChange"])
+          , generate: ["classes", "showLabels"]
+          }
+      }
+
+    box = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      , name: "Box"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable $ [ children, component, Tuple "css" jss ]
+        , generate: [ "clone" ]
+        }
+      }
+
+    breadcrumbs = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      , name: "Breadcrumbs"
+      , propsType: 
+        { base: basePropsRow [] $ Map.fromFoldable $ 
+            [ children
+            -- defaultComponent isn't working, but not sure why
+            --, defaultComponent
+            , Tuple "separator" jsx
+            , Tuple "ref" foreignType
+            ]
+        , generate: [ "classes", "itemsAfterCollapse", "itemsBeforeCollapse", "maxItems" ]
+        }
+      }
+
     button = simpleComponent
       { inherits: Just $ Type.app
         (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
@@ -156,6 +223,102 @@ components =
           }
         , tsc: { strictNullChecks: false }
         }
+
+    card = simpleComponent
+      { inherits: Just $ Type.app
+          (Type.constructor "MUI.Core.Paper.PaperProps")
+          [Type.constructor "React.Basic.DOM.Props_div"]
+      , name: "Card"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable [ children ]
+        , generate: [ "classes", "raised" ]
+        }
+      }
+
+    cardActionArea = simpleComponent
+      { inherits: Just $ Type.app
+          (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
+          [Type.constructor "React.Basic.DOM.Props_button"]
+      , name: "CardActionArea"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable [ children ]
+        , generate: [ "classes" ]
+        }
+      }
+
+    cardActions = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      , name: "CardActions"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable [ children ]
+        , generate: [ "classes", "disableSpacing" ]
+        }
+      }
+
+    cardContent = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      , name: "CardContent"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable [ children, component ]
+        , generate: [ "classes" ]
+        }
+      }
+
+    cardHeader = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      , name: "CardHeader"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+            [ Tuple "action" jsx
+            , Tuple "avatar" jsx
+            , children
+            , component
+            , Tuple "subheader" jsx
+            , Tuple "subheaderTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyProps")
+            , Tuple "title" jsx
+            , Tuple "titleTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyProps")
+            ]
+        , generate: [ "classes", "disableTypography" ]
+        }
+      }
+
+    cardMedia = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      , name: "CardMedia"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+            [ children
+            -- This isn't being found in the .d.ts
+            --, component 
+            ]
+        , generate: [ "classes", "image", "src" ]
+        }
+      }
+
+    checkbox = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_input"
+      , name: "Checkbox"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+            [ children
+            , Tuple "checkedIcon" jsx
+            , Tuple "icon" jsx
+            , Tuple "indeterminateIcon" jsx
+            ]
+        , generate: 
+            [ "checked"
+            , "classes"
+            , "color"
+            , "disabled"
+            , "disableRipple"
+            , "id"
+            , "indeterminate"
+            ]
+        }
+      }
+
+
+
     clickAwayListener =
       let
         onClickAway = Tuple "onClickAway" effectUnit
@@ -170,6 +333,7 @@ components =
           , generate: [ "mouseEvent", "touchEvent" ]
           }
         }
+
     dialog =
       let
         -- | TODO:
@@ -231,6 +395,21 @@ components =
           ]
         }
       }
+
+
+    -- | TODO: TransitionComponent
+    fade = simpleComponent
+      { inherits: Nothing -- should inherit TransitionComponent
+      , name: "Fade"
+      , propsType: 
+          { base: basePropsRow [] $ Map.fromFoldable [ Tuple "ref" foreignType ]
+          , generate: [ 
+            -- not sure what to do here, "theme"
+            ]
+          }
+      }
+
+
     gridList =
       let
         base = basePropsRow [] $ Map.fromFoldable
@@ -305,9 +484,34 @@ components =
       , tsc: { strictNullChecks: false }
       }
   in
-    [ appBar, badge, buttonBase, button, clickAwayListener, dialog
-    , dialogActions, dialogContent, dialogTitle, fab, gridList
-    , gridListTile, menu, menuItem, touchRipple
+    [ appBar
+    , avatar
+    , backdrop
+    , badge
+    , bottomNavigation
+    , box
+    , breadcrumbs
+    , buttonBase
+    , button
+    , card
+    , cardActionArea
+    , cardActions
+    , cardContent
+    , cardHeader
+    , cardMedia
+    , clickAwayListener
+    , checkbox
+    , dialog
+    , dialogActions
+    , dialogContent
+    , dialogTitle
+    , fab
+    , fade
+    , gridList
+    , gridListTile
+    , menu
+    , menuItem
+    , touchRipple
     ]
 
 -- | XXX: Can we cleanup this last traverse?

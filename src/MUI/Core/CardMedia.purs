@@ -1,52 +1,35 @@
 module MUI.Core.CardMedia where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type CardMediaPropsOptions componentProps = 
-  ( classes :: CardMediaClassKey
-  , component :: ReactComponent { | componentProps }
-  , image :: String
-  , src :: String
-  | componentProps
-  )
+type CardMediaPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: CardMediaClassKey, image :: String, src :: String | componentProps )
 
 foreign import data CardMediaProps :: Type
 
-type CardMediaClassKeyGenericOptions a =
-  ( root :: a 
-  , media :: a 
-  )
-type CardMediaClassKeyOptions = CardMediaClassKeyGenericOptions String
-type CardMediaClassKeyJSSOptions = CardMediaClassKeyGenericOptions JSS
+type CardMediaClassKeyGenericOptions a = ( media :: a, root :: a )
+
+type CardMediaClassKeyOptions  = CardMediaClassKeyGenericOptions String
+
 foreign import data CardMediaClassKey :: Type
+
+cardMediaClassKey :: ∀ required given. Prim.Row.Union given required CardMediaClassKeyOptions => Record given -> CardMediaClassKey
+cardMediaClassKey = Unsafe.Coerce.unsafeCoerce
+
+type CardMediaClassKeyOptionsJSS  = CardMediaClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data CardMediaClassKeyJSS :: Type
 
-cardMediaClassKey :: ∀  given required
-  .  Union given required (CardMediaClassKeyOptions )
-  => Record given
-  -> CardMediaClassKey
-cardMediaClassKey = unsafeCoerce
+cardMediaClassKeyJSS :: ∀ required given. Prim.Row.Union given required CardMediaClassKeyOptionsJSS => Record given -> CardMediaClassKeyJSS
+cardMediaClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-cardMediaClassKeyJSS :: ∀  given required
-  .  Union given required (CardMediaClassKeyJSSOptions )
-  => Record given
-  -> CardMediaClassKeyJSS
-cardMediaClassKeyJSS = unsafeCoerce
+foreign import _CardMedia :: ∀ a. React.Basic.ReactComponent a
 
-cardMedia :: ∀  given required
-  .  Union given required (CardMediaPropsOptions Props_div )
-  => Record given
-  -> JSX
-cardMedia = element _CardMedia
+cardMedia :: ∀ required given. Prim.Row.Union given required (CardMediaPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+cardMedia = React.Basic.element _CardMedia
 
-cardMedia_component :: ∀ componentProps given required
-  .  Union given required (CardMediaPropsOptions componentProps)
-  => Record given
-  -> JSX
-cardMedia_component = element _CardMedia
-
-foreign import _CardMedia :: ∀ a. ReactComponent a
+cardMedia_component :: ∀ required given componentProps. Prim.Row.Union given required (CardMediaPropsOptions componentProps) => Record given -> React.Basic.JSX
+cardMedia_component = React.Basic.element _CardMedia

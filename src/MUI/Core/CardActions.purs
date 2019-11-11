@@ -1,51 +1,35 @@
 module MUI.Core.CardActions where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type CardActionsPropsOptions componentProps = 
-  ( children :: (Array JSX)
-  , classes :: CardActionsClassKey
-  , disableSpacing :: Boolean
-  | componentProps
-  )
+type CardActionsPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: CardActionsClassKey, disableSpacing :: Boolean | componentProps )
 
 foreign import data CardActionsProps :: Type
 
-type CardActionsClassKeyGenericOptions a =
-  ( root :: a 
-  , spacing :: a 
-  )
-type CardActionsClassKeyOptions = CardActionsClassKeyGenericOptions String
-type CardActionsClassKeyJSSOptions = CardActionsClassKeyGenericOptions JSS
+type CardActionsClassKeyGenericOptions a = ( root :: a, spacing :: a )
+
+type CardActionsClassKeyOptions  = CardActionsClassKeyGenericOptions String
+
 foreign import data CardActionsClassKey :: Type
+
+cardActionsClassKey :: ∀ required given. Prim.Row.Union given required CardActionsClassKeyOptions => Record given -> CardActionsClassKey
+cardActionsClassKey = Unsafe.Coerce.unsafeCoerce
+
+type CardActionsClassKeyOptionsJSS  = CardActionsClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data CardActionsClassKeyJSS :: Type
 
-cardActionsClassKey :: ∀  given required
-  .  Union given required (CardActionsClassKeyOptions )
-  => Record given
-  -> CardActionsClassKey
-cardActionsClassKey = unsafeCoerce
+cardActionsClassKeyJSS :: ∀ required given. Prim.Row.Union given required CardActionsClassKeyOptionsJSS => Record given -> CardActionsClassKeyJSS
+cardActionsClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-cardActionsClassKeyJSS :: ∀  given required
-  .  Union given required (CardActionsClassKeyJSSOptions )
-  => Record given
-  -> CardActionsClassKeyJSS
-cardActionsClassKeyJSS = unsafeCoerce
+foreign import _CardActions :: ∀ a. React.Basic.ReactComponent a
 
-cardActions :: ∀  given required
-  .  Union given required (CardActionsPropsOptions Props_div )
-  => Record given
-  -> JSX
-cardActions = element _CardActions
+cardActions :: ∀ required given. Prim.Row.Union given required (CardActionsPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+cardActions = React.Basic.element _CardActions
 
-cardActions_component :: ∀ componentProps given required
-  .  Union given required (CardActionsPropsOptions componentProps)
-  => Record given
-  -> JSX
-cardActions_component = element _CardActions
-
-foreign import _CardActions :: ∀ a. ReactComponent a
+cardActions_component :: ∀ required given componentProps. Prim.Row.Union given required (CardActionsPropsOptions componentProps) => Record given -> React.Basic.JSX
+cardActions_component = React.Basic.element _CardActions
