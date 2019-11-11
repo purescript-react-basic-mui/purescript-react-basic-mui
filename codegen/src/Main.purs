@@ -6,8 +6,8 @@ import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconP
 import Codegen (component, icon, write) as Codegen
 import Codegen.AST (Ident(..), ModuleName(..), TypeF(..), TypeName(..))
 import Codegen.AST.Sugar (declType)
-import Codegen.AST.Sugar.Type (app, constrained, constructor, forAll, record, recordApply, row, var) as Type
-import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, eventHandler, iconName, jsx, psImportPath, reactComponentApply)
+import Codegen.AST.Sugar.Type (app, constrained, constructor, forAll, record, recordApply, row) as Type
+import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, iconName, jsx, psImportPath, reactComponentApply)
 import Codegen.Model (componentName) as Model
 import Codegen.TS.MUI (componentProps) as TS.MUI
 import Codegen.TS.MUI (propsTypeName)
@@ -140,7 +140,7 @@ components =
       { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
       , name: "BottomNavigation"
       , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable $ [ children, component ] <> (map handlerProp ["onChange"])
+          { base: basePropsRow [] $ Map.fromFoldable $ [ children, component ] <> (map eventHandlerProp ["onChange"])
           , generate: ["classes", "showLabels"]
           }
       }
@@ -498,55 +498,57 @@ components =
           , generate: [ "classes", "dense", "disableGutters" ]
           }
         }
-    -- modal =
-    --   let
-    --     props_div = Type.constructor "React.Basic.DOM.Props_div"
-    --     backdropPropsType = Type.app
-    --       (Type.constructor "MUI.Core.Backdrop.BackdropPropsOptions")
-    --       [ props_div ]
+    modal =
+      let
+        props_div = Type.constructor "React.Basic.DOM.Props_div"
+        backdropPropsType = Type.app
+          (Type.constructor "MUI.Core.Backdrop.BackdropPropsOptions")
+          [ props_div ]
 
-    --     backdropProps = Type.forAll { g: "given", r: "required"} $ \{ g, r } ->
-    --       let
-    --         gR = Type.recordApply g
-    --       in
-    --         Type.constrained "Prim.Row.Union" [ g, r, backdropPropsType] gR
+        backdropProps = Type.forAll { g: "given", r: "required"} $ \{ g, r } ->
+          let
+            gR = Type.recordApply g
+          in
+            Type.constrained "Prim.Row.Union" [ g, r, backdropPropsType] gR
 
-    --     handlers = map eventHandlerProp
-    --       [ "onBackdropClick"
-    --       , "onClose"
-    --       , "onEscapeKeyDown"
-    --       , "onRendered"
-    --       ]
+        handlers = map eventHandlerProp
+          [ "onBackdropClick"
+          , "onClose"
+          , "onEscapeKeyDown"
+          , "onRendered"
+          ]
 
-    --     base = basePropsRow [ ] $ Map.fromFoldable $
-    --       [ children
-    --       -- | XXX: Currently we are supporting only monomorphic backdrop
-    --       , Tuple "BackdropProps" backdropProps
-    --       -- , container
-    --       --   , manager :: ModalManager
-    --       ]
-    --       <> handlers
-    --   in simpleComponent
-    --     { inherits: Nothing
-    --     , name: "Modal"
-    --     , propsType:
-    --       { base
-    --       , generate:
-    --         [ "classes"
-    --         , "closeAfterTransition"
-    --         , "disableAutoFocus"
-    --         , "disableBackdropClick"
-    --         , "disableEnforceFocus"
-    --         , "disableEscapeKeyDown"
-    --         , "disablePortal"
-    --         , "disableRestoreFocus"
-    --         , "disableScrollLock"
-    --         , "hideBackdrop"
-    --         , "keepMounted"
-    --         , "open"
-    --         ]
-    --       }
-    --     }
+        base = basePropsRow [ ] $ Map.fromFoldable $
+          [ children
+          -- | XXX: Currently we are supporting only monomorphic backdrop
+          , Tuple "BackdropProps" backdropProps
+          -- , container
+          , Tuple
+              "manager"
+              (Type.constructor "MUI.Core.Modal.ModalManager.ModalManager")
+          ]
+          <> handlers
+      in simpleComponent
+        { inherits: Nothing
+        , name: "Modal"
+        , propsType:
+          { base
+          , generate:
+            [ "classes"
+            , "closeAfterTransition"
+            , "disableAutoFocus"
+            , "disableBackdropClick"
+            , "disableEnforceFocus"
+            , "disableEscapeKeyDown"
+            , "disablePortal"
+            , "disableRestoreFocus"
+            , "disableScrollLock"
+            , "hideBackdrop"
+            , "keepMounted"
+            , "open"
+            ]
+          }
+        }
 
     touchRipple =
       { extraDeclarations: []
@@ -589,6 +591,7 @@ components =
     , linearProgress
     , menu
     , menuItem
+    , modal
     , touchRipple
     ]
 

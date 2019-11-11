@@ -1,10 +1,10 @@
 module MUI.Core.ClickAwayListener where
 
-import Effect (Effect) as Effect
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
+import React.Basic.Events (EventHandler) as React.Basic.Events
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
@@ -24,7 +24,7 @@ instance eqMouseEvent :: Eq MouseEvent where
 instance eqTouchEvent :: Eq TouchEvent where
   eq = Unsafe.Reference.unsafeRefEq
 
-type ClickAwayListenerPropsOptions componentProps = ( children :: React.Basic.JSX, mouseEvent :: MouseEvent, onClickAway :: Effect.Effect Unit, touchEvent :: TouchEvent | componentProps )
+type ClickAwayListenerPropsOptions componentProps = ( children :: React.Basic.JSX, mouseEvent :: MouseEvent, onClickAway :: React.Basic.Events.EventHandler, touchEvent :: TouchEvent | componentProps )
 
 foreign import data ClickAwayListenerProps :: Type
 

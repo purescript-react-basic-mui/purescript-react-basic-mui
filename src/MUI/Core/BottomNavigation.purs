@@ -1,14 +1,13 @@
 module MUI.Core.BottomNavigation where
 
-import Effect (Effect) as Effect
 import MUI.Core (JSS) as MUI.Core
-import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
+import React.Basic.Events (EventHandler) as React.Basic.Events
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type BottomNavigationPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: BottomNavigationClassKey, component :: React.Basic.ReactComponent {  | componentProps }, onChange :: Effect.Effect Unit, showLabels :: Boolean | componentProps )
+type BottomNavigationPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: BottomNavigationClassKey, component :: React.Basic.ReactComponent {  | componentProps }, onChange :: React.Basic.Events.EventHandler, showLabels :: Boolean | componentProps )
 
 foreign import data BottomNavigationProps :: Type
 

@@ -1,11 +1,11 @@
 module MUI.Core.Dialog where
 
-import Effect (Effect) as Effect
 import MUI.Core (JSS) as MUI.Core
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
+import React.Basic.Events (EventHandler) as React.Basic.Events
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
@@ -30,7 +30,7 @@ instance eqMaxWidth :: Eq MaxWidth where
 instance eqScroll :: Eq Scroll where
   eq = Unsafe.Reference.unsafeRefEq
 
-type DialogPropsOptions componentProps = ( "aria-describedby" :: String, "aria-labelledby" :: String, children :: Array React.Basic.JSX, classes :: DialogClassKey, disableBackdropClick :: Boolean, disableEscapeKeyDown :: Boolean, fullScreen :: Boolean, fullWidth :: Boolean, maxWidth :: MaxWidth, onBackdropClick :: Effect.Effect Unit, onClose :: Effect.Effect Unit, onEnter :: Effect.Effect Unit, onEntered :: Effect.Effect Unit, onEntering :: Effect.Effect Unit, onEscapeKeyDown :: Effect.Effect Unit, onExit :: Effect.Effect Unit, onExited :: Effect.Effect Unit, onExiting :: Effect.Effect Unit, open :: Boolean, scroll :: Scroll, transitionDuration :: TransitionDuration | componentProps )
+type DialogPropsOptions componentProps = ( "aria-describedby" :: String, "aria-labelledby" :: String, children :: Array React.Basic.JSX, classes :: DialogClassKey, fullScreen :: Boolean, fullWidth :: Boolean, maxWidth :: MaxWidth, onEnter :: React.Basic.Events.EventHandler, onEntered :: React.Basic.Events.EventHandler, onEntering :: React.Basic.Events.EventHandler, onExit :: React.Basic.Events.EventHandler, onExited :: React.Basic.Events.EventHandler, onExiting :: React.Basic.Events.EventHandler, scroll :: Scroll, transitionDuration :: TransitionDuration | componentProps )
 
 foreign import data DialogProps :: Type
 

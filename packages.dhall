@@ -6,16 +6,6 @@ let upstream =
 
 let overrides = { react-basic = upstream.react-basic // { version = "df358364ece1cd4760429afae0bcca0eb518eb03" }}
 
-let additions =
-  { subrecord =
-      mkPackage
-        [ "console"
-        , "record"
-        , "assert"
-        , "maybe"
-        ]
-        "https://github.com/rubenpieters/purescript-subrecord.git"
-        "0.1.0"
-  }
+let additions = { = }
 
 in  upstream // overrides // additions
