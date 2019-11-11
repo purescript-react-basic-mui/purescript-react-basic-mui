@@ -1,12 +1,19 @@
 module MUI.Core.Checkbox where
 
+import Effect (Effect) as Effect
+import Foreign (Foreign) as Foreign
 import MUI.Core (JSS) as MUI.Core
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
-import React.Basic.DOM (Props_input) as React.Basic.DOM
+import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
+
+foreign import data Type_ :: Type
+
+type_ :: { button :: Type_, reset :: Type_, submit :: Type_ }
+type_ = { button: Unsafe.Coerce.unsafeCoerce "button", reset: Unsafe.Coerce.unsafeCoerce "reset", submit: Unsafe.Coerce.unsafeCoerce "submit" }
 
 foreign import data Color :: Type
 
@@ -16,7 +23,10 @@ color = { default: Unsafe.Coerce.unsafeCoerce "default", primary: Unsafe.Coerce.
 instance eqColor :: Eq Color where
   eq = Unsafe.Reference.unsafeRefEq
 
-type CheckboxPropsOptions componentProps = ( checked :: Boolean, checkedIcon :: React.Basic.JSX, children :: Array React.Basic.JSX, classes :: CheckboxClassKey, color :: Color, disableRipple :: Boolean, disabled :: Boolean, icon :: React.Basic.JSX, id :: String, indeterminate :: Boolean, indeterminateIcon :: React.Basic.JSX | componentProps )
+instance eqType :: Eq Type_ where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type CheckboxPropsOptions componentProps = ( checked :: Boolean, checkedIcon :: React.Basic.JSX, classes :: CheckboxClassKey, color :: Color, disableRipple :: Boolean, disabled :: Boolean, icon :: React.Basic.JSX, id :: String, indeterminate :: Boolean, indeterminateIcon :: React.Basic.JSX, inputProps :: Foreign.Foreign, inputRef :: Foreign.Foreign, onChange :: Effect.Effect Unit, required :: Boolean, "type" :: Type_, value :: Foreign.Foreign | componentProps )
 
 foreign import data CheckboxProps :: Type
 
@@ -38,7 +48,7 @@ checkboxClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
 foreign import _Checkbox :: ∀ a. React.Basic.ReactComponent a
 
-checkbox :: ∀ required given. Prim.Row.Union given required (CheckboxPropsOptions React.Basic.DOM.Props_input) => Record given -> React.Basic.JSX
+checkbox :: ∀ required given. Prim.Row.Union given required (CheckboxPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
 checkbox = React.Basic.element _Checkbox
 
 checkbox_component :: ∀ required given componentProps. Prim.Row.Union given required (CheckboxPropsOptions componentProps) => Record given -> React.Basic.JSX

@@ -296,15 +296,17 @@ components =
       }
 
     checkbox = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_input"
+      { inherits: Nothing -- should be IconButon
       , name: "Checkbox"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable 
-            [ children
-            , Tuple "checkedIcon" jsx
+            ([Tuple "checkedIcon" jsx
             , Tuple "icon" jsx
             , Tuple "indeterminateIcon" jsx
-            ]
+            , Tuple "inputProps" foreignType
+            , Tuple "inputRef" foreignType
+            , Tuple "value" foreignType
+            ] <> (map handlerProp [ "onChange" ]))
         , generate: 
             [ "checked"
             , "classes"
@@ -313,6 +315,69 @@ components =
             , "disableRipple"
             , "id"
             , "indeterminate"
+            , "required"
+            , "type"
+            ]
+        }
+      }
+
+    chip = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      , name: "Chip"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+            ([Tuple "avatar" jsx
+            , Tuple "deleteIcon" jsx
+            , Tuple "icon" jsx
+            , Tuple "label" jsx
+            ] <> (map handlerProp [ "onDelete" ]))
+        , generate: 
+            [ "classes"
+            , "color"
+            , "disabled"
+            , "size"
+            , "variant"
+            ]
+        }
+      }
+
+    circularProgress = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      , name: "CircularProgress"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable []
+        , generate: 
+            [ "classes"
+            , "color"
+            , "disableShrink"
+            , "size"
+            , "thickness"
+            , "value"
+            , "variant"
+            ]
+        }
+      }
+
+    collapse = simpleComponent
+      { inherits: Nothing -- should extend Transition
+      , name: "Collapse"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable [ children, component ]
+        , generate: 
+            [ "collapsedHeight" 
+            , "timeout"
+            ]
+        }
+      }
+
+    container = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      , name: "Container"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable [ component ]
+        , generate: 
+            [ "fixed" 
+            , "maxWidth"
             ]
         }
       }
@@ -499,8 +564,12 @@ components =
     , cardContent
     , cardHeader
     , cardMedia
+    , circularProgress
     , clickAwayListener
     , checkbox
+    , chip
+    , collapse
+    , container
     , dialog
     , dialogActions
     , dialogContent

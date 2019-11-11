@@ -1,92 +1,62 @@
 module MUI.Core.Chip where
 
-import MUI.Core (JSS)
-import MUI.Core.Chip.Color (ColorProp)
-import MUI.Core.Chip.Size (SizeProp)
-import MUI.Core.Chip.Variant (VariantProp)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import React.Basic.Events (EventHandler)
-import Unsafe.Coerce (unsafeCoerce)
+import Effect (Effect) as Effect
+import MUI.Core (JSS) as MUI.Core
+import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-type ChipPropsOptions componentProps = 
-  ( avatar :: JSX
-  , children :: (Array JSX)
-  , classes :: ChipClassKey
-  , clickable :: Boolean
-  , color :: ColorProp
-  , component :: ReactComponent { | componentProps }
-  , deleteIcon :: JSX
-  , icon :: JSX
-  , label :: JSX
-  , onDelete :: EventHandler
-  , size :: SizeProp
-  , variant :: VariantProp
-  | componentProps
-  )
+foreign import data Variant :: Type
+
+variant :: { default :: Variant, outlined :: Variant }
+variant = { default: Unsafe.Coerce.unsafeCoerce "default", outlined: Unsafe.Coerce.unsafeCoerce "outlined" }
+
+foreign import data Size :: Type
+
+size :: { medium :: Size, small :: Size }
+size = { medium: Unsafe.Coerce.unsafeCoerce "medium", small: Unsafe.Coerce.unsafeCoerce "small" }
+
+foreign import data Color :: Type
+
+color :: { default :: Color, inherit :: Color, primary :: Color, secondary :: Color }
+color = { default: Unsafe.Coerce.unsafeCoerce "default", inherit: Unsafe.Coerce.unsafeCoerce "inherit", primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary" }
+
+instance eqColor :: Eq Color where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqSize :: Eq Size where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqVariant :: Eq Variant where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type ChipPropsOptions componentProps = ( avatar :: React.Basic.JSX, classes :: ChipClassKey, color :: Color, deleteIcon :: React.Basic.JSX, disabled :: Boolean, icon :: React.Basic.JSX, label :: React.Basic.JSX, onDelete :: Effect.Effect Unit, size :: Size, variant :: Variant | componentProps )
 
 foreign import data ChipProps :: Type
 
-type ChipClassKeyGenericOptions a =
-  ( root :: a 
-  , sizeSmall :: a 
-  , colorPrimary :: a 
-  , colorSecondary :: a 
-  , clickable :: a 
-  , clickableColorPrimary :: a 
-  , clickableColorSecondary :: a 
-  , deletable :: a 
-  , deletableColorPrimary :: a 
-  , deletableColorSecondary :: a 
-  , outlined :: a 
-  , outlinedPrimary :: a 
-  , outlinedSecondary :: a 
-  , avatar :: a 
-  , avatarSmall :: a 
-  , avatarColorPrimary :: a 
-  , avatarColorSecondary :: a 
-  , avatarChildren :: a 
-  , icon :: a 
-  , iconSmall :: a 
-  , iconColorPrimary :: a 
-  , iconColorSecondary :: a 
-  , label :: a 
-  , labelSmall :: a 
-  , deleteIcon :: a 
-  , deleteIconSmall :: a 
-  , deleteIconColorPrimary :: a 
-  , deleteIconColorSecondary :: a 
-  , deleteIconOutlinedColorPrimary :: a 
-  , deleteIconOutlinedColorSecondary :: a 
-  )
-type ChipClassKeyOptions = ChipClassKeyGenericOptions String
-type ChipClassKeyJSSOptions = ChipClassKeyGenericOptions JSS
+type ChipClassKeyGenericOptions a = ( avatar :: a, avatarColorPrimary :: a, avatarColorSecondary :: a, avatarSmall :: a, clickable :: a, clickableColorPrimary :: a, clickableColorSecondary :: a, colorPrimary :: a, colorSecondary :: a, deletable :: a, deletableColorPrimary :: a, deletableColorSecondary :: a, deleteIcon :: a, deleteIconColorPrimary :: a, deleteIconColorSecondary :: a, deleteIconOutlinedColorPrimary :: a, deleteIconOutlinedColorSecondary :: a, deleteIconSmall :: a, disabled :: a, icon :: a, iconColorPrimary :: a, iconColorSecondary :: a, iconSmall :: a, label :: a, labelSmall :: a, outlined :: a, outlinedPrimary :: a, outlinedSecondary :: a, root :: a, sizeSmall :: a )
+
+type ChipClassKeyOptions  = ChipClassKeyGenericOptions String
+
 foreign import data ChipClassKey :: Type
+
+chipClassKey :: ∀ required given. Prim.Row.Union given required ChipClassKeyOptions => Record given -> ChipClassKey
+chipClassKey = Unsafe.Coerce.unsafeCoerce
+
+type ChipClassKeyOptionsJSS  = ChipClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data ChipClassKeyJSS :: Type
 
-chipClassKey :: ∀  given required
-  .  Union given required (ChipClassKeyOptions )
-  => Record given
-  -> ChipClassKey
-chipClassKey = unsafeCoerce
+chipClassKeyJSS :: ∀ required given. Prim.Row.Union given required ChipClassKeyOptionsJSS => Record given -> ChipClassKeyJSS
+chipClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-chipClassKeyJSS :: ∀  given required
-  .  Union given required (ChipClassKeyJSSOptions )
-  => Record given
-  -> ChipClassKeyJSS
-chipClassKeyJSS = unsafeCoerce
+foreign import _Chip :: ∀ a. React.Basic.ReactComponent a
 
-chip :: ∀  given required
-  .  Union given required (ChipPropsOptions Props_div )
-  => Record given
-  -> JSX
-chip = element _Chip
+chip :: ∀ required given. Prim.Row.Union given required (ChipPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+chip = React.Basic.element _Chip
 
-chip_component :: ∀ componentProps given required
-  .  Union given required (ChipPropsOptions componentProps)
-  => Record given
-  -> JSX
-chip_component = element _Chip
-
-foreign import _Chip :: ∀ a. ReactComponent a
+chip_component :: ∀ required given componentProps. Prim.Row.Union given required (ChipPropsOptions componentProps) => Record given -> React.Basic.JSX
+chip_component = React.Basic.element _Chip
