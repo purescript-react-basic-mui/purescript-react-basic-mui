@@ -40,7 +40,7 @@ instance eqColor :: Eq Color where
 instance eqVariant :: Eq Variant where
   eq = Unsafe.Reference.unsafeRefEq
 
-type BadgePropsOptions componentProps = ( anchorOrigin :: { horizontal :: Horizontal, vertical :: Vertical }, badgeContent :: React.Basic.JSX, children :: Array React.Basic.JSX, classes :: BadgeClassKey, color :: Color, component :: React.Basic.ReactComponent {  | componentProps }, invisible :: Boolean, max :: Number, showZero :: Boolean, variant :: Variant | componentProps )
+type BadgePropsOptions componentProps val = ( anchorOrigin :: { horizontal :: Horizontal, vertical :: Vertical }, badgeContent :: React.Basic.JSX, children :: val, classes :: BadgeClassKey, color :: Color, component :: React.Basic.ReactComponent {  | componentProps }, invisible :: Boolean, max :: Number, showZero :: Boolean, variant :: Variant | componentProps )
 
 foreign import data BadgeProps :: Type
 

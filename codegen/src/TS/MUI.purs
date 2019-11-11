@@ -125,9 +125,15 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: { b
         propsOptionsTypeDecl = declType (AST.TypeName $ propsName <> "Options") vars c'
         propsTypeDecl = declForeignData (AST.TypeName $ propsName)
 
+        -- propsPartials = declType (AST.TypeName $ propsName <> "Partial")
+
+        -- propsPartial { declaration, var } = declForeignValue (ident)
+        -- (forAll' "a" \a -> reactComponentApply [a])
+
         propsDeclarations
           = List.Cons (propsOptionsTypeDecl.declaration )
           $ List.Cons (propsTypeDecl.declaration)
+          -- $ List.Cons (propsPartials.declaration)
           $ List.Nil
 
       unions' <- for unions $ case _ of

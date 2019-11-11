@@ -1,94 +1,58 @@
 module MUI.Core.CircularProgress where
 
+import MUI.Core (JSS) as MUI.Core
 import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import Unsafe.Coerce (unsafeCoerce)
+foreign import data Variant :: Type
 
-type CircularProgressPropsOptions componentProps = 
-  ( classes :: CircularProgressClassKey
-  , color :: ColorProp
-  , disableShrink :: Boolean
-  , size :: Number
-  , thickness :: Number
-  , value :: Number
-  , variant :: VariantProp
-  | componentProps
-  )
+variant :: { determinate :: Variant, indeterminate :: Variant, static :: Variant }
+variant = { determinate: Unsafe.Coerce.unsafeCoerce "determinate", indeterminate: Unsafe.Coerce.unsafeCoerce "indeterminate", static: Unsafe.Coerce.unsafeCoerce "static" }
+
+foreign import data Size :: Type
+
+size :: { number :: Number -> Size, string :: String -> Size }
+size = { number: Unsafe.Coerce.unsafeCoerce, string: Unsafe.Coerce.unsafeCoerce }
+
+foreign import data Color :: Type
+
+color :: { inherit :: Color, primary :: Color, secondary :: Color }
+color = { inherit: Unsafe.Coerce.unsafeCoerce "inherit", primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary" }
+
+instance eqColor :: Eq Color where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqVariant :: Eq Variant where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type CircularProgressPropsOptions componentProps = ( classes :: CircularProgressClassKey, color :: Color, disableShrink :: Boolean, size :: Size, thickness :: Number, value :: Number, variant :: Variant | componentProps )
 
 foreign import data CircularProgressProps :: Type
 
-foreign import data ColorProp :: Type
-foreign import _eqColorProp :: ColorProp -> ColorProp -> Boolean
-foreign import _ordColorProp :: ColorProp -> ColorProp -> Int
-instance eqColorProp :: Eq ColorProp where eq _left _right = _eqColorProp _left _right
-instance ordColorProp :: Ord ColorProp where compare _left _right = compare (_ordColorProp _left _right) (_ordColorProp _right _left)
+type CircularProgressClassKeyGenericOptions a = ( circle :: a, circleDisableShrink :: a, circleIndeterminate :: a, circleStatic :: a, colorPrimary :: a, colorSecondary :: a, indeterminate :: a, root :: a, static :: a, svg :: a )
 
-primary :: ColorProp
-primary = unsafeCoerce "primary"
+type CircularProgressClassKeyOptions  = CircularProgressClassKeyGenericOptions String
 
-secondary :: ColorProp
-secondary = unsafeCoerce "secondary"
-
-inherit :: ColorProp
-inherit = unsafeCoerce "inherit"
-foreign import data VariantProp :: Type
-foreign import _eqVariantProp :: VariantProp -> VariantProp -> Boolean
-foreign import _ordVariantProp :: VariantProp -> VariantProp -> Int
-instance eqVariantProp :: Eq VariantProp where eq _left _right = _eqVariantProp _left _right
-instance ordVariantProp :: Ord VariantProp where compare _left _right = compare (_ordVariantProp _left _right) (_ordVariantProp _right _left)
-
-determinate :: VariantProp
-determinate = unsafeCoerce "determinate"
-
-indeterminate :: VariantProp
-indeterminate = unsafeCoerce "indeterminate"
-
-static :: VariantProp
-static = unsafeCoerce "static"
-
-type CircularProgressClassKeyGenericOptions a =
-  ( root :: a 
-  , static :: a 
-  , indeterminate :: a 
-  , colorPrimary :: a 
-  , colorSecondary :: a 
-  , svg :: a 
-  , circle :: a 
-  , circleStatic :: a 
-  , circleIndeterminate :: a 
-  , circleDisableShrink :: a 
-  )
-type CircularProgressClassKeyOptions = CircularProgressClassKeyGenericOptions String
-type CircularProgressClassKeyJSSOptions = CircularProgressClassKeyGenericOptions JSS
 foreign import data CircularProgressClassKey :: Type
+
+circularProgressClassKey :: ∀ required given. Prim.Row.Union given required CircularProgressClassKeyOptions => Record given -> CircularProgressClassKey
+circularProgressClassKey = Unsafe.Coerce.unsafeCoerce
+
+type CircularProgressClassKeyOptionsJSS  = CircularProgressClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data CircularProgressClassKeyJSS :: Type
 
-circularProgressClassKey :: ∀  given required
-  .  Union given required (CircularProgressClassKeyOptions )
-  => Record given
-  -> CircularProgressClassKey
-circularProgressClassKey = unsafeCoerce
+circularProgressClassKeyJSS :: ∀ required given. Prim.Row.Union given required CircularProgressClassKeyOptionsJSS => Record given -> CircularProgressClassKeyJSS
+circularProgressClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-circularProgressClassKeyJSS :: ∀  given required
-  .  Union given required (CircularProgressClassKeyJSSOptions )
-  => Record given
-  -> CircularProgressClassKeyJSS
-circularProgressClassKeyJSS = unsafeCoerce
+foreign import _CircularProgress :: ∀ a. React.Basic.ReactComponent a
 
-circularProgress :: ∀  given required
-  .  Union given required (CircularProgressPropsOptions Props_div )
-  => Record given
-  -> JSX
-circularProgress = element _CircularProgress
+circularProgress :: ∀ required given. Prim.Row.Union given required (CircularProgressPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+circularProgress = React.Basic.element _CircularProgress
 
-circularProgress_component :: ∀ componentProps given required
-  .  Union given required (CircularProgressPropsOptions componentProps)
-  => Record given
-  -> JSX
-circularProgress_component = element _CircularProgress
-
-foreign import _CircularProgress :: ∀ a. ReactComponent a
+circularProgress_component :: ∀ required given componentProps. Prim.Row.Union given required (CircularProgressPropsOptions componentProps) => Record given -> React.Basic.JSX
+circularProgress_component = React.Basic.element _CircularProgress

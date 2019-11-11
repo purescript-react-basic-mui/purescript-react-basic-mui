@@ -1,7 +1,7 @@
 module MUI.Core.Drawer where
 
 import MUI.Core (JSS)
-import MUI.Core.Modal (ModalPropsPartial)
+import MUI.Core.Modal (ModalProps, ModalPropsPartial, modal)
 import MUI.Core.Paper (PaperPropsPartial)
 import MUI.Core.Slide (SlidePropsPartial)
 import Prim.Row (class Union)
@@ -10,12 +10,12 @@ import React.Basic.DOM (Props_div)
 import React.Basic.Events (EventHandler)
 import Unsafe.Coerce (unsafeCoerce)
 
-type DrawerProps componentProps =
+type DrawerProps componentProps = ∀ given required.
   ( anchor :: AnchorProp
   , children :: Array JSX
   , classes :: DrawerClassKey
   , elevation :: Number
-  , "ModalProps" :: ModalPropsPartial
+  , "ModalProps" :: ModalPropsPartial given required
   , onClose :: EventHandler
   , open :: Boolean
   , "PaperProps" :: PaperPropsPartial
@@ -106,3 +106,5 @@ drawer = element _Drawer
 
 
 foreign import _Drawer :: ∀ a. ReactComponent a
+
+x = drawer { "ModalProps": {}}

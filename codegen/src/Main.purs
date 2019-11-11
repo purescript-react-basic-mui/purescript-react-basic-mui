@@ -6,7 +6,7 @@ import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconP
 import Codegen (component, icon, write) as Codegen
 import Codegen.AST (Ident(..), ModuleName(..), TypeF(..), TypeName(..))
 import Codegen.AST.Sugar (declType)
-import Codegen.AST.Sugar.Type (app, constructor, record, row) as Type
+import Codegen.AST.Sugar.Type (app, constrained, constructor, forAll, record, recordApply, row, var) as Type
 import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, eventHandler, iconName, jsx, psImportPath, reactComponentApply)
 import Codegen.Model (componentName) as Model
 import Codegen.TS.MUI (componentProps) as TS.MUI
@@ -43,9 +43,7 @@ components :: Array Component
 components =
   let
     children = Tuple "children" arrayJSX
-    effect result = Type.app (Type.constructor "Effect.Effect") [ result ]
-    effectUnit = effect (Type.constructor "Prelude.Unit")
-    handlerProp name = Tuple name effectUnit
+    eventHandlerProp name = Tuple name (Type.constructor "React.Basic.Events.EventHandler")
 
     foreignType = Type.constructor "Foreign.Foreign"
     jss = Type.constructor "MUI.Core.JSS"
@@ -90,7 +88,6 @@ components =
         , generate: ["classes", "color", "position"]
         }
       }
-
     avatar = simpleComponent
       { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
       , name: "Avatar"
@@ -178,13 +175,17 @@ components =
         [Type.constructor "React.Basic.DOM.Props_button"]
       , name: "Button"
       , propsType:
-        { base: emptyBase
+        { base: basePropsRow [] $ Map.fromFoldable
+          [ Tuple "endIcon" jsx
+          , Tuple "startIcon" jsx
+          ]
         , generate:
           [ "classes", "color", "disabled", "disableFocusRipple"
           , "disableRipple", "fullWidth", "href", "size", "variant"
           ]
         }
       }
+
     buttonBase =
       let
         base = basePropsRow [] $ Map.fromFoldable
@@ -192,9 +193,9 @@ components =
           , Tuple "buttonRef" foreignType
           , children
           -- XXX: We are catching material ui documentation / type error here.
-          -- MenuItem doesn't contain `component` prop.
+          -- ButtonBase doesn't contain `component` prop.
           -- , component
-          , Tuple "onFocusVisible" eventHandler
+          , eventHandlerProp "onFocusVisible"
           -- | XXX: Provide some sugar for generating relative imports
           -- | between components
           , Tuple "TouchRippleProps" $ roll $ TypeConstructor
@@ -317,11 +318,21 @@ components =
         }
       }
 
-
+    circularProgress = simpleComponent
+      { inherits: Nothing
+      , name: "CircularProgress"
+      , propsType:
+        { base: emptyBase
+        , generate:
+          [ "classes", "color", "disableShrink", "size"
+          , "thickness", "value", "variant"
+          ]
+        }
+      }
 
     clickAwayListener =
       let
-        onClickAway = Tuple "onClickAway" effectUnit
+        onClickAway = eventHandlerProp "onClickAway"
         -- | Single jsx node is required
         child = Tuple "children" jsx
         base = basePropsRow [] $ Map.fromFoldable [ child, onClickAway ]
@@ -340,9 +351,10 @@ components =
         -- | * `ModalProps` inheritance - I want to go back to this after Modal component
         -- | migration.
         -- | * `PaperComponent`, `PaperProps`, `TransitionComponent`, `TransitionDuration`
-        handlers = map handlerProp
-          [ "onBackdropClick", "onClose", "onEnter", "onEntered", "onEntering"
-          , "onEscapeKeyDown", "onExit", "onExited", "onExiting"]
+        handlers = map eventHandlerProp
+          [ "onEnter", "onEntered", "onEntering"
+          , "onExit", "onExited", "onExiting"
+          ]
         base = basePropsRow [] $ Map.fromFoldable $ [ children ] <> handlers
       in simpleComponent
         { inherits: Nothing
@@ -351,13 +363,12 @@ components =
           { base
           , generate:
             [ "aria-describedby", "aria-labelledby"
-            , "classes", "disableBackdropClick"
-            , "disableEscapeKeyDown", "fullScreen"
-            , "fullWidth", "maxWidth", "open"
-            , "scroll", "transitionDuration"
+            , "classes", "fullScreen", "fullWidth"
+            , "maxWidth", "scroll", "transitionDuration"
             ]
           }
         }
+
     dialogActions = simpleComponent
       { inherits: Nothing
       , name: "DialogActions"
@@ -366,6 +377,7 @@ components =
         , generate: [ "classes", "disableSpacing" ]
         }
       }
+
     dialogContent = simpleComponent
       { inherits: Nothing
       , name: "DialogContent"
@@ -374,6 +386,7 @@ components =
         , generate: [ "classes", "dividers" ]
         }
       }
+
     dialogTitle = simpleComponent
       { inherits: Nothing
       , name: "DialogTitle"
@@ -382,6 +395,7 @@ components =
         , generate: [ "classes", "disableTypography" ]
         }
       }
+
     fab = simpleComponent
       { inherits: Just $ Type.app
           (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
@@ -396,7 +410,6 @@ components =
         }
       }
 
-
     -- | TODO: TransitionComponent
     fade = simpleComponent
       { inherits: Nothing -- should inherit TransitionComponent
@@ -408,7 +421,6 @@ components =
             ]
           }
       }
-
 
     gridList =
       let
@@ -424,6 +436,7 @@ components =
             , generate: [ "cellHeight", "classes", "cols", "spacing" ]
             }
           }
+
     gridListTile =
       let
         base = basePropsRow [] $ Map.fromFoldable
@@ -438,10 +451,23 @@ components =
             , generate: [ "classes", "cols", "rows" ]
             }
           }
+
+    linearProgress = simpleComponent
+      { inherits: Nothing
+      , name: "LinearProgress"
+      , propsType:
+        { base: emptyBase
+        , generate:
+          [ "classes", "color", "value"
+          , "valueBuffer", "variant"
+          ]
+        }
+      }
+
     menu =
       let
         -- | Still missing: anchorEl, onClose, MenuListProps, PopoverClasses, transitionDuration
-        handlers = map handlerProp
+        handlers = map eventHandlerProp
           ["onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting"]
         -- | I'm not sure what is the difference between `React.Element` and `DOM.Element`
         nullable = Type.constructor "Data.Nullable.Nullable"
@@ -472,6 +498,56 @@ components =
           , generate: [ "classes", "dense", "disableGutters" ]
           }
         }
+    -- modal =
+    --   let
+    --     props_div = Type.constructor "React.Basic.DOM.Props_div"
+    --     backdropPropsType = Type.app
+    --       (Type.constructor "MUI.Core.Backdrop.BackdropPropsOptions")
+    --       [ props_div ]
+
+    --     backdropProps = Type.forAll { g: "given", r: "required"} $ \{ g, r } ->
+    --       let
+    --         gR = Type.recordApply g
+    --       in
+    --         Type.constrained "Prim.Row.Union" [ g, r, backdropPropsType] gR
+
+    --     handlers = map eventHandlerProp
+    --       [ "onBackdropClick"
+    --       , "onClose"
+    --       , "onEscapeKeyDown"
+    --       , "onRendered"
+    --       ]
+
+    --     base = basePropsRow [ ] $ Map.fromFoldable $
+    --       [ children
+    --       -- | XXX: Currently we are supporting only monomorphic backdrop
+    --       , Tuple "BackdropProps" backdropProps
+    --       -- , container
+    --       --   , manager :: ModalManager
+    --       ]
+    --       <> handlers
+    --   in simpleComponent
+    --     { inherits: Nothing
+    --     , name: "Modal"
+    --     , propsType:
+    --       { base
+    --       , generate:
+    --         [ "classes"
+    --         , "closeAfterTransition"
+    --         , "disableAutoFocus"
+    --         , "disableBackdropClick"
+    --         , "disableEnforceFocus"
+    --         , "disableEscapeKeyDown"
+    --         , "disablePortal"
+    --         , "disableRestoreFocus"
+    --         , "disableScrollLock"
+    --         , "hideBackdrop"
+    --         , "keepMounted"
+    --         , "open"
+    --         ]
+    --       }
+    --     }
+
     touchRipple =
       { extraDeclarations: []
       , inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
@@ -499,6 +575,7 @@ components =
     , cardContent
     , cardHeader
     , cardMedia
+    , circularProgress
     , clickAwayListener
     , checkbox
     , dialog
@@ -509,6 +586,7 @@ components =
     , fade
     , gridList
     , gridListTile
+    , linearProgress
     , menu
     , menuItem
     , touchRipple
@@ -562,14 +640,19 @@ iconRead = eitherReader $ \s -> case s `Map.lookup` icons' of
     step i = Tuple (iconName i) i
     icons' = Map.fromFoldable $ map step icons
 
-commaSeparatedComponentList :: Parser (Array Component)
-commaSeparatedComponentList = option (multiString (Pattern ",") componentRead)
-    ( long "skip-props"
-   <> short 's'
-   <> metavar "component1,component2,...,component3"
-   <> help helpText
-   <> value [ ]
-    )
+commaSeparatedComponentList :: { helpText ∷ String, long ∷ String, short ∷ Char } → Parser (Array Component)
+commaSeparatedComponentList { helpText, long: l, short: s } = option (multiString (Pattern ",") componentRead)
+  ( long l
+  <> short s
+  <> metavar "component1,component2,...,component3"
+  <> help helpText
+  <> value [ ]
+  )
+
+showPropsOptions :: Parser Options
+showPropsOptions = map ShowPropsCommand $ { component: _, skip: _ }
+  <$> componentOption
+  <*> commaSeparatedComponentList { helpText, long: "skip-props", short: 's' }
   where
     helpText = intercalate "."
       [ "A comma-separated list of component names "
@@ -577,11 +660,6 @@ commaSeparatedComponentList = option (multiString (Pattern ",") componentRead)
       , "This can be useful if you want to list only component own "
       , "properties or destil some inheritance etc."
       ]
-
-showPropsOptions :: Parser Options
-showPropsOptions = map ShowPropsCommand $ { component: _, skip: _ }
-  <$> componentOption
-  <*> commaSeparatedComponentList -- (long "skip-components" <> short 's')
 
 data GenOutput
   = Directory FilePath
@@ -601,10 +679,14 @@ genOutput = directory <|> stdout
       <> help "Print component to stdout"
 
 genTarget :: Parser GenTarget
-genTarget = genComponent <|> genComponents <|> genIcon
+genTarget = genComponents <|> genAllComponents <|> genIcon
   where
-    genComponent = map GenComponent componentOption
-    genComponents = flag' GenComponents $
+    genComponents =
+      GenComponents <$> commaSeparatedComponentList { helpText, long: "components", short: 'c' }
+      where
+        helpText = "A comma-separated list of component names."
+
+    genAllComponents = flag' GenAllComponents $
       long "all-components"
       <> short 'a'
       <> help "Codegen all components"
@@ -616,8 +698,8 @@ genOptions = map Generate $ { target: _, output: _ }
   <*> ((Just <$> genOutput) <|> pure Nothing)
 
 data GenTarget
-  = GenComponents
-  | GenComponent Component
+  = GenAllComponents
+  | GenComponents (Array Component)
   -- | GenIcons
   | GenIcon Icon
 
@@ -663,8 +745,7 @@ main = do
           Nothing -> do
             writeComponentModules "../src" component code
         Left err -> do
-          log $ "\n" <> (psImportPath $ component.modulePath) <> ":"
-          log $ "Codegen errors: " <> intercalate "\n" err
+          log $ "\n" <> (psImportPath $ component.modulePath) <> " component codegen errors: " <> intercalate "\n" err
 
     writeIconModules dir icon code = launchAff_ $ do
       let
@@ -704,9 +785,9 @@ main = do
               $ Map.filterWithKey (\k v -> k `Set.member` keys) cProps
           log $ intercalate "\n" props
         Left err -> log $ intercalate "\n" err
-    Generate { target: GenComponent component, output } ->
+    Generate { target: GenComponents components', output } -> for_ components' \component ->
       codegenComponent component output
-    Generate { target: GenComponents, output } -> for_ components \component ->
+    Generate { target: GenAllComponents, output } -> for_ components \component ->
       codegenComponent component output
     Generate { target: GenIcon i, output } ->
       iconCodegen i output

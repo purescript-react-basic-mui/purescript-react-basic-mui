@@ -1,74 +1,39 @@
 module MUI.Core.Modal where
 
-import Foreign (Foreign)
-import Foreign.Object (Object)
-import MUI.Core (JSS)
-import MUI.Core.Modal.ModalManager (ModalManager)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import React.Basic.Events (EventHandler)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Backdrop (BackdropPropsOptions) as MUI.Core.Backdrop
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import React.Basic.Events (EventHandler) as React.Basic.Events
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type BackdropProps = Object Foreign
+type ModalPropsOptions componentProps = ( "BackdropProps" :: ∀ required given. Prim.Row.Union given required (MUI.Core.Backdrop.BackdropPropsOptions React.Basic.DOM.Props_div) => Record given, children :: Array React.Basic.JSX, classes :: ModalClassKey, closeAfterTransition :: Boolean, disableAutoFocus :: Boolean, disableBackdropClick :: Boolean, disableEnforceFocus :: Boolean, disableEscapeKeyDown :: Boolean, disablePortal :: Boolean, disableRestoreFocus :: Boolean, disableScrollLock :: Boolean, hideBackdrop :: Boolean, keepMounted :: Boolean, onBackdropClick :: React.Basic.Events.EventHandler, onClose :: React.Basic.Events.EventHandler, onEscapeKeyDown :: React.Basic.Events.EventHandler, onRendered :: React.Basic.Events.EventHandler, open :: Boolean | componentProps )
 
-type ModalProps componentProps =
-  --( "BackdropComponent" :: Component { | BackdropPropsOptions }
-  --, "BackdropProps" :: BackdropProps
-  ( children :: Array JSX
-  , className :: String
-  , classes :: ModalClassKey
-  , closeAfterTransition :: Boolean
-  , container :: Foreign
-  , disableAutoFocus :: Boolean
-  , disableBackdropClick :: Boolean
-  , disableEnforceFocus :: Boolean
-  , disableEscapeKeyDown :: Boolean
-  , disablePortal :: Boolean
-  , disableRestoreFocus :: Boolean
-  , hideBackdrop :: Boolean
-  , manager :: ModalManager
-  , onBackdropClick :: EventHandler
-  , onClose :: EventHandler
-  , onEscapeKeyDown :: EventHandler
-  , onRendered :: EventHandler
-  , open :: Boolean
-  | componentProps
-  )
+foreign import data ModalProps :: Type
+
+type ModalPropsPartial = ∀ given required. Prim.Row.Union given required (ModalPropsOptions React.Basic.DOM.Props_div) => Record required
+
+type ModalClassKeyGenericOptions a = (  )
+
+type ModalClassKeyOptions  = ModalClassKeyGenericOptions String
 
 foreign import data ModalClassKey :: Type
+
+modalClassKey :: ∀ required given. Prim.Row.Union given required ModalClassKeyOptions => Record given -> ModalClassKey
+modalClassKey = Unsafe.Coerce.unsafeCoerce
+
+type ModalClassKeyOptionsJSS  = ModalClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data ModalClassKeyJSS :: Type
-foreign import data ModalPropsPartial :: Type
 
-type ModalClassKeyOptionsJSS = ModalClassKeyOptionsR JSS
-type ModalClassKeyOptions = ModalClassKeyOptionsR String
-type ModalClassKeyOptionsR a = 
-  ( root :: a 
-  , hidden :: a 
-  )
+modalClassKeyJSS :: ∀ required given. Prim.Row.Union given required ModalClassKeyOptionsJSS => Record given -> ModalClassKeyJSS
+modalClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-modalClassKey :: ∀ options options_
-  . Union options options_ ModalClassKeyOptions
-  => Record options
-  -> ModalClassKey
-modalClassKey = unsafeCoerce
+foreign import _Modal :: ∀ a. React.Basic.ReactComponent a
 
-modalClassKeyJSS :: ∀ options options_
-  . Union options options_ ModalClassKeyOptionsJSS
-  => Record options
-  -> ModalClassKeyJSS
-modalClassKeyJSS = unsafeCoerce
+modal :: ∀ required given. Prim.Row.Union given required (ModalPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+modal = React.Basic.element _Modal
 
-modalPropsPartial :: ∀ options options_
-  . Union options options_ (ModalProps Props_div)
-  => Record options
-  -> ModalPropsPartial
-modalPropsPartial = unsafeCoerce
-
-modal :: ∀ props props_
-  . Union props props_ (ModalProps Props_div)
-  => Record props 
-  -> JSX
-modal = element _Modal
-
-foreign import _Modal :: ∀ a. ReactComponent a 
+modal_component :: ∀ required given componentProps. Prim.Row.Union given required (ModalPropsOptions componentProps) => Record given -> React.Basic.JSX
+modal_component = React.Basic.element _Modal
