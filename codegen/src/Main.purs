@@ -999,6 +999,136 @@ components =
         }
       }
 
+    link = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_a"
+      , name: "Link"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+          [ children
+          , Tuple "TypographyClasses" (Type.constructor "MUI.Core.Typography.TypographyClassKey")
+          ] 
+        , generate:
+          [ "classes" 
+          , "color"
+          , "underline"
+          , "variant"
+          ]
+        }
+      }
+
+    list = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_ul"
+      , name: "List"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+          [ children
+          , Tuple "subheader" jsx
+          ] 
+        , generate:
+          [ "classes" 
+          , "dense"
+          , "disablePadding"
+          ]
+        }
+      }
+
+    -- | TODO add ContainerComponent and ContainerProps
+    listItem = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_li"
+      , name: "ListItem"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+          [ children
+          ] 
+        , generate:
+          [ 
+          -- "alignItems"
+            "autoFocus"
+          , "button"
+          , "classes"
+          , "dense"
+          , "disabled"
+          , "disableGutters"
+          , "divider"
+          , "selected"
+          ]
+        }
+      }
+
+    listItemAvatar = simpleComponent
+      { inherits: Nothing
+      , name: "ListItemAvatar"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+          [
+          ] 
+        , generate:
+          [ "classes"
+          ]
+        }
+      }
+
+    listItemIcon = simpleComponent
+      { inherits: Just divProps
+      , name: "ListItemIcon"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+          [ 
+          ] 
+        , generate:
+          [ "classes"
+          ]
+        }
+      }
+
+    listItemSecondaryAction = simpleComponent
+      { inherits: Just divProps
+      , name: "ListItemSecondaryAction"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+          [
+          ] 
+        , generate:
+          [ "classes"
+          ]
+        }
+      }
+
+    listItemText = simpleComponent
+      { inherits: Just divProps
+      , name: "ListItemText"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+          [ Tuple "primary" jsx
+          , Tuple "primaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassKey")
+          , Tuple "secondary" jsx
+          , Tuple "secondaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassKey")
+          ] 
+        , generate:
+          [ "classes"
+          , "disableTypography"
+          , "inset"
+          ]
+        }
+      }
+
+    listSubheader = simpleComponent
+      { inherits: Just $ (Type.constructor "React.Basic.DOM.Props_li")
+      , name: "ListSubheader"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+          [ children 
+          ] 
+        , generate:
+          [ "classes"
+          , "color"
+          , "disableGutters"
+          , "disableSticky"
+          , "inset"
+          ]
+        }
+      }
+
     menu =
       let
         -- | Still missing: anchorEl, onClose, MenuListProps, PopoverClasses, transitionDuration
@@ -1017,6 +1147,7 @@ components =
           , generate: [ "autoFocus", "classes", "disableAutoFocusItem", "open", "transitionDuration", "variant" ]
           }
         }
+
     menuItem =
       let
         base = basePropsRow [] $ Map.fromFoldable
@@ -1026,13 +1157,34 @@ components =
           -- , component
           ]
       in simpleComponent
-        { inherits: Nothing -- | TODO: inherit from `ListItem`
+        { inherits: Just $ Type.app (Type.constructor "MUI.Core.ListItem.ListItemPropsOptions") [ Type.constructor "React.Basic.DOM.Props_li" ]
         , name: "MenuItem"
         , propsType:
           { base
           , generate: [ "classes", "dense", "disableGutters" ]
           }
         }
+
+    mobileStepper = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ Type.constructor "React.Basic.DOM.Props_props" ]
+        , name: "MobileStepper"
+        , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ Tuple "backButton" jsx
+              , Tuple "LinearProgressProps" (Type.constructor "MUI.Core.LinearPropgress.LinearProgressProps")
+              , Tuple "nextButton" jsx
+              ]
+          , generate: 
+              [ "activeStep"
+              , "backButton"
+              , "classes"
+              , "position"
+              , "steps"
+              , "variant"
+              ]
+          }
+        }
+
     modal =
       let
         props_div = Type.constructor "React.Basic.DOM.Props_div"
@@ -1082,6 +1234,26 @@ components =
             , "keepMounted"
             , "open"
             ]
+          }
+        }
+
+    -- | TODO value
+    nativeSelect = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ Type.constructor "React.Basic.DOM.Props_div" ]
+        , name: "NativeSelect"
+        , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "IconComponent" jsx
+              , Tuple "input" jsx
+              , Tuple "inputProps" (Type.constructor "MUI.Core.Input.InputProps")
+              , eventHandlerProp "onChange"
+              , Tuple "value" foreignType 
+              ]
+          , generate: 
+              [ "classes"
+              , "variant"
+              ]
           }
         }
 
@@ -1175,9 +1347,16 @@ components =
     , inputBase
     , inputLabel
     , linearProgress
+    , link
+    , list
+    , listItem
+    , listItemAvatar
+    , listItemText
+    , listSubheader
     , menu
     , menuItem
     , modal
+    , nativeSelect
     , paper
     , slide
     , touchRipple

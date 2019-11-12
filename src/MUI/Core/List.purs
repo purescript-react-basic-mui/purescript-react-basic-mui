@@ -1,68 +1,40 @@
 module MUI.Core.List where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_ul) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type ListProps componentProps =
-  ( children :: Array JSX
-  , classes :: ListClassKey
-  , component :: ReactComponent { | componentProps }
-  , dense :: Boolean
-  , disablePadding :: Boolean
-  , subheader :: JSX
-  | componentProps 
-  )
+type ListPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: ListClassKey, dense :: Boolean, disablePadding :: Boolean, subheader :: React.Basic.JSX | componentProps )
 
-foreign import data ListClassKey :: Type
-foreign import data ListClassKeyJSS :: Type
+foreign import data ListProps :: Type
+
 foreign import data ListPropsPartial :: Type
 
-type ListClassKeyOptionsJSS = ListClassKeyOptionsR JSS
-type ListClassKeyOptions = ListClassKeyOptionsR String
-type ListClassKeyOptionsR a =
-  ( root :: a
-  , padding :: a
-  , dense :: a
-  , subheader :: a
-  )
+listPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (ListPropsOptions React.Basic.DOM.Props_ul) => Record options -> ListPropsPartial
+listPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-listClassKey :: ∀ options options_
-  . Union options options_ ListClassKeyOptions
-  => Record options
-  -> ListClassKey
-listClassKey = unsafeCoerce
+type ListClassKeyGenericOptions a = ( dense :: a, padding :: a, root :: a, subheader :: a )
 
-listClassKeyJSS :: ∀ options options_
-  . Union options options_ ListClassKeyOptionsJSS
-  => Record options
-  -> ListClassKeyJSS
-listClassKeyJSS = unsafeCoerce
+type ListClassKeyOptions  = ListClassKeyGenericOptions String
 
-listPropsPartial_component :: ∀ componentProps props props_
-  . Union props props_ (ListProps componentProps)
-  => Record props 
-  -> ListPropsPartial
-listPropsPartial_component = unsafeCoerce
+foreign import data ListClassKey :: Type
 
-listPropsPartial :: ∀ props props_
-  . Union props props_ (ListProps Props_div)
-  => Record props 
-  -> ListPropsPartial
-listPropsPartial = unsafeCoerce
+listClassKey :: ∀ required given. Prim.Row.Union given required ListClassKeyOptions => Record given -> ListClassKey
+listClassKey = Unsafe.Coerce.unsafeCoerce
 
-list_component :: ∀ componentProps props props_
-  . Union props props_ (ListProps componentProps)
-  => Record props 
-  -> JSX
-list_component = element _List
+type ListClassKeyOptionsJSS  = ListClassKeyGenericOptions MUI.Core.JSS
 
-list :: ∀ props props_
-  . Union props props_ (ListProps Props_div)
-  => Record props 
-  -> JSX
-list = element _List
+foreign import data ListClassKeyJSS :: Type
 
-foreign import _List :: ∀ a. ReactComponent a
+listClassKeyJSS :: ∀ required given. Prim.Row.Union given required ListClassKeyOptionsJSS => Record given -> ListClassKeyJSS
+listClassKeyJSS = Unsafe.Coerce.unsafeCoerce
+
+foreign import _List :: ∀ a. React.Basic.ReactComponent a
+
+list :: ∀ required given. Prim.Row.Union given required (ListPropsOptions React.Basic.DOM.Props_ul) => Record given -> React.Basic.JSX
+list = React.Basic.element _List
+
+list_component :: ∀ required given componentProps. Prim.Row.Union given required (ListPropsOptions componentProps) => Record given -> React.Basic.JSX
+list_component = React.Basic.element _List

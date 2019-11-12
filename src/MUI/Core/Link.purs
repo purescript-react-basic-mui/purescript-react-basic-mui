@@ -1,101 +1,67 @@
 module MUI.Core.Link where
 
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Typography (TypographyClassKey) as MUI.Core.Typography
+import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_a) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-import MUI.Core (JSS)
-import MUI.Core.Typography (TypographyClassKey, VariantMapping)
-import MUI.Core.Typography.Align (AlignProp)
-import MUI.Core.Typography.Display (DisplayProp)
-import MUI.Core.Typography.Variant (VariantProp)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_a)
-import Unsafe.Coerce (unsafeCoerce)
+foreign import data Variant :: Type
 
-type LinkProps componentProps =
-  ( align :: AlignProp
-  , children :: Array JSX
-  , classes :: LinkClassKey
-  , color :: ColorProp
-  , component :: ReactComponent { | componentProps }
-  , display :: DisplayProp
-  , gutterBottom :: Boolean
-  , noWrap :: Boolean
-  , paragraph :: Boolean
-  , "TypographyClasses" :: TypographyClassKey
-  , underline :: UnderlineProp
-  , variant :: VariantProp
-  , variantMapping :: VariantMapping
-  | componentProps
-  )
+variant :: { body1 :: Variant, body2 :: Variant, button :: Variant, caption :: Variant, h1 :: Variant, h2 :: Variant, h3 :: Variant, h4 :: Variant, h5 :: Variant, h6 :: Variant, inherit :: Variant, overline :: Variant, srOnly :: Variant, subtitle1 :: Variant, subtitle2 :: Variant }
+variant = { body1: Unsafe.Coerce.unsafeCoerce "body1", body2: Unsafe.Coerce.unsafeCoerce "body2", button: Unsafe.Coerce.unsafeCoerce "button", caption: Unsafe.Coerce.unsafeCoerce "caption", h1: Unsafe.Coerce.unsafeCoerce "h1", h2: Unsafe.Coerce.unsafeCoerce "h2", h3: Unsafe.Coerce.unsafeCoerce "h3", h4: Unsafe.Coerce.unsafeCoerce "h4", h5: Unsafe.Coerce.unsafeCoerce "h5", h6: Unsafe.Coerce.unsafeCoerce "h6", inherit: Unsafe.Coerce.unsafeCoerce "inherit", overline: Unsafe.Coerce.unsafeCoerce "overline", srOnly: Unsafe.Coerce.unsafeCoerce "srOnly", subtitle1: Unsafe.Coerce.unsafeCoerce "subtitle1", subtitle2: Unsafe.Coerce.unsafeCoerce "subtitle2" }
 
-foreign import data ColorProp :: Type
-data Color = Default | Error | Inherit | Primary | Secondary | TextPrimary | TextSecondary
-color :: Color -> ColorProp
-color Default = unsafeCoerce "default"
-color Error = unsafeCoerce "error"
-color Inherit = unsafeCoerce "inherit"
-color Primary = unsafeCoerce "primary"
-color Secondary = unsafeCoerce "secondary"
-color TextPrimary = unsafeCoerce "textPrimary"
-color TextSecondary = unsafeCoerce "textSecondary"
+foreign import data Underline :: Type
 
-foreign import data UnderlineProp :: Type
-data Underline = None | Hover | Always
-underline :: Underline -> UnderlineProp
-underline None = unsafeCoerce "none"
-underline Hover = unsafeCoerce "hover"
-underline Always = unsafeCoerce "Always"
+underline :: { always :: Underline, hover :: Underline, none :: Underline }
+underline = { always: Unsafe.Coerce.unsafeCoerce "always", hover: Unsafe.Coerce.unsafeCoerce "hover", none: Unsafe.Coerce.unsafeCoerce "none" }
 
-foreign import data LinkClassKey :: Type
-foreign import data LinkClassKeyJSS :: Type
+foreign import data Color :: Type
+
+color :: { error :: Color, inherit :: Color, initial :: Color, primary :: Color, secondary :: Color, textPrimary :: Color, textSecondary :: Color }
+color = { error: Unsafe.Coerce.unsafeCoerce "error", inherit: Unsafe.Coerce.unsafeCoerce "inherit", initial: Unsafe.Coerce.unsafeCoerce "initial", primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary", textPrimary: Unsafe.Coerce.unsafeCoerce "textPrimary", textSecondary: Unsafe.Coerce.unsafeCoerce "textSecondary" }
+
+instance eqColor :: Eq Color where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqUnderline :: Eq Underline where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqVariant :: Eq Variant where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type LinkPropsOptions componentProps = ( "TypographyClasses" :: MUI.Core.Typography.TypographyClassKey, children :: Array React.Basic.JSX, classes :: LinkClassKey, color :: Color, underline :: Underline, variant :: Variant | componentProps )
+
+foreign import data LinkProps :: Type
+
 foreign import data LinkPropsPartial :: Type
 
-type LinkClassKeyOptionsJSS = LinkClassKeyOptionsR JSS
-type LinkClassKeyOptions = LinkClassKeyOptionsR String
-type LinkClassKeyOptionsR a =
-  ( root :: a
-  , underlineNone :: a
-  , underlineHover :: a
-  , underlineAlways :: a
-  , button :: a
-  , focusVisible :: a
-  )
+linkPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (LinkPropsOptions React.Basic.DOM.Props_a) => Record options -> LinkPropsPartial
+linkPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-linkClassKey  :: ∀ options options_
-  . Union options options_ LinkClassKeyOptions
-  => Record options
-  -> LinkClassKey
-linkClassKey = unsafeCoerce
+type LinkClassKeyGenericOptions a = ( alignCenter :: a, alignJustify :: a, alignLeft :: a, alignRight :: a, body1 :: a, body2 :: a, button :: a, caption :: a, colorError :: a, colorInherit :: a, colorSecondary :: a, colorTextSecondary :: a, displayBlock :: a, displayInline :: a, focusVisible :: a, gutterBottom :: a, h1 :: a, h2 :: a, h3 :: a, h4 :: a, h5 :: a, h6 :: a, noWrap :: a, overline :: a, paragraph :: a, root :: a, srOnly :: a, subtitle1 :: a, subtitle2 :: a, underlineAlways :: a, underlineHover :: a, underlineNone :: a )
 
-linkClassKeyJSS  :: ∀ options options_
-  . Union options options_ LinkClassKeyOptionsJSS
-  => Record options
-  -> LinkClassKeyJSS
-linkClassKeyJSS = unsafeCoerce
+type LinkClassKeyOptions  = LinkClassKeyGenericOptions String
 
-linkPropsPartial_component :: ∀ componentProps props props_
-  . Union props props_ (LinkProps componentProps)
-  => Record props 
-  -> LinkPropsPartial
-linkPropsPartial_component = unsafeCoerce
+foreign import data LinkClassKey :: Type
 
-linkPropsPartial :: ∀ props props_
-  . Union props props_ (LinkProps Props_a)
-  => Record props 
-  -> LinkPropsPartial
-linkPropsPartial = unsafeCoerce
+linkClassKey :: ∀ required given. Prim.Row.Union given required LinkClassKeyOptions => Record given -> LinkClassKey
+linkClassKey = Unsafe.Coerce.unsafeCoerce
 
+type LinkClassKeyOptionsJSS  = LinkClassKeyGenericOptions MUI.Core.JSS
 
-link_component :: ∀ componentProps props props_
-  . Union props props_ (LinkProps componentProps)
-  => { | props }
-  -> JSX
-link_component = element _Link
+foreign import data LinkClassKeyJSS :: Type
 
-link :: ∀ props props_
-  . Union props props_ (LinkProps Props_a)
-  => { | props }
-  -> JSX
-link = element _Link
+linkClassKeyJSS :: ∀ required given. Prim.Row.Union given required LinkClassKeyOptionsJSS => Record given -> LinkClassKeyJSS
+linkClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-foreign import _Link :: ∀ a. ReactComponent a
+foreign import _Link :: ∀ a. React.Basic.ReactComponent a
+
+link :: ∀ required given. Prim.Row.Union given required (LinkPropsOptions React.Basic.DOM.Props_a) => Record given -> React.Basic.JSX
+link = React.Basic.element _Link
+
+link_component :: ∀ required given componentProps. Prim.Row.Union given required (LinkPropsOptions componentProps) => Record given -> React.Basic.JSX
+link_component = React.Basic.element _Link

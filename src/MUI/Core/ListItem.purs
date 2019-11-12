@@ -1,94 +1,40 @@
 module MUI.Core.ListItem where
 
-import Foreign (Foreign)
-import Foreign.Object (Object)
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_li, Props_div)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_li) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type ContainerProps = Object Foreign
+type ListItemPropsOptions componentProps = ( autoFocus :: Boolean, button :: Boolean, children :: Array React.Basic.JSX, classes :: ListItemClassKey, dense :: Boolean, disableGutters :: Boolean, disabled :: Boolean, divider :: Boolean, selected :: Boolean | componentProps )
 
-type ListItemProps componentProps containerProps = 
-  ( alignItems :: AlignItemsProp
-  , autoFocus :: Boolean
-  , button :: Boolean
-  , children :: Array JSX
-  , classes :: ListItemClassKey
-  , component :: ReactComponent { | componentProps }
-  , "ContainerComponent" :: { | containerProps }
-  , "ContainerProps" :: ReactComponent { | containerProps }
-  , dense :: Boolean
-  , disabled :: Boolean
-  , disableGutters :: Boolean
-  , divider :: Boolean
-  , selected  :: Boolean
-  | componentProps
-  )
+foreign import data ListItemProps :: Type
 
-foreign import data AlignItemsProp :: Type
-data AlignItems = FlexStart | Start | Center
-alignItems :: AlignItems -> AlignItemsProp
-alignItems FlexStart = unsafeCoerce "flex-start"
-alignItems Start = unsafeCoerce "start"
-alignItems Center = unsafeCoerce "center"
-
-foreign import data ListItemClassKey :: Type
-foreign import data ListItemClassKeyJSS :: Type
 foreign import data ListItemPropsPartial :: Type
 
-type ListItemClassKeyOptionsJSS = ListItemClassKeyOptionsR JSS
-type ListItemClassKeyOptions = ListItemClassKeyOptionsR String
-type ListItemClassKeyOptionsR a = 
-  ( root :: a
-  , container :: a
-  , focusVisible :: a
-  , dense :: a
-  , alignItemsFlexStart :: a
-  , disabled :: a
-  , divider :: a
-  , gutters :: a
-  , button :: a
-  , secondaryAction :: a
-  , selected :: a
-  )
+listItemPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (ListItemPropsOptions React.Basic.DOM.Props_li) => Record options -> ListItemPropsPartial
+listItemPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-listItemClassKey :: ∀ options options_
-  . Union options options_ ListItemClassKeyOptions
-  => Record options
-  -> ListItemClassKey
-listItemClassKey = unsafeCoerce
+type ListItemClassKeyGenericOptions a = ( button :: a, container :: a, default :: a, dense :: a, disabled :: a, divider :: a, focusVisible :: a, gutters :: a, root :: a, secondaryAction :: a, selected :: a )
 
-listItemClassKeyJSS :: ∀ options options_
-  . Union options options_ ListItemClassKeyOptionsJSS
-  => Record options
-  -> ListItemClassKeyJSS
-listItemClassKeyJSS = unsafeCoerce
+type ListItemClassKeyOptions  = ListItemClassKeyGenericOptions String
 
-listItemPropsPartial_component :: ∀ componentProps containerProps props props_
-  . Union props props_ (ListItemProps  componentProps containerProps)
-  => Record props 
-  -> ListItemPropsPartial 
-listItemPropsPartial_component = unsafeCoerce
+foreign import data ListItemClassKey :: Type
 
-listItemPropsPartial :: ∀ props props_
-  . Union props props_ (ListItemProps Props_li Props_div)
-  => Record props 
-  -> ListItemPropsPartial 
-listItemPropsPartial = unsafeCoerce
+listItemClassKey :: ∀ required given. Prim.Row.Union given required ListItemClassKeyOptions => Record given -> ListItemClassKey
+listItemClassKey = Unsafe.Coerce.unsafeCoerce
 
-listItem_component :: ∀ componentProps containerProps props props_
-  . Union props props_ (ListItemProps componentProps containerProps)
-  => Record props 
-  -> JSX
-listItem_component = element _ListItem
+type ListItemClassKeyOptionsJSS  = ListItemClassKeyGenericOptions MUI.Core.JSS
 
-listItem :: ∀ props props_
-  . Union props props_ (ListItemProps Props_li Props_div)
-  => Record props 
-  -> JSX
-listItem = element _ListItem
+foreign import data ListItemClassKeyJSS :: Type
 
+listItemClassKeyJSS :: ∀ required given. Prim.Row.Union given required ListItemClassKeyOptionsJSS => Record given -> ListItemClassKeyJSS
+listItemClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-foreign import _ListItem :: ∀ a. ReactComponent a
+foreign import _ListItem :: ∀ a. React.Basic.ReactComponent a
+
+listItem :: ∀ required given. Prim.Row.Union given required (ListItemPropsOptions React.Basic.DOM.Props_li) => Record given -> React.Basic.JSX
+listItem = React.Basic.element _ListItem
+
+listItem_component :: ∀ required given componentProps. Prim.Row.Union given required (ListItemPropsOptions componentProps) => Record given -> React.Basic.JSX
+listItem_component = React.Basic.element _ListItem

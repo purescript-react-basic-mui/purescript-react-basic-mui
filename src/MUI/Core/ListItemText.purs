@@ -1,62 +1,41 @@
 module MUI.Core.ListItemText where
 
-import MUI.Core (JSS)
-import MUI.Core.Typography (TypographyProps)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Typography (TypographyClassKey) as MUI.Core.Typography
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type ListItemTextProps componentProps =
-  ( children :: Array JSX
-  , classes :: ListItemTextClassKey
-  , disableTypography :: Boolean
-  , inset :: Boolean
-  , primary :: JSX
-  , primaryTypographyProps :: TypographyProps
-  , secondary :: JSX
-  , secondaryTypographyProps :: TypographyProps
-  | componentProps
-  )
+type ListItemTextPropsOptions componentProps = ( classes :: ListItemTextClassKey, disableTypography :: Boolean, inset :: Boolean, primary :: React.Basic.JSX, primaryTypographyProps :: MUI.Core.Typography.TypographyClassKey, secondary :: React.Basic.JSX, secondaryTypographyProps :: MUI.Core.Typography.TypographyClassKey | componentProps )
 
-foreign import data ListItemTextClassKey :: Type
-foreign import data ListItemTextClassKeyJSS :: Type
+foreign import data ListItemTextProps :: Type
+
 foreign import data ListItemTextPropsPartial :: Type
 
-type ListItemTextClassKeyOptionsJSS = ListItemTextClassKeyOptionsR JSS
-type ListItemTextClassKeyOptions = ListItemTextClassKeyOptionsR String
-type ListItemTextClassKeyOptionsR a =
-  ( root :: a
-  , multiline :: a
-  , dense :: a
-  , inset :: a
-  , primary :: a
-  , secondary :: a
-  )
+listItemTextPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (ListItemTextPropsOptions React.Basic.DOM.Props_div) => Record options -> ListItemTextPropsPartial
+listItemTextPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-listItemTextClassKey :: ∀ options options_
-  . Union options options_ ListItemTextClassKeyOptions
-  => Record options
-  -> ListItemTextClassKey
-listItemTextClassKey = unsafeCoerce
+type ListItemTextClassKeyGenericOptions a = ( dense :: a, inset :: a, multiline :: a, primary :: a, root :: a, secondary :: a )
 
-listItemTextClassKeyJSS :: ∀ options options_
-  . Union options options_ ListItemTextClassKeyOptionsJSS
-  => Record options
-  -> ListItemTextClassKeyJSS
-listItemTextClassKeyJSS = unsafeCoerce
+type ListItemTextClassKeyOptions  = ListItemTextClassKeyGenericOptions String
 
+foreign import data ListItemTextClassKey :: Type
 
-listItemTextPropsPartial :: ∀ props props_
-  . Union props props_ (ListItemTextProps Props_div)
-  => Record props 
-  -> ListItemTextPropsPartial 
-listItemTextPropsPartial = unsafeCoerce
+listItemTextClassKey :: ∀ required given. Prim.Row.Union given required ListItemTextClassKeyOptions => Record given -> ListItemTextClassKey
+listItemTextClassKey = Unsafe.Coerce.unsafeCoerce
 
-listItemText :: ∀ props props_
-  . Union props props_ (ListItemTextProps Props_div)
-  => Record props 
-  -> JSX
-listItemText = element _ListItemText
+type ListItemTextClassKeyOptionsJSS  = ListItemTextClassKeyGenericOptions MUI.Core.JSS
 
-foreign import _ListItemText :: ∀ a. ReactComponent a
+foreign import data ListItemTextClassKeyJSS :: Type
+
+listItemTextClassKeyJSS :: ∀ required given. Prim.Row.Union given required ListItemTextClassKeyOptionsJSS => Record given -> ListItemTextClassKeyJSS
+listItemTextClassKeyJSS = Unsafe.Coerce.unsafeCoerce
+
+foreign import _ListItemText :: ∀ a. React.Basic.ReactComponent a
+
+listItemText :: ∀ required given. Prim.Row.Union given required (ListItemTextPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+listItemText = React.Basic.element _ListItemText
+
+listItemText_component :: ∀ required given componentProps. Prim.Row.Union given required (ListItemTextPropsOptions componentProps) => Record given -> React.Basic.JSX
+listItemText_component = React.Basic.element _ListItemText
