@@ -9,6 +9,7 @@ import Data.Char.Unicode (isUpper)
 import Data.Either (Either(..), fromRight)
 import Data.Foldable (foldMap, intercalate)
 import Data.Functor.Mu (Mu(..)) as Mu
+import Data.Int (binary)
 import Data.List (intercalate) as List
 import Data.Map (toUnfoldable) as Map
 import Data.Maybe (Maybe(..))
@@ -87,7 +88,7 @@ printValueBindingFields { value: { binders, name: Ident name, expr }, signature 
       <> v
   where
     bs = if Array.null binders then mempty else " " <> line (map unwrap binders)
-    v = name <> bs <> " = " <> para printExpr expr
+    v = name <> bs <> " = " <> (cata printExpr expr { precedence: Zero, binary: Nothing })
 
 printModuleName :: ModuleName -> String
 printModuleName (ModuleName n) = n
@@ -98,24 +99,52 @@ printQualifiedName { moduleName: Just m, name } = case m of
   (ModuleName "Prelude") -> unwrap name
   otherwise -> printModuleName m <> "." <> unwrap name
 
+-- | I'm not sure about this whole minimal parens printing strategy
+-- | so please correct me if I'm wrong.
+data Precedence = Zero | One | Two | Three | Four | Five | Six | Seven | Eight | Nine
+derive instance eqPrecedence ∷ Eq Precedence
+derive instance ordPrecedence ∷ Ord Precedence
+data Branch = BranchLeft | BranchRight
+data Associativity = AssocLeft | AssocRight
+type ExprPrintingContext =
+  { precedence ∷ Precedence
+  , binary ∷ Maybe
+    { assoc ∷ Associativity
+    , branch ∷ Branch
+    }
+  }
+
 -- | We are using here GAlgebra to get
 -- | a bit nicer output for an application but
 -- | probably we should just use the same strategy
 -- | as in case of `printType` and pass printing context.
-printExpr :: GAlgebra (Tuple Expr) ExprF String
+printExpr :: Algebra ExprF (ExprPrintingContext -> String)
 printExpr = case _ of
-  ExprBoolean b -> show $ b
-  ExprApp (Tuple (Mu.In (ExprApp _ _)) x) y -> "(" <> x <> ") (" <> snd y <> ")"
-  ExprApp x (Tuple (Mu.In (ExprApp _ _)) y) -> "(" <> snd x <> ") (" <> y <> ")"
-  ExprApp x y -> snd x <> " " <> snd y
-  ExprArray arr -> "[" <> intercalate ", " (map snd arr) <> "]"
-  ExprIdent x -> printQualifiedName x
-  ExprNumber n ->  show n
-  ExprRecord props -> "{ " <> intercalate ", " props' <> " }"
+  ExprBoolean b -> const $ show b
+  ExprApp x y -> case _ of
+    { precedence, binary: Just { assoc, branch }} → case precedence `compare` Six, assoc, branch of
+      GT, _, _ → "(" <> sub <> ")"
+      EQ, AssocLeft, BranchRight → "(" <> sub <> ")"
+      EQ, AssocRight, BranchLeft → "(" <> sub <> ")"
+      _, _, _ → sub
+    { precedence } → if precedence < Six
+      then sub
+      else "(" <> sub <> ")"
+    where
+      sub =
+        x { precedence: Six, binary: Just { assoc: AssocLeft, branch: BranchLeft }}
+        <> " "
+        <> y { precedence: Six, binary: Just { assoc: AssocLeft, branch: BranchRight }}
+  ExprArray arr -> const $ "[" <> intercalate ", " (map (_ $ zero ) arr) <> "]"
+  ExprIdent x -> const $ printQualifiedName x
+  ExprNumber n ->  const $ show n
+  ExprRecord props -> const $ "{ " <> intercalate ", " props' <> " }"
     where
       props' :: Array String
-      props' = map (\(Tuple n v) -> n <> ": " <> snd v) <<< Map.toUnfoldable $ props
-  ExprString s -> show s
+      props' = map (\(Tuple n v) -> n <> ": " <> v zero) <<< Map.toUnfoldable $ props
+  ExprString s -> const $ show s
+  where
+    zero = { precedence: Zero, binary: Nothing }
 
 data PrintingContext = StandAlone | InApplication | InArr
 

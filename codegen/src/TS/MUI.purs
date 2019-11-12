@@ -296,14 +296,17 @@ componentConstructorsAST { componentName, extraVars, hasStyles, inherits, propsC
                 (Ident $ componentName' <> "WithStyles")
                 [Ident "style"]
                 (Expr.app
+                  (Expr.ident "React.Basic.element")
                   (Expr.app
-                    (Expr.ident "React.Basic.element")
                     (Expr.app
-                      (Expr.app exprUnsafeCoerce (Expr.ident "MUI.Core.Styles.WithStyles.withStyles"))
+                      (Expr.app
+                        exprUnsafeCoerce
+                        (Expr.ident "MUI.Core.Styles.WithStyles.withStyles")
+                      )
                       (Expr.ident "style")
                     )
+                    componentValue.var
                   )
-                  componentValue.var
                 )
                 (Just signature)
 
