@@ -4,7 +4,7 @@ import Prelude
 
 import Codegen.AST.Imports (declarationImports, importsDeclarations)
 import Codegen.AST.Types (Declaration(..), Expr, ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), QualifiedName, RowF(..), TypeF(..), TypeName(..), ValueBindingFields, reservedNames)
-import Data.Array (cons, fromFoldable) as Array
+import Data.Array (cons, fromFoldable, null) as Array
 import Data.Char.Unicode (isUpper)
 import Data.Either (Either(..), fromRight)
 import Data.Foldable (foldMap, intercalate)
@@ -86,7 +86,8 @@ printValueBindingFields { value: { binders, name: Ident name, expr }, signature 
       <> "\n"
       <> v
   where
-    v = name <> line (map unwrap binders) <> " = " <> para printExpr expr
+    bs = if Array.null binders then mempty else " " <> line (map unwrap binders)
+    v = name <> bs <> " = " <> para printExpr expr
 
 printModuleName :: ModuleName -> String
 printModuleName (ModuleName n) = n
@@ -105,7 +106,7 @@ printExpr :: GAlgebra (Tuple Expr) ExprF String
 printExpr = case _ of
   ExprBoolean b -> show $ b
   ExprApp (Tuple (Mu.In (ExprApp _ _)) x) y -> "(" <> x <> ") (" <> snd y <> ")"
-  ExprApp x (Tuple (Mu.In (ExprApp _ _)) y) -> snd x <> ") (" <> y <> ")"
+  ExprApp x (Tuple (Mu.In (ExprApp _ _)) y) -> "(" <> snd x <> ") (" <> y <> ")"
   ExprApp x y -> snd x <> " " <> snd y
   ExprArray arr -> "[" <> intercalate ", " (map snd arr) <> "]"
   ExprIdent x -> printQualifiedName x
@@ -116,13 +117,18 @@ printExpr = case _ of
       props' = map (\(Tuple n v) -> n <> ": " <> snd v) <<< Map.toUnfoldable $ props
   ExprString s -> show s
 
-data PrintingContext = StandAlone | InApplication
+data PrintingContext = StandAlone | InApplication | InArr
 
 printType :: Algebra TypeF (PrintingContext -> String)
 printType = case _ of
   TypeApp l params -> parens (line $ Array.cons (l InApplication) (map (_ $ InApplication) params))
   TypeArray t -> parens $ "Array "  <> t StandAlone
-  TypeArr f a -> parens $ f StandAlone <> " -> " <> a StandAlone
+  TypeArr f a ->  case _ of
+    InArr → "(" <> s <> ")"
+    InApplication → "(" <> s <> ")"
+    otherwise → s
+    where
+      s = f InArr <> " -> " <> a StandAlone
   TypeBoolean -> const "Boolean"
   TypeConstructor qn -> const $ printQualifiedName qn
   TypeConstrained { className, params } t -> const $
@@ -134,6 +140,7 @@ printType = case _ of
   TypeString -> const $ "String"
   TypeVar (Ident v) -> const $ v
   where
+    parens s InArr = s
     parens s InApplication = "(" <> s <> ")"
     parens s StandAlone = s
 

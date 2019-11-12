@@ -1,7 +1,7 @@
-module MUI.Core.Styles where
+module MUI.Core.Styles.WithStyles where
 
 import MUI.Core (JSS)
-import MUI.Core.Styles.CreateMuiTheme (Theme)
+import MUI.Core.Styles.Types (Theme)
 import React.Basic (ReactComponent)
 
 foreign import withStyles :: ∀ props

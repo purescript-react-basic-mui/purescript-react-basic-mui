@@ -4,6 +4,7 @@ import Prelude
 
 import Codegen.AST (Declaration, Ident, Row, RowLabel, Type)
 import Codegen.AST.Sugar.Type (app, array, constructor) as Type
+import Codegen.AST.Sugar.Type (forAll')
 import Data.Foldable (intercalate)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
@@ -108,6 +109,9 @@ arrayJSX = Type.array $ jsx
 
 reactComponentApply :: Array Type -> Type
 reactComponentApply = Type.app (Type.constructor "React.Basic.ReactComponent")
+
+reactComponentForallA :: Type
+reactComponentForallA = forAll' "a" \a -> reactComponentApply [a]
 
 divProps :: Type
 divProps = Type.constructor "React.Basic.DOM.Props_div"

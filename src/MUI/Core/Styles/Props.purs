@@ -30,6 +30,7 @@ import MUI.Core.ListItemText (ListItemTextPropsPartial)
 import MUI.Core.Modal (ModalPropsPartial)
 import MUI.Core.Paper (PaperPropsPartial)
 import MUI.Core.SvgIcon (SvgIconPropsPartial)
+import MUI.Core.Styles.Types (ComponentsPropsPartial)
 import MUI.Core.Tab (TabPropsPartial)
 import MUI.Core.Table (TablePropsPartial)
 import MUI.Core.TableBody (TableBodyPropsPartial)
@@ -146,8 +147,6 @@ type ComponentsProps =
   , "MuiTypography" :: TypographyProps
   --, "MuiWithWidth" :: WithWidthOptions
   )
-
-foreign import data ComponentsPropsPartial :: Type
 
 componentsPropsPartial :: ∀ props props_
   .  Union props props_ ComponentsProps
