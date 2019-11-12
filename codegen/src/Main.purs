@@ -719,6 +719,35 @@ components =
       }
 
 
+    -- | TODO issue with WrapReversed not getting quotes, spacing has issues
+    grid = simpleComponent
+      { inherits: Just divProps
+      , name: "Grid"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ children
+              ]
+          , generate: 
+              [ 
+              -- "alignContent" 
+              --, "alignItems"
+                "classes"
+              , "container"
+              --, "direction"
+              , "item"
+              --, "justify"
+              , "lg"
+              , "md"
+              , "sm"
+              -- , "spacing"
+              --, "wrap"
+              , "xl"
+              , "xs"
+              , "zeroMinWidth"
+              ]
+          }
+      }
+
 
     gridList =
       let
@@ -727,7 +756,7 @@ components =
           , component
           ]
         in simpleComponent
-          { inherits: Nothing
+          { inherits: Just $ Type.constructor "React.Basic.DOM.Props_ul"
           , name: "GridList"
           , propsType:
             { base
@@ -742,13 +771,162 @@ components =
           , component
           ]
         in simpleComponent
-          { inherits: Nothing
+          { inherits: Just $ Type.constructor "React.Basic.DOM.Props_li"
           , name: "GridListTile"
           , propsType:
             { base
             , generate: [ "classes", "cols", "rows" ]
             }
           }
+
+    gridListTileBar = simpleComponent
+      { inherits: Nothing
+      , name: "GridListTileBar"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ Tuple "actionIcon" jsx
+              , Tuple "subtitle" jsx
+              , Tuple "title" jsx
+              ]
+          , generate: 
+              [ "classes"
+              , "actionPosition"
+              , "titlePosition"
+              ]
+          }
+      }
+
+
+
+    -- | TODO update when Transition is figured out
+    grow = simpleComponent
+      { inherits: Nothing
+      , name: "Grow"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ 
+              ]
+          , generate: 
+              [ "in"
+              , "timeout"
+              ]
+          }
+      }
+
+    hidden = simpleComponent
+      { inherits: Nothing
+      , name: "Hidden"
+      , propsType:
+          { base: emptyBase 
+          , generate: 
+              [ "implementation"
+              , "initialWidth"
+              , "lgDown"
+              , "lgUp"
+              , "mdDown"
+              , "mdUp"
+              , "only"
+              , "smDown"
+              , "smUp"
+              , "xlDown"
+              , "xlUp"
+              , "xsDown"
+              , "xsUp"
+              ]
+          }
+      }
+
+
+    icon = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
+      , name: "Icon"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ component
+              ]
+          , generate: 
+              [ "classes" 
+              , "color"
+              , "fontSize"
+              ]
+          }
+      }
+
+    iconButton = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ divProps ]
+      , name: "IconButton"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ children
+              ]
+          , generate: 
+              [ "classes" 
+              , "color"
+              , "disabled"
+              , "disableFocusRipple"
+              , "disableRipple"
+              , "edge"
+              , "size"
+              ]
+          }
+      }
+
+    input = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.InputBase.InputBasePropsOptions") [ divProps ]
+      , name: "Input"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+            [ Tuple "defaultValue" foreignType
+            , Tuple "endAdornment" jsx
+            , Tuple "inputProps" foreignType
+            , Tuple "inputRef" foreignType
+            , Tuple "startAdornment" jsx
+            , Tuple "value" foreignType
+            , eventHandlerProp "onChange"
+            ]
+        , generate:
+          [ "autoComplete"
+          , "autoFocus"
+          , "classes"
+          , "className"
+          , "color"
+          , "disabled"
+          , "error"
+          , "fullWidth"
+          , "id"
+          , "margin"
+          , "multiline"
+          , "name"
+          , "placeholder"
+          , "readOnly"
+          , "required"
+          , "rows"
+          , "rowsMax"
+          , "type"
+          ]
+        }
+      }
+
+
+    inputAdornment = simpleComponent
+      { inherits: Just divProps
+      , name: "InputAdornment"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+            [ children
+            , component
+            ]
+        , generate:
+          [ "classes" 
+          , "disablePointerEvents"
+          , "disableTypography"
+          , "position"
+          , "variant"
+          ]
+        }
+      }
+
+
 
     -- | TODO: inputProps should be something like ReactComponent { | InputProps }
     inputBase = simpleComponent
@@ -787,10 +965,30 @@ components =
         }
       }
 
-
+    inputLabel = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.FormLabel.FormLabelPropsOptions") [ Type.constructor "React.Basic.DOM.Props_label" ]
+      , name: "InputLabel"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+            [ children
+            ]
+        , generate:
+          [ "classes" 
+          , "color"
+          , "disableAnimation"
+          , "disabled"
+          , "error"
+          , "focused"
+          , "margin"
+          , "required"
+          , "shrink"
+          , "variant"
+          ]
+        }
+      }
 
     linearProgress = simpleComponent
-      { inherits: Nothing
+      { inherits: Just divProps
       , name: "LinearProgress"
       , propsType:
         { base: emptyBase
@@ -964,9 +1162,18 @@ components =
     , formGroup
     , formHelperText
     , formLabel
+    , grid
     , gridList
     , gridListTile
+    , gridListTileBar
+    , grow
+    --, hidden
+    , icon
+    , iconButton
+    , input
+    , inputAdornment
     , inputBase
+    , inputLabel
     , linearProgress
     , menu
     , menuItem

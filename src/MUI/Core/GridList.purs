@@ -3,7 +3,7 @@ module MUI.Core.GridList where
 import MUI.Core (JSS) as MUI.Core
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
-import React.Basic.DOM (Props_div) as React.Basic.DOM
+import React.Basic.DOM (Props_ul) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
 foreign import data CellHeight :: Type
@@ -17,7 +17,7 @@ foreign import data GridListProps :: Type
 
 foreign import data GridListPropsPartial :: Type
 
-gridListPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (GridListPropsOptions React.Basic.DOM.Props_div) => Record options -> GridListPropsPartial
+gridListPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (GridListPropsOptions React.Basic.DOM.Props_ul) => Record options -> GridListPropsPartial
 gridListPropsPartial = Unsafe.Coerce.unsafeCoerce
 
 type GridListClassKeyGenericOptions a = ( root :: a )
@@ -38,7 +38,7 @@ gridListClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
 foreign import _GridList :: ∀ a. React.Basic.ReactComponent a
 
-gridList :: ∀ required given. Prim.Row.Union given required (GridListPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+gridList :: ∀ required given. Prim.Row.Union given required (GridListPropsOptions React.Basic.DOM.Props_ul) => Record given -> React.Basic.JSX
 gridList = React.Basic.element _GridList
 
 gridList_component :: ∀ required given componentProps. Prim.Row.Union given required (GridListPropsOptions componentProps) => Record given -> React.Basic.JSX

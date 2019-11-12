@@ -1,111 +1,67 @@
 module MUI.Core.IconButton where
 
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.ButtonBase (ButtonBasePropsOptions) as MUI.Core.ButtonBase
 import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-import MUI.Core (JSS)
-import MUI.Core.ButtonBase (ButtonBasePropsOptions)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_button)
-import Unsafe.Coerce (unsafeCoerce)
+foreign import data Size :: Type
 
-type IconButtonPropsOptions componentProps = 
-  ( children :: (Array JSX)
-  , classes :: IconButtonClassKey
-  , color :: ColorProp
-  , disabled :: Boolean
-  , disableFocusRipple :: Boolean
-  , disableRipple :: Boolean
-  , edge :: EdgeProp
-  , size :: SizeProp
-  | componentProps
-  )
+size :: { medium :: Size, small :: Size }
+size = { medium: Unsafe.Coerce.unsafeCoerce "medium", small: Unsafe.Coerce.unsafeCoerce "small" }
+
+foreign import data Edge :: Type
+
+edge :: { end :: Edge, "false" :: Edge, start :: Edge }
+edge = { end: Unsafe.Coerce.unsafeCoerce "end", false: Unsafe.Coerce.unsafeCoerce false, start: Unsafe.Coerce.unsafeCoerce "start" }
+
+foreign import data Color :: Type
+
+color :: { default :: Color, inherit :: Color, primary :: Color, secondary :: Color }
+color = { default: Unsafe.Coerce.unsafeCoerce "default", inherit: Unsafe.Coerce.unsafeCoerce "inherit", primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary" }
+
+instance eqColor :: Eq Color where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqEdge :: Eq Edge where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqSize :: Eq Size where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type IconButtonPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: IconButtonClassKey, color :: Color, disableFocusRipple :: Boolean, disableRipple :: Boolean, disabled :: Boolean, edge :: Edge, size :: Size | componentProps )
 
 foreign import data IconButtonProps :: Type
 
-type IconButtonPropsPartial = {}
+foreign import data IconButtonPropsPartial :: Type
 
-foreign import data ColorProp :: Type
-foreign import _eqColorProp :: ColorProp -> ColorProp -> Boolean
-foreign import _ordColorProp :: ColorProp -> ColorProp -> Int
-instance eqColorProp :: Eq ColorProp where eq _left _right = _eqColorProp _left _right
-instance ordColorProp :: Ord ColorProp where compare _left _right = compare (_ordColorProp _left _right) (_ordColorProp _right _left)
+iconButtonPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (IconButtonPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_div)) => Record options -> IconButtonPropsPartial
+iconButtonPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-primary :: ColorProp
-primary = unsafeCoerce "primary"
+type IconButtonClassKeyGenericOptions a = ( colorInherit :: a, colorPrimary :: a, colorSecondary :: a, disabled :: a, edgeEnd :: a, edgeStart :: a, label :: a, root :: a, sizeSmall :: a )
 
-secondary :: ColorProp
-secondary = unsafeCoerce "secondary"
+type IconButtonClassKeyOptions  = IconButtonClassKeyGenericOptions String
 
-default :: ColorProp
-default = unsafeCoerce "default"
-
-inherit :: ColorProp
-inherit = unsafeCoerce "inherit"
-foreign import data EdgeProp :: Type
-foreign import _eqEdgeProp :: EdgeProp -> EdgeProp -> Boolean
-foreign import _ordEdgeProp :: EdgeProp -> EdgeProp -> Int
-instance eqEdgeProp :: Eq EdgeProp where eq _left _right = _eqEdgeProp _left _right
-instance ordEdgeProp :: Ord EdgeProp where compare _left _right = compare (_ordEdgeProp _left _right) (_ordEdgeProp _right _left)
-
-start :: EdgeProp
-start = unsafeCoerce "start"
-
-end :: EdgeProp
-end = unsafeCoerce "end"
-
-boolean :: Boolean -> EdgeProp
-boolean value = unsafeCoerce value
-foreign import data SizeProp :: Type
-foreign import _eqSizeProp :: SizeProp -> SizeProp -> Boolean
-foreign import _ordSizeProp :: SizeProp -> SizeProp -> Int
-instance eqSizeProp :: Eq SizeProp where eq _left _right = _eqSizeProp _left _right
-instance ordSizeProp :: Ord SizeProp where compare _left _right = compare (_ordSizeProp _left _right) (_ordSizeProp _right _left)
-
-small :: SizeProp
-small = unsafeCoerce "small"
-
-medium :: SizeProp
-medium = unsafeCoerce "medium"
-
-type IconButtonClassKeyGenericOptions a =
-  ( root :: a 
-  , edgeStart :: a 
-  , edgeEnd :: a 
-  , colorInherit :: a 
-  , colorPrimary :: a 
-  , colorSecondary :: a 
-  , disabled :: a 
-  , sizeSmall :: a 
-  , label :: a 
-  )
-type IconButtonClassKeyOptions = IconButtonClassKeyGenericOptions String
-type IconButtonClassKeyJSSOptions = IconButtonClassKeyGenericOptions JSS
 foreign import data IconButtonClassKey :: Type
+
+iconButtonClassKey :: ∀ required given. Prim.Row.Union given required IconButtonClassKeyOptions => Record given -> IconButtonClassKey
+iconButtonClassKey = Unsafe.Coerce.unsafeCoerce
+
+type IconButtonClassKeyOptionsJSS  = IconButtonClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data IconButtonClassKeyJSS :: Type
 
-iconButtonClassKey :: ∀  given required
-  .  Union given required (IconButtonClassKeyOptions )
-  => Record given
-  -> IconButtonClassKey
-iconButtonClassKey = unsafeCoerce
+iconButtonClassKeyJSS :: ∀ required given. Prim.Row.Union given required IconButtonClassKeyOptionsJSS => Record given -> IconButtonClassKeyJSS
+iconButtonClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-iconButtonClassKeyJSS :: ∀  given required
-  .  Union given required (IconButtonClassKeyJSSOptions )
-  => Record given
-  -> IconButtonClassKeyJSS
-iconButtonClassKeyJSS = unsafeCoerce
+foreign import _IconButton :: ∀ a. React.Basic.ReactComponent a
 
-iconButton :: ∀  given required
-  .  Union given required (IconButtonPropsOptions (ButtonBasePropsOptions Props_button) )
-  => Record given
-  -> JSX
-iconButton = element _IconButton
+iconButton :: ∀ required given. Prim.Row.Union given required (IconButtonPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_div)) => Record given -> React.Basic.JSX
+iconButton = React.Basic.element _IconButton
 
-iconButton_component :: ∀ componentProps given required
-  .  Union given required (IconButtonPropsOptions componentProps)
-  => Record given
-  -> JSX
-iconButton_component = element _IconButton
-
-foreign import _IconButton :: ∀ a. ReactComponent a
+iconButton_component :: ∀ required given componentProps. Prim.Row.Union given required (IconButtonPropsOptions componentProps) => Record given -> React.Basic.JSX
+iconButton_component = React.Basic.element _IconButton
