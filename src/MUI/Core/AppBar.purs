@@ -2,6 +2,8 @@ module MUI.Core.AppBar where
 
 import MUI.Core (JSS) as MUI.Core
 import MUI.Core.Paper (PaperPropsOptions) as MUI.Core.Paper
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -57,3 +59,6 @@ appBar = React.Basic.element _AppBar
 
 appBar_component :: ∀ required given componentProps. Prim.Row.Union given required (AppBarPropsOptions componentProps) => Record given -> React.Basic.JSX
 appBar_component = React.Basic.element _AppBar
+
+appBarWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (AppBarPropsOptions (MUI.Core.Paper.PaperPropsOptions React.Basic.DOM.Props_div)) => Prim.Row.Union jss jss_ AppBarClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+appBarWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _AppBar)

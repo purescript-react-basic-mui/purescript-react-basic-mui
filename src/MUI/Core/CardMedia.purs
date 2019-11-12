@@ -1,6 +1,8 @@
 module MUI.Core.CardMedia where
 
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
@@ -38,3 +40,6 @@ cardMedia = React.Basic.element _CardMedia
 
 cardMedia_component :: ∀ required given componentProps. Prim.Row.Union given required (CardMediaPropsOptions componentProps) => Record given -> React.Basic.JSX
 cardMedia_component = React.Basic.element _CardMedia
+
+cardMediaWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (CardMediaPropsOptions React.Basic.DOM.Props_div) => Prim.Row.Union jss jss_ CardMediaClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+cardMediaWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _CardMedia)

@@ -1,6 +1,8 @@
 module MUI.Core.ListItemText where
 
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import MUI.Core.Typography (TypographyClassKey) as MUI.Core.Typography
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -39,3 +41,6 @@ listItemText = React.Basic.element _ListItemText
 
 listItemText_component :: ∀ required given componentProps. Prim.Row.Union given required (ListItemTextPropsOptions componentProps) => Record given -> React.Basic.JSX
 listItemText_component = React.Basic.element _ListItemText
+
+listItemTextWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (ListItemTextPropsOptions React.Basic.DOM.Props_div) => Prim.Row.Union jss jss_ ListItemTextClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+listItemTextWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _ListItemText)

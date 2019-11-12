@@ -7,7 +7,7 @@ import Codegen (component, icon, write) as Codegen
 import Codegen.AST (Ident(..), ModuleName(..), TypeF(..), TypeName(..))
 import Codegen.AST.Sugar (declType)
 import Codegen.AST.Sugar.Type (app, constrained, constructor, forAll, record, recordApply, row) as Type
-import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, divProps, iconName, jsx, psImportPath, reactComponentApply)
+import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, divProps, iconName, jsx, psImportPath, reactComponentApply, reactComponentForallA)
 import Codegen.Model (componentName) as Model
 import Codegen.TS.MUI (componentProps) as TS.MUI
 import Codegen.TS.MUI (propsTypeName)
@@ -157,11 +157,11 @@ components =
     breadcrumbs = simpleComponent
       { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
       , name: "Breadcrumbs"
-      , propsType: 
+      , propsType:
         { base: basePropsRow [] $ Map.fromFoldable $ 
             [ children
-            -- defaultComponent isn't working, but not sure why
-            --, defaultComponent
+            -- Not found on the TS side
+            -- , component
             , Tuple "separator" jsx
             , Tuple "ref" foreignType
             ]
@@ -1198,6 +1198,14 @@ components =
           in
             Type.constrained "Prim.Row.Union" [ g, r, backdropPropsType] gR
 
+        -- TODO:
+        -- When I want to make this polymorphic it complicates
+        -- codegen of derived components like `dialog` etc.
+        -- How do we want approach this problem.
+        --
+        -- backdropPropsIdent = Ident "backdropProps"
+        -- backdropProps = Type.var backdropPropsIdent
+
         handlers = map eventHandlerProp
           [ "onBackdropClick"
           , "onClose"
@@ -1207,6 +1215,7 @@ components =
 
         base = basePropsRow [ ] $ Map.fromFoldable $
           [ children
+          , Tuple "BackdropComponent" reactComponentForallA
           -- | XXX: Currently we are supporting only monomorphic backdrop
           , Tuple "BackdropProps" backdropProps
           -- , container
@@ -1221,8 +1230,7 @@ components =
         , propsType:
           { base
           , generate:
-            [ "classes"
-            , "closeAfterTransition"
+            [ "closeAfterTransition"
             , "disableAutoFocus"
             , "disableBackdropClick"
             , "disableEnforceFocus"

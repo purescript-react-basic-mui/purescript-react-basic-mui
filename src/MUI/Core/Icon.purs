@@ -1,6 +1,8 @@
 module MUI.Core.Icon where
 
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -56,3 +58,6 @@ icon = React.Basic.element _Icon
 
 icon_component :: ∀ required given componentProps. Prim.Row.Union given required (IconPropsOptions componentProps) => Record given -> React.Basic.JSX
 icon_component = React.Basic.element _Icon
+
+iconWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (IconPropsOptions React.Basic.DOM.Props_span) => Prim.Row.Union jss jss_ IconClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+iconWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _Icon)

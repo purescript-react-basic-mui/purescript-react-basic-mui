@@ -3,6 +3,8 @@ module MUI.Core.ButtonBase where
 import Foreign (Foreign) as Foreign
 import MUI.Core (JSS) as MUI.Core
 import MUI.Core.ButtonBase.TouchRipple (TouchRippleProps) as MUI.Core.ButtonBase.TouchRipple
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -55,3 +57,6 @@ buttonBase = React.Basic.element _ButtonBase
 
 buttonBase_component :: ∀ required given componentProps. Prim.Row.Union given required (ButtonBasePropsOptions componentProps) => Record given -> React.Basic.JSX
 buttonBase_component = React.Basic.element _ButtonBase
+
+buttonBaseWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (ButtonBasePropsOptions (ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Prim.Row.Union jss jss_ ButtonBaseClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+buttonBaseWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _ButtonBase)

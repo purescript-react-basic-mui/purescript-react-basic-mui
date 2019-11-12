@@ -1,6 +1,8 @@
 module MUI.Core.ListSubheader where
 
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -48,3 +50,6 @@ listSubheader = React.Basic.element _ListSubheader
 
 listSubheader_component :: ∀ required given componentProps. Prim.Row.Union given required (ListSubheaderPropsOptions componentProps) => Record given -> React.Basic.JSX
 listSubheader_component = React.Basic.element _ListSubheader
+
+listSubheaderWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (ListSubheaderPropsOptions React.Basic.DOM.Props_li) => Prim.Row.Union jss jss_ ListSubheaderClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+listSubheaderWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _ListSubheader)

@@ -3,6 +3,8 @@ module MUI.Core.NativeSelect where
 import Foreign (Foreign) as Foreign
 import MUI.Core (JSS) as MUI.Core
 import MUI.Core.Input (InputProps, InputPropsOptions) as MUI.Core.Input
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -51,3 +53,6 @@ nativeSelect = React.Basic.element _NativeSelect
 
 nativeSelect_component :: ∀ required given componentProps. Prim.Row.Union given required (NativeSelectPropsOptions componentProps) => Record given -> React.Basic.JSX
 nativeSelect_component = React.Basic.element _NativeSelect
+
+nativeSelectWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (NativeSelectPropsOptions (MUI.Core.Input.InputPropsOptions React.Basic.DOM.Props_div)) => Prim.Row.Union jss jss_ NativeSelectClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+nativeSelectWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _NativeSelect)

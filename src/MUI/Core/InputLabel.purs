@@ -2,6 +2,8 @@ module MUI.Core.InputLabel where
 
 import MUI.Core (JSS) as MUI.Core
 import MUI.Core.FormLabel (FormLabelPropsOptions) as MUI.Core.FormLabel
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -65,3 +67,6 @@ inputLabel = React.Basic.element _InputLabel
 
 inputLabel_component :: ∀ required given componentProps. Prim.Row.Union given required (InputLabelPropsOptions componentProps) => Record given -> React.Basic.JSX
 inputLabel_component = React.Basic.element _InputLabel
+
+inputLabelWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (InputLabelPropsOptions (MUI.Core.FormLabel.FormLabelPropsOptions React.Basic.DOM.Props_label)) => Prim.Row.Union jss jss_ InputLabelClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+inputLabelWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _InputLabel)

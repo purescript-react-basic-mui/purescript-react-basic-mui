@@ -2,6 +2,8 @@ module MUI.Core.Button where
 
 import MUI.Core (JSS) as MUI.Core
 import MUI.Core.ButtonBase (ButtonBasePropsOptions) as MUI.Core.ButtonBase
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -65,3 +67,6 @@ button = React.Basic.element _Button
 
 button_component :: ∀ required given componentProps. Prim.Row.Union given required (ButtonPropsOptions componentProps) => Record given -> React.Basic.JSX
 button_component = React.Basic.element _Button
+
+buttonWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (ButtonPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Prim.Row.Union jss jss_ ButtonClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+buttonWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _Button)

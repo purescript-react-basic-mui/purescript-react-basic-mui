@@ -1,6 +1,8 @@
 module MUI.Core.FormHelperText where
 
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -56,3 +58,6 @@ formHelperText = React.Basic.element _FormHelperText
 
 formHelperText_component :: ∀ required given componentProps. Prim.Row.Union given required (FormHelperTextPropsOptions componentProps) => Record given -> React.Basic.JSX
 formHelperText_component = React.Basic.element _FormHelperText
+
+formHelperTextWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (FormHelperTextPropsOptions React.Basic.DOM.Props_p) => Prim.Row.Union jss jss_ FormHelperTextClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+formHelperTextWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _FormHelperText)

@@ -3,6 +3,8 @@ module MUI.Core.Drawer where
 import MUI.Core (JSS) as MUI.Core
 import MUI.Core.Modal (ModalPropsOptions, ModalPropsPartial) as MUI.Core.Modal
 import MUI.Core.Slide (SlidePropsPartial) as MUI.Core.Slide
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -64,3 +66,6 @@ drawer = React.Basic.element _Drawer
 
 drawer_component :: ∀ required given componentProps. Prim.Row.Union given required (DrawerPropsOptions componentProps) => Record given -> React.Basic.JSX
 drawer_component = React.Basic.element _Drawer
+
+drawerWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (DrawerPropsOptions (MUI.Core.Modal.ModalPropsOptions React.Basic.DOM.Props_div)) => Prim.Row.Union jss jss_ DrawerClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+drawerWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _Drawer)

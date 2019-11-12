@@ -1,6 +1,8 @@
 module MUI.Core.Grid where
 
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -80,3 +82,6 @@ grid = React.Basic.element _Grid
 
 grid_component :: ∀ required given componentProps. Prim.Row.Union given required (GridPropsOptions componentProps) => Record given -> React.Basic.JSX
 grid_component = React.Basic.element _Grid
+
+gridWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (GridPropsOptions React.Basic.DOM.Props_div) => Prim.Row.Union jss jss_ GridClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+gridWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _Grid)

@@ -27,7 +27,6 @@ import MUI.Core.List (ListClassKeyJSS)
 import MUI.Core.ListItem (ListItemClassKeyJSS)
 import MUI.Core.ListItemIcon (ListItemIconClassKeyJSS)
 import MUI.Core.ListItemText (ListItemTextClassKeyJSS)
-import MUI.Core.Modal (ModalClassKeyJSS)
 import MUI.Core.Paper (PaperClassKeyJSS)
 import MUI.Core.SvgIcon (SvgIconClassKeyJSS)
 import MUI.Core.Tab (TabClassKeyJSS)
@@ -108,7 +107,6 @@ type Overrides =
   --, "MuiMenu" :: MenuClassKeyJSS
   --, "MuiMenuItem" :: MenuItemClassKeyJSS
   --, "MuiMobileStepper" :: MobileStepperClassKeyJSS
-  , "MuiModal" :: ModalClassKeyJSS
   --, "MuiNativeSelect" :: NativeSelectClassKeyJSS
   --, "MuiOutlinedInput" :: OutlinedInputClassKeyJSS
   , "MuiPaper" :: PaperClassKeyJSS

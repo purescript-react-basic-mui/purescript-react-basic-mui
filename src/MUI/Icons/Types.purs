@@ -5,8 +5,8 @@ module MUI.Icons.Types
   )
   where
 
-import MUI.Core.Styles (withStyles)
 import MUI.Core.Styles.CreateMuiTheme (Theme)
+import MUI.Core.Styles.WithStyles (withStyles)
 import MUI.Core.SvgIcon (SvgIconProps, SvgIconClassKeyOptionsJSS)
 import Prim.Row (class Union)
 import React.Basic (JSX, ReactComponent, element)

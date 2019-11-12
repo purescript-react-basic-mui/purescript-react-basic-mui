@@ -2,6 +2,8 @@ module MUI.Core.FormControlLabel where
 
 import Foreign (Foreign) as Foreign
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -50,3 +52,6 @@ formControlLabel = React.Basic.element _FormControlLabel
 
 formControlLabel_component :: ∀ required given componentProps. Prim.Row.Union given required (FormControlLabelPropsOptions componentProps) => Record given -> React.Basic.JSX
 formControlLabel_component = React.Basic.element _FormControlLabel
+
+formControlLabelWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (FormControlLabelPropsOptions React.Basic.DOM.Props_label) => Prim.Row.Union jss jss_ FormControlLabelClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+formControlLabelWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _FormControlLabel)

@@ -1,6 +1,8 @@
 module MUI.Core.GridList where
 
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_ul) as React.Basic.DOM
@@ -43,3 +45,6 @@ gridList = React.Basic.element _GridList
 
 gridList_component :: ∀ required given componentProps. Prim.Row.Union given required (GridListPropsOptions componentProps) => Record given -> React.Basic.JSX
 gridList_component = React.Basic.element _GridList
+
+gridListWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (GridListPropsOptions React.Basic.DOM.Props_ul) => Prim.Row.Union jss jss_ GridListClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+gridListWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _GridList)

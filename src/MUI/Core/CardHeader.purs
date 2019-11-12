@@ -1,6 +1,8 @@
 module MUI.Core.CardHeader where
 
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import MUI.Core.Typography (TypographyProps) as MUI.Core.Typography
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -39,3 +41,6 @@ cardHeader = React.Basic.element _CardHeader
 
 cardHeader_component :: ∀ required given componentProps. Prim.Row.Union given required (CardHeaderPropsOptions componentProps) => Record given -> React.Basic.JSX
 cardHeader_component = React.Basic.element _CardHeader
+
+cardHeaderWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (CardHeaderPropsOptions React.Basic.DOM.Props_div) => Prim.Row.Union jss jss_ CardHeaderClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+cardHeaderWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _CardHeader)

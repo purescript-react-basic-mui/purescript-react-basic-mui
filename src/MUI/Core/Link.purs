@@ -1,6 +1,8 @@
 module MUI.Core.Link where
 
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import MUI.Core.Typography (TypographyClassKey) as MUI.Core.Typography
 import Prelude
 import Prim.Row (class Union) as Prim.Row
@@ -65,3 +67,6 @@ link = React.Basic.element _Link
 
 link_component :: ∀ required given componentProps. Prim.Row.Union given required (LinkPropsOptions componentProps) => Record given -> React.Basic.JSX
 link_component = React.Basic.element _Link
+
+linkWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (LinkPropsOptions React.Basic.DOM.Props_a) => Prim.Row.Union jss jss_ LinkClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+linkWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _Link)

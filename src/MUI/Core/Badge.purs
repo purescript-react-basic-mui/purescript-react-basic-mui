@@ -1,6 +1,8 @@
 module MUI.Core.Badge where
 
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -72,3 +74,6 @@ badge = React.Basic.element _Badge
 
 badge_component :: ∀ required given componentProps. Prim.Row.Union given required (BadgePropsOptions componentProps) => Record given -> React.Basic.JSX
 badge_component = React.Basic.element _Badge
+
+badgeWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (BadgePropsOptions React.Basic.DOM.Props_div) => Prim.Row.Union jss jss_ BadgeClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+badgeWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _Badge)

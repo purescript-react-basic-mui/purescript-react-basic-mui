@@ -1,6 +1,8 @@
 module MUI.Core.BottomNavigation where
 
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
@@ -39,3 +41,6 @@ bottomNavigation = React.Basic.element _BottomNavigation
 
 bottomNavigation_component :: ∀ required given componentProps. Prim.Row.Union given required (BottomNavigationPropsOptions componentProps) => Record given -> React.Basic.JSX
 bottomNavigation_component = React.Basic.element _BottomNavigation
+
+bottomNavigationWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (BottomNavigationPropsOptions React.Basic.DOM.Props_div) => Prim.Row.Union jss jss_ BottomNavigationClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+bottomNavigationWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _BottomNavigation)

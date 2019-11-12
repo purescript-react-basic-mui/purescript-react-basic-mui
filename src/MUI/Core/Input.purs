@@ -3,6 +3,8 @@ module MUI.Core.Input where
 import Foreign (Foreign) as Foreign
 import MUI.Core (JSS) as MUI.Core
 import MUI.Core.InputBase (InputBasePropsOptions) as MUI.Core.InputBase
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -69,3 +71,6 @@ input = React.Basic.element _Input
 
 input_component :: ∀ required given componentProps. Prim.Row.Union given required (InputPropsOptions componentProps) => Record given -> React.Basic.JSX
 input_component = React.Basic.element _Input
+
+inputWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (InputPropsOptions (MUI.Core.InputBase.InputBasePropsOptions React.Basic.DOM.Props_div)) => Prim.Row.Union jss jss_ InputClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+inputWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _Input)

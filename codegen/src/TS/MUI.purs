@@ -12,28 +12,30 @@ import Codegen.AST.Sugar.Type (constrained, forAll, forAll', forAllWith, recordA
 import Codegen.Model (Component, ComponentName, ModulePath, componentFullPath, jsImportPath, psImportPath, reactComponentApply)
 import Codegen.Model (componentName, jsx) as Model
 import Codegen.TS.Module (PossibleType(..), astAlgebra, declarations, exprUnsafeCoerce, unionDeclarations) as TS.Module
+import Codegen.TS.Module (exprUnsafeCoerce)
 import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.State (runState)
-import Data.Array (elem, filter, fromFoldable, null, singleton, tail, toUnfoldable) as Array
+import Control.Monad.Writer (execWriter)
+import Control.Monad.Writer.Class (tell)
+import Data.Array (cons, elem, filter, fromFoldable, null, singleton, tail, toUnfoldable) as Array
 import Data.Either (Either(..))
 import Data.Foldable (foldr)
 import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Functor.Mu (roll)
-import Data.List (List(..), fromFoldable) as List
+import Data.List (List(..), fromFoldable, singleton) as List
 import Data.List (List)
 import Data.Map (Map)
 import Data.Map (filterKeys, fromFoldable, keys, lookup, singleton) as Map
 import Data.Map.Internal (keys) as Map.Internal
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
+import Data.Maybe (Maybe(..), fromMaybe, isJust, maybe)
 import Data.Newtype (unwrap)
 import Data.Set (member) as Set
 import Data.String (joinWith)
 import Data.String.Extra (camelCase)
 import Data.Traversable (for)
 import Data.Tuple (Tuple(..))
-import Data.Unfoldable (fromMaybe) as Unfoldable
 import Matryoshka (cata, cataM)
 import ReadDTS.Instantiation (Property, Type, TypeF(..)) as Instantiation
 import ReadDTS.Instantiation.Pretty (pprintTypeName)
@@ -124,23 +126,25 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
         c' = Type.typeRow $ Type.row (classesProp <> labels <> base'.labels) base'.tail
         propsOptionsTypeDecl = declType (AST.TypeName $ propsName <> "Options") vars c'
         propsTypeDecl = declForeignData (AST.TypeName $ propsName)
+        extraVars = case Array.tail propsType.base.vars of
+          Just arr → arr
+          Nothing → []
 
         -- For example:
         --
         -- foreign import data ModalPropsPartial ∷ Type
         -- modalPropsPartial :: ∀ options options_
-        --   . Union options options_ (ModalProps Props_div x)
+        --   . Union options options_ (ModalProps Props_div)
         --   => Record options
         --   -> ModalPropsPartial
         -- modalPropsPartial = unsafeCoerce
         propsPartial = declForeignData (AST.TypeName $ propsName <> "Partial")
         propsPartialConstructor =
           let
-            vars' = join (Unfoldable.fromMaybe (Array.tail propsType.base.vars))
-            signature = forAllWith vars' { o: "options", o_: "options_"} $ \{ o, o_ } ->
+            signature = forAllWith extraVars { o: "options", o_: "options_"} $ \{ o, o_ } ->
               let
                 inherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") inherits
-                u = Type.app propsOptionsTypeDecl.constructor ([ inherits' ] <> (map Type.var vars'))
+                u = Type.app propsOptionsTypeDecl.constructor ([ inherits' ] <> (map Type.var extraVars))
                 fun = Type.arr (recordApply o) propsPartial.constructor
               in
                 constrained "Prim.Row.Union" [ o, o_, u] fun
@@ -176,7 +180,13 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
           <> List.fromFoldable extraDeclarations
           <> propsDeclarations
           <> maybe mempty _.declarations classes
-          <> componentConstructorsAST propsOptionsTypeDecl.constructor inherits componentName
+          <> componentConstructorsAST
+            { componentName
+            , extraVars
+            , hasStyles: isJust classes
+            , inherits
+            , propsConstructor: propsOptionsTypeDecl.constructor
+            }
 
       pure $ AST.Module $
         { declarations
@@ -192,59 +202,114 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
 
 -- | TODO: This is codegen doesn't use typescript AST at all
 -- | so we should move it up.
-componentConstructorsAST :: AST.Type -> Maybe AST.Type -> ComponentName -> List Declaration
-componentConstructorsAST propsConstructor inherits componentName =
-  let
-    componentName' = camelCase componentName
-    componentValue = foreignReactComponentDecl componentName
-    inherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") inherits
-
-    -- | For example:
-    -- | appBar :: ∀  given required
-    -- |   .  Union given required (AppBarPropsOptions (PaperProps Props_div) )
-    -- |   => Record given
-    -- |   -> JSX
-    -- | appBar = element _AppBar
-    componentConstructor =
+componentConstructorsAST ::
+  { componentName :: ComponentName
+  , extraVars :: Array Ident
+  , hasStyles :: Boolean
+  , inherits :: Maybe AST.Type
+  , propsConstructor :: AST.Type
+  }
+  -> List Declaration
+componentConstructorsAST { componentName, extraVars, hasStyles, inherits, propsConstructor } = constructors
+  where
+    -- | Maybe this `Writer` here is a bit overkill ;-)
+    constructors = execWriter do
       let
-        signature = forAll { g: "given", r: "required"} $ \{ g, r } ->
-          let
-            fun = Type.arr (recordApply g) Model.jsx
-            u = Type.app propsConstructor [ inherits' ]
-          in
-            constrained "Prim.Row.Union" [ g, r, u] fun
-      in
-        declValue
-          (Ident componentName')
-          []
-          (Expr.app (Expr.ident "React.Basic.element") componentValue.var)
-          (Just signature)
+        componentName' = camelCase componentName
+        inherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") inherits
+        componentValue = foreignReactComponentDecl componentName
 
-    -- | For example:
-    -- | appBar :: ∀  componentProps given required
-    -- |   .  Union given required (AppBarPropsOptions componentProps)
-    -- |   => Record given
-    -- |   -> JSX
-    -- | appBar = element _AppBar
-    componentConstructor' =
-      let
-        signature = forAll { c: "componentProps", g: "given", r: "required"} $ \{ c, g, r } ->
+        -- | For example:
+        -- | appBar :: ∀  given required
+        -- |   .  Union given required (AppBarPropsOptions (PaperProps Props_div) )
+        -- |   => Record given
+        -- |   -> JSX
+        -- | appBar = element _AppBar
+        componentConstructor =
           let
-            fun = Type.arr (recordApply g) Model.jsx
-            u = Type.app propsConstructor [ c ]
+            signature = forAllWith extraVars { g: "given", r: "required"} $ \{ g, r } ->
+              let
+                fun = Type.arr (recordApply g) Model.jsx
+                extraVars' = map Type.var extraVars
+                u = Type.app propsConstructor (Array.cons inherits' extraVars')
+              in
+                constrained "Prim.Row.Union" [ g, r, u ] fun
           in
-            constrained "Prim.Row.Union" [ g, r, u] fun
-      in
-        declValue
-          (Ident $ componentName' <> "_component")
-          []
-          (Expr.app (Expr.ident "React.Basic.element") componentValue.var)
-          (Just signature)
-  in Array.toUnfoldable
-    [ componentValue.declaration
-    , componentConstructor.declaration
-    , componentConstructor'.declaration
-    ]
+            declValue
+              (Ident componentName')
+              []
+              (Expr.app (Expr.ident "React.Basic.element") componentValue.var)
+              (Just signature)
+
+        -- | For example:
+        -- | appBar :: ∀  componentProps given required
+        -- |   .  Union given required (AppBarPropsOptions componentProps)
+        -- |   => Record given
+        -- |   -> JSX
+        -- | appBar = element _AppBar
+        componentConstructor' =
+          let
+            signature = forAllWith extraVars { c: "componentProps", g: "given", r: "required"} $ \{ c, g, r } ->
+              let
+                fun = Type.arr (recordApply g) Model.jsx
+                extraVars' = map Type.var extraVars
+                u = Type.app propsConstructor (Array.cons c extraVars')
+              in
+                constrained "Prim.Row.Union" [ g, r, u] fun
+          in
+            declValue
+              (Ident $ componentName' <> "_component")
+              []
+              (Expr.app (Expr.ident "React.Basic.element") componentValue.var)
+              (Just signature)
+
+      tell $ List.singleton componentValue.declaration
+      tell $ List.singleton componentConstructor.declaration
+      tell $ List.singleton componentConstructor'.declaration
+
+      when hasStyles $ do
+        let
+          -- | For example:
+          -- | appBarWithStyles :: ∀ jss jss_ required given
+          -- |   . Union given required (AppBarPropsOptions (PaperProps Props_div))
+          -- |   => Union jss jss_ AppBarPropsOptionsJSS
+          -- |   => (Theme -> Record jss)
+          -- |   -> Record given
+          -- |   -> JSX
+          -- | appBarWithStyles style = element (unsafeCoerce withStyles style _AppBar)
+          componentConstructorWithStyles =
+            let
+              signature = forAllWith extraVars { g: "given", jss: "jss", jss_: "jss_", r: "required"} $ \{ g, jss, jss_, r } ->
+                let
+                  style = Type.arr (Type.constructor "MUI.Core.Styles.Types.Theme") (recordApply jss)
+                  fun = Type.arr style (Type.arr (recordApply g) Model.jsx)
+                  extraVars' = map Type.var extraVars
+                  u = Type.app propsConstructor (Array.cons inherits' extraVars')
+                in
+                  constrained "Prim.Row.Union" [ g, r, u ]
+                  $ constrained "Prim.Row.Union" [ jss, jss_, Type.constructor $ componentName <> "ClassKeyOptionsJSS" ]
+                  $ fun
+            in
+              declValue
+                (Ident $ componentName' <> "WithStyles")
+                [Ident "style"]
+                (Expr.app
+                  (Expr.ident "React.Basic.element")
+                  (Expr.app
+                    (Expr.app
+                      (Expr.app
+                        exprUnsafeCoerce
+                        (Expr.ident "MUI.Core.Styles.WithStyles.withStyles")
+                      )
+                      (Expr.ident "style")
+                    )
+                    componentValue.var
+                  )
+                )
+                (Just signature)
+
+        tell $ pure componentConstructorWithStyles.declaration
+
 
 -- | Generates all declarations related to classes.
 -- |

@@ -2,6 +2,8 @@ module MUI.Core.Breadcrumbs where
 
 import Foreign (Foreign) as Foreign
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
@@ -39,3 +41,6 @@ breadcrumbs = React.Basic.element _Breadcrumbs
 
 breadcrumbs_component :: ∀ required given componentProps. Prim.Row.Union given required (BreadcrumbsPropsOptions componentProps) => Record given -> React.Basic.JSX
 breadcrumbs_component = React.Basic.element _Breadcrumbs
+
+breadcrumbsWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (BreadcrumbsPropsOptions React.Basic.DOM.Props_div) => Prim.Row.Union jss jss_ BreadcrumbsClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+breadcrumbsWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _Breadcrumbs)

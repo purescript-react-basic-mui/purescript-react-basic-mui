@@ -3,6 +3,8 @@ module MUI.Core.OutlinedInput where
 import Foreign (Foreign) as Foreign
 import MUI.Core (JSS) as MUI.Core
 import MUI.Core.InputBase (InputBasePropsOptions) as MUI.Core.InputBase
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -69,3 +71,6 @@ outlinedInput = React.Basic.element _OutlinedInput
 
 outlinedInput_component :: ∀ required given componentProps. Prim.Row.Union given required (OutlinedInputPropsOptions componentProps) => Record given -> React.Basic.JSX
 outlinedInput_component = React.Basic.element _OutlinedInput
+
+outlinedInputWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (OutlinedInputPropsOptions (MUI.Core.InputBase.InputBasePropsOptions React.Basic.DOM.Props_div)) => Prim.Row.Union jss jss_ OutlinedInputClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+outlinedInputWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _OutlinedInput)

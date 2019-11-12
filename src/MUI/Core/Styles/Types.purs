@@ -1,6 +1,4 @@
-module MUI.Core.Styles.CreateMuiTheme where
-
-import Prelude
+module MUI.Core.Styles.Types where
 
 import Foreign (Foreign, unsafeToForeign)
 import MUI.Core.Styles.CreateBreakpoints (BreakpointsOptions, Breakpoints)
@@ -9,26 +7,15 @@ import MUI.Core.Styles.CreatePalette (PaletteOptions, Palette)
 import MUI.Core.Styles.Shape (ShapeOptions, Shape)
 import MUI.Core.Styles.Transitions (TransitionsOptions, Transitions)
 import MUI.Core.Styles.CreateTypography (Typography, TypographyOptions)
-import MUI.Core.Styles.Types (ComponentsPropsPartial, Direction, OverridesPartial)
 import MUI.Core.Styles.ZIndex (ZIndex, ZIndexOptions)
 import Prim.Row (class Union)
+import Unsafe.Coerce (unsafeCoerce)
 
-type ThemePartial =
-  ( shape :: ShapeOptions
-  , breakpoints :: BreakpointsOptions
-  , direction :: Direction
-  , mixins :: MixinsOptions
-  , overrides :: OverridesPartial
-  , palette :: PaletteOptions
-  , props :: ComponentsPropsPartial 
-  , shadows :: Array String
-  , spacing :: Number -> Number 
-  , transitions :: TransitionsOptions
-  , typography :: TypographyOptions
-  , zIndex :: ZIndexOptions
-  )
+foreign import data OverridesPartial :: Type
 
-type Theme = 
+foreign import data ComponentsPropsPartial :: Type
+
+type Theme =
   { shape :: Shape
   , breakpoints :: Breakpoints
   , direction :: Direction
@@ -43,10 +30,8 @@ type Theme =
   , zIndex :: ZIndex
   }
 
-createMuiTheme :: ∀ options options_
-  . Union options options_ ThemePartial
-  => Record options 
-  -> Theme 
-createMuiTheme = _createMuiTheme <<< unsafeToForeign
+foreign import data Direction :: Type
+-- data Direction = LTR | RTL
+direction :: { ltr ∷ Direction, rtl ∷ Direction }
+direction = { ltr: unsafeCoerce "ltr", rtl: unsafeCoerce "rtl" }
 
-foreign import _createMuiTheme :: Foreign -> Theme

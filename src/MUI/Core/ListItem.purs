@@ -1,6 +1,8 @@
 module MUI.Core.ListItem where
 
 import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_li) as React.Basic.DOM
@@ -38,3 +40,6 @@ listItem = React.Basic.element _ListItem
 
 listItem_component :: ∀ required given componentProps. Prim.Row.Union given required (ListItemPropsOptions componentProps) => Record given -> React.Basic.JSX
 listItem_component = React.Basic.element _ListItem
+
+listItemWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (ListItemPropsOptions React.Basic.DOM.Props_li) => Prim.Row.Union jss jss_ ListItemClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+listItemWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _ListItem)
