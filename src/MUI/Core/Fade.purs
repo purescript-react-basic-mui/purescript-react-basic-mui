@@ -9,6 +9,8 @@ type FadePropsOptions componentProps = ( ref :: Foreign.Foreign | componentProps
 
 foreign import data FadeProps :: Type
 
+foreign import data FadePropsPartial :: Type
+
 foreign import _Fade :: ∀ a. React.Basic.ReactComponent a
 
 fade :: ∀ required given. Prim.Row.Union given required (FadePropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX

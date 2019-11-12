@@ -16,6 +16,8 @@ type BackdropPropsOptions componentProps = ( children :: Array React.Basic.JSX, 
 
 foreign import data BackdropProps :: Type
 
+foreign import data BackdropPropsPartial :: Type
+
 type BackdropClassKeyGenericOptions a = ( invisible :: a, root :: a )
 
 type BackdropClassKeyOptions  = BackdropClassKeyGenericOptions String

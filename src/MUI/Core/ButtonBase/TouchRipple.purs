@@ -10,6 +10,8 @@ type TouchRipplePropsOptions componentProps = ( center :: Boolean, classes :: To
 
 foreign import data TouchRippleProps :: Type
 
+foreign import data TouchRipplePropsPartial :: Type
+
 type TouchRippleClassKeyGenericOptions a = ( child :: a, childLeaving :: a, childPulsate :: a, ripple :: a, ripplePulsate :: a, rippleVisible :: a, root :: a )
 
 type TouchRippleClassKeyOptions  = TouchRippleClassKeyGenericOptions String

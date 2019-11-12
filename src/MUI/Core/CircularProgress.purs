@@ -33,6 +33,8 @@ type CircularProgressPropsOptions componentProps = ( classes :: CircularProgress
 
 foreign import data CircularProgressProps :: Type
 
+foreign import data CircularProgressPropsPartial :: Type
+
 type CircularProgressClassKeyGenericOptions a = ( circle :: a, circleDisableShrink :: a, circleIndeterminate :: a, circleStatic :: a, colorPrimary :: a, colorSecondary :: a, indeterminate :: a, root :: a, static :: a, svg :: a )
 
 type CircularProgressClassKeyOptions  = CircularProgressClassKeyGenericOptions String

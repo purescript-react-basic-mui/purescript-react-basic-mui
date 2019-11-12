@@ -1,83 +1,55 @@
 module MUI.Core.LinearProgress where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-type LinearProgressProps componentProps =
-  ( classes :: LinearProgressClassKey
-  , color :: ColorProp
-  , value :: Number
-  , valueBuffer :: Number
-  , variant :: Variant
-  | componentProps
-  )
+foreign import data Variant :: Type
 
-foreign import data ColorProp :: Type
-data Color = Primary | Secondary
-color :: Color -> ColorProp
-color Primary = unsafeCoerce "primary"
-color Secondary = unsafeCoerce "secondary"
+variant :: { buffer :: Variant, determinate :: Variant, indeterminate :: Variant, query :: Variant }
+variant = { buffer: Unsafe.Coerce.unsafeCoerce "buffer", determinate: Unsafe.Coerce.unsafeCoerce "determinate", indeterminate: Unsafe.Coerce.unsafeCoerce "indeterminate", query: Unsafe.Coerce.unsafeCoerce "query" }
 
-foreign import data VariantProp :: Type
-data Variant = Determinate | Indeterminate | Buffer | Query
-variant :: Variant -> VariantProp
-variant Determinate = unsafeCoerce "determinate"
-variant Indeterminate = unsafeCoerce "indeterminate"
-variant Buffer = unsafeCoerce "buffer"
-variant Query = unsafeCoerce "query"
+foreign import data Color :: Type
 
-foreign import data LinearProgressClassKey :: Type
-foreign import data LinearProgressClassKeyJSS :: Type
+color :: { primary :: Color, secondary :: Color }
+color = { primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary" }
+
+instance eqColor :: Eq Color where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqVariant :: Eq Variant where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type LinearProgressPropsOptions componentProps = ( classes :: LinearProgressClassKey, color :: Color, value :: Number, valueBuffer :: Number, variant :: Variant | componentProps )
+
+foreign import data LinearProgressProps :: Type
+
 foreign import data LinearProgressPropsPartial :: Type
 
-type LinearProgressClassKeyOptionsJSS = LinearProgressClassKeyOptionsR JSS
-type LinearProgressClassKeyOptions = LinearProgressClassKeyOptionsR String
-type LinearProgressClassKeyOptionsR a =
-  ( root :: a
-  , colorPrimary :: a
-  , colorSecondary :: a
-  , determinate :: a
-  , indeterminate :: a
-  , buffer :: a
-  , query :: a
-  , dashed :: a
-  , dashedColorPrimary :: a
-  , dashedColorSecondary :: a
-  , bar :: a
-  , barColorPrimary :: a
-  , barColorSecondary :: a
-  , bar1Indeterminate :: a
-  , bar1Determinate :: a
-  , bar1Buffer :: a
-  , bar2Indeterminate :: a
-  , bar2Buffer :: a
-  )
+type LinearProgressClassKeyGenericOptions a = ( bar :: a, bar1Buffer :: a, bar1Determinate :: a, bar1Indeterminate :: a, bar2Buffer :: a, bar2Indeterminate :: a, barColorPrimary :: a, barColorSecondary :: a, buffer :: a, colorPrimary :: a, colorSecondary :: a, dashed :: a, dashedColorPrimary :: a, dashedColorSecondary :: a, determinate :: a, indeterminate :: a, query :: a, root :: a )
 
-linearProgressClassKey :: ∀ options options_
-  . Union options options_ LinearProgressClassKeyOptions
-  => Record options
-  -> LinearProgressClassKey
-linearProgressClassKey = unsafeCoerce
+type LinearProgressClassKeyOptions  = LinearProgressClassKeyGenericOptions String
 
-linearProgressClassKeyJSS :: ∀ options options_
-  . Union options options_ LinearProgressClassKeyOptionsJSS
-  => Record options
-  -> LinearProgressClassKeyJSS
-linearProgressClassKeyJSS = unsafeCoerce
+foreign import data LinearProgressClassKey :: Type
 
-linearProgress :: ∀ props props_
-  . Union props props_ (LinearProgressProps Props_div)
-  => Record props 
-  -> JSX
-linearProgress = element _LinearProgress
+linearProgressClassKey :: ∀ required given. Prim.Row.Union given required LinearProgressClassKeyOptions => Record given -> LinearProgressClassKey
+linearProgressClassKey = Unsafe.Coerce.unsafeCoerce
 
-linearProgressPropsPartial :: ∀ props props_
-  . Union props props_ (LinearProgressProps Props_div)
-  => Record props 
-  -> LinearProgressPropsPartial 
-linearProgressPropsPartial = unsafeCoerce
+type LinearProgressClassKeyOptionsJSS  = LinearProgressClassKeyGenericOptions MUI.Core.JSS
 
-foreign import _LinearProgress :: ∀ a. ReactComponent a
+foreign import data LinearProgressClassKeyJSS :: Type
+
+linearProgressClassKeyJSS :: ∀ required given. Prim.Row.Union given required LinearProgressClassKeyOptionsJSS => Record given -> LinearProgressClassKeyJSS
+linearProgressClassKeyJSS = Unsafe.Coerce.unsafeCoerce
+
+foreign import _LinearProgress :: ∀ a. React.Basic.ReactComponent a
+
+linearProgress :: ∀ required given. Prim.Row.Union given required (LinearProgressPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+linearProgress = React.Basic.element _LinearProgress
+
+linearProgress_component :: ∀ required given componentProps. Prim.Row.Union given required (LinearProgressPropsOptions componentProps) => Record given -> React.Basic.JSX
+linearProgress_component = React.Basic.element _LinearProgress

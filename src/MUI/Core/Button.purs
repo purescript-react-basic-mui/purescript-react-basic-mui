@@ -33,9 +33,11 @@ instance eqSize :: Eq Size where
 instance eqVariant :: Eq Variant where
   eq = Unsafe.Reference.unsafeRefEq
 
-type ButtonPropsOptions componentProps = ( classes :: ButtonClassKey, color :: Color, disableFocusRipple :: Boolean, disableRipple :: Boolean, disabled :: Boolean, fullWidth :: Boolean, href :: String, size :: Size, variant :: Variant | componentProps )
+type ButtonPropsOptions componentProps = ( classes :: ButtonClassKey, color :: Color, disableFocusRipple :: Boolean, disableRipple :: Boolean, disabled :: Boolean, endIcon :: React.Basic.JSX, fullWidth :: Boolean, href :: String, size :: Size, startIcon :: React.Basic.JSX, variant :: Variant | componentProps )
 
 foreign import data ButtonProps :: Type
+
+foreign import data ButtonPropsPartial :: Type
 
 type ButtonClassKeyGenericOptions a = ( colorInherit :: a, contained :: a, containedPrimary :: a, containedSecondary :: a, containedSizeLarge :: a, containedSizeSmall :: a, disabled :: a, endIcon :: a, focusVisible :: a, fullWidth :: a, iconSizeLarge :: a, iconSizeMedium :: a, iconSizeSmall :: a, label :: a, outlined :: a, outlinedPrimary :: a, outlinedSecondary :: a, outlinedSizeLarge :: a, outlinedSizeSmall :: a, root :: a, sizeLarge :: a, sizeSmall :: a, startIcon :: a, text :: a, textPrimary :: a, textSecondary :: a, textSizeLarge :: a, textSizeSmall :: a )
 

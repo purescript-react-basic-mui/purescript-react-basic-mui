@@ -15,6 +15,8 @@ type GridListPropsOptions componentProps = ( cellHeight :: CellHeight, children 
 
 foreign import data GridListProps :: Type
 
+foreign import data GridListPropsPartial :: Type
+
 type GridListClassKeyGenericOptions a = ( root :: a )
 
 type GridListClassKeyOptions  = GridListClassKeyGenericOptions String

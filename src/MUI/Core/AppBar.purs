@@ -29,6 +29,8 @@ type AppBarPropsOptions componentProps = ( children :: Array React.Basic.JSX, cl
 
 foreign import data AppBarProps :: Type
 
+foreign import data AppBarPropsPartial :: Type
+
 type AppBarClassKeyGenericOptions a = ( colorDefault :: a, colorPrimary :: a, colorSecondary :: a, positionAbsolute :: a, positionFixed :: a, positionRelative :: a, positionStatic :: a, positionSticky :: a, root :: a )
 
 type AppBarClassKeyOptions  = AppBarClassKeyGenericOptions String

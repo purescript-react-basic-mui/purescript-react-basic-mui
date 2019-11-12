@@ -10,6 +10,8 @@ type GridListTilePropsOptions componentProps = ( children :: Array React.Basic.J
 
 foreign import data GridListTileProps :: Type
 
+foreign import data GridListTilePropsPartial :: Type
+
 type GridListTileClassKeyGenericOptions a = ( imgFullHeight :: a, imgFullWidth :: a, root :: a, tile :: a )
 
 type GridListTileClassKeyOptions  = GridListTileClassKeyGenericOptions String

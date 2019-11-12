@@ -20,6 +20,8 @@ type AvatarPropsOptions componentProps = ( alt :: String, classes :: AvatarClass
 
 foreign import data AvatarProps :: Type
 
+foreign import data AvatarPropsPartial :: Type
+
 type AvatarClassKeyGenericOptions a = ( circle :: a, colorDefault :: a, img :: a, root :: a, rounded :: a, square :: a )
 
 type AvatarClassKeyOptions  = AvatarClassKeyGenericOptions String

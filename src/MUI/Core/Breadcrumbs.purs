@@ -11,6 +11,8 @@ type BreadcrumbsPropsOptions componentProps = ( children :: Array React.Basic.JS
 
 foreign import data BreadcrumbsProps :: Type
 
+foreign import data BreadcrumbsPropsPartial :: Type
+
 type BreadcrumbsClassKeyGenericOptions a = ( li :: a, ol :: a, root :: a, separator :: a )
 
 type BreadcrumbsClassKeyOptions  = BreadcrumbsClassKeyGenericOptions String

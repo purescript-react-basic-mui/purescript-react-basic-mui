@@ -21,7 +21,7 @@ import MUI.Core.Drawer (DrawerPropsPartial)
 import MUI.Core.Grid (GridProps)
 import MUI.Core.Icon (IconPropsPartial)
 import MUI.Core.IconButton (IconButtonPropsPartial)
-import MUI.Core.LinearProgress (LinearProgressPropsPartial)
+-- import MUI.Core.LinearProgress (LinearProgressPropsPartial)
 import MUI.Core.Link (LinkPropsPartial)
 import MUI.Core.List (ListPropsPartial)
 import MUI.Core.ListItem (ListItemPropsPartial)
@@ -96,7 +96,7 @@ type ComponentsProps =
   -- , "MuiInputAdornment" :: InputAdornmentPropsPartial
   -- , "MuiInputBase" :: InputBasePropsPartial
   -- , "MuiInputLabel" :: InputLabelPropsPartial
-  , "MuiLinearProgress" :: LinearProgressPropsPartial
+  -- , "MuiLinearProgress" :: LinearProgressPropsPartial
   , "MuiLink" :: LinkPropsPartial
   , "MuiList" :: ListPropsPartial
   , "MuiListItem" :: ListItemPropsPartial

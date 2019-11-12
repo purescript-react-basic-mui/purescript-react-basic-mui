@@ -16,7 +16,7 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.List (List)
 import Data.Map (Map)
 import Data.Map (unionWith) as Map
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype)
 import Data.Ord (class Ord1)
 import Data.Set (Set)
@@ -229,6 +229,9 @@ instance traversableRowF :: Traversable RowF where
 -- | I hope that this assymetry between `Row` and `Type`
 -- | simplifies structure of most our algebras.
 type Row = RowF Type
+
+emptyRow ∷ Row
+emptyRow = Row { labels: mempty, tail: Nothing }
 
 data Union = Union QualifiedTypeName (Array UnionMember)
 derive instance genericUnion :: Generic Union _

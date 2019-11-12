@@ -10,6 +10,8 @@ type MenuItemPropsOptions componentProps = ( children :: Array React.Basic.JSX, 
 
 foreign import data MenuItemProps :: Type
 
+foreign import data MenuItemPropsPartial :: Type
+
 type MenuItemClassKeyGenericOptions a = ( dense :: a, gutters :: a, root :: a, selected :: a )
 
 type MenuItemClassKeyOptions  = MenuItemClassKeyGenericOptions String

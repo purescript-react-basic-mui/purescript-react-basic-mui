@@ -6,6 +6,6 @@ let upstream =
 
 let overrides = { react-basic = upstream.react-basic // { version = "df358364ece1cd4760429afae0bcca0eb518eb03" }}
 
-let additions = {=}
+let additions = { = }
 
 in  upstream // overrides // additions

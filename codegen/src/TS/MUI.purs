@@ -16,8 +16,7 @@ import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.State (runState)
-import Data.Array (any)
-import Data.Array (any, elem, filter, fromFoldable, null, singleton, toUnfoldable) as Array
+import Data.Array (elem, filter, fromFoldable, null, singleton, toUnfoldable) as Array
 import Data.Either (Either(..))
 import Data.Foldable (foldr)
 import Data.Functor.Mu (Mu(..)) as Mu
@@ -29,7 +28,7 @@ import Data.Map (filterKeys, fromFoldable, keys, lookup, singleton) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (unwrap)
-import Data.Set (isEmpty, member) as Set
+import Data.Set (member) as Set
 import Data.String (joinWith)
 import Data.String.Extra (camelCase)
 import Data.Traversable (for)
@@ -125,9 +124,12 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: { b
         propsOptionsTypeDecl = declType (AST.TypeName $ propsName <> "Options") vars c'
         propsTypeDecl = declForeignData (AST.TypeName $ propsName)
 
+        propsPartial = declForeignData (AST.TypeName $ propsName <> "Partial")
+
         propsDeclarations
           = List.Cons (propsOptionsTypeDecl.declaration )
           $ List.Cons (propsTypeDecl.declaration)
+          $ List.Cons (propsPartial.declaration)
           $ List.Nil
 
       unions' <- for unions $ case _ of

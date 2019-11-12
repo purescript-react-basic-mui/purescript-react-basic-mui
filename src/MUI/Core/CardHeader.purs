@@ -11,6 +11,8 @@ type CardHeaderPropsOptions componentProps = ( action :: React.Basic.JSX, avatar
 
 foreign import data CardHeaderProps :: Type
 
+foreign import data CardHeaderPropsPartial :: Type
+
 type CardHeaderClassKeyGenericOptions a = ( action :: a, avatar :: a, content :: a, root :: a, subheader :: a, title :: a )
 
 type CardHeaderClassKeyOptions  = CardHeaderClassKeyGenericOptions String

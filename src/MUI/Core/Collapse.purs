@@ -14,6 +14,8 @@ type CollapsePropsOptions componentProps = ( children :: Array React.Basic.JSX, 
 
 foreign import data CollapseProps :: Type
 
+foreign import data CollapsePropsPartial :: Type
+
 foreign import _Collapse :: ∀ a. React.Basic.ReactComponent a
 
 collapse :: ∀ required given. Prim.Row.Union given required (CollapsePropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX

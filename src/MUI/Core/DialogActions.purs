@@ -10,6 +10,8 @@ type DialogActionsPropsOptions componentProps = ( children :: Array React.Basic.
 
 foreign import data DialogActionsProps :: Type
 
+foreign import data DialogActionsPropsPartial :: Type
+
 type DialogActionsClassKeyGenericOptions a = ( root :: a, spacing :: a )
 
 type DialogActionsClassKeyOptions  = DialogActionsClassKeyGenericOptions String

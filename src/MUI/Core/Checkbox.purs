@@ -1,12 +1,12 @@
 module MUI.Core.Checkbox where
 
-import Effect (Effect) as Effect
 import Foreign (Foreign) as Foreign
 import MUI.Core (JSS) as MUI.Core
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
+import React.Basic.Events (EventHandler) as React.Basic.Events
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
@@ -26,9 +26,11 @@ instance eqColor :: Eq Color where
 instance eqType :: Eq Type_ where
   eq = Unsafe.Reference.unsafeRefEq
 
-type CheckboxPropsOptions componentProps = ( checked :: Boolean, checkedIcon :: React.Basic.JSX, classes :: CheckboxClassKey, color :: Color, disableRipple :: Boolean, disabled :: Boolean, icon :: React.Basic.JSX, id :: String, indeterminate :: Boolean, indeterminateIcon :: React.Basic.JSX, inputProps :: Foreign.Foreign, inputRef :: Foreign.Foreign, onChange :: Effect.Effect Unit, required :: Boolean, "type" :: Type_, value :: Foreign.Foreign | componentProps )
+type CheckboxPropsOptions componentProps = ( checked :: Boolean, checkedIcon :: React.Basic.JSX, classes :: CheckboxClassKey, color :: Color, disableRipple :: Boolean, disabled :: Boolean, icon :: React.Basic.JSX, id :: String, indeterminate :: Boolean, indeterminateIcon :: React.Basic.JSX, inputProps :: Foreign.Foreign, inputRef :: Foreign.Foreign, onChange :: React.Basic.Events.EventHandler, required :: Boolean, "type" :: Type_, value :: Foreign.Foreign | componentProps )
 
 foreign import data CheckboxProps :: Type
+
+foreign import data CheckboxPropsPartial :: Type
 
 type CheckboxClassKeyGenericOptions a = ( checked :: a, colorPrimary :: a, colorSecondary :: a, disabled :: a, indeterminate :: a, input :: a, root :: a )
 

@@ -9,6 +9,8 @@ type BoxPropsOptions componentProps = ( children :: Array React.Basic.JSX, clone
 
 foreign import data BoxProps :: Type
 
+foreign import data BoxPropsPartial :: Type
+
 foreign import _Box :: ∀ a. React.Basic.ReactComponent a
 
 box :: ∀ required given. Prim.Row.Union given required (BoxPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX

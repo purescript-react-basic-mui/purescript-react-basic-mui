@@ -1,11 +1,11 @@
 module MUI.Core.Chip where
 
-import Effect (Effect) as Effect
 import MUI.Core (JSS) as MUI.Core
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
+import React.Basic.Events (EventHandler) as React.Basic.Events
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
@@ -33,9 +33,11 @@ instance eqSize :: Eq Size where
 instance eqVariant :: Eq Variant where
   eq = Unsafe.Reference.unsafeRefEq
 
-type ChipPropsOptions componentProps = ( avatar :: React.Basic.JSX, classes :: ChipClassKey, color :: Color, deleteIcon :: React.Basic.JSX, disabled :: Boolean, icon :: React.Basic.JSX, label :: React.Basic.JSX, onDelete :: Effect.Effect Unit, size :: Size, variant :: Variant | componentProps )
+type ChipPropsOptions componentProps = ( avatar :: React.Basic.JSX, classes :: ChipClassKey, color :: Color, deleteIcon :: React.Basic.JSX, disabled :: Boolean, icon :: React.Basic.JSX, label :: React.Basic.JSX, onDelete :: React.Basic.Events.EventHandler, size :: Size, variant :: Variant | componentProps )
 
 foreign import data ChipProps :: Type
+
+foreign import data ChipPropsPartial :: Type
 
 type ChipClassKeyGenericOptions a = ( avatar :: a, avatarColorPrimary :: a, avatarColorSecondary :: a, avatarSmall :: a, clickable :: a, clickableColorPrimary :: a, clickableColorSecondary :: a, colorPrimary :: a, colorSecondary :: a, deletable :: a, deletableColorPrimary :: a, deletableColorSecondary :: a, deleteIcon :: a, deleteIconColorPrimary :: a, deleteIconColorSecondary :: a, deleteIconOutlinedColorPrimary :: a, deleteIconOutlinedColorSecondary :: a, deleteIconSmall :: a, disabled :: a, icon :: a, iconColorPrimary :: a, iconColorSecondary :: a, iconSmall :: a, label :: a, labelSmall :: a, outlined :: a, outlinedPrimary :: a, outlinedSecondary :: a, root :: a, sizeSmall :: a )
 

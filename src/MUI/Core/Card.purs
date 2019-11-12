@@ -11,6 +11,8 @@ type CardPropsOptions componentProps = ( children :: Array React.Basic.JSX, clas
 
 foreign import data CardProps :: Type
 
+foreign import data CardPropsPartial :: Type
+
 type CardClassKeyGenericOptions a = ( root :: a )
 
 type CardClassKeyOptions  = CardClassKeyGenericOptions String

@@ -27,6 +27,8 @@ type ButtonBasePropsOptions componentProps = ( "TouchRippleProps" :: MUI.Core.Bu
 
 foreign import data ButtonBaseProps :: Type
 
+foreign import data ButtonBasePropsPartial :: Type
+
 type ButtonBaseClassKeyGenericOptions a = ( disabled :: a, focusVisible :: a, root :: a )
 
 type ButtonBaseClassKeyOptions  = ButtonBaseClassKeyGenericOptions String

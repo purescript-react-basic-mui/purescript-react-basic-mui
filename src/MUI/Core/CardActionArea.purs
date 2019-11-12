@@ -11,6 +11,8 @@ type CardActionAreaPropsOptions componentProps = ( children :: Array React.Basic
 
 foreign import data CardActionAreaProps :: Type
 
+foreign import data CardActionAreaPropsPartial :: Type
+
 type CardActionAreaClassKeyGenericOptions a = ( focusHighlight :: a, focusVisible :: a, root :: a )
 
 type CardActionAreaClassKeyOptions  = CardActionAreaClassKeyGenericOptions String

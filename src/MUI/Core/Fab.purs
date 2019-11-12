@@ -37,6 +37,8 @@ type FabPropsOptions componentProps = ( classes :: FabClassKey, color :: Color, 
 
 foreign import data FabProps :: Type
 
+foreign import data FabPropsPartial :: Type
+
 type FabClassKeyGenericOptions a = ( colorInherit :: a, disabled :: a, extended :: a, focusVisible :: a, label :: a, primary :: a, root :: a, secondary :: a, sizeMedium :: a, sizeSmall :: a )
 
 type FabClassKeyOptions  = FabClassKeyGenericOptions String

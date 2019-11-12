@@ -44,6 +44,8 @@ type BadgePropsOptions componentProps = ( anchorOrigin :: { horizontal :: Horizo
 
 foreign import data BadgeProps :: Type
 
+foreign import data BadgePropsPartial :: Type
+
 type BadgeClassKeyGenericOptions a = ( anchorOriginBottomLeftRectangle :: a, anchorOriginBottomRightCircle :: a, anchorOriginBottomRightRectangle :: a, anchorOriginTopLeftCircle :: a, anchorOriginTopLeftRectangle :: a, anchorOriginTopRightCircle :: a, anchorOriginTopRightRectangle :: a, badge :: a, colorError :: a, colorPrimary :: a, colorSecondary :: a, dot :: a, invisible :: a, root :: a )
 
 type BadgeClassKeyOptions  = BadgeClassKeyGenericOptions String

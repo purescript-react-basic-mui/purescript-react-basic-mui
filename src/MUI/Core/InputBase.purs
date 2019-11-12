@@ -1,106 +1,67 @@
 module MUI.Core.InputBase where
 
+import Foreign (Foreign) as Foreign
+import MUI.Core (JSS) as MUI.Core
 import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import React.Basic.Events (EventHandler) as React.Basic.Events
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-import Foreign (Foreign)
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div, Props_input)
-import React.Basic.Events (EventHandler)
-import Unsafe.Coerce (unsafeCoerce)
+foreign import data RowsMax :: Type
 
-type InputBasePropsOptions componentProps value = 
-  ( autoComplete :: String
-  , autoFocus :: Boolean
-  , classes :: InputBaseClassKey
-  , className :: String
-  , defaultValue :: value
-  , disabled :: Boolean
-  , endAdornment :: JSX
-  , error :: Boolean
-  , fullWidth :: Boolean
-  , id :: String
-  , inputComponent :: ReactComponent { | Props_input }
-  , inputProps :: { | Props_input }
-  , inputRef :: Foreign
-  , margin :: MarginProp
-  , multiline :: Boolean
-  , name :: String
-  , onChange :: EventHandler
-  , placeholder :: String
-  , readOnly :: Boolean
-  , required :: Boolean
-  , rows :: Number
-  , rowsMax :: Number
-  , select :: Boolean
-  , startAdornment :: JSX
-  , type :: String
-  , value :: value
-  | componentProps
-  )
+rowsMax :: { number :: Number -> RowsMax, string :: String -> RowsMax }
+rowsMax = { number: Unsafe.Coerce.unsafeCoerce, string: Unsafe.Coerce.unsafeCoerce }
+
+foreign import data Rows :: Type
+
+rows :: { number :: Number -> Rows, string :: String -> Rows }
+rows = { number: Unsafe.Coerce.unsafeCoerce, string: Unsafe.Coerce.unsafeCoerce }
+
+foreign import data Margin :: Type
+
+margin :: { dense :: Margin, none :: Margin }
+margin = { dense: Unsafe.Coerce.unsafeCoerce "dense", none: Unsafe.Coerce.unsafeCoerce "none" }
+
+foreign import data Color :: Type
+
+color :: { primary :: Color, secondary :: Color }
+color = { primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary" }
+
+instance eqColor :: Eq Color where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqMargin :: Eq Margin where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type InputBasePropsOptions componentProps = ( autoComplete :: String, autoFocus :: Boolean, className :: String, classes :: InputBaseClassKey, color :: Color, defaultValue :: Foreign.Foreign, disabled :: Boolean, endAdornment :: React.Basic.JSX, error :: Boolean, fullWidth :: Boolean, id :: String, inputComponent :: React.Basic.ReactComponent {  | Props_input }, inputProps :: Foreign.Foreign, inputRef :: Foreign.Foreign, margin :: Margin, multiline :: Boolean, name :: String, onChange :: React.Basic.Events.EventHandler, placeholder :: String, readOnly :: Boolean, required :: Boolean, rows :: Rows, rowsMax :: RowsMax, startAdornment :: React.Basic.JSX, "type" :: String, value :: Foreign.Foreign | componentProps )
 
 foreign import data InputBaseProps :: Type
 
-foreign import data MarginProp :: Type
-foreign import _eqMarginProp :: MarginProp -> MarginProp -> Boolean
-foreign import _ordMarginProp :: MarginProp -> MarginProp -> Int
-instance eqMarginProp :: Eq MarginProp where eq _left _right = _eqMarginProp _left _right
-instance ordMarginProp :: Ord MarginProp where compare _left _right = compare (_ordMarginProp _left _right) (_ordMarginProp _right _left)
+foreign import data InputBasePropsPartial :: Type
 
-dense :: MarginProp
-dense = unsafeCoerce "dense"
+type InputBaseClassKeyGenericOptions a = ( adornedEnd :: a, adornedStart :: a, colorSecondary :: a, disabled :: a, error :: a, focused :: a, formControl :: a, fullWidth :: a, input :: a, inputAdornedEnd :: a, inputAdornedStart :: a, inputHiddenLabel :: a, inputMarginDense :: a, inputMultiline :: a, inputTypeSearch :: a, marginDense :: a, multiline :: a, root :: a )
 
-none :: MarginProp
-none = unsafeCoerce "none"
+type InputBaseClassKeyOptions  = InputBaseClassKeyGenericOptions String
 
-type InputBaseClassKeyGenericOptions a =
-  ( root :: a 
-  , formControl :: a 
-  , focused :: a 
-  , disabled :: a 
-  , adornedStart :: a 
-  , adornedEnd :: a 
-  , error :: a 
-  , marginDense :: a 
-  , multiline :: a 
-  , fullWidth :: a 
-  , input :: a 
-  , inputMarginDense :: a 
-  , inputSelect :: a 
-  , inputMultiline :: a 
-  , inputTypeSearch :: a 
-  , inputAdornedStart :: a 
-  , inputAdornedEnd :: a 
-  , inputHiddenLabel :: a 
-  )
-type InputBaseClassKeyOptions = InputBaseClassKeyGenericOptions String
-type InputBaseClassKeyJSSOptions = InputBaseClassKeyGenericOptions JSS
 foreign import data InputBaseClassKey :: Type
+
+inputBaseClassKey :: ∀ required given. Prim.Row.Union given required InputBaseClassKeyOptions => Record given -> InputBaseClassKey
+inputBaseClassKey = Unsafe.Coerce.unsafeCoerce
+
+type InputBaseClassKeyOptionsJSS  = InputBaseClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data InputBaseClassKeyJSS :: Type
 
-inputBaseClassKey :: ∀  given required
-  .  Union given required (InputBaseClassKeyOptions )
-  => Record given
-  -> InputBaseClassKey
-inputBaseClassKey = unsafeCoerce
+inputBaseClassKeyJSS :: ∀ required given. Prim.Row.Union given required InputBaseClassKeyOptionsJSS => Record given -> InputBaseClassKeyJSS
+inputBaseClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-inputBaseClassKeyJSS :: ∀  given required
-  .  Union given required (InputBaseClassKeyJSSOptions )
-  => Record given
-  -> InputBaseClassKeyJSS
-inputBaseClassKeyJSS = unsafeCoerce
+foreign import _InputBase :: ∀ a. React.Basic.ReactComponent a
 
-inputBase :: ∀ value given required
-  .  Union given required (InputBasePropsOptions Props_div value)
-  => Record given
-  -> JSX
-inputBase = element _InputBase
+inputBase :: ∀ required given. Prim.Row.Union given required (InputBasePropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+inputBase = React.Basic.element _InputBase
 
-inputBase_component :: ∀ componentProps value given required
-  .  Union given required (InputBasePropsOptions componentProps value)
-  => Record given
-  -> JSX
-inputBase_component = element _InputBase
-
-foreign import _InputBase :: ∀ a. ReactComponent a
+inputBase_component :: ∀ required given componentProps. Prim.Row.Union given required (InputBasePropsOptions componentProps) => Record given -> React.Basic.JSX
+inputBase_component = React.Basic.element _InputBase

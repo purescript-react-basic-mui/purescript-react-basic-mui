@@ -10,6 +10,8 @@ type CardActionsPropsOptions componentProps = ( children :: Array React.Basic.JS
 
 foreign import data CardActionsProps :: Type
 
+foreign import data CardActionsPropsPartial :: Type
+
 type CardActionsClassKeyGenericOptions a = ( root :: a, spacing :: a )
 
 type CardActionsClassKeyOptions  = CardActionsClassKeyGenericOptions String

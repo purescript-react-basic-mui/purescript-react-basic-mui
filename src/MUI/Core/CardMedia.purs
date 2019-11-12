@@ -10,6 +10,8 @@ type CardMediaPropsOptions componentProps = ( children :: Array React.Basic.JSX,
 
 foreign import data CardMediaProps :: Type
 
+foreign import data CardMediaPropsPartial :: Type
+
 type CardMediaClassKeyGenericOptions a = ( media :: a, root :: a )
 
 type CardMediaClassKeyOptions  = CardMediaClassKeyGenericOptions String
