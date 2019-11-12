@@ -12,6 +12,9 @@ foreign import data CardActionsProps :: Type
 
 foreign import data CardActionsPropsPartial :: Type
 
+cardActionsPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (CardActionsPropsOptions React.Basic.DOM.Props_div) => Record options -> CardActionsPropsPartial
+cardActionsPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type CardActionsClassKeyGenericOptions a = ( root :: a, spacing :: a )
 
 type CardActionsClassKeyOptions  = CardActionsClassKeyGenericOptions String

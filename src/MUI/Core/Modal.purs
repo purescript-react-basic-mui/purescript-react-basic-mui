@@ -15,6 +15,9 @@ foreign import data ModalProps :: Type
 
 foreign import data ModalPropsPartial :: Type
 
+modalPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (ModalPropsOptions React.Basic.DOM.Props_div) => Record options -> ModalPropsPartial
+modalPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type ModalClassKeyGenericOptions a = (  )
 
 type ModalClassKeyOptions  = ModalClassKeyGenericOptions String

@@ -1,49 +1,39 @@
 module MUI.Core.Slide where
 
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.Events (EventHandler)
-import Unsafe.Coerce (unsafeCoerce)
+import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import React.Basic.Events (EventHandler) as React.Basic.Events
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-type SlideProps =
-  ( children :: Array JSX
-  , direction :: DirectionProp
-  , in :: Boolean
-  , timeout :: Number
-  , onEnter :: EventHandler
-  , onEntering :: EventHandler
-  , onEntered :: EventHandler
-  , onExit :: EventHandler
-  , onExiting :: EventHandler
-  , onExited :: EventHandler
-  , mountOnEnter :: Boolean
-  , unmountOnExit :: Boolean
-  , addEndListener :: EventHandler
-  )
+foreign import data Timeout :: Type
 
-foreign import data DirectionProp :: Type
-data Direction = Left | Right | Up | Down
-direction :: Direction -> DirectionProp
-direction Left = unsafeCoerce "left"
-direction Right = unsafeCoerce "right"
-direction Up = unsafeCoerce "up"
-direction Down = unsafeCoerce "down"
+timeout :: { number :: Number -> Timeout, record :: { appear :: Number, enter :: Number, exit :: Number } -> Timeout }
+timeout = { number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce }
+
+foreign import data Direction :: Type
+
+direction :: { down :: Direction, left :: Direction, right :: Direction, up :: Direction }
+direction = { down: Unsafe.Coerce.unsafeCoerce "down", left: Unsafe.Coerce.unsafeCoerce "left", right: Unsafe.Coerce.unsafeCoerce "right", up: Unsafe.Coerce.unsafeCoerce "up" }
+
+instance eqDirection :: Eq Direction where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type SlidePropsOptions componentProps = ( direction :: Direction, "in" :: Boolean, onEnter :: React.Basic.Events.EventHandler, onEntered :: React.Basic.Events.EventHandler, onEntering :: React.Basic.Events.EventHandler, onExit :: React.Basic.Events.EventHandler, onExited :: React.Basic.Events.EventHandler, onExiting :: React.Basic.Events.EventHandler, timeout :: Timeout | componentProps )
+
+foreign import data SlideProps :: Type
 
 foreign import data SlidePropsPartial :: Type
 
-slidePropsPartial
-  :: ∀ props props_
-  . Union props props_ SlideProps
-  => Record props 
-  -> SlidePropsPartial
-slidePropsPartial = unsafeCoerce
+slidePropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (SlidePropsOptions React.Basic.DOM.Props_div) => Record options -> SlidePropsPartial
+slidePropsPartial = Unsafe.Coerce.unsafeCoerce
 
+foreign import _Slide :: ∀ a. React.Basic.ReactComponent a
 
-slide
-  :: ∀ props props_
-  . Union props props_ SlideProps
-  => Record props 
-  -> JSX
-slide = element _Slide
+slide :: ∀ required given. Prim.Row.Union given required (SlidePropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+slide = React.Basic.element _Slide
 
-foreign import _Slide :: ∀ a. ReactComponent a
+slide_component :: ∀ required given componentProps. Prim.Row.Union given required (SlidePropsOptions componentProps) => Record given -> React.Basic.JSX
+slide_component = React.Basic.element _Slide

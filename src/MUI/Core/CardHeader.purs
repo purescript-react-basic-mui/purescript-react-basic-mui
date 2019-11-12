@@ -13,6 +13,9 @@ foreign import data CardHeaderProps :: Type
 
 foreign import data CardHeaderPropsPartial :: Type
 
+cardHeaderPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (CardHeaderPropsOptions React.Basic.DOM.Props_div) => Record options -> CardHeaderPropsPartial
+cardHeaderPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type CardHeaderClassKeyGenericOptions a = ( action :: a, avatar :: a, content :: a, root :: a, subheader :: a, title :: a )
 
 type CardHeaderClassKeyOptions  = CardHeaderClassKeyGenericOptions String

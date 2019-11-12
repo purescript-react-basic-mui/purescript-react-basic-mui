@@ -1,79 +1,58 @@
 module MUI.Core.Divider where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_hr)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_hr) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-type DividerProps componentProps =
-  ( absolute :: Boolean
-  , classes :: DividerClassKey 
-  , component :: ReactComponent { | componentProps }
-  , light :: Boolean
-  , variant :: VariantProp
-  | componentProps
-  )
+foreign import data Variant :: Type
 
-foreign import data VariantProp :: Type
+variant :: { fullWidth :: Variant, inset :: Variant, middle :: Variant }
+variant = { fullWidth: Unsafe.Coerce.unsafeCoerce "fullWidth", inset: Unsafe.Coerce.unsafeCoerce "inset", middle: Unsafe.Coerce.unsafeCoerce "middle" }
 
-data Variant = FullWidth | Inset | Middle 
+foreign import data Orientation :: Type
 
-variant :: Variant -> VariantProp
-variant FullWidth = unsafeCoerce "fullWidth"
-variant Inset = unsafeCoerce "inset"
-variant Middle = unsafeCoerce "middle"
+orientation :: { horizontal :: Orientation, vertical :: Orientation }
+orientation = { horizontal: Unsafe.Coerce.unsafeCoerce "horizontal", vertical: Unsafe.Coerce.unsafeCoerce "vertical" }
 
+instance eqOrientation :: Eq Orientation where
+  eq = Unsafe.Reference.unsafeRefEq
 
-foreign import data DividerClassKey :: Type
-foreign import data DividerClassKeyJSS :: Type
+instance eqVariant :: Eq Variant where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type DividerPropsOptions componentProps = ( absolute :: Boolean, classes :: DividerClassKey, light :: Boolean, orientation :: Orientation, variant :: Variant | componentProps )
+
+foreign import data DividerProps :: Type
+
 foreign import data DividerPropsPartial :: Type
 
-type DividerClassKeyOptionsJSS = DividerClassKeyOptionsR JSS
-type DividerClassKeyOptions = DividerClassKeyOptionsR String
-type DividerClassKeyOptionsR a =
-  ( root :: a
-  , absolute :: a
-  , inset :: a
-  , light :: a
-  , middle :: a
-  )
+dividerPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (DividerPropsOptions React.Basic.DOM.Props_hr) => Record options -> DividerPropsPartial
+dividerPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-dividerClassKey :: ∀ options options_
-  . Union options options_ DividerClassKeyOptions
-  => Record options
-  -> DividerClassKey
-dividerClassKey = unsafeCoerce
+type DividerClassKeyGenericOptions a = ( absolute :: a, inset :: a, light :: a, middle :: a, root :: a, vertical :: a )
 
-dividerClassKeyJSS :: ∀ options options_
-  . Union options options_ DividerClassKeyOptionsJSS
-  => Record options
-  -> DividerClassKeyJSS
-dividerClassKeyJSS = unsafeCoerce
+type DividerClassKeyOptions  = DividerClassKeyGenericOptions String
 
-dividerPropsPartial_component :: ∀ componentProps props props_
-  . Union props props_ (DividerProps componentProps)
-  => Record props 
-  -> DividerPropsPartial 
-dividerPropsPartial_component = unsafeCoerce
+foreign import data DividerClassKey :: Type
 
-dividerPropsPartial :: ∀ props props_
-  . Union props props_ (DividerProps Props_hr)
-  => Record props 
-  -> DividerPropsPartial 
-dividerPropsPartial = unsafeCoerce
+dividerClassKey :: ∀ required given. Prim.Row.Union given required DividerClassKeyOptions => Record given -> DividerClassKey
+dividerClassKey = Unsafe.Coerce.unsafeCoerce
 
-divider_component :: ∀ componentProps props props_
-  . Union props props_ (DividerProps componentProps)
-  => Record props 
-  -> JSX
-divider_component = element _Divider
+type DividerClassKeyOptionsJSS  = DividerClassKeyGenericOptions MUI.Core.JSS
 
-divider :: ∀ props props_
-  . Union props props_ (DividerProps Props_hr)
-  => Record props 
-  -> JSX
-divider = element _Divider
+foreign import data DividerClassKeyJSS :: Type
 
+dividerClassKeyJSS :: ∀ required given. Prim.Row.Union given required DividerClassKeyOptionsJSS => Record given -> DividerClassKeyJSS
+dividerClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-foreign import _Divider :: ∀ a. ReactComponent a
+foreign import _Divider :: ∀ a. React.Basic.ReactComponent a
+
+divider :: ∀ required given. Prim.Row.Union given required (DividerPropsOptions React.Basic.DOM.Props_hr) => Record given -> React.Basic.JSX
+divider = React.Basic.element _Divider
+
+divider_component :: ∀ required given componentProps. Prim.Row.Union given required (DividerPropsOptions componentProps) => Record given -> React.Basic.JSX
+divider_component = React.Basic.element _Divider

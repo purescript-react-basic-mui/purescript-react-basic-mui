@@ -17,6 +17,9 @@ foreign import data GridListProps :: Type
 
 foreign import data GridListPropsPartial :: Type
 
+gridListPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (GridListPropsOptions React.Basic.DOM.Props_div) => Record options -> GridListPropsPartial
+gridListPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type GridListClassKeyGenericOptions a = ( root :: a )
 
 type GridListClassKeyOptions  = GridListClassKeyGenericOptions String

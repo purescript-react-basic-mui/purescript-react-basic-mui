@@ -1,7 +1,7 @@
 module MUI.Core.AppBar where
 
 import MUI.Core (JSS) as MUI.Core
-import MUI.Core.Paper (PaperProps) as MUI.Core.Paper
+import MUI.Core.Paper (PaperPropsOptions) as MUI.Core.Paper
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
@@ -31,6 +31,9 @@ foreign import data AppBarProps :: Type
 
 foreign import data AppBarPropsPartial :: Type
 
+appBarPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (AppBarPropsOptions (MUI.Core.Paper.PaperPropsOptions React.Basic.DOM.Props_div)) => Record options -> AppBarPropsPartial
+appBarPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type AppBarClassKeyGenericOptions a = ( colorDefault :: a, colorPrimary :: a, colorSecondary :: a, positionAbsolute :: a, positionFixed :: a, positionRelative :: a, positionStatic :: a, positionSticky :: a, root :: a )
 
 type AppBarClassKeyOptions  = AppBarClassKeyGenericOptions String
@@ -49,7 +52,7 @@ appBarClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
 foreign import _AppBar :: ∀ a. React.Basic.ReactComponent a
 
-appBar :: ∀ required given. Prim.Row.Union given required (AppBarPropsOptions (MUI.Core.Paper.PaperProps React.Basic.DOM.Props_div)) => Record given -> React.Basic.JSX
+appBar :: ∀ required given. Prim.Row.Union given required (AppBarPropsOptions (MUI.Core.Paper.PaperPropsOptions React.Basic.DOM.Props_div)) => Record given -> React.Basic.JSX
 appBar = React.Basic.element _AppBar
 
 appBar_component :: ∀ required given componentProps. Prim.Row.Union given required (AppBarPropsOptions componentProps) => Record given -> React.Basic.JSX

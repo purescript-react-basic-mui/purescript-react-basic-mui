@@ -30,6 +30,9 @@ foreign import data ClickAwayListenerProps :: Type
 
 foreign import data ClickAwayListenerPropsPartial :: Type
 
+clickAwayListenerPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (ClickAwayListenerPropsOptions React.Basic.DOM.Props_div) => Record options -> ClickAwayListenerPropsPartial
+clickAwayListenerPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 foreign import _ClickAwayListener :: ∀ a. React.Basic.ReactComponent a
 
 clickAwayListener :: ∀ required given. Prim.Row.Union given required (ClickAwayListenerPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX

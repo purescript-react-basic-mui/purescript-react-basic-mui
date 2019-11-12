@@ -22,6 +22,9 @@ foreign import data AvatarProps :: Type
 
 foreign import data AvatarPropsPartial :: Type
 
+avatarPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (AvatarPropsOptions React.Basic.DOM.Props_div) => Record options -> AvatarPropsPartial
+avatarPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type AvatarClassKeyGenericOptions a = ( circle :: a, colorDefault :: a, img :: a, root :: a, rounded :: a, square :: a )
 
 type AvatarClassKeyOptions  = AvatarClassKeyGenericOptions String

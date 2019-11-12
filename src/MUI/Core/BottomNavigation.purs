@@ -13,6 +13,9 @@ foreign import data BottomNavigationProps :: Type
 
 foreign import data BottomNavigationPropsPartial :: Type
 
+bottomNavigationPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (BottomNavigationPropsOptions React.Basic.DOM.Props_div) => Record options -> BottomNavigationPropsPartial
+bottomNavigationPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type BottomNavigationClassKeyGenericOptions a = ( root :: a )
 
 type BottomNavigationClassKeyOptions  = BottomNavigationClassKeyGenericOptions String

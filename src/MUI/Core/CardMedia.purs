@@ -12,6 +12,9 @@ foreign import data CardMediaProps :: Type
 
 foreign import data CardMediaPropsPartial :: Type
 
+cardMediaPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (CardMediaPropsOptions React.Basic.DOM.Props_div) => Record options -> CardMediaPropsPartial
+cardMediaPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type CardMediaClassKeyGenericOptions a = ( media :: a, root :: a )
 
 type CardMediaClassKeyOptions  = CardMediaClassKeyGenericOptions String

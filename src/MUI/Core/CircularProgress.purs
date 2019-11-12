@@ -35,6 +35,9 @@ foreign import data CircularProgressProps :: Type
 
 foreign import data CircularProgressPropsPartial :: Type
 
+circularProgressPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (CircularProgressPropsOptions React.Basic.DOM.Props_div) => Record options -> CircularProgressPropsPartial
+circularProgressPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type CircularProgressClassKeyGenericOptions a = ( circle :: a, circleDisableShrink :: a, circleIndeterminate :: a, circleStatic :: a, colorPrimary :: a, colorSecondary :: a, indeterminate :: a, root :: a, static :: a, svg :: a )
 
 type CircularProgressClassKeyOptions  = CircularProgressClassKeyGenericOptions String

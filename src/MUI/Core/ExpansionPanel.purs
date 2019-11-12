@@ -1,60 +1,42 @@
 module MUI.Core.ExpansionPanel where
 
-import Prelude
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Paper (PaperPropsOptions) as MUI.Core.Paper
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import React.Basic.Events (EventHandler) as React.Basic.Events
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-import Effect.Uncurried (EffectFn2)
-import MUI.Core (JSS)
-import MUI.Core.Paper (PaperProps)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import React.Basic.Events (SyntheticEvent)
-import Unsafe.Coerce (unsafeCoerce)
-
-type ExpansionPanelPropsOptions componentProps = 
-  ( children :: (Array JSX)
-  , defaultExpanded :: Boolean
-  , disabled :: Boolean
-  , expanded :: Boolean
-  , onChange :: EffectFn2 SyntheticEvent Boolean Unit
-  | componentProps
-  )
+type ExpansionPanelPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: ExpansionPanelClassKey, defaultExpanded :: Boolean, disabled :: Boolean, expanded :: Boolean, onChange :: React.Basic.Events.EventHandler | componentProps )
 
 foreign import data ExpansionPanelProps :: Type
 
-type ExpansionPanelClassKeyGenericOptions a =
-  ( root :: a 
-  , rounded :: a 
-  , expanded :: a 
-  , disabled :: a 
-  )
-type ExpansionPanelClassKeyOptions = ExpansionPanelClassKeyGenericOptions String
-type ExpansionPanelClassKeyJSSOptions = ExpansionPanelClassKeyGenericOptions JSS
+foreign import data ExpansionPanelPropsPartial :: Type
+
+expansionPanelPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (ExpansionPanelPropsOptions (MUI.Core.Paper.PaperPropsOptions React.Basic.DOM.Props_div)) => Record options -> ExpansionPanelPropsPartial
+expansionPanelPropsPartial = Unsafe.Coerce.unsafeCoerce
+
+type ExpansionPanelClassKeyGenericOptions a = ( disabled :: a, expanded :: a, root :: a, rounded :: a )
+
+type ExpansionPanelClassKeyOptions  = ExpansionPanelClassKeyGenericOptions String
+
 foreign import data ExpansionPanelClassKey :: Type
+
+expansionPanelClassKey :: ∀ required given. Prim.Row.Union given required ExpansionPanelClassKeyOptions => Record given -> ExpansionPanelClassKey
+expansionPanelClassKey = Unsafe.Coerce.unsafeCoerce
+
+type ExpansionPanelClassKeyOptionsJSS  = ExpansionPanelClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data ExpansionPanelClassKeyJSS :: Type
 
-expansionPanelClassKey :: ∀  given required
-  .  Union given required (ExpansionPanelClassKeyOptions )
-  => Record given
-  -> ExpansionPanelClassKey
-expansionPanelClassKey = unsafeCoerce
+expansionPanelClassKeyJSS :: ∀ required given. Prim.Row.Union given required ExpansionPanelClassKeyOptionsJSS => Record given -> ExpansionPanelClassKeyJSS
+expansionPanelClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-expansionPanelClassKeyJSS :: ∀  given required
-  .  Union given required (ExpansionPanelClassKeyJSSOptions )
-  => Record given
-  -> ExpansionPanelClassKeyJSS
-expansionPanelClassKeyJSS = unsafeCoerce
+foreign import _ExpansionPanel :: ∀ a. React.Basic.ReactComponent a
 
-expansionPanel :: ∀  given required
-  .  Union given required (ExpansionPanelPropsOptions (PaperProps Props_div) )
-  => Record given
-  -> JSX
-expansionPanel = element _ExpansionPanel
+expansionPanel :: ∀ required given. Prim.Row.Union given required (ExpansionPanelPropsOptions (MUI.Core.Paper.PaperPropsOptions React.Basic.DOM.Props_div)) => Record given -> React.Basic.JSX
+expansionPanel = React.Basic.element _ExpansionPanel
 
-expansionPanel_component :: ∀ componentProps given required
-  .  Union given required (ExpansionPanelPropsOptions componentProps)
-  => Record given
-  -> JSX
-expansionPanel_component = element _ExpansionPanel
-
-foreign import _ExpansionPanel :: ∀ a. ReactComponent a
+expansionPanel_component :: ∀ required given componentProps. Prim.Row.Union given required (ExpansionPanelPropsOptions componentProps) => Record given -> React.Basic.JSX
+expansionPanel_component = React.Basic.element _ExpansionPanel

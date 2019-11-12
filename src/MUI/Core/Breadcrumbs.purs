@@ -13,6 +13,9 @@ foreign import data BreadcrumbsProps :: Type
 
 foreign import data BreadcrumbsPropsPartial :: Type
 
+breadcrumbsPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (BreadcrumbsPropsOptions React.Basic.DOM.Props_div) => Record options -> BreadcrumbsPropsPartial
+breadcrumbsPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type BreadcrumbsClassKeyGenericOptions a = ( li :: a, ol :: a, root :: a, separator :: a )
 
 type BreadcrumbsClassKeyOptions  = BreadcrumbsClassKeyGenericOptions String

@@ -36,11 +36,14 @@ instance eqColor :: Eq Color where
 instance eqMargin :: Eq Margin where
   eq = Unsafe.Reference.unsafeRefEq
 
-type InputBasePropsOptions componentProps = ( autoComplete :: String, autoFocus :: Boolean, className :: String, classes :: InputBaseClassKey, color :: Color, defaultValue :: Foreign.Foreign, disabled :: Boolean, endAdornment :: React.Basic.JSX, error :: Boolean, fullWidth :: Boolean, id :: String, inputComponent :: React.Basic.ReactComponent {  | Props_input }, inputProps :: Foreign.Foreign, inputRef :: Foreign.Foreign, margin :: Margin, multiline :: Boolean, name :: String, onChange :: React.Basic.Events.EventHandler, placeholder :: String, readOnly :: Boolean, required :: Boolean, rows :: Rows, rowsMax :: RowsMax, startAdornment :: React.Basic.JSX, "type" :: String, value :: Foreign.Foreign | componentProps )
+type InputBasePropsOptions componentProps = ( autoComplete :: String, autoFocus :: Boolean, className :: String, classes :: InputBaseClassKey, color :: Color, defaultValue :: Foreign.Foreign, disabled :: Boolean, endAdornment :: React.Basic.JSX, error :: Boolean, fullWidth :: Boolean, id :: String, inputProps :: Foreign.Foreign, inputRef :: Foreign.Foreign, margin :: Margin, multiline :: Boolean, name :: String, onChange :: React.Basic.Events.EventHandler, placeholder :: String, readOnly :: Boolean, required :: Boolean, rows :: Rows, rowsMax :: RowsMax, startAdornment :: React.Basic.JSX, "type" :: String, value :: Foreign.Foreign | componentProps )
 
 foreign import data InputBaseProps :: Type
 
 foreign import data InputBasePropsPartial :: Type
+
+inputBasePropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (InputBasePropsOptions React.Basic.DOM.Props_div) => Record options -> InputBasePropsPartial
+inputBasePropsPartial = Unsafe.Coerce.unsafeCoerce
 
 type InputBaseClassKeyGenericOptions a = ( adornedEnd :: a, adornedStart :: a, colorSecondary :: a, disabled :: a, error :: a, focused :: a, formControl :: a, fullWidth :: a, input :: a, inputAdornedEnd :: a, inputAdornedStart :: a, inputHiddenLabel :: a, inputMarginDense :: a, inputMultiline :: a, inputTypeSearch :: a, marginDense :: a, multiline :: a, root :: a )
 

@@ -12,6 +12,9 @@ foreign import data MenuItemProps :: Type
 
 foreign import data MenuItemPropsPartial :: Type
 
+menuItemPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (MenuItemPropsOptions React.Basic.DOM.Props_div) => Record options -> MenuItemPropsPartial
+menuItemPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type MenuItemClassKeyGenericOptions a = ( dense :: a, gutters :: a, root :: a, selected :: a )
 
 type MenuItemClassKeyOptions  = MenuItemClassKeyGenericOptions String

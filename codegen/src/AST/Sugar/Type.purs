@@ -53,9 +53,10 @@ constrained s params =
 -- -- | ```
 -- -- | Gives us:
 -- -- |
--- -- | ∀ required given. Prim.Row.Union given required FinalRow => Record given -> ResultType
+-- -- | forall required given. Prim.Row.Union given required FinalRow => Record given -> ResultType
 -- -- |
-forAll :: ∀ idents il names nl vars
+
+forAll :: forall idents il names nl vars
   . HFoldl (List Ident -> Ident -> List Ident) (List Ident) (Record idents) (List Ident)
   => RowToList names nl
   => RowToList idents il
@@ -65,22 +66,35 @@ forAll :: ∀ idents il names nl vars
   -> (Record vars -> Type)
   -> Type
 forAll names cont =
+  -- | It is horrible but this don't want to work so I've copied
+  -- | the whole `forAllWith` below :-(
+  -- forAllWith [] names cont
   let
     varsRecord = mapRecord Ident names
     toList = hfoldl (flip List.Cons :: List Ident -> Ident -> List Ident) (List.Nil :: List Ident)
     varsRecord' = mapRecord (roll <<< TypeVar) varsRecord
-    idents = Array.fromFoldable (toList varsRecord)
+    idents' = Array.fromFoldable (toList varsRecord)
   in
-    roll (TypeForall idents (cont varsRecord'))
+    roll (TypeForall idents' (cont varsRecord'))
 
--- forAll :: ∀ n. Nat n => Vec n String -> (Vec n Type -> Type) -> Type
--- forAll names cont =
---   let
---     idents = map Ident names
---     vars = map (roll <<< TypeVar) idents
---   in
---     roll (TypeForall (Vec.toArray idents) (cont vars))
--- 
+forAllWith :: forall idents il names nl vars
+  . HFoldl (List Ident -> Ident -> List Ident) (List Ident) (Record idents) (List Ident)
+  => RowToList names nl
+  => RowToList idents il
+  => MapRecord nl names String Ident () idents
+  => MapRecord il idents Ident Type () vars
+  => Array Ident
+  -> Record names
+  -> (Record vars -> Type)
+  -> Type
+forAllWith idents names cont =
+  let
+    varsRecord = mapRecord Ident names
+    toList = hfoldl (flip List.Cons :: List Ident -> Ident -> List Ident) (List.Nil :: List Ident)
+    varsRecord' = mapRecord (roll <<< TypeVar) varsRecord
+    idents' = idents <> Array.fromFoldable (toList varsRecord)
+  in
+    roll (TypeForall idents' (cont varsRecord'))
 
 forAll' :: String -> (Type -> Type) -> Type
 forAll' n cont =
@@ -93,7 +107,7 @@ forAll' n cont =
 name :: String -> QualifiedName TypeName
 name = name'
 
-name' :: ∀ n. Newtype n String => String -> QualifiedName n
+name' :: forall n. Newtype n String => String -> QualifiedName n
 name' n = qn n
   where
     qn = split (Pattern ".") >>> unsnoc >>> case _ of

@@ -32,6 +32,9 @@ foreign import data CheckboxProps :: Type
 
 foreign import data CheckboxPropsPartial :: Type
 
+checkboxPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (CheckboxPropsOptions React.Basic.DOM.Props_div) => Record options -> CheckboxPropsPartial
+checkboxPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type CheckboxClassKeyGenericOptions a = ( checked :: a, colorPrimary :: a, colorSecondary :: a, disabled :: a, indeterminate :: a, input :: a, root :: a )
 
 type CheckboxClassKeyOptions  = CheckboxClassKeyGenericOptions String

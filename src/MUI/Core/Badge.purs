@@ -46,6 +46,9 @@ foreign import data BadgeProps :: Type
 
 foreign import data BadgePropsPartial :: Type
 
+badgePropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (BadgePropsOptions React.Basic.DOM.Props_div) => Record options -> BadgePropsPartial
+badgePropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type BadgeClassKeyGenericOptions a = ( anchorOriginBottomLeftRectangle :: a, anchorOriginBottomRightCircle :: a, anchorOriginBottomRightRectangle :: a, anchorOriginTopLeftCircle :: a, anchorOriginTopLeftRectangle :: a, anchorOriginTopRightCircle :: a, anchorOriginTopRightRectangle :: a, badge :: a, colorError :: a, colorPrimary :: a, colorSecondary :: a, dot :: a, invisible :: a, root :: a )
 
 type BadgeClassKeyOptions  = BadgeClassKeyGenericOptions String

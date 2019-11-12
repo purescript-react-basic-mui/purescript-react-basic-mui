@@ -29,6 +29,9 @@ foreign import data ButtonBaseProps :: Type
 
 foreign import data ButtonBasePropsPartial :: Type
 
+buttonBasePropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (ButtonBasePropsOptions (ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Record options -> ButtonBasePropsPartial
+buttonBasePropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type ButtonBaseClassKeyGenericOptions a = ( disabled :: a, focusVisible :: a, root :: a )
 
 type ButtonBaseClassKeyOptions  = ButtonBaseClassKeyGenericOptions String

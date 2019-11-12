@@ -12,6 +12,9 @@ foreign import data DialogActionsProps :: Type
 
 foreign import data DialogActionsPropsPartial :: Type
 
+dialogActionsPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (DialogActionsPropsOptions React.Basic.DOM.Props_div) => Record options -> DialogActionsPropsPartial
+dialogActionsPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type DialogActionsClassKeyGenericOptions a = ( root :: a, spacing :: a )
 
 type DialogActionsClassKeyOptions  = DialogActionsClassKeyGenericOptions String

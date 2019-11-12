@@ -39,6 +39,9 @@ foreign import data ChipProps :: Type
 
 foreign import data ChipPropsPartial :: Type
 
+chipPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (ChipPropsOptions React.Basic.DOM.Props_div) => Record options -> ChipPropsPartial
+chipPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type ChipClassKeyGenericOptions a = ( avatar :: a, avatarColorPrimary :: a, avatarColorSecondary :: a, avatarSmall :: a, clickable :: a, clickableColorPrimary :: a, clickableColorSecondary :: a, colorPrimary :: a, colorSecondary :: a, deletable :: a, deletableColorPrimary :: a, deletableColorSecondary :: a, deleteIcon :: a, deleteIconColorPrimary :: a, deleteIconColorSecondary :: a, deleteIconOutlinedColorPrimary :: a, deleteIconOutlinedColorSecondary :: a, deleteIconSmall :: a, disabled :: a, icon :: a, iconColorPrimary :: a, iconColorSecondary :: a, iconSmall :: a, label :: a, labelSmall :: a, outlined :: a, outlinedPrimary :: a, outlinedSecondary :: a, root :: a, sizeSmall :: a )
 
 type ChipClassKeyOptions  = ChipClassKeyGenericOptions String

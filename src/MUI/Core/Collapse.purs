@@ -16,6 +16,9 @@ foreign import data CollapseProps :: Type
 
 foreign import data CollapsePropsPartial :: Type
 
+collapsePropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (CollapsePropsOptions React.Basic.DOM.Props_div) => Record options -> CollapsePropsPartial
+collapsePropsPartial = Unsafe.Coerce.unsafeCoerce
+
 foreign import _Collapse :: ∀ a. React.Basic.ReactComponent a
 
 collapse :: ∀ required given. Prim.Row.Union given required (CollapsePropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX

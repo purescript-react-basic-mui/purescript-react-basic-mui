@@ -7,7 +7,7 @@ import Codegen (component, icon, write) as Codegen
 import Codegen.AST (Ident(..), ModuleName(..), TypeF(..), TypeName(..))
 import Codegen.AST.Sugar (declType)
 import Codegen.AST.Sugar.Type (app, constrained, constructor, forAll, record, recordApply, row) as Type
-import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, iconName, jsx, psImportPath, reactComponentApply)
+import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, divProps, iconName, jsx, psImportPath, reactComponentApply)
 import Codegen.Model (componentName) as Model
 import Codegen.TS.MUI (componentProps) as TS.MUI
 import Codegen.TS.MUI (propsTypeName)
@@ -57,9 +57,6 @@ components =
     defaultComponent = Tuple "defaultComponent" $ reactComponentApply
         [ Type.record <<< Type.row mempty $ Just $ Left componentPropsIdent ]
 
-    inputComponent = Tuple "inputComponent" $ reactComponentApply
-        [ Type.record <<< Type.row mempty $ Just $ Left (Ident "Props_input") ]
-
     basePropsRow extraVars props =
       { row: Type.row props (Just (Left componentPropsIdent))
       , vars: [ componentPropsIdent ] <> extraVars
@@ -83,7 +80,7 @@ components =
 
     appBar = simpleComponent
       { inherits: Just $ Type.app
-          (Type.constructor "MUI.Core.Paper.PaperProps")
+          (Type.constructor "MUI.Core.Paper.PaperPropsOptions")
           [Type.constructor "React.Basic.DOM.Props_div"]
       , name: "AppBar"
       , propsType:
@@ -230,7 +227,7 @@ components =
 
     card = simpleComponent
       { inherits: Just $ Type.app
-          (Type.constructor "MUI.Core.Paper.PaperProps")
+          (Type.constructor "MUI.Core.Paper.PaperPropsOptions")
           [Type.constructor "React.Basic.DOM.Props_div"]
       , name: "Card"
       , propsType:
@@ -461,6 +458,104 @@ components =
         }
       }
 
+    -- | TODO: add component
+    divider = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_hr"
+      , name: "Divider"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable []
+        , generate: 
+            [ "absolute"
+            , "classes"
+            , "light"
+            , "orientation"
+            , "variant"
+            ]
+        }
+      }
+
+    drawer = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.Modal.ModalPropsOptions") [ divProps ]
+      , name: "Drawer"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              ([ children
+              , Tuple "ModalProps" (Type.constructor "MUI.Core.Modal.ModalPropsPartial")
+              , eventHandlerProp "onClose"
+              , Tuple "PaperProps" (Type.constructor "MUI.Core.Modal.ModalPropsPartial")
+              , Tuple "SlideProps" (Type.constructor "MUI.Core.Slide.SlidePropsPartial")
+              ] <> map eventHandlerProp ["onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting"])
+          , generate: 
+            [ "anchor"
+            , "classes"
+            , "elevation"
+            , "open"
+            , "transitionDuration"
+            , "variant"
+            ]
+          }
+      }
+
+    -- | TODO: TransitionComponent, TransitionProps
+    expansionPanel = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ divProps ]
+      , name: "ExpansionPanel"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ children
+              , eventHandlerProp "onChange"
+              ]
+          , generate: 
+              [ "classes"
+              , "defaultExpanded"
+              , "disabled"
+              , "expanded"
+              ]
+          }
+      }
+
+    expansionPanelActions = simpleComponent
+      { inherits: Just divProps
+      , name: "ExpansionPanelActions"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ children
+              ]
+          , generate: 
+              [ "classes"
+              ]
+          }
+      }
+
+    expansionPanelDetails = simpleComponent
+      { inherits: Just divProps
+      , name: "ExpansionPanelDetails"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ children
+              ]
+          , generate: 
+              [ "classes"
+              ]
+          }
+      }
+
+    expansionPanelSummary = simpleComponent
+      { inherits: Just divProps
+      , name: "ExpansionPanelSummary"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ children
+              , Tuple "expandIcon" jsx
+              , Tuple "IconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonPropsPartial")
+              ]
+          , generate: 
+              [ "classes"
+              ]
+          }
+      }
+
+
     fab = simpleComponent
       { inherits: Just $ Type.app
           (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
@@ -486,6 +581,144 @@ components =
             ]
           }
       }
+
+    -- | TODO inputComponent, make value a type variable
+    filledInput = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.InputBasePropsOption") [ divProps ]
+      , name: "FilledInput"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ children
+              , Tuple "endAdornment" jsx
+              , Tuple "inputProps" (Type.constructor "MUI.Core.InputBasePartial")
+              , Tuple "inputRef" foreignType
+              , eventHandlerProp "onChange"
+              , Tuple "startAdornment" jsx
+              , Tuple "value" foreignType
+              ]
+          , generate: 
+              [ "autoComplete"
+              , "autoFocus"
+              , "classes"
+              , "className"
+              , "color"
+              , "defaultValue"
+              , "disabled"
+              , "disableUnderline"
+              , "error"
+              , "fullWidth"
+              , "id"
+              , "margin"
+              , "multiline"
+              , "name"
+              , "placeholder" 
+              , "readOnly"
+              , "required"
+              , "rows"
+              , "rowsMax"
+              , "type"
+              ]
+          }
+      }
+
+    formControl = simpleComponent
+      { inherits: Just $ divProps
+      , name: "FormControl"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ children
+              ]
+          , generate: 
+              [ "color"
+              , "disabled"
+              , "error"
+              , "fullWidth"
+              , "hiddenLabel"
+              , "margin"
+              , "required"
+              , "variant"
+              ]
+          }
+      }
+
+    -- | TODO make value a type variable
+    formControlLabel = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_label" 
+      , name: "FormControlLabel"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ children
+              , Tuple "control" jsx
+              , Tuple "label" jsx
+              , eventHandlerProp "onChange"
+              , Tuple "value" foreignType
+              ]
+          , generate: 
+              [ "checked" 
+              , "classes"
+              , "disabled"
+              , "labelPlacement"
+              , "name"
+              ]
+          }
+      }
+
+    formGroup = simpleComponent
+      { inherits: Just $ divProps
+      , name: "FormGroup"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ children
+              ]
+          , generate: 
+              [ "classes"
+              , "row"
+              ]
+          }
+      }
+
+    
+    formHelperText = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_p" 
+      , name: "FormHelperText"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ children
+              , component
+              ]
+          , generate: 
+              [ "classes"
+              , "disabled"
+              , "error"
+              , "filled"
+              , "focused"
+              , "margin"
+              , "required"
+              , "variant"
+              ]
+          }
+      }
+
+    formLabel = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_label" 
+      , name: "FormLabel"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable 
+              [ children
+              ]
+          , generate: 
+              [ "classes"
+              , "color"
+              , "disabled"
+              , "error"
+              , "filled"
+              , "focused"
+              , "required"
+              ]
+          }
+      }
+
+
 
     gridList =
       let
@@ -517,6 +750,7 @@ components =
             }
           }
 
+    -- | TODO: inputProps should be something like ReactComponent { | InputProps }
     inputBase = simpleComponent
       { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
       , name: "InputBase"
@@ -524,7 +758,6 @@ components =
         { base: basePropsRow [] $ Map.fromFoldable 
             [ Tuple "defaultValue" foreignType
             , Tuple "endAdornment" jsx
-            , inputComponent
             , Tuple "inputProps" foreignType
             , Tuple "inputRef" foreignType
             , Tuple "startAdornment" jsx
@@ -654,6 +887,32 @@ components =
           }
         }
 
+    paper = simpleComponent
+      { inherits: Just divProps
+      , name: "Paper"
+      , propsType:
+        { base: basePropsRow [ ] $ Map.fromFoldable $ [ children, component ]
+        , generate:
+          [ "classes"
+          , "elevation"
+          , "square"
+          ]
+        }
+      }
+
+
+    slide = simpleComponent
+        { inherits: Nothing
+        , name: "Slide"
+        , propsType: 
+            { base: basePropsRow [] $ Map.fromFoldable $ 
+                map eventHandlerProp ["onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting"]
+            , generate: 
+              [ "direction", "in", "timeout"
+              ]
+            }
+        }
+
     touchRipple =
       { extraDeclarations: []
       , inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
@@ -692,8 +951,19 @@ components =
     , dialogActions
     , dialogContent
     , dialogTitle
+    , divider
+    , drawer
+    , expansionPanel
+    , expansionPanelActions
+    , expansionPanelDetails
+    , expansionPanelSummary
     , fab
     , fade
+    , formControl
+    , formControlLabel
+    , formGroup
+    , formHelperText
+    , formLabel
     , gridList
     , gridListTile
     , inputBase
@@ -701,6 +971,8 @@ components =
     , menu
     , menuItem
     , modal
+    , paper
+    , slide
     , touchRipple
     ]
 

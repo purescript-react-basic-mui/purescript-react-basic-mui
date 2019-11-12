@@ -1,91 +1,40 @@
 module MUI.Core.Paper where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_div)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type PaperProps componentProps =
-  ( children :: Array JSX
-  , classes :: PaperClassKey
-  , component :: ReactComponent { | componentProps }
-  , elevation :: Number
-  , square :: Boolean
-  | componentProps
-  )
+type PaperPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: PaperClassKey, component :: React.Basic.ReactComponent {  | componentProps }, elevation :: Number, square :: Boolean | componentProps )
 
-foreign import data PaperClassKey :: Type
-foreign import data PaperClassKeyJSS :: Type
+foreign import data PaperProps :: Type
+
 foreign import data PaperPropsPartial :: Type
 
-type PaperClassKeyOptionsJSS = PaperClassKeyOptionsR JSS
-type PaperClassKeyOptions = PaperClassKeyOptionsR String
-type PaperClassKeyOptionsR a =
-  ( root :: a
-  , rounded :: a
-  , elevation0 :: a
-  , elevation1 :: a
-  , elevation2 :: a
-  , elevation3 :: a
-  , elevation4 :: a
-  , elevation5 :: a
-  , elevation6 :: a
-  , elevation7 :: a
-  , elevation8 :: a
-  , elevation9 :: a
-  , elevation10 :: a
-  , elevation11 :: a
-  , elevation12 :: a
-  , elevation13 :: a
-  , elevation14 :: a
-  , elevation15 :: a
-  , elevation16 :: a
-  , elevation17 :: a
-  , elevation18 :: a
-  , elevation19 :: a
-  , elevation20 :: a
-  , elevation21 :: a
-  , elevation22 :: a
-  , elevation23 :: a
-  , elevation24 :: a
-  )
+paperPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (PaperPropsOptions React.Basic.DOM.Props_div) => Record options -> PaperPropsPartial
+paperPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-paperClassKey :: ∀ options options_
-  . Union options options_ PaperClassKeyOptions
-  => Record options
-  -> PaperClassKey
-paperClassKey = unsafeCoerce
+type PaperClassKeyGenericOptions a = ( elevation0 :: a, elevation1 :: a, elevation10 :: a, elevation11 :: a, elevation12 :: a, elevation13 :: a, elevation14 :: a, elevation15 :: a, elevation16 :: a, elevation17 :: a, elevation18 :: a, elevation19 :: a, elevation2 :: a, elevation20 :: a, elevation21 :: a, elevation22 :: a, elevation23 :: a, elevation24 :: a, elevation3 :: a, elevation4 :: a, elevation5 :: a, elevation6 :: a, elevation7 :: a, elevation8 :: a, elevation9 :: a, root :: a, rounded :: a )
 
-paperClassKeyJSS :: ∀ options options_
-  . Union options options_ PaperClassKeyOptionsJSS
-  => Record options
-  -> PaperClassKeyJSS
-paperClassKeyJSS = unsafeCoerce
+type PaperClassKeyOptions  = PaperClassKeyGenericOptions String
 
-paperPropsPartial_component :: ∀ componentProps props props_
-  . Union props props_ (PaperProps componentProps)
-  => Record props 
-  -> PaperPropsPartial
-paperPropsPartial_component = unsafeCoerce
+foreign import data PaperClassKey :: Type
 
-paperPropsPartial :: ∀ props props_
-  . Union props props_ (PaperProps Props_div)
-  => Record props 
-  -> PaperPropsPartial
-paperPropsPartial = unsafeCoerce
+paperClassKey :: ∀ required given. Prim.Row.Union given required PaperClassKeyOptions => Record given -> PaperClassKey
+paperClassKey = Unsafe.Coerce.unsafeCoerce
 
-paper_component :: ∀ componentProps props props_
-  . Union props props_ (PaperProps componentProps)
-  => Record props 
-  -> JSX
-paper_component = element _Paper
+type PaperClassKeyOptionsJSS  = PaperClassKeyGenericOptions MUI.Core.JSS
 
-paper :: ∀ props props_
-  . Union props props_ (PaperProps Props_div)
-  => Record props 
-  -> JSX
-paper = element _Paper
+foreign import data PaperClassKeyJSS :: Type
 
+paperClassKeyJSS :: ∀ required given. Prim.Row.Union given required PaperClassKeyOptionsJSS => Record given -> PaperClassKeyJSS
+paperClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-foreign import _Paper :: ∀ a. ReactComponent a
+foreign import _Paper :: ∀ a. React.Basic.ReactComponent a
+
+paper :: ∀ required given. Prim.Row.Union given required (PaperPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+paper = React.Basic.element _Paper
+
+paper_component :: ∀ required given componentProps. Prim.Row.Union given required (PaperPropsOptions componentProps) => Record given -> React.Basic.JSX
+paper_component = React.Basic.element _Paper

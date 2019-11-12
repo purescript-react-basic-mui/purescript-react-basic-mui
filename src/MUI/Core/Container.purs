@@ -21,6 +21,9 @@ foreign import data ContainerProps :: Type
 
 foreign import data ContainerPropsPartial :: Type
 
+containerPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (ContainerPropsOptions React.Basic.DOM.Props_div) => Record options -> ContainerPropsPartial
+containerPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 foreign import _Container :: ∀ a. React.Basic.ReactComponent a
 
 container :: ∀ required given. Prim.Row.Union given required (ContainerPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX

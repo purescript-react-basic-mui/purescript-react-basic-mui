@@ -12,6 +12,9 @@ foreign import data TouchRippleProps :: Type
 
 foreign import data TouchRipplePropsPartial :: Type
 
+touchRipplePropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (TouchRipplePropsOptions React.Basic.DOM.Props_span) => Record options -> TouchRipplePropsPartial
+touchRipplePropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type TouchRippleClassKeyGenericOptions a = ( child :: a, childLeaving :: a, childPulsate :: a, ripple :: a, ripplePulsate :: a, rippleVisible :: a, root :: a )
 
 type TouchRippleClassKeyOptions  = TouchRippleClassKeyGenericOptions String

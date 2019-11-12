@@ -39,6 +39,9 @@ foreign import data FabProps :: Type
 
 foreign import data FabPropsPartial :: Type
 
+fabPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (FabPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Record options -> FabPropsPartial
+fabPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type FabClassKeyGenericOptions a = ( colorInherit :: a, disabled :: a, extended :: a, focusVisible :: a, label :: a, primary :: a, root :: a, secondary :: a, sizeMedium :: a, sizeSmall :: a )
 
 type FabClassKeyOptions  = FabClassKeyGenericOptions String

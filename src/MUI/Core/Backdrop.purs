@@ -18,6 +18,9 @@ foreign import data BackdropProps :: Type
 
 foreign import data BackdropPropsPartial :: Type
 
+backdropPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (BackdropPropsOptions (MUI.Core.Fade.FadePropsOptions React.Basic.DOM.Props_div)) => Record options -> BackdropPropsPartial
+backdropPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type BackdropClassKeyGenericOptions a = ( invisible :: a, root :: a )
 
 type BackdropClassKeyOptions  = BackdropClassKeyGenericOptions String

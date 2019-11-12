@@ -13,6 +13,9 @@ foreign import data CardActionAreaProps :: Type
 
 foreign import data CardActionAreaPropsPartial :: Type
 
+cardActionAreaPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (CardActionAreaPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Record options -> CardActionAreaPropsPartial
+cardActionAreaPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type CardActionAreaClassKeyGenericOptions a = ( focusHighlight :: a, focusVisible :: a, root :: a )
 
 type CardActionAreaClassKeyOptions  = CardActionAreaClassKeyGenericOptions String

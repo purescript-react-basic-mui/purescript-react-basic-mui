@@ -30,6 +30,9 @@ foreign import data LinearProgressProps :: Type
 
 foreign import data LinearProgressPropsPartial :: Type
 
+linearProgressPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (LinearProgressPropsOptions React.Basic.DOM.Props_div) => Record options -> LinearProgressPropsPartial
+linearProgressPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type LinearProgressClassKeyGenericOptions a = ( bar :: a, bar1Buffer :: a, bar1Determinate :: a, bar1Indeterminate :: a, bar2Buffer :: a, bar2Indeterminate :: a, barColorPrimary :: a, barColorSecondary :: a, buffer :: a, colorPrimary :: a, colorSecondary :: a, dashed :: a, dashedColorPrimary :: a, dashedColorSecondary :: a, determinate :: a, indeterminate :: a, query :: a, root :: a )
 
 type LinearProgressClassKeyOptions  = LinearProgressClassKeyGenericOptions String

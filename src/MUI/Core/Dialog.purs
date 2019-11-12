@@ -36,6 +36,9 @@ foreign import data DialogProps :: Type
 
 foreign import data DialogPropsPartial :: Type
 
+dialogPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (DialogPropsOptions React.Basic.DOM.Props_div) => Record options -> DialogPropsPartial
+dialogPropsPartial = Unsafe.Coerce.unsafeCoerce
+
 type DialogClassKeyGenericOptions a = ( container :: a, paper :: a, paperFullScreen :: a, paperFullWidth :: a, paperScrollBody :: a, paperScrollPaper :: a, paperWidthFalse :: a, paperWidthLg :: a, paperWidthMd :: a, paperWidthSm :: a, paperWidthXl :: a, paperWidthXs :: a, root :: a, scrollBody :: a, scrollPaper :: a )
 
 type DialogClassKeyOptions  = DialogClassKeyGenericOptions String
