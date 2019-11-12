@@ -3,13 +3,11 @@ module Codegen.AST.Printers where
 import Prelude
 
 import Codegen.AST.Imports (declarationImports, importsDeclarations)
-import Codegen.AST.Types (Declaration(..), Expr, ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), QualifiedName, RowF(..), TypeF(..), TypeName(..), ValueBindingFields, reservedNames)
+import Codegen.AST.Types (Declaration(..), ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), QualifiedName, RowF(..), TypeF(..), TypeName(..), ValueBindingFields, reservedNames)
 import Data.Array (cons, fromFoldable, null) as Array
 import Data.Char.Unicode (isUpper)
 import Data.Either (Either(..), fromRight)
 import Data.Foldable (foldMap, intercalate)
-import Data.Functor.Mu (Mu(..)) as Mu
-import Data.Int (binary)
 import Data.List (intercalate) as List
 import Data.Map (toUnfoldable) as Map
 import Data.Maybe (Maybe(..))
@@ -20,8 +18,8 @@ import Data.String.CodeUnits (uncons) as SCU
 import Data.String.Regex (Regex, regex)
 import Data.String.Regex (test) as Regex
 import Data.String.Regex.Flags (noFlags) as Regex.Flags
-import Data.Tuple (Tuple(..), snd)
-import Matryoshka (Algebra, GAlgebra, cata, para)
+import Data.Tuple (Tuple(..))
+import Matryoshka (Algebra, cata)
 import Partial.Unsafe (unsafePartial)
 
 lines :: Array String -> String

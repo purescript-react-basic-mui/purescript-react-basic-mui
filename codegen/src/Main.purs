@@ -157,10 +157,11 @@ components =
     breadcrumbs = simpleComponent
       { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
       , name: "Breadcrumbs"
-      , propsType: 
+      , propsType:
         { base: basePropsRow [] $ Map.fromFoldable $ 
             [ children
-            , component
+            -- Not found on the TS side
+            -- , component
             , Tuple "separator" jsx
             , Tuple "ref" foreignType
             ]

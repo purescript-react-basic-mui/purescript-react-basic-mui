@@ -9,7 +9,7 @@ import Codegen.AST.Sugar.Expr (app, ident) as Expr
 import Codegen.AST.Sugar.Type (app, arr, constructor, row, string, typeRow, var) as Type
 import Codegen.AST.Sugar.Type (arr) as T
 import Codegen.AST.Sugar.Type (constrained, forAll, forAll', forAllWith, recordApply)
-import Codegen.Model (Component, ComponentName, ModulePath, componentFullPath, componentName, jsImportPath, psImportPath, reactComponentApply)
+import Codegen.Model (Component, ComponentName, ModulePath, componentFullPath, jsImportPath, psImportPath, reactComponentApply)
 import Codegen.Model (componentName, jsx) as Model
 import Codegen.TS.Module (PossibleType(..), astAlgebra, declarations, exprUnsafeCoerce, unionDeclarations) as TS.Module
 import Codegen.TS.Module (exprUnsafeCoerce)
@@ -17,7 +17,7 @@ import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.State (runState)
-import Control.Monad.Writer (execWriter, runWriter)
+import Control.Monad.Writer (execWriter)
 import Control.Monad.Writer.Class (tell)
 import Data.Array (cons, elem, filter, fromFoldable, null, singleton, tail, toUnfoldable) as Array
 import Data.Either (Either(..))
@@ -36,11 +36,9 @@ import Data.String (joinWith)
 import Data.String.Extra (camelCase)
 import Data.Traversable (for)
 import Data.Tuple (Tuple(..))
-import Data.Unfoldable (fromMaybe) as Unfoldable
 import Matryoshka (cata, cataM)
 import ReadDTS.Instantiation (Property, Type, TypeF(..)) as Instantiation
 import ReadDTS.Instantiation.Pretty (pprintTypeName)
-import Unsafe.Coerce (unsafeCoerce)
 
 type TsImportPath = String
 
