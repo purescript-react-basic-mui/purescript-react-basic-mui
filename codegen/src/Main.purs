@@ -1257,6 +1257,61 @@ components =
           }
         }
 
+    -- | TODO value
+    noSsr = simpleComponent
+      { inherits: Nothing
+        , name: "NoSsr"
+        , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "fallback" jsx
+              ]
+          , generate: 
+              [ "defer"
+              ]
+          }
+        }
+
+    -- | inputComponent
+    outlineInput = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.InputBase.InputBasePropsOptions") [ divProps ]
+      , name: "OutlinedInput"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+            [ Tuple "defaultValue" foreignType
+            , Tuple "endAdornment" jsx
+            , Tuple "inputProps" foreignType
+            , Tuple "inputRef" foreignType
+            , Tuple "startAdornment" jsx
+            , Tuple "value" foreignType
+            , eventHandlerProp "onChange"
+            ]
+        , generate:
+          [ "autoComplete"
+          , "autoFocus"
+          , "classes"
+          , "className"
+          , "color"
+          , "disabled"
+          , "error"
+          , "fullWidth"
+          , "id"
+          , "margin"
+          , "multiline"
+          , "name"
+          , "notched"
+          , "placeholder"
+          , "readOnly"
+          , "required"
+          , "rows"
+          , "rowsMax"
+          , "type"
+          ]
+        }
+      }
+
+
+
     paper = simpleComponent
       { inherits: Just divProps
       , name: "Paper"
@@ -1270,18 +1325,174 @@ components =
         }
       }
 
+    -- | TransitionComponent, TransitionProps, transformOrigin
+    popover = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.Modal.ModalPropsOptions") [ divProps ]
+      , name: "Popover"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+            [ Tuple "action" foreignType
+            , Tuple "anchorEl" foreignType
+            , Tuple "anchorPosition" foreignType
+            , children
+            , Tuple "getContentAnchorEl" foreignType
+            , eventHandlerProp "onChange"
+            , eventHandlerProp "onEnter"
+            , eventHandlerProp "onEntering"
+            , eventHandlerProp "onExit"
+            , eventHandlerProp "onExited"
+            , eventHandlerProp "onExiting"
+            , Tuple "PaperProps" (Type.constructor "MUI.Core.Paper.PaperProps")
+            ]
+        , generate:
+          [ "anchorOrigin"
+          , "anchorPosition"
+          , "classes"
+          , "elevation"
+          , "marginThreshold"
+          , "open"
+          --, "transformOrigin"
+          , "transitionDuration"
+          ]
+        }
+      }
 
-    slide = simpleComponent
-        { inherits: Nothing
-        , name: "Slide"
+    popper = simpleComponent
+      { inherits: Just divProps
+      , name: "Popper"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+            [ Tuple "anchorEl" foreignType
+            , children
+            , Tuple "modifiers" foreignType
+            , Tuple "popperOptions" foreignType
+            , Tuple "popperRef" foreignType
+            ]
+        , generate:
+          [ "disablePortal"
+          , "keepMounted"
+          , "open"
+          , "transition"
+          ]
+        }
+      }
+
+    portal = simpleComponent
+      { inherits: Nothing
+      , name: "Portal"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+          [ children
+          , Tuple "container" foreignType
+          , eventHandlerProp "onRendered"
+          ]
+        , generate: [ "disablePortal" ]
+        }
+      }
+
+    -- | value, inputProps, inputRef
+    radio = simpleComponent
+        { inherits: Just $ Type.app (Type.constructor "MUI.Core.IconButton.IconButtonPropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        , name: "Radio"
         , propsType: 
-            { base: basePropsRow [] $ Map.fromFoldable $ 
-                map eventHandlerProp ["onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting"]
+            { base: basePropsRow [] $ Map.fromFoldable
+                  [ Tuple "checkedIcon" jsx
+                  , Tuple "inputProps" foreignType
+                  , Tuple "inputRef" foreignType
+                  , eventHandlerProp "onChange"
+                  , Tuple "value" foreignType
+                  ]
             , generate: 
-              [ "direction", "in", "timeout"
+              [ "checked"
+              , "classes"
+              , "color"
+              , "disabled"
+              , "disableRipple"
+              , "icon"
+              , "id"
+              , "name"
+              , "required"
+              , "type"
               ]
             }
         }
+
+    -- | value, inputProps, inputRef
+    radioGroup = simpleComponent
+        { inherits: Just $ Type.app (Type.constructor "MUI.Core.FormGroup.FormGroupPropsOptions") [ divProps ]
+        , name: "RadioGroup"
+        , propsType: 
+            { base: basePropsRow [] $ Map.fromFoldable
+                  [ children
+                  , Tuple "defaultValue" foreignType
+                  , eventHandlerProp "onChange"
+                  , Tuple "value" foreignType
+                  ]
+            , generate: 
+              [ "name"
+              ]
+            }
+        }
+
+    rootRef = simpleComponent
+        { inherits: Nothing
+        , name: "RootRef"
+        , propsType: 
+            { base: basePropsRow [] $ Map.fromFoldable
+                  [ Tuple "rootRef" foreignType
+                  ]
+            , generate: 
+              [
+              ]
+            }
+        }
+
+    slide = simpleComponent
+      { inherits: Nothing
+      , name: "Slide"
+      , propsType: 
+        { base: basePropsRow [] $ Map.fromFoldable $ 
+            map eventHandlerProp ["onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting"]
+        , generate: 
+          [ "direction", "in", "timeout"
+          ]
+        }
+      }
+
+    -- | TODO value
+    select = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ Type.constructor "React.Basic.DOM.Props_div" ]
+        , name: "Select"
+        , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "IconComponent" jsx
+              , Tuple "input" jsx
+              , Tuple "inputProps" (Type.constructor "MUI.Core.Input.InputProps")
+              , Tuple "MenuProps" (Type.constructor "MUI.Core.Menu.MenuProps")
+              , eventHandlerProp "onChange"
+              , eventHandlerProp "onClose"
+              , eventHandlerProp "onOpen"
+              , Tuple "renderValue" foreignType
+              , Tuple "SelectDisplayProps" foreignType
+              , Tuple "value" foreignType 
+              ]
+          , generate: 
+              [ "autoWidth"
+              , "classes"
+              , "displayEmpty"
+              , "labelWidth"
+              , "multiple"
+              , "native"
+              , "open"
+              , "renderValue"
+              , "variant"
+              ]
+          }
+        }
+
+
+
 
     touchRipple =
       { extraDeclarations: []
@@ -1346,6 +1557,7 @@ components =
     , inputAdornment
     , inputBase
     , inputLabel
+    , outlineInput
     , linearProgress
     , link
     , list
@@ -1357,7 +1569,15 @@ components =
     , menuItem
     , modal
     , nativeSelect
+    , noSsr
     , paper
+    , popover
+    , popper
+    , portal
+    , radio
+    , radioGroup
+    , rootRef
+    , select
     , slide
     , touchRipple
     ]
