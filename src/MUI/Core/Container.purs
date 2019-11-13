@@ -10,7 +10,7 @@ import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 foreign import data MaxWidth :: Type
 
 maxWidth :: { "false" :: MaxWidth, lg :: MaxWidth, md :: MaxWidth, sm :: MaxWidth, xl :: MaxWidth, xs :: MaxWidth }
-maxWidth = { false: Unsafe.Coerce.unsafeCoerce false, lg: Unsafe.Coerce.unsafeCoerce "lg", md: Unsafe.Coerce.unsafeCoerce "md", sm: Unsafe.Coerce.unsafeCoerce "sm", xl: Unsafe.Coerce.unsafeCoerce "xl", xs: Unsafe.Coerce.unsafeCoerce "xs" }
+maxWidth = { "false": Unsafe.Coerce.unsafeCoerce false, lg: Unsafe.Coerce.unsafeCoerce "lg", md: Unsafe.Coerce.unsafeCoerce "md", sm: Unsafe.Coerce.unsafeCoerce "sm", xl: Unsafe.Coerce.unsafeCoerce "xl", xs: Unsafe.Coerce.unsafeCoerce "xs" }
 
 instance eqMaxWidth :: Eq MaxWidth where
   eq = Unsafe.Reference.unsafeRefEq

@@ -1383,6 +1383,7 @@ components =
         , propsType: 
             { base: basePropsRow [] $ Map.fromFoldable
                   [ Tuple "checkedIcon" jsx
+                  , Tuple "icon" jsx
                   , Tuple "inputProps" foreignType
                   , Tuple "inputRef" foreignType
                   , eventHandlerProp "onChange"
@@ -1394,7 +1395,6 @@ components =
               , "color"
               , "disabled"
               , "disableRipple"
-              , "icon"
               , "id"
               , "name"
               , "required"
@@ -1433,18 +1433,6 @@ components =
             }
         }
 
-    slide = simpleComponent
-      { inherits: Nothing
-      , name: "Slide"
-      , propsType: 
-        { base: basePropsRow [] $ Map.fromFoldable $ 
-            map eventHandlerProp ["onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting"]
-        , generate: 
-          [ "direction", "in", "timeout"
-          ]
-        }
-      }
-
     -- | TODO value
     select = simpleComponent
       { inherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ divProps ]
@@ -1477,6 +1465,304 @@ components =
           }
         }
 
+    slide = simpleComponent
+      { inherits: Nothing
+      , name: "Slide"
+      , propsType: 
+        { base: basePropsRow [] $ Map.fromFoldable $ 
+            map eventHandlerProp ["onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting"]
+        , generate: 
+          [ "direction", "in", "timeout"
+          ]
+        }
+      }
+
+    -- | TODO ThumbComponent ValueLabelComponent
+    slider = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
+        , name: "Slider"
+        , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "defaultValue" foreignType
+              , Tuple "getAriaLabel" foreignType
+              , Tuple "getAriaValueText" foreignType
+              , eventHandlerProp "onChange"
+              , eventHandlerProp "onChangeCommitted"
+              , Tuple "marks" foreignType
+              , Tuple "value" foreignType
+              , Tuple "valueLabelFormat" foreignType
+              ]
+          , generate: 
+              [ "aria-label" 
+              , "aria-labelledby"
+              , "aria-valuetext"
+              , "classes"
+              , "color"
+              , "disabled"
+              , "max"
+              , "min"
+              , "name"
+              , "orientation"
+              , "step"
+              , "track"
+              , "valueLabelDisplay"
+              ]
+          }
+        }
+
+    -- | TODO: TransitionComponent, TransitionProps
+    snackbar = simpleComponent
+      { inherits: Just divProps
+        , name: "Snackbar"
+        , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "action" jsx
+              , Tuple "ClickAwayListenerProps" (Type.constructor "MUI.Core.ClickAwayListener.ClickAwayListenerProps")
+              , Tuple "ContentProps" (Type.constructor "MUI.Core.SnackbarContent.SnackbarContentProps")
+              -- `key` is in the docs but not in the typedef
+              --, Tuple "key" foreignType 
+              , Tuple "message" jsx
+              , eventHandlerProp "onClose"
+              , eventHandlerProp "onEnter"
+              , eventHandlerProp "onEntered"
+              , eventHandlerProp "onEntering"
+              , eventHandlerProp "onExit"
+              , eventHandlerProp "onExited"
+              , eventHandlerProp "onExiting"
+              ]
+          , generate: 
+              [ "anchorOrigin" 
+              , "autoHideDuration"
+              , "classes"
+              , "disableWindowBlurListener"
+              , "open"
+              , "resumeHideDuration"
+              , "transitionDuration"
+              ]
+          }
+        }
+
+    snackbarContent = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ divProps ]
+        , name: "SnackbarContent"
+        , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ Tuple "action" jsx
+              , Tuple "message" jsx
+              ]
+          , generate: 
+              [ "classes"
+              , "role" 
+              ]
+          }
+        }
+
+    step = simpleComponent
+      { inherits: Just divProps
+        , name: "Step"
+        , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "connector" jsx
+              ]
+          , generate: 
+              [ "active" 
+              , "alternativeLabel"
+              , "completed"
+              , "disabled"
+              , "index"
+              , "last"
+              , "orientation"
+              ]
+          }
+        }
+
+    stepButton = simpleComponent
+        { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        , name: "StepButton"
+        , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "icon" foreignType
+              , Tuple "optional" jsx
+              ]
+          , generate: 
+              [ "active" 
+              , "alternativeLabel"
+              , "classes"
+              , "completed"
+              , "disabled"
+              , "last"
+              , "orientation"
+              ]
+          }
+        }
+
+    stepConnector = simpleComponent
+      { inherits: Just divProps
+      , name: "StepConnector"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              ]
+          , generate: 
+              [ "active" 
+              , "alternativeLabel"
+              , "classes"
+              , "completed"
+              , "disabled"
+              , "index"
+              , "orientation"
+              ]
+          }
+        }
+
+    -- | TODO: TransitionComponent, transitionDuration, TransitionProps
+    stepContent = simpleComponent
+      { inherits: Just divProps
+      , name: "StepContent"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              ]
+          , generate: 
+              [ "active" 
+              , "alternativeLabel"
+              , "classes"
+              , "completed"
+              , "last"
+              , "optional"
+              , "orientation"
+              ]
+          }
+        }
+
+
+    stepIcon = simpleComponent
+      { inherits: Just divProps
+      , name: "StepIcon"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "icon" jsx
+              ]
+          , generate: 
+              [ "active" 
+              , "classes"
+              , "completed"
+              , "error"
+              ]
+          }
+        }
+
+    -- | TODO StepIconComponent
+    stepLabel = simpleComponent
+      { inherits: Just divProps
+      , name: "StepLabel"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "icon" jsx
+              , Tuple "optional" jsx
+              , Tuple "StepIconComponent" foreignType
+              , Tuple "StepIconProps" (Type.constructor "MUI.Core.StepIcon.StepIconProps")
+              ]
+          , generate: 
+              [ "classes"
+              , "disabled"
+              , "error"
+              ]
+          }
+        }
+
+    stepper = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ divProps ]
+      , name: "Stepper"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "connector" jsx
+              ]
+          , generate: 
+              [ "activeStep"
+              , "alternativeLabel"
+              , "classes"
+              , "nonLinear" 
+              , "orientation" 
+              ]
+          }
+        }
+
+    svgIcon = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.SVG.Props_svg"
+      , name: "SvgIcon"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              ]
+          , generate: 
+              [ "classes"
+              , "color"
+              , "fontSize"
+              , "htmlColor"
+              , "shapeRendering"
+              , "titleAccess"
+              , "viewBox"
+              ]
+          }
+        }
+
+    swipeableDrawer = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.Drawer.DrawerPropsOptions") [ divProps ]
+      , name: "SwipeableDrawer"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "SwipeAreaProps" foreignType
+              , eventHandlerProp "onClose"
+              , eventHandlerProp "onOpen"
+              ]
+          , generate: 
+              [ "disableBackdropTransition"
+              , "disableDiscovery"
+              , "disableSwipeToOpen"
+              , "hysteresis"
+              , "minFlingVelocity"
+              , "open"
+              , "swipeAreaWidth"
+              ]
+          }
+        }
+
+    switch = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.IconButton.IconButtonPropsOptions") [ divProps ]
+      , name: "Switch"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "checkedIcon" jsx
+              , Tuple "icon" jsx
+              , Tuple "inputProps" foreignType
+              , Tuple "inputRef" foreignType
+              , eventHandlerProp "onChange"
+              , Tuple "value" foreignType
+              ]
+          , generate: 
+              [ "checked"
+              , "classes"
+              , "color"
+              , "disabled"
+              , "disableRipple"
+              , "edge"
+              , "id"
+              , "required"
+              , "size"
+              , "type"
+              ]
+          }
+        }
 
 
 
@@ -1565,6 +1851,19 @@ components =
     , rootRef
     , select
     , slide
+    , slider
+    , snackbar
+    , snackbarContent
+    , step
+    , stepButton
+    , stepConnector
+    , stepContent
+    , stepIcon
+    , stepLabel
+    , stepper
+    , svgIcon
+    , swipeableDrawer
+    , switch
     , touchRipple
     ]
 

@@ -19,7 +19,7 @@ size = { medium: Unsafe.Coerce.unsafeCoerce "medium", small: Unsafe.Coerce.unsaf
 foreign import data Edge :: Type
 
 edge :: { end :: Edge, "false" :: Edge, start :: Edge }
-edge = { end: Unsafe.Coerce.unsafeCoerce "end", false: Unsafe.Coerce.unsafeCoerce false, start: Unsafe.Coerce.unsafeCoerce "start" }
+edge = { end: Unsafe.Coerce.unsafeCoerce "end", "false": Unsafe.Coerce.unsafeCoerce false, start: Unsafe.Coerce.unsafeCoerce "start" }
 
 foreign import data Color :: Type
 

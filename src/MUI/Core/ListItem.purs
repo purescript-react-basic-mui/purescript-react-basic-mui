@@ -3,12 +3,22 @@ module MUI.Core.ListItem where
 import MUI.Core (JSS) as MUI.Core
 import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
 import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
+import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_li) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-type ListItemPropsOptions componentProps = ( autoFocus :: Boolean, button :: Boolean, children :: Array React.Basic.JSX, classes :: ListItemClassKey, dense :: Boolean, disableGutters :: Boolean, disabled :: Boolean, divider :: Boolean, selected :: Boolean | componentProps )
+foreign import data AlignItems :: Type
+
+alignItems :: { "FlexStart" :: AlignItems, center :: AlignItems }
+alignItems = { "FlexStart": Unsafe.Coerce.unsafeCoerce "flex-start", center: Unsafe.Coerce.unsafeCoerce "center" }
+
+instance eqAlignItems :: Eq AlignItems where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type ListItemPropsOptions componentProps = ( alignItems :: AlignItems, autoFocus :: Boolean, button :: Boolean, children :: Array React.Basic.JSX, classes :: ListItemClassKey, dense :: Boolean, disableGutters :: Boolean, disabled :: Boolean, divider :: Boolean, selected :: Boolean | componentProps )
 
 foreign import data ListItemProps :: Type
 

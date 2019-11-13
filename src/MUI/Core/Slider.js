@@ -1,0 +1,1 @@
+exports._Slider = require("@material-ui/core/Slider").default;

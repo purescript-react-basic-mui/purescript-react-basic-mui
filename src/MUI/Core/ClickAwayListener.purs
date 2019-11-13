@@ -11,12 +11,12 @@ import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 foreign import data TouchEvent :: Type
 
 touchEvent :: { "false" :: TouchEvent, onTouchEnd :: TouchEvent, onTouchStart :: TouchEvent }
-touchEvent = { false: Unsafe.Coerce.unsafeCoerce false, onTouchEnd: Unsafe.Coerce.unsafeCoerce "onTouchEnd", onTouchStart: Unsafe.Coerce.unsafeCoerce "onTouchStart" }
+touchEvent = { "false": Unsafe.Coerce.unsafeCoerce false, onTouchEnd: Unsafe.Coerce.unsafeCoerce "onTouchEnd", onTouchStart: Unsafe.Coerce.unsafeCoerce "onTouchStart" }
 
 foreign import data MouseEvent :: Type
 
 mouseEvent :: { "false" :: MouseEvent, onClick :: MouseEvent, onMouseDown :: MouseEvent, onMouseUp :: MouseEvent }
-mouseEvent = { false: Unsafe.Coerce.unsafeCoerce false, onClick: Unsafe.Coerce.unsafeCoerce "onClick", onMouseDown: Unsafe.Coerce.unsafeCoerce "onMouseDown", onMouseUp: Unsafe.Coerce.unsafeCoerce "onMouseUp" }
+mouseEvent = { "false": Unsafe.Coerce.unsafeCoerce false, onClick: Unsafe.Coerce.unsafeCoerce "onClick", onMouseDown: Unsafe.Coerce.unsafeCoerce "onMouseDown", onMouseUp: Unsafe.Coerce.unsafeCoerce "onMouseUp" }
 
 instance eqMouseEvent :: Eq MouseEvent where
   eq = Unsafe.Reference.unsafeRefEq

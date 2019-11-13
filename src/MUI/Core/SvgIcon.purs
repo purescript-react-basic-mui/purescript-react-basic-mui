@@ -1,82 +1,63 @@
 module MUI.Core.SvgIcon where
 
-import MUI.Core (JSS)
-import MUI.Core.Icon.Color as Icon
-import MUI.Core.Icon.FontSize (FontSize)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM.Internal (SharedSVGProps)
-import React.Basic.DOM.SVG (Props_svg)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
+import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM.SVG (Props_svg) as React.Basic.DOM.SVG
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-type SvgIconProps componentProps =
-  ( children :: Array JSX
-  , classes :: SvgIconClassKey
-  , color :: Icon.ColorProp
-  , component :: ReactComponent { | componentProps }
-  , fontSize :: FontSize
-  , htmlColor :: String
-  , shapeRendering :: String
-  , titleAccess :: String
-  , viewBox :: String
-  | componentProps
-  )
+foreign import data FontSize :: Type
 
-foreign import data SvgIconClassKey :: Type
-foreign import data SvgIconClassKeyJSS :: Type
+fontSize :: { default :: FontSize, inherit :: FontSize, large :: FontSize, small :: FontSize }
+fontSize = { default: Unsafe.Coerce.unsafeCoerce "default", inherit: Unsafe.Coerce.unsafeCoerce "inherit", large: Unsafe.Coerce.unsafeCoerce "large", small: Unsafe.Coerce.unsafeCoerce "small" }
+
+foreign import data Color :: Type
+
+color :: { action :: Color, disabled :: Color, error :: Color, inherit :: Color, primary :: Color, secondary :: Color }
+color = { action: Unsafe.Coerce.unsafeCoerce "action", disabled: Unsafe.Coerce.unsafeCoerce "disabled", error: Unsafe.Coerce.unsafeCoerce "error", inherit: Unsafe.Coerce.unsafeCoerce "inherit", primary: Unsafe.Coerce.unsafeCoerce "primary", secondary: Unsafe.Coerce.unsafeCoerce "secondary" }
+
+instance eqColor :: Eq Color where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqFontSize :: Eq FontSize where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type SvgIconPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: SvgIconClassKey, color :: Color, fontSize :: FontSize, htmlColor :: String, shapeRendering :: String, titleAccess :: String, viewBox :: String | componentProps )
+
+foreign import data SvgIconProps :: Type
+
 foreign import data SvgIconPropsPartial :: Type
 
-type SvgIconClassKeyOptionsJSS = SvgIconClassKeyOptionsR JSS
-type SvgIconClassKeyOptions = SvgIconClassKeyOptionsR String
-type SvgIconClassKeyOptionsR a =
-  ( root :: a
-  , colorPrimary :: a
-  , colorSecondary :: a
-  , colorAction :: a
-  , colorError :: a
-  , colorDisabled :: a
-  , fontSizeInherit :: a
-  , fontSizeSmall :: a
-  , fontSizeLarge :: a
-  )
+svgIconPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (SvgIconPropsOptions React.Basic.DOM.SVG.Props_svg) => Record options -> SvgIconPropsPartial
+svgIconPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-svgIconClassKey :: ∀ options options_
-  . Union options options_ SvgIconClassKeyOptions
-  => Record options
-  -> SvgIconClassKey
-svgIconClassKey = unsafeCoerce
+type SvgIconClassKeyGenericOptions a = ( colorAction :: a, colorDisabled :: a, colorError :: a, colorPrimary :: a, colorSecondary :: a, fontSizeInherit :: a, fontSizeLarge :: a, fontSizeSmall :: a, root :: a )
 
-svgIconClassKeyJSS :: ∀ options options_
-  . Union options options_ SvgIconClassKeyOptionsJSS
-  => Record options
-  -> SvgIconClassKeyJSS
-svgIconClassKeyJSS = unsafeCoerce
+type SvgIconClassKeyOptions  = SvgIconClassKeyGenericOptions String
 
-svgIconPropsPartial_component :: ∀ componentProps props props_
-  . Union props props_ (SvgIconProps componentProps)
-  => Record props 
-  -> SvgIconPropsPartial 
-svgIconPropsPartial_component = unsafeCoerce
+foreign import data SvgIconClassKey :: Type
 
-svgIconPropsPartial :: ∀ props props_
-  . Union props props_ (SvgIconProps (SharedSVGProps Props_svg))
-  => Record props 
-  -> SvgIconPropsPartial 
-svgIconPropsPartial = unsafeCoerce
+svgIconClassKey :: ∀ required given. Prim.Row.Union given required SvgIconClassKeyOptions => Record given -> SvgIconClassKey
+svgIconClassKey = Unsafe.Coerce.unsafeCoerce
 
+type SvgIconClassKeyOptionsJSS  = SvgIconClassKeyGenericOptions MUI.Core.JSS
 
-svgIcon_component :: ∀ componentProps props props_
-  . Union props props_ (SvgIconProps componentProps)
-  => Record props 
-  -> JSX
-svgIcon_component = element _SvgIcon
+foreign import data SvgIconClassKeyJSS :: Type
 
-svgIcon :: ∀ props props_
-  . Union props props_ (SvgIconProps (SharedSVGProps Props_svg))
-  => Record props 
-  -> JSX
-svgIcon = element _SvgIcon
+svgIconClassKeyJSS :: ∀ required given. Prim.Row.Union given required SvgIconClassKeyOptionsJSS => Record given -> SvgIconClassKeyJSS
+svgIconClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
+foreign import _SvgIcon :: ∀ a. React.Basic.ReactComponent a
 
+svgIcon :: ∀ required given. Prim.Row.Union given required (SvgIconPropsOptions React.Basic.DOM.SVG.Props_svg) => Record given -> React.Basic.JSX
+svgIcon = React.Basic.element _SvgIcon
 
-foreign import _SvgIcon :: ∀ a. ReactComponent a
+svgIcon_component :: ∀ required given componentProps. Prim.Row.Union given required (SvgIconPropsOptions componentProps) => Record given -> React.Basic.JSX
+svgIcon_component = React.Basic.element _SvgIcon
+
+svgIconWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (SvgIconPropsOptions React.Basic.DOM.SVG.Props_svg) => Prim.Row.Union jss jss_ SvgIconClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+svgIconWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _SvgIcon)
