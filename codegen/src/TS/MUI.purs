@@ -52,7 +52,7 @@ foreignReactComponentDecl :: ComponentName -> { declaration :: Declaration , ide
 foreignReactComponentDecl componentName = { declaration, ident, var }
   where
   ident = Ident ("_" <> componentName)
-  { declaration, var } = declForeignValue (ident) (forAll' "a" \a -> reactComponentApply [a])
+  { declaration, var } = declForeignValue (ident) (forAll' "a" reactComponentApply)
 
 componentProps
   :: Component

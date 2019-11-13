@@ -6,8 +6,8 @@ import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconP
 import Codegen (component, icon, write) as Codegen
 import Codegen.AST (Ident(..), ModuleName(..), TypeF(..), TypeName(..))
 import Codegen.AST.Sugar (declType)
-import Codegen.AST.Sugar.Type (app, constrained, constructor, forAll, record, recordApply, row) as Type
-import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, divProps, iconName, jsx, psImportPath, reactComponentApply, reactComponentForallA)
+import Codegen.AST.Sugar.Type (app, constructor, record, row) as Type
+import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, divProps, iconName, jsx, psImportPath, reactComponentApply)
 import Codegen.Model (componentName) as Model
 import Codegen.TS.MUI (componentProps) as TS.MUI
 import Codegen.TS.MUI (propsTypeName)
@@ -52,10 +52,10 @@ components =
     componentPropsIdent = Ident "componentProps"
 
     component = Tuple "component" $ reactComponentApply
-        [ Type.record <<< Type.row mempty $ Just $ Left componentPropsIdent ]
+        (Type.record <<< Type.row mempty $ Just $ Left componentPropsIdent)
 
     defaultComponent = Tuple "defaultComponent" $ reactComponentApply
-        [ Type.record <<< Type.row mempty $ Just $ Left componentPropsIdent ]
+        (Type.record <<< Type.row mempty $ Just $ Left componentPropsIdent)
 
     basePropsRow extraVars props =
       { row: Type.row props (Just (Left componentPropsIdent))
@@ -81,7 +81,7 @@ components =
     appBar = simpleComponent
       { inherits: Just $ Type.app
           (Type.constructor "MUI.Core.Paper.PaperPropsOptions")
-          [Type.constructor "React.Basic.DOM.Props_div"]
+          [ divProps ]
       , name: "AppBar"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable [ children ]
@@ -89,7 +89,7 @@ components =
         }
       }
     avatar = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      { inherits: Just $ divProps
       , name: "Avatar"
       , propsType: 
           { base: basePropsRow [] $ Map.fromFoldable []
@@ -108,7 +108,7 @@ components =
     backdrop = simpleComponent
       { inherits: Just $ Type.app
           (Type.constructor "MUI.Core.Fade.FadePropsOptions")
-          [Type.constructor "React.Basic.DOM.Props_div"]
+          [ divProps ]
       , name: "Backdrop"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable [ children ]
@@ -137,7 +137,7 @@ components =
     -- | `children` and `component` are taken from `buttonBase`
 
     bottomNavigation = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      { inherits: Just $ divProps
       , name: "BottomNavigation"
       , propsType:
           { base: basePropsRow [] $ Map.fromFoldable $ [ children, component ] <> (map eventHandlerProp ["onChange"])
@@ -146,7 +146,7 @@ components =
       }
 
     box = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      { inherits: Just $ divProps
       , name: "Box"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable $ [ children, component, Tuple "css" jss ]
@@ -155,7 +155,7 @@ components =
       }
 
     breadcrumbs = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      { inherits: Just $ divProps
       , name: "Breadcrumbs"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable $ 
@@ -228,7 +228,7 @@ components =
     card = simpleComponent
       { inherits: Just $ Type.app
           (Type.constructor "MUI.Core.Paper.PaperPropsOptions")
-          [Type.constructor "React.Basic.DOM.Props_div"]
+          [ divProps ]
       , name: "Card"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable [ children ]
@@ -248,7 +248,7 @@ components =
       }
 
     cardActions = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      { inherits: Just $ divProps
       , name: "CardActions"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable [ children ]
@@ -257,7 +257,7 @@ components =
       }
 
     cardContent = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      { inherits: Just $ divProps
       , name: "CardContent"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable [ children, component ]
@@ -266,7 +266,7 @@ components =
       }
 
     cardHeader = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      { inherits: Just $ divProps
       , name: "CardHeader"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable 
@@ -284,7 +284,7 @@ components =
       }
 
     cardMedia = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      { inherits: Just $ divProps
       , name: "CardMedia"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable 
@@ -323,7 +323,7 @@ components =
       }
 
     chip = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      { inherits: Just $ divProps
       , name: "Chip"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable 
@@ -343,7 +343,7 @@ components =
       }
 
     circularProgress = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      { inherits: Just $ divProps
       , name: "CircularProgress"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable []
@@ -387,7 +387,7 @@ components =
       }
 
     container = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      { inherits: Just $ divProps
       , name: "Container"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable [ component ]
@@ -419,7 +419,9 @@ components =
           ]
         base = basePropsRow [] $ Map.fromFoldable $ [ children ] <> handlers
       in simpleComponent
-        { inherits: Nothing
+        { inherits: Just $ Type.app
+            (Type.constructor "MUI.Core.Modal.ModalPropsOptions")
+            [ divProps ]
         , name: "Dialog"
         , propsType:
           { base
@@ -930,7 +932,7 @@ components =
 
     -- | TODO: inputProps should be something like ReactComponent { | InputProps }
     inputBase = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_div"
+      { inherits: Just $ divProps
       , name: "InputBase"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable 
@@ -1187,25 +1189,6 @@ components =
 
     modal =
       let
-        props_div = Type.constructor "React.Basic.DOM.Props_div"
-        backdropPropsType = Type.app
-          (Type.constructor "MUI.Core.Backdrop.BackdropPropsOptions")
-          [ props_div ]
-
-        backdropProps = Type.forAll { g: "given", r: "required"} $ \{ g, r } ->
-          let
-            gR = Type.recordApply g
-          in
-            Type.constrained "Prim.Row.Union" [ g, r, backdropPropsType] gR
-
-        -- TODO:
-        -- When I want to make this polymorphic it complicates
-        -- codegen of derived components like `dialog` etc.
-        -- How do we want approach this problem.
-        --
-        -- backdropPropsIdent = Ident "backdropProps"
-        -- backdropProps = Type.var backdropPropsIdent
-
         handlers = map eventHandlerProp
           [ "onBackdropClick"
           , "onClose"
@@ -1213,11 +1196,11 @@ components =
           , "onRendered"
           ]
 
+        backdropPropsPartial = Type.constructor "MUI.Core.Backdrop.BackdropPropsPartial"
         base = basePropsRow [ ] $ Map.fromFoldable $
           [ children
-          , Tuple "BackdropComponent" reactComponentForallA
-          -- | XXX: Currently we are supporting only monomorphic backdrop
-          , Tuple "BackdropProps" backdropProps
+          , Tuple "BackdropComponent" (reactComponentApply backdropPropsPartial)
+          , Tuple "BackdropProps" backdropPropsPartial
           -- , container
           , Tuple
               "manager"
@@ -1247,7 +1230,7 @@ components =
 
     -- | TODO value
     nativeSelect = simpleComponent
-      { inherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ Type.constructor "React.Basic.DOM.Props_div" ]
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ divProps ]
         , name: "NativeSelect"
         , propsType:
           { base: basePropsRow [] $ Map.fromFoldable
@@ -1469,7 +1452,7 @@ components =
 
     -- | TODO value
     select = simpleComponent
-      { inherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ Type.constructor "React.Basic.DOM.Props_div" ]
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ divProps ]
         , name: "Select"
         , propsType:
           { base: basePropsRow [] $ Map.fromFoldable

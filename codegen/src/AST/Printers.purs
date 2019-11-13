@@ -139,12 +139,23 @@ printExpr = case _ of
   ExprRecord props -> const $ "{ " <> intercalate ", " props' <> " }"
     where
       props' :: Array String
-      props' = map (\(Tuple n v) -> n <> ": " <> v zero) <<< Map.toUnfoldable $ props
+      props' = map (\(Tuple n v) -> printRowLabel n <> ": " <> v zero) <<< Map.toUnfoldable $ props
+
   ExprString s -> const $ show s
   where
     zero = { precedence: Zero, binary: Nothing }
 
 data PrintingContext = StandAlone | InApplication | InArr
+
+printRowLabel l = case SCU.uncons l of
+  Just { head } -> if isUpper head || l `Set.member` reservedNames || not (Regex.test alphanumRegex l)
+    then show l
+    else l
+  Nothing -> l
+  where
+    alphanumRegex :: Regex
+    alphanumRegex = unsafePartial $ fromRight $ regex "^[A-Za-z0-9_]*$" Regex.Flags.noFlags
+
 
 printType :: Algebra TypeF (PrintingContext -> String)
 printType = case _ of
@@ -174,16 +185,7 @@ printType = case _ of
     printRow (Row { labels, tail }) = intercalate ", " labels' <> tail'
       where
         labels' :: Array String
-        labels' = map (\(Tuple n t) -> label n <> " :: " <> t StandAlone) <<< Map.toUnfoldable $ labels
-
-        alphanumRegex :: Regex
-        alphanumRegex = unsafePartial $ fromRight $ regex "^[A-Za-z0-9_]*$" Regex.Flags.noFlags
-
-        label l = case SCU.uncons l of
-          Just { head } -> if isUpper head || l `Set.member` reservedNames || not (Regex.test alphanumRegex l)
-            then show l
-            else l
-          Nothing -> l
+        labels' = map (\(Tuple n t) -> printRowLabel n <> " :: " <> t StandAlone) <<< Map.toUnfoldable $ labels
 
         tail' = case tail of
           Nothing -> mempty
