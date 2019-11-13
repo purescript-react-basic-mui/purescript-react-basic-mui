@@ -1953,6 +1953,82 @@ components =
           }
         }
 
+    textField = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.FormControl.FormControlPropsOptions") [ divProps ]
+      , name: "TextField"
+      , propsType:
+        { base: basePropsRow [] $ Map.fromFoldable 
+            [ children
+            , Tuple "defaultValue" foreignType
+            , Tuple "endAdornment" jsx
+            , Tuple "helperText" jsx 
+            , Tuple "InputLabelProps" (Type.constructor "MUI.Core.InputLabel.InputLabelProps")
+            , Tuple "inputProps" foreignType
+            , Tuple "inputRef" foreignType
+            , Tuple "FormHelperTextProps" (Type.constructor "MUI.Core.FormHelperText.FormHelperTextProps")
+            , Tuple "label" jsx
+            , eventHandlerProp "onChange"
+            , eventHandlerProp "onBlur"
+            , eventHandlerProp "onFocus"
+            , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectProps")
+            , Tuple "value" foreignType
+            ]
+        , generate:
+            [ "autoComplete"
+            , "autoFocus"
+            , "color"
+            , "disabled"
+            , "error"
+            , "fullWidth"
+            , "helperText"
+            , "id"
+            , "label"
+            , "margin"
+            , "multiline"
+            , "name"
+            , "placeholder"
+            , "required"
+            , "rows"
+            , "rowsMax"
+            , "select"
+            , "type"
+          ]
+        }
+      }
+
+    toggleButton = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [Type.constructor "React.Basic.DOM.Props_button" ]
+      , name: "ToggleButton"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "value" foreignType
+              ]
+          , generate: 
+              [ "classes"
+              , "disabled"
+              , "disableFocusRipple"
+              , "disableRipple"
+              , "selected"
+              ]
+          }
+        }
+
+    toolbar = simpleComponent
+      { inherits: Just divProps
+      , name: "Toolbar"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              ]
+          , generate: 
+              [ "classes"
+              , "disableGutters"
+              , "variant"
+              ]
+          }
+        }
+
     touchRipple =
       { extraDeclarations: []
       , inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
@@ -1964,6 +2040,39 @@ components =
         }
       , tsc: { strictNullChecks: false }
       }
+
+    -- | TODO needs to extend HTMLElement
+    typography = simpleComponent
+      { inherits: Nothing
+      , name: "Typography"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              ]
+          , generate: 
+              [ "classes"
+              , "align"
+              , "color"
+              , "display"
+              , "gutterBottom"
+              , "noWrap"
+              , "paragraph"
+              , "variant"
+              , "variantMapping"
+              ]
+          }
+        }
+
+    -- | TODO needs to extend Transition
+    zoom = simpleComponent
+      { inherits: Nothing
+      , name: "Zoom"
+      , propsType:
+          { base: emptyBase
+          , generate: [ "in" , "timeout" ]
+          }
+        }
+
   in
     [ appBar
     , avatar
@@ -2062,7 +2171,12 @@ components =
     , tableSortLabel
     , tabs
     , textareaAutosize
+    --, textField
+    --, toggleButton
+    , toolbar
     , touchRipple
+    , typography
+    , zoom
     ]
 
 -- | XXX: Can we cleanup this last traverse?

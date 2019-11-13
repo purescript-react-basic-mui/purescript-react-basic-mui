@@ -1,0 +1,1 @@
+exports._Toolbar = require("@material-ui/core/Toolbar").default;
