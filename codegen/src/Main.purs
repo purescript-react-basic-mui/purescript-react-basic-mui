@@ -410,7 +410,6 @@ components =
     dialog =
       let
         -- | TODO:
-        -- | * `ModalProps` inheritance - I want to go back to this after Modal component
         -- | migration.
         -- | * `PaperComponent`, `PaperProps`, `TransitionComponent`, `TransitionDuration`
         handlers = map eventHandlerProp
@@ -720,8 +719,6 @@ components =
           }
       }
 
-
-    -- | TODO issue with WrapReversed not getting quotes, spacing has issues
     grid = simpleComponent
       { inherits: Just divProps
       , name: "Grid"
@@ -729,20 +726,19 @@ components =
           { base: basePropsRow [] $ Map.fromFoldable 
               [ children
               ]
-          , generate: 
-              [ 
-              -- "alignContent" 
-              --, "alignItems"
-                "classes"
+          , generate:
+              [ "alignContent"
+              , "alignItems"
+              , "classes"
               , "container"
-              --, "direction"
+              , "direction"
               , "item"
-              --, "justify"
+              , "justify"
               , "lg"
               , "md"
               , "sm"
-              -- , "spacing"
-              --, "wrap"
+              , "spacing"
+              , "wrap"
               , "xl"
               , "xs"
               , "zeroMinWidth"
@@ -1043,9 +1039,8 @@ components =
           [ children
           ] 
         , generate:
-          [ 
-          -- "alignItems"
-            "autoFocus"
+          [ "alignItems"
+          , "autoFocus"
           , "button"
           , "classes"
           , "dense"
