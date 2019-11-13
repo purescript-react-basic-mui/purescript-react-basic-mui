@@ -815,7 +815,7 @@ components =
       { inherits: Nothing
       , name: "Hidden"
       , propsType:
-          { base: emptyBase 
+          { base: basePropsRow [] $ Map.fromFoldable [ Tuple "only" foreignType ]
           , generate: 
               [ "implementation"
               , "initialWidth"
@@ -823,7 +823,6 @@ components =
               , "lgUp"
               , "mdDown"
               , "mdUp"
-              , "only"
               , "smDown"
               , "smUp"
               , "xlDown"
@@ -1863,22 +1862,21 @@ components =
       , name: "TablePagination"
       , propsType:
           { base: basePropsRow [] $ Map.fromFoldable
-              [ 
-              -- children
-              -- , Tuple "backIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonProps")
-              -- , Tuple "labelDisplayedRows" foreignType
-              -- , Tuple "labelRowsPerPage" jsx
-              -- , Tuple "nextIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonProps")
-              -- , eventHandlerProp "onChangePage"
-              -- , eventHandlerProp "onChangeRowsPerPage"
-              -- , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelecProps")
+              [ children
+              , Tuple "backIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonProps")
+              , Tuple "labelDisplayedRows" foreignType
+              , Tuple "labelRowsPerPage" jsx
+              , Tuple "nextIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonProps")
+              , eventHandlerProp "onChangePage"
+              , eventHandlerProp "onChangeRowsPerPage"
+              , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelecProps")
               ]
           , generate: 
-              [ -- "classes"
-              --, "count"
-              --, "page"
-              --, "rowsPerPage"
-              --, "rowsPerPageOptions"
+              [ "classes"
+              , "count"
+              , "page"
+              , "rowsPerPage"
+              , "rowsPerPageOptions"
               ]
           }
         }
@@ -2118,7 +2116,7 @@ components =
     , gridListTile
     , gridListTileBar
     , grow
-    --, hidden
+    , hidden
     , icon
     , iconButton
     , input
