@@ -1,95 +1,57 @@
 module MUI.Core.TableSortLabel where
 
-import Foreign (Foreign)
-import MUI.Core (JSS)
-import MUI.Core.ButtonBase (ButtonBaseActions)
-import MUI.Core.ButtonBase as ButtonBase
--- import MUI.Core.SvgIcon (SvgIconProps)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_span)
---import React.Basic.DOM.Internal (SharedSVGProps)
---import React.Basic.DOM.SVG (Props_svg)
-import React.Basic.Events (EventHandler)
-import React.Basic.Hooks (Ref)
-import Unsafe.Coerce (unsafeCoerce)
+import Foreign (Foreign) as Foreign
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.ButtonBase (ButtonBasePropsOptions) as MUI.Core.ButtonBase
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
+import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_button) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-type TableSortLabelProps componentProps =
-  ( active :: Boolean
-  , children :: Array JSX
-  , classes :: TableSortLabelClassKey
-  , direction :: DirectionProp
-  , hideSortIcon :: Boolean
---  , "IconComponent" :: ReactComponent { | (SvgIconProps (SharedSVGProps Props_svg)) }
-  , action :: Ref ButtonBaseActions
-  , buttonRef :: Ref Foreign
-  , centerRipple :: Boolean
-  , component :: ReactComponent { | componentProps }
-  , disabled :: Boolean
-  , disableRipple :: Boolean
-  , disableTouchRipple :: Boolean
-  , focusRipple :: Boolean
-  , focusVisibleClassName :: String
-  , onFocusVisible :: EventHandler
-  , "TouchRippleProps" :: Foreign
-  , type :: ButtonBase.ButtonBaseTypeProp
-  | componentProps
-  )
+foreign import data Direction :: Type
 
-foreign import data DirectionProp :: Type
-data Direction = Asc | Desc
-direction :: Direction -> DirectionProp
-direction Asc = unsafeCoerce "asc"
-direction Desc = unsafeCoerce "desc"
+direction :: { asc :: Direction, desc :: Direction }
+direction = { asc: Unsafe.Coerce.unsafeCoerce "asc", desc: Unsafe.Coerce.unsafeCoerce "desc" }
 
-foreign import data TableSortLabelClassKey :: Type
-foreign import data TableSortLabelClassKeyJSS :: Type
+instance eqDirection :: Eq Direction where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type TableSortLabelPropsOptions componentProps = ( "IconComponent" :: Foreign.Foreign, active :: Boolean, children :: Array React.Basic.JSX, classes :: TableSortLabelClassKey, direction :: Direction, hideSortIcon :: Boolean | componentProps )
+
+foreign import data TableSortLabelProps :: Type
+
 foreign import data TableSortLabelPropsPartial :: Type
 
-type TableSortLabelClassKeyOptionsJSS = TableSortLabelClassKeyOptionsR JSS
-type TableSortLabelClassKeyOptions = TableSortLabelClassKeyOptionsR String
-type TableSortLabelClassKeyOptionsR a =
-  ( root :: a
-  , active :: a
-  , icon :: a
-  , iconDirectionDesc :: a
-  , iconDirectionAsc :: a
-  )
+tableSortLabelPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (TableSortLabelPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Record options -> TableSortLabelPropsPartial
+tableSortLabelPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-tableSortLabelClassKey :: ∀ options options_
-  .  Union options options_ TableSortLabelClassKeyOptions
-  => Record options
-  -> TableSortLabelClassKey
-tableSortLabelClassKey = unsafeCoerce
+type TableSortLabelClassKeyGenericOptions a = ( active :: a, icon :: a, iconDirectionAsc :: a, iconDirectionDesc :: a, root :: a )
 
-tableSortLabelClassKeyJSS :: ∀ options options_
-  .  Union options options_ TableSortLabelClassKeyOptionsJSS
-  => Record options
-  -> TableSortLabelClassKeyJSS
-tableSortLabelClassKeyJSS = unsafeCoerce
+type TableSortLabelClassKeyOptions  = TableSortLabelClassKeyGenericOptions String
 
-tableSortLabelPropsPartial_component :: ∀ componentProps props props_
-  .  Union props props_ (TableSortLabelProps componentProps)
-  => Record props 
-  -> TableSortLabelPropsPartial 
-tableSortLabelPropsPartial_component = unsafeCoerce
+foreign import data TableSortLabelClassKey :: Type
 
-tableSortLabelPropsPartial :: ∀ props props_
-  .  Union props props_ (TableSortLabelProps Props_span)
-  => Record props 
-  -> TableSortLabelPropsPartial 
-tableSortLabelPropsPartial = unsafeCoerce
+tableSortLabelClassKey :: ∀ required given. Prim.Row.Union given required TableSortLabelClassKeyOptions => Record given -> TableSortLabelClassKey
+tableSortLabelClassKey = Unsafe.Coerce.unsafeCoerce
 
-tableSortLabel_component :: ∀ componentProps props props_
-  .  Union props props_ (TableSortLabelProps componentProps)
-  => Record props 
-  -> JSX
-tableSortLabel_component = element _TableSortLabel
+type TableSortLabelClassKeyOptionsJSS  = TableSortLabelClassKeyGenericOptions MUI.Core.JSS
 
-tableSortLabel :: ∀ props props_
-  .  Union props props_ (TableSortLabelProps Props_span)
-  => Record props 
-  -> JSX
-tableSortLabel = element _TableSortLabel
+foreign import data TableSortLabelClassKeyJSS :: Type
 
-foreign import  _TableSortLabel :: ∀ a. ReactComponent a
+tableSortLabelClassKeyJSS :: ∀ required given. Prim.Row.Union given required TableSortLabelClassKeyOptionsJSS => Record given -> TableSortLabelClassKeyJSS
+tableSortLabelClassKeyJSS = Unsafe.Coerce.unsafeCoerce
+
+foreign import _TableSortLabel :: ∀ a. React.Basic.ReactComponent a
+
+tableSortLabel :: ∀ required given. Prim.Row.Union given required (TableSortLabelPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Record given -> React.Basic.JSX
+tableSortLabel = React.Basic.element _TableSortLabel
+
+tableSortLabel_component :: ∀ required given componentProps. Prim.Row.Union given required (TableSortLabelPropsOptions componentProps) => Record given -> React.Basic.JSX
+tableSortLabel_component = React.Basic.element _TableSortLabel
+
+tableSortLabelWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (TableSortLabelPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Prim.Row.Union jss jss_ TableSortLabelClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+tableSortLabelWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _TableSortLabel)

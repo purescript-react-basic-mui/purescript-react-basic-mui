@@ -35,7 +35,7 @@ import MUI.Core.TableBody (TableBodyClassKeyJSS)
 import MUI.Core.TableCell (TableCellClassKeyJSS)
 import MUI.Core.TableFooter (TableFooterClassKeyJSS)
 import MUI.Core.TableHead (TableHeadClassKeyJSS)
-import MUI.Core.TablePagination (TablePaginationClassKeyJSS)
+--import MUI.Core.TablePagination (TablePaginationClassKeyJSS)
 import MUI.Core.TableRow (TableRowClassKeyJSS)
 import MUI.Core.TableSortLabel (TableSortLabelClassKeyJSS)
 import MUI.Core.Tabs (TabsClassKeyJSS)
@@ -131,7 +131,7 @@ type Overrides =
   , "MuiTableCell" :: TableCellClassKeyJSS
   , "MuiTableFooter" :: TableFooterClassKeyJSS
   , "MuiTableHead" :: TableHeadClassKeyJSS
-  , "MuiTablePagination" :: TablePaginationClassKeyJSS
+--  , "MuiTablePagination" :: TablePaginationClassKeyJSS
   , "MuiTableRow" :: TableRowClassKeyJSS
   , "MuiTableSortLabel" :: TableSortLabelClassKeyJSS
   , "MuiTabs" :: TabsClassKeyJSS

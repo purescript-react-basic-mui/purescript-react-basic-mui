@@ -37,7 +37,7 @@ import MUI.Core.TableBody (TableBodyPropsPartial)
 import MUI.Core.TableCell (TableCellPropsPartial)
 import MUI.Core.TableFooter (TableFooterPropsPartial)
 import MUI.Core.TableHead (TableHeadPropsPartial)
-import MUI.Core.TablePagination (TablePaginationPropsPartial)
+-- import MUI.Core.TablePagination (TablePaginationPropsPartial)
 import MUI.Core.TableRow (TableRowPropsPartial)
 import MUI.Core.TableSortLabel (TableSortLabelPropsPartial)
 import MUI.Core.Tabs (TabsPropsPartial)
@@ -136,7 +136,7 @@ type ComponentsProps =
   , "MuiTableCell" :: TableCellPropsPartial
   , "MuiTableFooter" :: TableFooterPropsPartial
   , "MuiTableHead" :: TableHeadPropsPartial
-  , "MuiTablePagination" :: TablePaginationPropsPartial
+--  , "MuiTablePagination" :: TablePaginationPropsPartial
   , "MuiTableRow" :: TableRowPropsPartial
   , "MuiTableSortLabel" :: TableSortLabelPropsPartial
   , "MuiTabs" :: TabsPropsPartial

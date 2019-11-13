@@ -1764,7 +1764,194 @@ components =
           }
         }
 
+    tab = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+      , name: "Tab"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "icon" jsx
+              , Tuple "label" jsx
+              , Tuple "value" foreignType
+              ]
+          , generate: 
+              [ "classes"
+              , "disabled"
+              , "disableFocusRipple"
+              , "disableRipple"
+              , "wrapped"
+              ]
+          }
+        }
 
+    table = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_table"
+      , name: "Table"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              ]
+          , generate: 
+              [ "classes"
+              , "padding"
+              , "size"
+              , "stickyHeader"
+              ]
+          }
+        }
+
+    tableBody = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_tbody"
+      , name: "TableBody"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              ]
+          , generate: 
+              [ "classes"
+              ]
+          }
+        }
+
+    tableCell = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_td"
+      , name: "TableCell"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              ]
+          , generate: 
+              [ "classes"
+              , "padding"
+              , "scope"
+              , "size"
+              --, "scopeDirection"
+              , "variant"
+              ]
+          }
+        }
+
+    tableFooter = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_tfoot"
+      , name: "TableFooter"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              ]
+          , generate: 
+              [ "classes"
+              ]
+          }
+        }
+
+    tableHead = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_thead"
+      , name: "TableHead"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              ]
+          , generate: 
+              [ "classes"
+              ]
+          }
+        }
+
+    -- | TODO add TablePaginationActions
+    tablePagination = simpleComponent
+      { inherits: Nothing --Just $ Type.app (Type.constructor "MUI.Core.TableCell.TableCellPropsOptions") [Type.constructor "React.Basic.DOM.Props_td" ]
+      , name: "TablePagination"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ 
+              -- children
+              -- , Tuple "backIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonProps")
+              -- , Tuple "labelDisplayedRows" foreignType
+              -- , Tuple "labelRowsPerPage" jsx
+              -- , Tuple "nextIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonProps")
+              -- , eventHandlerProp "onChangePage"
+              -- , eventHandlerProp "onChangeRowsPerPage"
+              -- , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelecProps")
+              ]
+          , generate: 
+              [ -- "classes"
+              --, "count"
+              --, "page"
+              --, "rowsPerPage"
+              --, "rowsPerPageOptions"
+              ]
+          }
+        }
+
+    tableRow = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_tr"
+      , name: "TableRow"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              ]
+          , generate: 
+              [ "classes"
+              , "hover"
+              , "selected"
+              ]
+          }
+        }
+
+    -- | TODO IconComponent
+    tableSortLabel = simpleComponent
+      { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [Type.constructor "React.Basic.DOM.Props_button" ]
+      , name: "TableSortLabel"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "IconComponent" foreignType
+              ]
+          , generate: 
+              [ "classes"
+              , "active"
+              , "direction"
+              , "hideSortIcon"
+              ]
+          }
+        }
+
+    tabs = simpleComponent
+      { inherits: Nothing
+      , name: "Tabs"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              , Tuple "action" foreignType
+              , eventHandlerProp "onChange"
+              , Tuple "ScrollButtonComponent" foreignType
+              , Tuple "TabIndicatorProps" foreignType
+              , Tuple "value" foreignType
+              ]
+          , generate: 
+              [ "classes"
+              , "indicatorColor"
+              , "orientation"
+              , "textColor"
+              , "variant" 
+              , "width" 
+              ]
+          }
+        }
+
+    textareaAutosize = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_textarea"
+      , name: "TextareaAutosize"
+      , propsType:
+          { base: basePropsRow [] $ Map.fromFoldable
+              [ children
+              ]
+          , generate: 
+              [ "rows"
+              , "rowsMax"
+              ]
+          }
+        }
 
     touchRipple =
       { extraDeclarations: []
@@ -1864,6 +2051,17 @@ components =
     , svgIcon
     , swipeableDrawer
     , switch
+    , tab
+    , table
+    , tableBody
+    , tableCell
+    , tableFooter
+    , tableHead
+    --, tablePagination
+    , tableRow
+    , tableSortLabel
+    , tabs
+    , textareaAutosize
     , touchRipple
     ]
 

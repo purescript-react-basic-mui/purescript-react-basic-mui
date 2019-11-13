@@ -1,114 +1,65 @@
 module MUI.Core.Tabs where
 
+import Foreign (Foreign) as Foreign
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_div) as React.Basic.DOM
+import React.Basic.Events (EventHandler) as React.Basic.Events
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-import Effect (Effect)
-import Effect.Uncurried (EffectFn2)
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic.DOM (Props_div)
-import React.Basic.Events (SyntheticEvent)
-import React.Basic.Hooks (JSX, ReactComponent, element)
-import Unsafe.Coerce (unsafeCoerce)
+foreign import data Variant :: Type
 
-type TabsProps value componentProps =
-  ( action :: TabActions
-  , centered :: Boolean
-  , children :: Array JSX
-  , classes :: TabsClassKey
-  , component :: ReactComponent { | componentProps }
-  , indicatorColor :: String
-  , onChange  :: EffectFn2 SyntheticEvent value Unit
-  , orientation :: OrientationProp
-  , "ScrollButtonComponent" :: JSX
-  , scrollButtons :: ScrollButtonProp
-  , "TabIndicatorProps" :: { | Props_div }
-  , textColor :: String
-  , value :: value
-  , variant :: VariantProp
-  | componentProps
-  )
+variant :: { fullWidth :: Variant, scrollable :: Variant, standard :: Variant }
+variant = { fullWidth: Unsafe.Coerce.unsafeCoerce "fullWidth", scrollable: Unsafe.Coerce.unsafeCoerce "scrollable", standard: Unsafe.Coerce.unsafeCoerce "standard" }
 
-type TabActions = { updateIndicator :: Effect Unit }
+foreign import data Orientation :: Type
 
-foreign import data VariantProp :: Type
-data Variant = Standard | Scrollable | FullWidth
-variant :: Variant -> VariantProp
-variant Standard = unsafeCoerce "standard"
-variant Scrollable = unsafeCoerce "scrollable"
-variant FullWidth = unsafeCoerce "fullWidth"
-  
-foreign import data OrientationProp :: Type
-data Orientation = Horizontal | Vertical
-orientation :: Orientation -> OrientationProp
-orientation Horizontal = unsafeCoerce "horizontal"
-orientation Vertical = unsafeCoerce "vertical"
+orientation :: { horizontal :: Orientation, vertical :: Orientation }
+orientation = { horizontal: Unsafe.Coerce.unsafeCoerce "horizontal", vertical: Unsafe.Coerce.unsafeCoerce "vertical" }
 
-foreign import data ScrollButtonProp :: Type
-data ScrollButton = Auto | Desktop | On | Off
-scrollButton :: ScrollButton -> ScrollButtonProp
-scrollButton Auto = unsafeCoerce "auto"
-scrollButton Desktop = unsafeCoerce "desktop"
-scrollButton On = unsafeCoerce "on"
-scrollButton Off = unsafeCoerce "off"
+instance eqOrientation :: Eq Orientation where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqVariant :: Eq Variant where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type TabsPropsOptions componentProps = ( "ScrollButtonComponent" :: Foreign.Foreign, "TabIndicatorProps" :: Foreign.Foreign, action :: Foreign.Foreign, children :: Array React.Basic.JSX, classes :: TabsClassKey, indicatorColor :: String, onChange :: React.Basic.Events.EventHandler, orientation :: Orientation, textColor :: String, value :: Foreign.Foreign, variant :: Variant, width :: String | componentProps )
+
+foreign import data TabsProps :: Type
 
 foreign import data TabsPropsPartial :: Type
 
-type TabsClassKeyOptionsJSS = TabsClassKeyOptionsR JSS
-type TabsClassKeyOptions = TabsClassKeyOptionsR String
-type TabsClassKeyOptionsR a =
-  ( root :: a
-  , vertical :: a
-  , flexContainer :: a
-  , flexContainerVertical :: a
-  , centered :: a
-  , scroller :: a
-  , fixed :: a
-  , scrollable :: a
-  , scrollButtons :: a
-  , scrollButtonsDesktop :: a
-  , indicator :: a
-  )
+tabsPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (TabsPropsOptions React.Basic.DOM.Props_div) => Record options -> TabsPropsPartial
+tabsPropsPartial = Unsafe.Coerce.unsafeCoerce
+
+type TabsClassKeyGenericOptions a = ( centered :: a, fixed :: a, flexContainer :: a, indicator :: a, root :: a, scrollButtons :: a, scrollButtonsDesktop :: a, scrollable :: a, scroller :: a )
+
+type TabsClassKeyOptions  = TabsClassKeyGenericOptions String
 
 foreign import data TabsClassKey :: Type
+
+tabsClassKey :: ∀ required given. Prim.Row.Union given required TabsClassKeyOptions => Record given -> TabsClassKey
+tabsClassKey = Unsafe.Coerce.unsafeCoerce
+
+type TabsClassKeyOptionsJSS  = TabsClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data TabsClassKeyJSS :: Type
 
-tabsClassKey :: ∀ options options_
-  . Union options options_ TabsClassKeyOptions
-  => Record options
-  -> TabsClassKey
-tabsClassKey = unsafeCoerce
+tabsClassKeyJSS :: ∀ required given. Prim.Row.Union given required TabsClassKeyOptionsJSS => Record given -> TabsClassKeyJSS
+tabsClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-tabsClassKeyJSS :: ∀ options options_
-  . Union options options_ TabsClassKeyOptionsJSS
-  => Record options
-  -> TabsClassKeyJSS
-tabsClassKeyJSS = unsafeCoerce
+foreign import _Tabs :: ∀ a. React.Basic.ReactComponent a
 
-tabsPartial_component :: ∀ value componentProps props props_
-  . Union props props_ (TabsProps value componentProps)
-  => Record props 
-  -> TabsPropsPartial
-tabsPartial_component = unsafeCoerce
+tabs :: ∀ required given. Prim.Row.Union given required (TabsPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+tabs = React.Basic.element _Tabs
 
-tabsPartial :: ∀ value props props_
-  . Union props props_ (TabsProps value Props_div)
-  => Record props 
-  ->TabsPropsPartial
-tabsPartial = unsafeCoerce
+tabs_component :: ∀ required given componentProps. Prim.Row.Union given required (TabsPropsOptions componentProps) => Record given -> React.Basic.JSX
+tabs_component = React.Basic.element _Tabs
 
-
-tabs_component :: ∀ value componentProps props props_
-  . Union props props_ (TabsProps value componentProps)
-  => Record props 
-  -> JSX
-tabs_component = element _Tabs
-
-tabs :: ∀ value props props_
-  . Union props props_ (TabsProps value Props_div)
-  => Record props 
-  -> JSX
-tabs = element _Tabs
-
-
-foreign import _Tabs :: ∀ a. ReactComponent a
+tabsWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (TabsPropsOptions React.Basic.DOM.Props_div) => Prim.Row.Union jss jss_ TabsClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+tabsWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _Tabs)

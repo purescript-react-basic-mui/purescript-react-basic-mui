@@ -1,91 +1,47 @@
 module MUI.Core.Tab where
 
-import Foreign (Foreign)
-import MUI.Core (JSS)
-import MUI.Core.ButtonBase (ButtonBaseActions, ButtonBaseTypeProp)
-import Prim.Row (class Union)
-import React.Basic.DOM (Props_button)
-import React.Basic.Events (EventHandler)
-import React.Basic.Hooks (JSX, ReactComponent, Ref, element)
-import Unsafe.Coerce (unsafeCoerce)
+import Foreign (Foreign) as Foreign
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.ButtonBase (ButtonBasePropsOptions) as MUI.Core.ButtonBase
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_button) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type TabProps value componentProps =
-  ( action :: Ref ButtonBaseActions
-  , buttonRef :: Ref Foreign
-  , centerRipple :: Boolean
-  , classes :: TabClassKey
-  , component :: ReactComponent { | componentProps } 
-  , disabled :: Boolean
-  , disableRipple :: Boolean
-  , disableTouchRipple :: Boolean
-  , focusRipple :: Boolean
-  , focusVisibleClassName :: String
-  , icon :: JSX
-  , label :: JSX
-  , onFocusVisible :: EventHandler
-  , "TouchRippleProps" :: Foreign
-  , type :: ButtonBaseTypeProp
-  , wrapped :: Boolean
-  , value :: value
-  | componentProps
-  )
+type TabPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: TabClassKey, disableFocusRipple :: Boolean, disableRipple :: Boolean, disabled :: Boolean, icon :: React.Basic.JSX, label :: React.Basic.JSX, value :: Foreign.Foreign, wrapped :: Boolean | componentProps )
+
+foreign import data TabProps :: Type
 
 foreign import data TabPropsPartial :: Type
 
-type TabClassKeyOptionsJSS = TabClassKeyOptionsR JSS
-type TabClassKeyOptions = TabClassKeyOptionsR String
-type TabClassKeyOptionsR a =
-  ( root :: a
-  , labelIcon :: a
-  , textColorInherit :: a
-  , textColorPrimary :: a
-  , textColorSecondary :: a
-  , selected :: a
-  , disabled :: a
-  , fullWidth :: a
-  , wrapped :: a
-  , wrapper :: a
-  )
+tabPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (TabPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Record options -> TabPropsPartial
+tabPropsPartial = Unsafe.Coerce.unsafeCoerce
+
+type TabClassKeyGenericOptions a = ( disabled :: a, fullWidth :: a, labelIcon :: a, root :: a, selected :: a, textColorInherit :: a, textColorPrimary :: a, textColorSecondary :: a, wrapped :: a, wrapper :: a )
+
+type TabClassKeyOptions  = TabClassKeyGenericOptions String
 
 foreign import data TabClassKey :: Type
+
+tabClassKey :: ∀ required given. Prim.Row.Union given required TabClassKeyOptions => Record given -> TabClassKey
+tabClassKey = Unsafe.Coerce.unsafeCoerce
+
+type TabClassKeyOptionsJSS  = TabClassKeyGenericOptions MUI.Core.JSS
+
 foreign import data TabClassKeyJSS :: Type
 
-tabClassKey :: ∀ options options_
-  . Union options options_ TabClassKeyOptions
-  => Record options
-  -> TabClassKey
-tabClassKey = unsafeCoerce
+tabClassKeyJSS :: ∀ required given. Prim.Row.Union given required TabClassKeyOptionsJSS => Record given -> TabClassKeyJSS
+tabClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-tabClassKeyJSS :: ∀ options options_
-  . Union options options_ TabClassKeyOptionsJSS
-  => Record options
-  -> TabClassKeyJSS
-tabClassKeyJSS = unsafeCoerce
+foreign import _Tab :: ∀ a. React.Basic.ReactComponent a
 
-tabPartial_component :: ∀ value componentProps props props_
-  . Union props props_ (TabProps value componentProps)
-  => Record props 
-  -> TabPropsPartial
-tabPartial_component = unsafeCoerce
+tab :: ∀ required given. Prim.Row.Union given required (TabPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Record given -> React.Basic.JSX
+tab = React.Basic.element _Tab
 
-tabPartial :: ∀ value props props_
-  . Union props props_ (TabProps value Props_button)
-  => Record props 
-  ->TabPropsPartial
-tabPartial = unsafeCoerce
+tab_component :: ∀ required given componentProps. Prim.Row.Union given required (TabPropsOptions componentProps) => Record given -> React.Basic.JSX
+tab_component = React.Basic.element _Tab
 
-
-tab_component :: ∀ value componentProps props props_
-  . Union props props_ (TabProps value componentProps)
-  => Record props 
-  -> JSX
-tab_component = element _Tab
-
-tab :: ∀ value props props_
-  . Union props props_ (TabProps value Props_button)
-  => Record props 
-  -> JSX
-tab = element _Tab
-
-
-foreign import _Tab :: ∀ a. ReactComponent a
+tabWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (TabPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Prim.Row.Union jss jss_ TabClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+tabWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _Tab)

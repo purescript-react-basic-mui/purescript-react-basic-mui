@@ -1,102 +1,71 @@
 module MUI.Core.TableCell where
 
-import MUI.Core (JSS)
-import MUI.Core.Table as Table
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_td)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
+import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_td) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-type TableCellProps componentProps =
-  ( align :: AlignProp
-  , children :: Array JSX
-  , classes :: TableCellClassKey
-  , component :: ReactComponent { | componentProps }
-  , padding :: Table.PaddingProp
-  , scope :: String
-  , size :: Table.SizeProp
-  , sortDirection :: SortDirectionProp
-  , variant :: VariantProp
-  | componentProps
-  )
+foreign import data Variant :: Type
 
-foreign import data AlignProp :: Type
-data Align = Inherit | Left | Center | Right | Justify
-align :: Align -> AlignProp
-align Inherit = unsafeCoerce "inherit"
-align Left = unsafeCoerce "left"
-align Center = unsafeCoerce "center"
-align Right = unsafeCoerce "right"
-align Justify = unsafeCoerce "justify"
+variant :: { body :: Variant, footer :: Variant, head :: Variant }
+variant = { body: Unsafe.Coerce.unsafeCoerce "body", footer: Unsafe.Coerce.unsafeCoerce "footer", head: Unsafe.Coerce.unsafeCoerce "head" }
 
-foreign import data SortDirectionProp :: Type
-data SortDirection = Asc | Desc | False
-sortDirection :: SortDirection -> SortDirectionProp
-sortDirection Asc = unsafeCoerce "asc"
-sortDirection Desc = unsafeCoerce "desc"
-sortDirection False = unsafeCoerce false
+foreign import data Size :: Type
 
-foreign import data VariantProp :: Type
-data Variant = Head | Body | Footer
-variant :: Variant -> VariantProp
-variant Head = unsafeCoerce "head"
-variant Body = unsafeCoerce "body"
-variant Footer = unsafeCoerce "footer"
+size :: { medium :: Size, small :: Size }
+size = { medium: Unsafe.Coerce.unsafeCoerce "medium", small: Unsafe.Coerce.unsafeCoerce "small" }
 
-foreign import data TableCellClassKey :: Type
-foreign import data TableCellClassKeyJSS :: Type
+foreign import data Padding :: Type
+
+padding :: { checkbox :: Padding, default :: Padding, none :: Padding }
+padding = { checkbox: Unsafe.Coerce.unsafeCoerce "checkbox", default: Unsafe.Coerce.unsafeCoerce "default", none: Unsafe.Coerce.unsafeCoerce "none" }
+
+instance eqPadding :: Eq Padding where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqSize :: Eq Size where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqVariant :: Eq Variant where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type TableCellPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: TableCellClassKey, padding :: Padding, scope :: String, size :: Size, variant :: Variant | componentProps )
+
+foreign import data TableCellProps :: Type
+
 foreign import data TableCellPropsPartial :: Type
 
-type TableCellClassKeyOptionsJSS = TableCellClassKeyOptionsR JSS
-type TableCellClassKeyOptions = TableCellClassKeyOptionsR String
-type TableCellClassKeyOptionsR a =
-  ( root :: a
-  , head :: a
-  , body :: a
-  , footer :: a
-  , sizeSmall :: a
-  , paddingCheckbox :: a
-  , paddingNone :: a
-  , alignLeft :: a
-  , alignCenter :: a
-  , alignRight :: a
-  , alignJustify :: a
-  )
+tableCellPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (TableCellPropsOptions React.Basic.DOM.Props_td) => Record options -> TableCellPropsPartial
+tableCellPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-tableCellClassKey :: ∀ options options_
-  . Union options options_ TableCellClassKeyOptions
-  => Record options
-  -> TableCellClassKey
-tableCellClassKey = unsafeCoerce
+type TableCellClassKeyGenericOptions a = ( alignCenter :: a, alignJustify :: a, alignLeft :: a, alignRight :: a, body :: a, footer :: a, head :: a, paddingCheckbox :: a, paddingNone :: a, root :: a, sizeSmall :: a, stickyHeader :: a )
 
-tableCellClassKeyJSS :: ∀ options options_
-  . Union options options_ TableCellClassKeyOptionsJSS
-  => Record options
-  -> TableCellClassKeyJSS
-tableCellClassKeyJSS = unsafeCoerce
+type TableCellClassKeyOptions  = TableCellClassKeyGenericOptions String
 
-tableCellPropsPartial_component :: ∀ componentProps props props_
-  .  Union props props_ (TableCellProps componentProps)
-  => Record props 
-  -> TableCellPropsPartial
-tableCellPropsPartial_component = unsafeCoerce
+foreign import data TableCellClassKey :: Type
 
-tableCellPropsPartial :: ∀ props props_
-  .  Union props props_ (TableCellProps Props_td)
-  => Record props 
-  -> TableCellPropsPartial
-tableCellPropsPartial = unsafeCoerce
+tableCellClassKey :: ∀ required given. Prim.Row.Union given required TableCellClassKeyOptions => Record given -> TableCellClassKey
+tableCellClassKey = Unsafe.Coerce.unsafeCoerce
 
-tableCell_component :: ∀ componentProps props props_
-  . Union props props_ (TableCellProps componentProps)
-  => Record props 
-  -> JSX
-tableCell_component = element _TableCell
+type TableCellClassKeyOptionsJSS  = TableCellClassKeyGenericOptions MUI.Core.JSS
 
-tableCell :: ∀ props props_
-  . Union props props_ (TableCellProps Props_td)
-  => Record props 
-  -> JSX
-tableCell = element _TableCell
+foreign import data TableCellClassKeyJSS :: Type
 
-foreign import  _TableCell :: ∀ a. ReactComponent a
+tableCellClassKeyJSS :: ∀ required given. Prim.Row.Union given required TableCellClassKeyOptionsJSS => Record given -> TableCellClassKeyJSS
+tableCellClassKeyJSS = Unsafe.Coerce.unsafeCoerce
+
+foreign import _TableCell :: ∀ a. React.Basic.ReactComponent a
+
+tableCell :: ∀ required given. Prim.Row.Union given required (TableCellPropsOptions React.Basic.DOM.Props_td) => Record given -> React.Basic.JSX
+tableCell = React.Basic.element _TableCell
+
+tableCell_component :: ∀ required given componentProps. Prim.Row.Union given required (TableCellPropsOptions componentProps) => Record given -> React.Basic.JSX
+tableCell_component = React.Basic.element _TableCell
+
+tableCellWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (TableCellPropsOptions React.Basic.DOM.Props_td) => Prim.Row.Union jss jss_ TableCellClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+tableCellWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _TableCell)

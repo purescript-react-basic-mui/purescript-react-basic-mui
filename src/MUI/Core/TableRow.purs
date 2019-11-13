@@ -1,68 +1,45 @@
 module MUI.Core.TableRow where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_tr)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_tr) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type TableRowProps componentProps =
-  ( children :: Array JSX
-  , classes :: TableRowClassKey
-  , component :: ReactComponent { | componentProps }
-  , hover :: Boolean
-  , selected :: Boolean
-  | componentProps
-  )
+type TableRowPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: TableRowClassKey, hover :: Boolean, selected :: Boolean | componentProps )
 
-foreign import data TableRowClassKey :: Type
-foreign import data TableRowClassKeyJSS :: Type
+foreign import data TableRowProps :: Type
+
 foreign import data TableRowPropsPartial :: Type
 
-type TableRowClassKeyOptionsJSS = TableRowClassKeyOptionsR JSS
-type TableRowClassKeyOptions = TableRowClassKeyOptionsR String
-type TableRowClassKeyOptionsR a = 
-  ( root :: a
-  , selected :: a
-  , hover :: a
-  , head :: a
-  , footer :: a
-  )
+tableRowPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (TableRowPropsOptions React.Basic.DOM.Props_tr) => Record options -> TableRowPropsPartial
+tableRowPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-tableRowClassKey :: ∀ options options_
-  .  Union options options_ TableRowClassKeyOptions
-  => Record options
-  -> TableRowClassKey
-tableRowClassKey = unsafeCoerce
+type TableRowClassKeyGenericOptions a = ( footer :: a, head :: a, hover :: a, root :: a, selected :: a )
 
-tableRowClassKeyJSS :: ∀ options options_
-  .  Union options options_ TableRowClassKeyOptionsJSS
-  => Record options
-  -> TableRowClassKeyJSS
-tableRowClassKeyJSS = unsafeCoerce
+type TableRowClassKeyOptions  = TableRowClassKeyGenericOptions String
 
-tableRowPropsPartial_component :: ∀ componentProps props props_
-  .  Union props props_ (TableRowProps componentProps)
-  => Record props 
-  -> TableRowPropsPartial
-tableRowPropsPartial_component = unsafeCoerce
+foreign import data TableRowClassKey :: Type
 
-tableRowPropsPartial :: ∀ props props_
-  .  Union props props_ (TableRowProps Props_tr)
-  => Record props 
-  -> TableRowPropsPartial
-tableRowPropsPartial = unsafeCoerce
+tableRowClassKey :: ∀ required given. Prim.Row.Union given required TableRowClassKeyOptions => Record given -> TableRowClassKey
+tableRowClassKey = Unsafe.Coerce.unsafeCoerce
 
-tableRow_component :: ∀ componentProps props props_
-  .  Union props props_ (TableRowProps componentProps)
-  => Record props 
-  -> JSX
-tableRow_component = element _TableRow
+type TableRowClassKeyOptionsJSS  = TableRowClassKeyGenericOptions MUI.Core.JSS
 
-tableRow :: ∀ props props_
-  .  Union props props_ (TableRowProps Props_tr)
-  => Record props 
-  -> JSX
-tableRow = element _TableRow
+foreign import data TableRowClassKeyJSS :: Type
 
-foreign import  _TableRow :: ∀ a. ReactComponent a
+tableRowClassKeyJSS :: ∀ required given. Prim.Row.Union given required TableRowClassKeyOptionsJSS => Record given -> TableRowClassKeyJSS
+tableRowClassKeyJSS = Unsafe.Coerce.unsafeCoerce
+
+foreign import _TableRow :: ∀ a. React.Basic.ReactComponent a
+
+tableRow :: ∀ required given. Prim.Row.Union given required (TableRowPropsOptions React.Basic.DOM.Props_tr) => Record given -> React.Basic.JSX
+tableRow = React.Basic.element _TableRow
+
+tableRow_component :: ∀ required given componentProps. Prim.Row.Union given required (TableRowPropsOptions componentProps) => Record given -> React.Basic.JSX
+tableRow_component = React.Basic.element _TableRow
+
+tableRowWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (TableRowPropsOptions React.Basic.DOM.Props_tr) => Prim.Row.Union jss jss_ TableRowClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+tableRowWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _TableRow)

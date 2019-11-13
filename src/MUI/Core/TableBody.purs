@@ -1,61 +1,45 @@
 module MUI.Core.TableBody where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_tbody)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_tbody) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type TableBodyProps componentProps =
-  ( children :: Array JSX
-  , classes :: TableBodyClassKey
-  , component :: ReactComponent { | componentProps }
-  | componentProps
-  )
+type TableBodyPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: TableBodyClassKey | componentProps )
 
-foreign import data TableBodyClassKey :: Type
-foreign import data TableBodyClassKeyJSS :: Type
+foreign import data TableBodyProps :: Type
+
 foreign import data TableBodyPropsPartial :: Type
 
-type TableBodyClassKeyOptionsJSS = TableBodyClassKeyOptionsR JSS
-type TableBodyClassKeyOptions = TableBodyClassKeyOptionsR String
-type TableBodyClassKeyOptionsR a = ( root :: a )
+tableBodyPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (TableBodyPropsOptions React.Basic.DOM.Props_tbody) => Record options -> TableBodyPropsPartial
+tableBodyPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-tableBodyClassKey :: ∀ options options_
-  . Union options options_ TableBodyClassKeyOptions
-  => Record options
-  -> TableBodyClassKey
-tableBodyClassKey = unsafeCoerce
+type TableBodyClassKeyGenericOptions a = ( root :: a )
 
-tableBodyClassKeyJSS :: ∀ options options_
-  . Union options options_ TableBodyClassKeyOptionsJSS
-  => Record options
-  -> TableBodyClassKeyJSS
-tableBodyClassKeyJSS = unsafeCoerce
+type TableBodyClassKeyOptions  = TableBodyClassKeyGenericOptions String
 
-tableBodyPropsPartial_component :: ∀ componentProps props props_
-  . Union props props_ (TableBodyProps componentProps)
-  => Record props 
-  -> TableBodyPropsPartial
-tableBodyPropsPartial_component = unsafeCoerce
+foreign import data TableBodyClassKey :: Type
 
-tableBodyPropsPartial :: ∀ props props_
-  . Union props props_ (TableBodyProps Props_tbody)
-  => Record props 
-  -> TableBodyPropsPartial
-tableBodyPropsPartial = unsafeCoerce
+tableBodyClassKey :: ∀ required given. Prim.Row.Union given required TableBodyClassKeyOptions => Record given -> TableBodyClassKey
+tableBodyClassKey = Unsafe.Coerce.unsafeCoerce
 
-tableBody_component :: ∀ componentProps props props_
-  . Union props props_ (TableBodyProps componentProps)
-  => Record props 
-  -> JSX
-tableBody_component = element _TableBody
+type TableBodyClassKeyOptionsJSS  = TableBodyClassKeyGenericOptions MUI.Core.JSS
 
-tableBody :: ∀ props props_
-  . Union props props_ (TableBodyProps Props_tbody)
-  => Record props 
-  -> JSX
-tableBody = element _TableBody
+foreign import data TableBodyClassKeyJSS :: Type
 
+tableBodyClassKeyJSS :: ∀ required given. Prim.Row.Union given required TableBodyClassKeyOptionsJSS => Record given -> TableBodyClassKeyJSS
+tableBodyClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
-foreign import  _TableBody :: ∀ a. ReactComponent a
+foreign import _TableBody :: ∀ a. React.Basic.ReactComponent a
+
+tableBody :: ∀ required given. Prim.Row.Union given required (TableBodyPropsOptions React.Basic.DOM.Props_tbody) => Record given -> React.Basic.JSX
+tableBody = React.Basic.element _TableBody
+
+tableBody_component :: ∀ required given componentProps. Prim.Row.Union given required (TableBodyPropsOptions componentProps) => Record given -> React.Basic.JSX
+tableBody_component = React.Basic.element _TableBody
+
+tableBodyWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (TableBodyPropsOptions React.Basic.DOM.Props_tbody) => Prim.Row.Union jss jss_ TableBodyClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+tableBodyWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _TableBody)

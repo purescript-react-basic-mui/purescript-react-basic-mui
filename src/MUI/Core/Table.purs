@@ -1,75 +1,63 @@
 module MUI.Core.Table where
 
-import MUI.Core (JSS)
-import Prim.Row (class Union)
-import React.Basic (JSX, ReactComponent, element)
-import React.Basic.DOM (Props_table)
-import Unsafe.Coerce (unsafeCoerce)
+import MUI.Core (JSS) as MUI.Core
+import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
+import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
+import Prelude
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (element, JSX, ReactComponent) as React.Basic
+import React.Basic.DOM (Props_table) as React.Basic.DOM
+import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
+import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-type TableProps componentProps =
-  ( children :: Array JSX
-  , classes :: TableClassKey
-  , component :: ReactComponent { | componentProps }
-  , padding :: PaddingProp
-  , size :: SizeProp
-  | componentProps
-  )
+foreign import data Size :: Type
 
-foreign import data PaddingProp :: Type
-data Padding = Default | Checkbox | None
-padding :: Padding -> PaddingProp
-padding Default = unsafeCoerce "default"
-padding Checkbox = unsafeCoerce "checkbox"
-padding None = unsafeCoerce "none"
+size :: { medium :: Size, small :: Size }
+size = { medium: Unsafe.Coerce.unsafeCoerce "medium", small: Unsafe.Coerce.unsafeCoerce "small" }
 
-foreign import data SizeProp :: Type
-data Size = Small | Medium
-size :: Size -> SizeProp
-size Small = unsafeCoerce "small"
-size Medium = unsafeCoerce "medium"
+foreign import data Padding :: Type
 
-foreign import data TableClassKey :: Type
-foreign import data TableClassKeyJSS :: Type
+padding :: { checkbox :: Padding, default :: Padding, none :: Padding }
+padding = { checkbox: Unsafe.Coerce.unsafeCoerce "checkbox", default: Unsafe.Coerce.unsafeCoerce "default", none: Unsafe.Coerce.unsafeCoerce "none" }
+
+instance eqPadding :: Eq Padding where
+  eq = Unsafe.Reference.unsafeRefEq
+
+instance eqSize :: Eq Size where
+  eq = Unsafe.Reference.unsafeRefEq
+
+type TablePropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: TableClassKey, padding :: Padding, size :: Size, stickyHeader :: Boolean | componentProps )
+
+foreign import data TableProps :: Type
+
 foreign import data TablePropsPartial :: Type
 
-type TableClassKeyOptionsJSS = TableClassKeyOptionsR JSS 
-type TableClassKeyOptions = TableClassKeyOptionsR String
-type TableClassKeyOptionsR a = ( root :: a )
+tablePropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (TablePropsOptions React.Basic.DOM.Props_table) => Record options -> TablePropsPartial
+tablePropsPartial = Unsafe.Coerce.unsafeCoerce
 
-tableClassKey :: ∀ options options_
-  .  Union options options_ TableClassKeyOptions
-  => Record options
-  -> TableClassKey
-tableClassKey = unsafeCoerce
+type TableClassKeyGenericOptions a = ( root :: a, stickyHeader :: a )
 
-tableClassKeyJSS :: ∀ options options_
-  .  Union options options_ TableClassKeyOptionsJSS
-  => Record options
-  -> TableClassKeyJSS
-tableClassKeyJSS = unsafeCoerce
+type TableClassKeyOptions  = TableClassKeyGenericOptions String
 
-tablePropsPartial_component :: ∀ componentProps props props_
-  .  Union props props_ (TableProps componentProps)
-  => Record props 
-  -> TablePropsPartial 
-tablePropsPartial_component = unsafeCoerce
+foreign import data TableClassKey :: Type
 
-tablePropsPartial :: ∀ props props_
-  .  Union props props_ (TableProps Props_table)
-  => Record props 
-  -> TablePropsPartial 
-tablePropsPartial = unsafeCoerce
+tableClassKey :: ∀ required given. Prim.Row.Union given required TableClassKeyOptions => Record given -> TableClassKey
+tableClassKey = Unsafe.Coerce.unsafeCoerce
 
-table_component :: ∀ componentProps props props_
-  .  Union props props_ (TableProps componentProps)
-  => Record props 
-  -> JSX
-table_component = element _Table
+type TableClassKeyOptionsJSS  = TableClassKeyGenericOptions MUI.Core.JSS
 
-table :: ∀ props props_
-  .  Union props props_ (TableProps Props_table)
-  => Record props 
-  -> JSX
-table = element _Table
+foreign import data TableClassKeyJSS :: Type
 
-foreign import  _Table :: ∀ a. ReactComponent a
+tableClassKeyJSS :: ∀ required given. Prim.Row.Union given required TableClassKeyOptionsJSS => Record given -> TableClassKeyJSS
+tableClassKeyJSS = Unsafe.Coerce.unsafeCoerce
+
+foreign import _Table :: ∀ a. React.Basic.ReactComponent a
+
+table :: ∀ required given. Prim.Row.Union given required (TablePropsOptions React.Basic.DOM.Props_table) => Record given -> React.Basic.JSX
+table = React.Basic.element _Table
+
+table_component :: ∀ required given componentProps. Prim.Row.Union given required (TablePropsOptions componentProps) => Record given -> React.Basic.JSX
+table_component = React.Basic.element _Table
+
+tableWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (TablePropsOptions React.Basic.DOM.Props_table) => Prim.Row.Union jss jss_ TableClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX
+tableWithStyles style = React.Basic.element (Unsafe.Coerce.unsafeCoerce MUI.Core.Styles.WithStyles.withStyles style _Table)
