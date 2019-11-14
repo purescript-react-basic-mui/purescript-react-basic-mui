@@ -42,7 +42,7 @@ instance eqDisplay :: Eq Display where
 instance eqVariant :: Eq Variant where
   eq = Unsafe.Reference.unsafeRefEq
 
-type TypographyPropsOptions componentProps = ( align :: Align, children :: Array React.Basic.JSX, classes :: TypographyClassKey, color :: Color, display :: Display, gutterBottom :: Boolean, noWrap :: Boolean, paragraph :: Boolean, variant :: Variant, variantMapping :: { body1 :: String, body2 :: String, button :: String, caption :: String, h1 :: String, h2 :: String, h3 :: String, h4 :: String, h5 :: String, h6 :: String, overline :: String, srOnly :: String, subtitle1 :: String, subtitle2 :: String } | componentProps )
+type TypographyPropsOptions componentProps = ( align :: Align, children :: Array React.Basic.JSX, classes :: TypographyClassKey, color :: Color, component :: React.Basic.ReactComponent {  | componentProps }, display :: Display, gutterBottom :: Boolean, noWrap :: Boolean, paragraph :: Boolean, variant :: Variant, variantMapping :: { body1 :: String, body2 :: String, button :: String, caption :: String, h1 :: String, h2 :: String, h3 :: String, h4 :: String, h5 :: String, h6 :: String, overline :: String, srOnly :: String, subtitle1 :: String, subtitle2 :: String } | componentProps )
 
 foreign import data TypographyProps :: Type
 

@@ -2090,8 +2090,9 @@ components =
       , propsType:
           { base: basePropsRow [] $ Map.fromFoldable
               [ children
+              , component
               ]
-          , generate: 
+          , generate:
               [ "classes"
               , "align"
               , "color"

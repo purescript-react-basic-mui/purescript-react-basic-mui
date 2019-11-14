@@ -147,6 +147,7 @@ printExpr = case _ of
 
 data PrintingContext = StandAlone | InApplication | InArr
 
+printRowLabel :: String -> String
 printRowLabel l = case SCU.uncons l of
   Just { head } -> if isUpper head || l `Set.member` reservedNames || not (Regex.test alphanumRegex l)
     then show l
