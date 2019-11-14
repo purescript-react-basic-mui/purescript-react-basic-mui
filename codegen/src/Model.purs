@@ -4,11 +4,14 @@ import Prelude
 
 import Codegen.AST (Declaration, Ident, Row, RowLabel, Type)
 import Codegen.AST.Sugar.Type (app, array, constructor) as Type
+import Codegen.TS.Types (InstanceProps, InstantiationStrategy)
+import Data.Either (Either)
 import Data.Foldable (intercalate)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Maybe (Maybe)
 import Data.Moldy (class Moldable, Moldy(..), moldMap, moldlDefault, moldrDefault)
+import ReadDTS.Instantiation (Type) as ReadDTS.Instantiation
 
 -- | TODO: Update required
 -- |
@@ -40,8 +43,14 @@ type Component =
   , propsType ::
     { base :: { row :: Row, vars :: Array Ident }
     , generate :: Array RowLabel
+    -- | An escape hatch for tweaking low level props extraction
+    , instantiation :: Maybe
+        { extractProps :: ReadDTS.Instantiation.Type → Either (Array String) InstanceProps
+        , strategy :: InstantiationStrategy
+        }
     }
-  , tsc :: { strictNullChecks :: Boolean }
+  , tsc ::
+    { strictNullChecks :: Boolean }
   }
 
 type ComponentName = String

@@ -13,9 +13,9 @@ import Codegen.Model (Component, ComponentName, ModulePath, componentFullPath, j
 import Codegen.Model (componentName, jsx) as Model
 import Codegen.TS.Module (PossibleType(..), astAlgebra, declarations, exprUnsafeCoerce, unionDeclarations) as TS.Module
 import Codegen.TS.Module (exprUnsafeCoerce)
-import Codegen.TS.Types (M)
+import Codegen.TS.Types (InstanceProps, InstantiationStrategy(..), M)
 import Control.Monad.Error.Class (throwError)
-import Control.Monad.Except (runExceptT)
+import Control.Monad.Except (except, runExceptT)
 import Control.Monad.State (runState)
 import Control.Monad.Writer (execWriter)
 import Control.Monad.Writer.Class (tell)
@@ -26,7 +26,6 @@ import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Functor.Mu (roll)
 import Data.List (List(..), fromFoldable, singleton) as List
 import Data.List (List)
-import Data.Map (Map)
 import Data.Map (filterKeys, fromFoldable, keys, lookup, singleton) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), fromMaybe, isJust, maybe)
@@ -56,21 +55,19 @@ foreignReactComponentDecl componentName = { declaration, ident, var }
 
 componentProps
   :: Component
-  -> M
-    { fqn :: String
-    , props :: Map String (Instantiation.Property Instantiation.Type)
-    }
+  -> M InstanceProps
 componentProps component@{ modulePath } = do
   tsDeclarations <- TS.Module.declarations
     { path: instanceModulePath
     , source: Just source
     }
-  case Map.lookup instanceTypeName tsDeclarations of
-    Nothing -> throwError $ Array.singleton $ line
+  case Map.lookup instanceTypeName tsDeclarations, component.propsType.instantiation of
+    Nothing, _ -> throwError $ Array.singleton $ line
       ["Unable to find generated props instance type:", show instanceTypeName ]
-    Just { defaultInstance: Mu.In (Instantiation.Object n props), typeConstructor } -> do
+    Just ds, Just { extractProps } → except $ extractProps ds.defaultInstance
+    Just { defaultInstance: Mu.In (Instantiation.Object n props), typeConstructor }, _ -> do
       pure { fqn: n, props }
-    Just { defaultInstance } -> throwError $ Array.singleton $ lines
+    Just { defaultInstance }, _ -> throwError $ Array.singleton $ lines
       [ line
         ["Props instance type" , show instanceTypeName
         , "is not an object. Derived type is: ", show $ cata pprintTypeName defaultInstance
@@ -81,14 +78,18 @@ componentProps component@{ modulePath } = do
   where
     componentName = Model.componentName component
     propsName = propsTypeName componentName
+
     instanceTypeName = propsName <> "Instance"
     instanceModulePath = instanceTypeName <> ".d.ts"
     -- | This approach is described in `Codegen.Typescript.Module`
+    instantiationStrategy = maybe InterfaceInheritance _.strategy component.propsType.instantiation
     source = lines $
       [ line ["import", "{",  propsName, "}", "from", show $ tsImportPath modulePath ]
       -- | Interface extending forces ts type checker to resolve all type fields.
       -- | It won't work with just type aliasing :-(
-      , line ["export interface ", instanceTypeName, "extends", propsName <> " {};"]
+      , line $ case instantiationStrategy of
+          InterfaceInheritance → ["export interface ", instanceTypeName, "extends", propsName <> " {};"]
+          TypeAlias → ["export type ", instanceTypeName, "=", propsName <> ";"]
       ]
 
 componentAST :: Component -> M AST.Module

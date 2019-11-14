@@ -195,10 +195,10 @@ union (Just l) props = do
     typeName label = if label `Set.member` reservedNames
       then (pascalCase label) <> "_"
       else pascalCase label
-
-union Nothing _ = throwError
-  "Unable to build anonymous Union..."
-
+-- | Escape hatch
+union Nothing props = union (Just "Anonymous") props
+-- union Nothing _ = throwError
+--   "Unable to build anonymous Union..."
 
 -- | `union'` constructor which adds new union to the cache
 union'

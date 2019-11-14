@@ -6,8 +6,16 @@ This project is used to generate code for `purescript-react-basic-mui`. Look in 
 
 Quick component rebuild cycle can be based on something like:
 
+Generate initial `.spago/run.js` for yourself (trivial script which runs `Main.main`):
+
 ```
-spago build && node .spago/run.js codegen -c Badge
+spago run
+```
+
+And then you just read / eval / print  in cycle:
+
+```
+spago build && node .spago/run.js codegen -c Badge --stdout
 ```
 
 or even:

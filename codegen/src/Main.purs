@@ -11,7 +11,9 @@ import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPa
 import Codegen.Model (componentName) as Model
 import Codegen.TS.MUI (componentProps) as TS.MUI
 import Codegen.TS.MUI (propsTypeName)
+import Codegen.TS.Types (InstantiationStrategy(..))
 import Control.Alt ((<|>))
+import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.Reader (runReaderT)
 import Control.Monad.Trans.Class (lift)
@@ -19,7 +21,8 @@ import Data.Array (filter)
 import Data.Array (null, sort) as Array
 import Data.Either (Either(..))
 import Data.Foldable (for_, intercalate)
-import Data.Functor.Mu (roll)
+import Data.Functor.Mu (Mu(..)) as Mu
+import Data.Functor.Mu (roll, unroll)
 import Data.List (sort) as List
 import Data.Map (filterWithKey, fromFoldable, keys, lookup, toUnfoldable) as Map
 import Data.Map.Internal (keys) as Map.Internal
@@ -37,6 +40,7 @@ import Matryoshka (cata)
 import Node.Path (FilePath)
 import Options.Applicative (Parser, ReadM, command, eitherReader, execParser, flag', fullDesc, help, helper, info, long, metavar, option, progDesc, readerError, short, strOption, subparser, value, (<**>))
 import Options.Applicative.Types (readerAsk)
+import ReadDTS.Instantiation (TypeF(..)) as Instantiation
 import ReadDTS.Instantiation.Pretty (pprintTypeName)
 
 components :: Array Component
@@ -64,12 +68,16 @@ components =
 
     emptyBase = basePropsRow [] mempty
 
-    simpleComponent { inherits, name, propsType } =
+    simpleComponent { inherits, name, propsType: { base, generate }} =
       { extraDeclarations: []
       , inherits: inherits
       -- , name
-      , modulePath: (Name name)
-      , propsType
+      , modulePath: Name name
+      , propsType:
+        { base
+        , generate
+        , instantiation: Nothing
+        }
       , tsc: { strictNullChecks: false }
       }
 
@@ -221,6 +229,7 @@ components =
             , "disableRipple", "focusRipple", "focusVisibleClassName"
             , "type"
             ]
+          , instantiation: Nothing
           }
         , tsc: { strictNullChecks: false }
         }
@@ -1857,9 +1866,10 @@ components =
         }
 
     -- | TODO add TablePaginationActions
-    tablePagination = simpleComponent
-      { inherits: Nothing --Just $ Type.app (Type.constructor "MUI.Core.TableCell.TableCellPropsOptions") [Type.constructor "React.Basic.DOM.Props_td" ]
-      , name: "TablePagination"
+    tablePagination =
+      { extraDeclarations: []
+      , inherits: Just $ Type.app (Type.constructor "MUI.Core.TableCell.TableCellPropsOptions") [Type.constructor "React.Basic.DOM.Props_td" ]
+      , modulePath: Name "TablePagination"
       , propsType:
           { base: basePropsRow [] $ Map.fromFoldable
               [ children
@@ -1869,16 +1879,29 @@ components =
               , Tuple "nextIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonProps")
               , eventHandlerProp "onChangePage"
               , eventHandlerProp "onChangeRowsPerPage"
-              , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelecProps")
+              , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectProps")
               ]
-          , generate: 
+          , generate:
               [ "classes"
               , "count"
               , "page"
               , "rowsPerPage"
               , "rowsPerPageOptions"
               ]
+          -- | Long story short `TablePaginationProps` is a union
+          -- | so we are not able to create an interface instance for it.
+          -- | Fortunately we are able to extract interesting props
+          -- | from the first part component of this union...
+          , instantiation: Just
+            { strategy: TypeAlias
+            , extractProps: \defaultInstance → case unroll defaultInstance of
+                (Instantiation.Union [ Mu.In (Instantiation.Object fqn props), _]) →
+                  pure { fqn, props }
+                otherwise → throwError
+                  [ "Expecting an union as a representation for TablePaginationProps" ]
+            }
           }
+        , tsc: { strictNullChecks: false }
         }
 
     tableRow = simpleComponent
@@ -1951,9 +1974,11 @@ components =
           }
         }
 
-    textField = simpleComponent
-      { inherits: Just $ Type.app (Type.constructor "MUI.Core.FormControl.FormControlPropsOptions") [ divProps ]
-      , name: "TextField"
+    textField ∷ Component
+    textField =
+      { extraDeclarations: []
+      , inherits: Just $ Type.app (Type.constructor "MUI.Core.FormControl.FormControlPropsOptions") [ divProps ]
+      , modulePath: Name "TextField"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable 
             [ children
@@ -1991,9 +2016,26 @@ components =
             , "select"
             , "type"
           ]
+          , instantiation: Just
+            { strategy: TypeAlias
+            , extractProps: \defaultInstance → case unroll defaultInstance of
+                (Instantiation.Union
+                  [ Mu.In (Instantiation.Object fqn1 props1)
+                  , Mu.In (Instantiation.Object fqn2 props2)
+                  , Mu.In (Instantiation.Object fqn3 props3)
+                  ]
+                ) → throwError
+                  [ "Not sure how to tacke this three props types: " <> fqn1 <> ", " <> fqn2 <> "," <> fqn3 ]
+                (Instantiation.Union _) → throwError
+                  [ "Expecting a two member union as a representation for TextField" ]
+                otherwise → throwError
+                  [ "Expecting an union as a representation for TextField" ]
+            }
         }
+        , tsc: { strictNullChecks: false }
       }
 
+    -- | It seems that toggle button is still in `material-ui-lab`
     toggleButton = simpleComponent
       { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [Type.constructor "React.Basic.DOM.Props_button" ]
       , name: "ToggleButton"
@@ -2035,6 +2077,7 @@ components =
       , propsType:
         { base: emptyBase
         , generate: [ "center", "classes" ]
+        , instantiation: Nothing
         }
       , tsc: { strictNullChecks: false }
       }
@@ -2164,13 +2207,13 @@ components =
     , tableCell
     , tableFooter
     , tableHead
-    --, tablePagination
+    , tablePagination
     , tableRow
     , tableSortLabel
     , tabs
     , textareaAutosize
-    --, textField
-    --, toggleButton
+    -- , textField
+    -- , toggleButton
     , toolbar
     , touchRipple
     , typography
