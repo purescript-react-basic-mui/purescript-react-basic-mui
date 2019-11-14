@@ -6,6 +6,16 @@ let upstream =
 
 let overrides = { react-basic = upstream.react-basic // { version = "df358364ece1cd4760429afae0bcca0eb518eb03" }}
 
-let additions = { = }
+let additions =
+  { literal =
+      mkPackage
+        [ "numbers"
+        , "partial"
+        , "typelevel-prelude"
+        , "unsafe-coerce"
+        ]
+        "https://github.com/paluh/purescript-literal.git"
+        "master"
+  }
 
 in  upstream // overrides // additions

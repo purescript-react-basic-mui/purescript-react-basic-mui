@@ -54,8 +54,32 @@ instance showTypeName :: Show TypeName where
 
 type QualifiedTypeName = QualifiedName TypeName
 
+newtype OperatorName = OperatorName String
+derive instance newtypeOperatorName :: Newtype OperatorName _
+derive instance genericOperatorName :: Generic OperatorName _
+derive instance eqOperatorName :: Eq OperatorName
+derive instance ordOperatorName :: Ord OperatorName
+instance showOperatorName :: Show OperatorName where
+  show = genericShow
+
+type QualifiedOperatorName = QualifiedName OperatorName
+
+
 type Constraint ref
   = { className :: QualifiedName ClassName, params :: Array ref }
+
+data Precedence = Zero | One | Two | Three | Four | Five | Six | Seven | Eight | Nine
+derive instance eqPrecedence ∷ Eq Precedence
+derive instance ordPrecedence ∷ Ord Precedence
+derive instance genericPrecedence ∷ Generic Precedence _
+instance showPrecedence ∷ Show Precedence where
+  show = genericShow
+data Associativity = AssocLeft | AssocRight
+derive instance eqAssociativity ∷ Eq Associativity
+derive instance ordAssociativity ∷ Ord Associativity
+derive instance genericAssociativity ∷ Generic Associativity _
+instance showAssociativity ∷ Show Associativity where
+  show = genericShow
 
 data TypeF ref
   = TypeApp ref (Array ref)
@@ -68,9 +92,15 @@ data TypeF ref
   | TypeNumber
   -- | I'm handling this mututal recursion by hand
   -- | because I'm not sure how to do this better.
+  | TypeOperator
+    { associativity ∷ Associativity
+    , name :: QualifiedOperatorName
+    , precedence :: Precedence
+    }
   | TypeRecord (RowF ref)
   | TypeRow (RowF ref)
   | TypeString
+  | TypeSymbol String
   | TypeVar Ident
 
 type Type = Mu TypeF
@@ -83,6 +113,8 @@ instance showPropType :: Show ref => Show (TypeF ref) where
 -- | take into an account variable renaming etc.
 -- | It is used only by `AST.Monomorphic` so it
 -- | seems working there.
+-- | We want to have exhaustive pattern match
+-- | because these kind of bugs are hard to debug ;-)
 -- | Should we drop this trivial instance?
 instance eq1TypeF :: Eq1 TypeF where
   eq1 (TypeApp f1 a1) (TypeApp f2 a2) =
@@ -115,12 +147,18 @@ instance eq1TypeF :: Eq1 TypeF where
   eq1 (TypeRecord row1) (TypeRecord row2) = row1 == row2
   eq1 (TypeRecord _) _ = false
   eq1 _ (TypeRecord _) = false
+  eq1 (TypeOperator o1) (TypeOperator o2) = o1 == o2
+  eq1 (TypeOperator _) _ = false
+  eq1 _ (TypeOperator _) = false
   eq1 (TypeRow row1) (TypeRow row2) = row1 == row2
   eq1 (TypeRow _) _ = false
   eq1 _ (TypeRow _) = false
   eq1 TypeString TypeString = true
   eq1 TypeString _ = false
   eq1 _ TypeString = false
+  eq1 (TypeSymbol s1) (TypeSymbol s2) = s1 == s2
+  eq1 (TypeSymbol _) _ = false
+  eq1 _ (TypeSymbol _) = false
   eq1 (TypeVar v1) (TypeVar v2) = v1 == v2
 
 -- | Should we drop this and similar instances and move on
@@ -153,6 +191,9 @@ instance ord1TypeF :: Ord1 TypeF where
   compare1 TypeNumber TypeNumber = EQ
   compare1 TypeNumber _ = GT
   compare1 _ TypeNumber = GT
+  compare1 (TypeOperator o1) (TypeOperator o2) = compare o1.name o2.name
+  compare1 (TypeOperator _) _ = GT
+  compare1 _ (TypeOperator _) = GT
   compare1 (TypeRecord (Row row1)) (TypeRecord (Row row2)) = compare row1 row2
   compare1 (TypeRecord _) _ = GT
   compare1 _ (TypeRecord _) = GT
@@ -162,6 +203,9 @@ instance ord1TypeF :: Ord1 TypeF where
   compare1 TypeString TypeString = EQ
   compare1 TypeString _ = GT
   compare1 _ TypeString = GT
+  compare1 (TypeSymbol s1) (TypeSymbol s2) = compare s1 s2
+  compare1 (TypeSymbol s) _ = GT
+  compare1 _ (TypeSymbol s) = GT
   compare1 (TypeVar i1) (TypeVar i2) = compare i1 i2
 
 derive instance functorTypeF :: Functor TypeF
@@ -173,11 +217,13 @@ instance foldableTypeF :: Foldable TypeF where
   foldMap f (TypeConstrained { className, params } t) =
     foldMap f params <> f t
   foldMap _ (TypeConstructor _) = mempty
+  foldMap f (TypeForall _ t) = f t
+  foldMap _ TypeNumber = mempty
+  foldMap _ (TypeOperator _) = mempty
   foldMap f (TypeRecord r) = foldMap f r
   foldMap f (TypeRow r) = foldMap f r
-  foldMap _ TypeNumber = mempty
-  foldMap f (TypeForall _ t) = f t
   foldMap _ TypeString = mempty
+  foldMap _ (TypeSymbol _) = mempty
   foldMap _ (TypeVar _) = mempty
 
   foldr f t = foldrDefault f t
@@ -194,9 +240,11 @@ instance traversableTypeF :: Traversable TypeF where
   sequence (TypeConstructor t) = pure $ TypeConstructor t
   sequence (TypeForall v t) = TypeForall v <$> t
   sequence TypeNumber = pure $ TypeNumber
+  sequence (TypeOperator o) = pure $ TypeOperator o
   sequence (TypeRecord ts) = TypeRecord <$> sequence ts
   sequence (TypeRow ts) = TypeRow <$> sequence ts
   sequence TypeString = pure $ TypeString
+  sequence (TypeSymbol s) = pure $ TypeSymbol s
   sequence (TypeVar ident) = pure $ TypeVar ident
 
   traverse = traverseDefault
@@ -241,13 +289,12 @@ instance showUnion :: Show Union where
 -- | XXX: We should be able to handle also more general
 -- | `UnionConstructor Type` too.
 data UnionMember
-  = UnionBoolean Boolean
-  | UnionString String
-  | UnionStringName String String
-  | UnionNull
-  | UnionNumber String Number
-  | UnionConstructor String Type
-  | UnionUndefined
+  = BooleanLiteral Boolean
+  | NonLiteral Type
+  | NullLiteral
+  | NumberLiteral Number
+  | StringLiteral String
+  | UndefinedLiteral
 derive instance eqUnionMember :: Eq UnionMember
 derive instance ordUnionMember :: Ord UnionMember
 derive instance genericUnionMember :: Generic UnionMember _
@@ -336,6 +383,7 @@ data Import
   = ImportValue Ident
   | ImportType TypeName
   | ImportClass ClassName
+  | ImportOperator OperatorName
 derive instance newtypeIdent :: Newtype Ident _
 derive instance genericImport :: Generic Import _
 derive instance eqImport :: Eq Import

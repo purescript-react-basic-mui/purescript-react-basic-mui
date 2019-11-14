@@ -3,7 +3,7 @@ module Codegen.TS.MUI where
 import Prelude
 
 import Codegen.AST (Declaration, Ident(..), ModuleName(..), TypeF(..), TypeName(..))
-import Codegen.AST (Module(..), RowF(..), Type, TypeName(..), Union(..), Expr) as AST
+import Codegen.AST (Expr, Module(..), RowF(..), Type, TypeName(..), Union(..), UnionMember(..)) as AST
 import Codegen.AST.Sugar (declForeignData, declForeignValue, declType, declValue)
 import Codegen.AST.Sugar.Expr (app, ident) as Expr
 import Codegen.AST.Sugar.Type (app, arr, constructor, row, string, typeRow, var) as Type
@@ -11,11 +11,11 @@ import Codegen.AST.Sugar.Type (arr) as T
 import Codegen.AST.Sugar.Type (constrained, forAll, forAll', forAllWith, recordApply)
 import Codegen.Model (Component, ComponentName, ModulePath, componentFullPath, jsImportPath, psImportPath, reactComponentApply)
 import Codegen.Model (componentName, jsx) as Model
-import Codegen.TS.Module (PossibleType(..), astAlgebra, declarations, exprUnsafeCoerce, unionDeclarations) as TS.Module
+import Codegen.TS.Module (astAlgebra, declarations, exprUnsafeCoerce) as TS.Module
 import Codegen.TS.Module (exprUnsafeCoerce)
 import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
-import Control.Monad.Except (runExceptT)
+import Control.Monad.Except (runExcept, runExceptT)
 import Control.Monad.State (runState)
 import Control.Monad.Writer (execWriter)
 import Control.Monad.Writer.Class (tell)
@@ -112,10 +112,10 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
     -- | for AST generation.
     obj :: Instantiation.Type
     obj = roll $ Instantiation.Object fqn props'
-    objInstance = flip runState mempty <<< runExceptT <<< cataM TS.Module.astAlgebra $ obj
+    objInstance = runExcept <<< cataM TS.Module.astAlgebra $ obj
 
   case objInstance of
-    Tuple (Right (TS.Module.ProperType (Mu.In (TypeRecord (AST.Row { labels, tail: Nothing }))))) unions -> do
+    Right (AST.NonLiteral (Mu.In (TypeRecord (AST.Row { labels, tail: Nothing })))) -> do
       classes <- if "classes" `Array.elem` generate
         then Just <$> classesPropAST componentName (Map.lookup "classes" props)
         else pure Nothing
@@ -162,11 +162,11 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
           $ List.Cons (propsPartialConstructor.declaration)
           $ List.Nil
 
-      unions' <- for unions $ case _ of
-        AST.Union { moduleName: Just _, name } _ -> throwError $
-          [ "External union generation not implmented yet..." ]
-        AST.Union { moduleName: Nothing, name } members ->
-          pure $ TS.Module.unionDeclarations name members
+      -- unions' <- for unions $ case _ of
+      --   AST.Union { moduleName: Just _, name } _ -> throwError $
+      --     [ "External union generation not implmented yet..." ]
+      --   AST.Union { moduleName: Nothing, name } members ->
+      --     pure $ TS.Module.unionDeclarations name members
 
       let
         step { "type": union, constructors, instances } res =
@@ -176,8 +176,8 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
         -- | * classes realted declarations
         -- | * component constructor + foreign component import
         declarations
-          = foldr step List.Nil unions'
-          <> List.fromFoldable extraDeclarations
+          -- = foldr step List.Nil unions'
+          = List.fromFoldable extraDeclarations
           <> propsDeclarations
           <> maybe mempty _.declarations classes
           <> componentConstructorsAST
@@ -193,9 +193,9 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
         , moduleName: ModuleName $ psImportPath (componentFullPath component)
         }
 
-    (Tuple (Right result) _) -> throwError $ Array.singleton $ line $
+    Right result -> throwError $ Array.singleton $ line $
       ["Expecting object type as a result of props instantiation: " , show result ]
-    (Tuple (Left err) _) -> throwError [ err ]
+    Left err -> throwError [ err ]
   where
     componentName = Model.componentName component
     propsName = propsTypeName componentName

@@ -1,56 +1,20 @@
 module MUI.Core.Grid where
 
+import Literals.Boolean (False, True) as Literals.Boolean
+import Literals.Number (Literal) as Literals.Number
+import Literals.String (Literal) as Literals.String
 import MUI.Core (JSS) as MUI.Core
 import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
 import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
-import Prelude
+import OneOf (OneOf) as OneOf
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
-import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
-foreign import data Xs :: Type
-
-xs :: { auto :: Xs, eight :: Xs, eleven :: Xs, "false" :: Xs, five :: Xs, four :: Xs, nine :: Xs, one :: Xs, seven :: Xs, six :: Xs, ten :: Xs, three :: Xs, "true" :: Xs, twelve :: Xs, two :: Xs }
-xs = { auto: Unsafe.Coerce.unsafeCoerce "auto", eight: Unsafe.Coerce.unsafeCoerce 8.0, eleven: Unsafe.Coerce.unsafeCoerce 11.0, false: Unsafe.Coerce.unsafeCoerce false, five: Unsafe.Coerce.unsafeCoerce 5.0, four: Unsafe.Coerce.unsafeCoerce 4.0, nine: Unsafe.Coerce.unsafeCoerce 9.0, one: Unsafe.Coerce.unsafeCoerce 1.0, seven: Unsafe.Coerce.unsafeCoerce 7.0, six: Unsafe.Coerce.unsafeCoerce 6.0, ten: Unsafe.Coerce.unsafeCoerce 10.0, three: Unsafe.Coerce.unsafeCoerce 3.0, true: Unsafe.Coerce.unsafeCoerce true, twelve: Unsafe.Coerce.unsafeCoerce 12.0, two: Unsafe.Coerce.unsafeCoerce 2.0 }
-
-foreign import data Xl :: Type
-
-xl :: { auto :: Xl, eight :: Xl, eleven :: Xl, "false" :: Xl, five :: Xl, four :: Xl, nine :: Xl, one :: Xl, seven :: Xl, six :: Xl, ten :: Xl, three :: Xl, "true" :: Xl, twelve :: Xl, two :: Xl }
-xl = { auto: Unsafe.Coerce.unsafeCoerce "auto", eight: Unsafe.Coerce.unsafeCoerce 8.0, eleven: Unsafe.Coerce.unsafeCoerce 11.0, false: Unsafe.Coerce.unsafeCoerce false, five: Unsafe.Coerce.unsafeCoerce 5.0, four: Unsafe.Coerce.unsafeCoerce 4.0, nine: Unsafe.Coerce.unsafeCoerce 9.0, one: Unsafe.Coerce.unsafeCoerce 1.0, seven: Unsafe.Coerce.unsafeCoerce 7.0, six: Unsafe.Coerce.unsafeCoerce 6.0, ten: Unsafe.Coerce.unsafeCoerce 10.0, three: Unsafe.Coerce.unsafeCoerce 3.0, true: Unsafe.Coerce.unsafeCoerce true, twelve: Unsafe.Coerce.unsafeCoerce 12.0, two: Unsafe.Coerce.unsafeCoerce 2.0 }
-
-foreign import data Sm :: Type
-
-sm :: { auto :: Sm, eight :: Sm, eleven :: Sm, "false" :: Sm, five :: Sm, four :: Sm, nine :: Sm, one :: Sm, seven :: Sm, six :: Sm, ten :: Sm, three :: Sm, "true" :: Sm, twelve :: Sm, two :: Sm }
-sm = { auto: Unsafe.Coerce.unsafeCoerce "auto", eight: Unsafe.Coerce.unsafeCoerce 8.0, eleven: Unsafe.Coerce.unsafeCoerce 11.0, false: Unsafe.Coerce.unsafeCoerce false, five: Unsafe.Coerce.unsafeCoerce 5.0, four: Unsafe.Coerce.unsafeCoerce 4.0, nine: Unsafe.Coerce.unsafeCoerce 9.0, one: Unsafe.Coerce.unsafeCoerce 1.0, seven: Unsafe.Coerce.unsafeCoerce 7.0, six: Unsafe.Coerce.unsafeCoerce 6.0, ten: Unsafe.Coerce.unsafeCoerce 10.0, three: Unsafe.Coerce.unsafeCoerce 3.0, true: Unsafe.Coerce.unsafeCoerce true, twelve: Unsafe.Coerce.unsafeCoerce 12.0, two: Unsafe.Coerce.unsafeCoerce 2.0 }
-
-foreign import data Md :: Type
-
-md :: { auto :: Md, eight :: Md, eleven :: Md, "false" :: Md, five :: Md, four :: Md, nine :: Md, one :: Md, seven :: Md, six :: Md, ten :: Md, three :: Md, "true" :: Md, twelve :: Md, two :: Md }
-md = { auto: Unsafe.Coerce.unsafeCoerce "auto", eight: Unsafe.Coerce.unsafeCoerce 8.0, eleven: Unsafe.Coerce.unsafeCoerce 11.0, false: Unsafe.Coerce.unsafeCoerce false, five: Unsafe.Coerce.unsafeCoerce 5.0, four: Unsafe.Coerce.unsafeCoerce 4.0, nine: Unsafe.Coerce.unsafeCoerce 9.0, one: Unsafe.Coerce.unsafeCoerce 1.0, seven: Unsafe.Coerce.unsafeCoerce 7.0, six: Unsafe.Coerce.unsafeCoerce 6.0, ten: Unsafe.Coerce.unsafeCoerce 10.0, three: Unsafe.Coerce.unsafeCoerce 3.0, true: Unsafe.Coerce.unsafeCoerce true, twelve: Unsafe.Coerce.unsafeCoerce 12.0, two: Unsafe.Coerce.unsafeCoerce 2.0 }
-
-foreign import data Lg :: Type
-
-lg :: { auto :: Lg, eight :: Lg, eleven :: Lg, "false" :: Lg, five :: Lg, four :: Lg, nine :: Lg, one :: Lg, seven :: Lg, six :: Lg, ten :: Lg, three :: Lg, "true" :: Lg, twelve :: Lg, two :: Lg }
-lg = { auto: Unsafe.Coerce.unsafeCoerce "auto", eight: Unsafe.Coerce.unsafeCoerce 8.0, eleven: Unsafe.Coerce.unsafeCoerce 11.0, false: Unsafe.Coerce.unsafeCoerce false, five: Unsafe.Coerce.unsafeCoerce 5.0, four: Unsafe.Coerce.unsafeCoerce 4.0, nine: Unsafe.Coerce.unsafeCoerce 9.0, one: Unsafe.Coerce.unsafeCoerce 1.0, seven: Unsafe.Coerce.unsafeCoerce 7.0, six: Unsafe.Coerce.unsafeCoerce 6.0, ten: Unsafe.Coerce.unsafeCoerce 10.0, three: Unsafe.Coerce.unsafeCoerce 3.0, true: Unsafe.Coerce.unsafeCoerce true, twelve: Unsafe.Coerce.unsafeCoerce 12.0, two: Unsafe.Coerce.unsafeCoerce 2.0 }
-
-instance eqLg :: Eq Lg where
-  eq = Unsafe.Reference.unsafeRefEq
-
-instance eqMd :: Eq Md where
-  eq = Unsafe.Reference.unsafeRefEq
-
-instance eqSm :: Eq Sm where
-  eq = Unsafe.Reference.unsafeRefEq
-
-instance eqXl :: Eq Xl where
-  eq = Unsafe.Reference.unsafeRefEq
-
-instance eqXs :: Eq Xs where
-  eq = Unsafe.Reference.unsafeRefEq
-
-type GridPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: GridClassKey, container :: Boolean, item :: Boolean, lg :: Lg, md :: Md, sm :: Sm, xl :: Xl, xs :: Xs, zeroMinWidth :: Boolean | componentProps )
+type GridPropsOptions componentProps =
+  (alignContent :: OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (Literals.String.Literal "stretch") (Literals.String.Literal "space-around")) (Literals.String.Literal "space-between")) (Literals.String.Literal "flex-end")) (Literals.String.Literal "flex-start")) (Literals.String.Literal "center"),
+  alignItems :: OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (Literals.String.Literal "stretch") (Literals.String.Literal "baseline")) (Literals.String.Literal "flex-end")) (Literals.String.Literal "flex-start")) (Literals.String.Literal "center"), children :: Array React.Basic.JSX, classes :: GridClassKey, container :: Boolean, direction :: OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (Literals.String.Literal "row") (Literals.String.Literal "column-reverse")) (Literals.String.Literal "column")) (Literals.String.Literal "row-reverse"), item :: Boolean, justify :: OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (Literals.String.Literal "center") (Literals.String.Literal "space-evenly")) (Literals.String.Literal "space-around")) (Literals.String.Literal "space-between")) (Literals.String.Literal "flex-end")) (Literals.String.Literal "flex-start"), lg :: OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf Literals.Boolean.False (Literals.Number.Literal "12.0")) (Literals.Number.Literal "11.0")) (Literals.Number.Literal "10.0")) (Literals.Number.Literal "9.0")) (Literals.Number.Literal "8.0")) (Literals.Number.Literal "7.0")) (Literals.Number.Literal "6.0")) (Literals.Number.Literal "5.0")) (Literals.Number.Literal "4.0")) (Literals.Number.Literal "3.0")) (Literals.Number.Literal "2.0")) (Literals.Number.Literal "1.0")) (Literals.String.Literal "auto")) Literals.Boolean.True, md :: OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf Literals.Boolean.False (Literals.Number.Literal "12.0")) (Literals.Number.Literal "11.0")) (Literals.Number.Literal "10.0")) (Literals.Number.Literal "9.0")) (Literals.Number.Literal "8.0")) (Literals.Number.Literal "7.0")) (Literals.Number.Literal "6.0")) (Literals.Number.Literal "5.0")) (Literals.Number.Literal "4.0")) (Literals.Number.Literal "3.0")) (Literals.Number.Literal "2.0")) (Literals.Number.Literal "1.0")) (Literals.String.Literal "auto")) Literals.Boolean.True, sm :: OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf Literals.Boolean.False (Literals.Number.Literal "12.0")) (Literals.Number.Literal "11.0")) (Literals.Number.Literal "10.0")) (Literals.Number.Literal "9.0")) (Literals.Number.Literal "8.0")) (Literals.Number.Literal "7.0")) (Literals.Number.Literal "6.0")) (Literals.Number.Literal "5.0")) (Literals.Number.Literal "4.0")) (Literals.Number.Literal "3.0")) (Literals.Number.Literal "2.0")) (Literals.Number.Literal "1.0")) (Literals.String.Literal "auto")) Literals.Boolean.True, spacing :: OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (Literals.Number.Literal "0.0") (Literals.Number.Literal "10.0")) (Literals.Number.Literal "9.0")) (Literals.Number.Literal "8.0")) (Literals.Number.Literal "7.0")) (Literals.Number.Literal "6.0")) (Literals.Number.Literal "5.0")) (Literals.Number.Literal "4.0")) (Literals.Number.Literal "3.0")) (Literals.Number.Literal "2.0")) (Literals.Number.Literal "1.0"), wrap :: OneOf.OneOf (OneOf.OneOf (Literals.String.Literal "nowrap") (Literals.String.Literal "wrap-reverse")) (Literals.String.Literal "wrap"), xl :: OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf Literals.Boolean.False (Literals.Number.Literal "12.0")) (Literals.Number.Literal "11.0")) (Literals.Number.Literal "10.0")) (Literals.Number.Literal "9.0")) (Literals.Number.Literal "8.0")) (Literals.Number.Literal "7.0")) (Literals.Number.Literal "6.0")) (Literals.Number.Literal "5.0")) (Literals.Number.Literal "4.0")) (Literals.Number.Literal "3.0")) (Literals.Number.Literal "2.0")) (Literals.Number.Literal "1.0")) (Literals.String.Literal "auto")) Literals.Boolean.True, xs :: OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf (OneOf.OneOf Literals.Boolean.False (Literals.Number.Literal "12.0")) (Literals.Number.Literal "11.0")) (Literals.Number.Literal "10.0")) (Literals.Number.Literal "9.0")) (Literals.Number.Literal "8.0")) (Literals.Number.Literal "7.0")) (Literals.Number.Literal "6.0")) (Literals.Number.Literal "5.0")) (Literals.Number.Literal "4.0")) (Literals.Number.Literal "3.0")) (Literals.Number.Literal "2.0")) (Literals.Number.Literal "1.0")) (Literals.String.Literal "auto")) Literals.Boolean.True, zeroMinWidth :: Boolean | componentProps )
 
 foreign import data GridProps :: Type
 

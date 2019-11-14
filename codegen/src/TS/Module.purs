@@ -42,20 +42,22 @@ import Codegen.AST (Declaration(..)) as AST
 import Codegen.AST (Expr, ExprF(..), Ident(..), RowF(..), RowLabel, Type, TypeF(..), TypeName(..), Union(..))
 import Codegen.AST.Sugar (declInstance, valueBindingFields)
 import Codegen.AST.Sugar.Expr (app, boolean, ident, number, string) as Expr
-import Codegen.AST.Sugar.Type (arr) as Type
+import Codegen.AST.Sugar.Type (app, arr, constructor, symbol) as Type
 import Codegen.AST.Sugar.Type (name')
 import Codegen.AST.Types (UnionMember(..), reservedNames)
 import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
-import Control.Monad.Except (ExceptT(..), mapExceptT, withExceptT)
+import Control.Monad.Except (ExceptT(..), Except, mapExceptT, withExceptT)
 import Control.Monad.State (State, get, modify_, put)
 import Control.Monad.State.Trans (evalStateT)
 import Control.Monad.Trans.Class (lift)
 import Data.Array (catMaybes)
 import Data.Array (singleton) as Array
+import Data.Array.NonEmpty (NonEmptyArray)
+import Data.Array.NonEmpty (cons', fromArray, uncons) as NonEmptyArray
 import Data.Char.Unicode (toLower) as Unicode
 import Data.Either (Either(..))
-import Data.Foldable (all, foldMap)
+import Data.Foldable (all, foldMap, foldr)
 import Data.Functor.Mu (roll, unroll)
 import Data.FunctorWithIndex (mapWithIndex)
 import Data.Generic.Rep (class Generic)
@@ -112,31 +114,18 @@ declarations file = do
       pure $ Just (Tuple name { defaultInstance: t, typeConstructor: tc })
     Nothing -> pure Nothing)
 
--- | During a fold over typescript module types we handle unions and their members
--- | using the type defined below. It allows us to aggregate members of a union during
--- | fold so they can be used "one level up" when we finally accumulate them into
--- | a single `AST.Union`.
-data PossibleType
-  = ProperType Type
-  | UnionMember UnionMember
-  | PossibleUnion (Array PossibleType)
-derive instance genericPossiblePropType :: Generic PossibleType _
-instance showPossiblePropType :: Show PossibleType where
-  show t = genericShow t
-
-type UnionTypes = List Union
-
-type UnionTypeName = String
-
-type ComponentAlgebraM a = ExceptT String (State UnionTypes) a
+-- type UnionTypes = List Union
+-- type UnionTypeName = String
+type ComponentAlgebraM a = Except String a
 
 -- | Try to build an union from provided cases. For example if we
 -- | have something like `8 | "a" | null` on the TypeScript side
 -- | we are going to get here an array:
 -- |  ```
--- |  [ UnionMember (UnionNumber 8)
--- |  , UnionMember (UnionString "a")
--- |  , UnionMember UnionNull
+-- |  [ TypeLiteral (NumberLiteral 8)
+-- |  , TypeLiteral (StringLiteral "a")
+-- |  , TypeLiteral NullLiteral
+-- |  , ProperType Boolean
 -- |  ]
 -- | ```
 -- |
@@ -144,78 +133,64 @@ type ComponentAlgebraM a = ExceptT String (State UnionTypes) a
 -- | then the label of a property for which this value was defined
 -- | is passed as the first argument.
 union
-  :: Maybe RowLabel
-  -> Array PossibleType
-  -> ComponentAlgebraM (Either Type Union)
-union (Just l) props = do
-  -- | XXX: This flow can be a bit broken when we consider
-  -- |      `strictNullChecks: true` because we are going to
-  -- |      get types here.
-  -- |
-  -- | Typescript (in its strict mode) handles optional field through
-  -- | union with `undefined` value.  Do we really want to IGNORE this
-  -- | on PS side and pretend that everything is optional?
-  -- | This is dirty hack to ignore `undefined`:
-  -- |
-  -- | case props of
-  -- |   [ UnionMember UnionUndefined, ProperType t ] -> pure $ Left $ t
-  -- |   [ ProperType t, UnionMember UnionUndefined ] -> pure $ Left $ t
-  -- |   ...
-  props' <- flip evalStateT 0 $ for props $ case _ of
-    UnionMember p -> pure p
-    ProperType t -> do
-      -- | Really naive naming convention but maybe it will
-      -- | somewhat work in "most" simple scenarios
-      n <- case unroll t of
-        TypeNumber -> pure "number"
-        TypeString -> pure "string"
-        t' -> do
-          idx <- get
-          put (idx + 1)
-          let
-            n = case t' of
-              TypeRecord _ -> "record"
-              otherwise -> l
-            n' =
-              if idx > 0
-                then (n <> show idx)
-                else n
-          pure n'
-      pure $ UnionConstructor n t
-
-    p -> lift $ throwError $
-      "Unable to build a variant from non variant props for: " <> l <> ", " <> show p
-  -- | Currently building only local variants
-  pure $ Right $ Union
-    { name: TypeName $ typeName l, moduleName: Nothing }
-    props'
+  :: NonEmptyArray UnionMember
+  -> Type
+union ms = foldr step (unionMember head) tail
   where
-    -- | TOD:
-    -- | * Guard against scope naming collisions too
-    typeName label = if label `Set.member` reservedNames
-      then (pascalCase label) <> "_"
-      else pascalCase label
+    { head, tail } = NonEmptyArray.uncons ms
+    step m t = Type.app (Type.constructor "OneOf.OneOf") [ t, unionMember m ]
 
-union Nothing _ = throwError
-  "Unable to build anonymous Union..."
+unionMember ∷ UnionMember → Type
+unionMember = case _ of
+  BooleanLiteral b → if b
+    then Type.constructor "Literals.Boolean.True"
+    else Type.constructor "Literals.Boolean.False"
+  NonLiteral t → t
+  NullLiteral → Type.constructor "Literals.Null.Null"
+  NumberLiteral n → Type.app (Type.constructor "Literals.Number.Literal") [ Type.symbol (show n) ]
+  StringLiteral s → Type.app (Type.constructor "Literals.String.Literal") [ Type.symbol s ]
+  UndefinedLiteral → Type.constructor "Literals.Undefined.Undefined"
 
-
--- | `union'` constructor which adds new union to the cache
-union'
-  :: Maybe RowLabel
-  -> Array PossibleType
-  -> ComponentAlgebraM Type
-union' label vps = union label vps >>= case _ of
-  Left t -> pure $ t
-  Right v@(Union qn@{ name, moduleName: m } _) -> do
-    -- | TODO: Validate:
-    -- | * check if a given variant declaration is already defined
-    -- | * check if already defined variant with the same name has
-    -- |  the same structure
-    when (isJust m) $
-      throwError "External variants not implemented yet"
-    modify_ (List.Cons v)
-    pure $ roll $ TypeConstructor $ qn
+-- union (Just l) props = do
+--   let  for props $ case _ of
+--     BooleanLiteral p -> p
+--     TypeLiteral p -> p
+--     TypeLiteral p -> p
+--     TypeLiteral p -> p
+--     TypeLiteral p -> p
+--     TypeLiteral p -> p
+--     ProperType t -> NonLiteral t
+--     PossibleUnion t ->
+--     p -> lift $ throwError $
+--       "Unable to build a variant from non variant props for: " <> l <> ", " <> show p
+--   -- | Currently building only local variants
+--   pure $ Right $ Union
+--     { name: TypeName $ typeName l, moduleName: Nothing }
+--     props'
+--   where
+--     -- | TOD:
+--     -- | * Guard against scope naming collisions too
+--     typeName label = if label `Set.member` reservedNames
+--       then (pascalCase label) <> "_"
+--       else pascalCase label
+-- 
+-- 
+-- -- | `union'` constructor which adds new union to the cache
+-- union'
+--   :: Maybe RowLabel
+--   -> Array PossibleType
+--   -> ComponentAlgebraM Type
+-- union' label vps = union label vps >>= case _ of
+--   Left t -> pure $ t
+--   Right v@(Union qn@{ name, moduleName: m } _) -> do
+--     -- | TODO: Validate:
+--     -- | * check if a given variant declaration is already defined
+--     -- | * check if already defined variant with the same name has
+--     -- |  the same structure
+--     when (isJust m) $
+--       throwError "External variants not implemented yet"
+--     modify_ (List.Cons v)
+--     pure $ roll $ TypeConstructor $ qn
 
 -- | Given a TypeScript type representation try to build an AST for it.
 -- |
@@ -231,60 +206,49 @@ union' label vps = union label vps >>= case _ of
 astAlgebra :: AlgebraM
   ComponentAlgebraM
   Instantiation.TypeF
-  PossibleType
+  UnionMember
 astAlgebra = case _ of
   (Instantiation.Any) -> throwError "Unable to handle Any type"
-  (Instantiation.Array (PossibleUnion vs)) ->
-    properType <<< TypeArray <=< union' Nothing $ vs
-  (Instantiation.Array v@(UnionMember _)) ->
-    properType <<< TypeArray <=< union' Nothing $ [ v ]
-  (Instantiation.Array (ProperType t)) ->
-    properType $ TypeArray t
-  Instantiation.Boolean -> properType TypeBoolean
-  (Instantiation.BooleanLiteral b) -> unionMember $ UnionBoolean b
+  (Instantiation.Array vs) -> nonLiteral $ TypeArray (unionMember vs)
+  Instantiation.Boolean -> nonLiteral $ TypeBoolean
+  (Instantiation.BooleanLiteral b) ->  pure $ BooleanLiteral b
   (Instantiation.Intersection _ _) -> throwError "Unable to handle uninstantiated intersection"
-  Instantiation.Null -> unionMember $ UnionNull
-  Instantiation.Number -> properType $ TypeNumber
+  Instantiation.Null -> pure $ NullLiteral
+  Instantiation.Number -> nonLiteral $ TypeNumber
   (Instantiation.Object _ ts) ->
-    ProperType <<< roll <<< TypeRecord <<< Row <<< { tail: Nothing, labels: _ } <$> ts'
-    where
-      step propName { "type": PossibleUnion vs } = union' (Just propName) vs
-      step propName { "type": v@(UnionMember _) } = union' (Just propName) [ v ]
-      step _ { "type": ProperType t } = pure $ t
-      ts' = sequence $ mapWithIndex step ts
-  Instantiation.String -> properType TypeString
+    nonLiteral <<< TypeRecord <<< Row $ { tail: Nothing, labels: map (unionMember <<< _.type) ts }
+    -- where
+    --  step propName { "type": PossibleUnion vs } = union' (Just propName) vs
+    --  step propName { "type": v@(UnionMember _) } = union' (Just propName) [ v ]
+    --  step _ { "type": ProperType t } = pure $ t
+    --  ts' = mapWithIndex step ts
+  Instantiation.String -> nonLiteral TypeString
   (Instantiation.Tuple _) -> throwError "Tuple handling is on the way but still not present..."
-  (Instantiation.NumberLiteral n) ->
-    let
-      constructor = fromMaybe ("_" <> show n) $ Map.lookup n numberLiteralConstructor
-    in
-      unionMember $ UnionNumber constructor n
-  (Instantiation.StringLiteral s) -> unionMember $ if (String.contains (Pattern "-") s)
-    then UnionStringName (pascalCase s) s
-    else UnionString s
-  Instantiation.Undefined -> unionMember $ UnionUndefined
-  (Instantiation.Union ms) -> pure $ PossibleUnion ms
-  (Instantiation.Unknown err) -> throwError $
-    "ReadDTS was not able to instantiate given value: " <> err
+  (Instantiation.NumberLiteral n) -> pure (NumberLiteral n)
+  (Instantiation.StringLiteral s) -> pure $ (StringLiteral s)
+  Instantiation.Undefined -> pure $ UndefinedLiteral
+  (Instantiation.Union ms) -> case NonEmptyArray.fromArray ms of
+    Just arr → pure $ NonLiteral $ union arr
+    Nothing → throwError $ "Empty union?"
+  (Instantiation.Unknown err) -> throwError $ "ReadDTS was not able to instantiate given value: " <> err
   where
-    properType = pure <<< ProperType <<< roll
-    unionMember = pure <<< UnionMember
+    nonLiteral = pure <<< NonLiteral <<< roll 
 
-    numberLiteralConstructor :: Map Number UnionTypeName
-    numberLiteralConstructor = Map.fromFoldable
-      [ Tuple 1.0 "one"
-      , Tuple 2.0 "two"
-      , Tuple 3.0 "three"
-      , Tuple 4.0 "four"
-      , Tuple 5.0 "five"
-      , Tuple 6.0 "six"
-      , Tuple 7.0 "seven"
-      , Tuple 8.0 "eight"
-      , Tuple 9.0 "nine"
-      , Tuple 10.0 "ten"
-      , Tuple 11.0 "eleven"
-      , Tuple 12.0 "twelve"
-      ]
+--     numberLiteralConstructor :: Map Number UnionTypeName
+--     numberLiteralConstructor = Map.fromFoldable
+--       [ Tuple 1.0 "one"
+--       , Tuple 2.0 "two"
+--       , Tuple 3.0 "three"
+--       , Tuple 4.0 "four"
+--       , Tuple 5.0 "five"
+--       , Tuple 6.0 "six"
+--       , Tuple 7.0 "seven"
+--       , Tuple 8.0 "eight"
+--       , Tuple 9.0 "nine"
+--       , Tuple 10.0 "ten"
+--       , Tuple 11.0 "eleven"
+--       , Tuple 12.0 "twelve"
+--       ]
 
 exprUnsafeCoerce :: Expr
 exprUnsafeCoerce = Expr.ident "Unsafe.Coerce.unsafeCoerce"
@@ -298,77 +262,77 @@ exprUndefined = Expr.ident "Foreign.NullOrUndefined.undefined"
 exprNull :: Expr
 exprNull = Expr.ident "Foreign.NullOrUndefined.null"
 
--- | Creates declarations for an union:
--- | * a foreign type declaration for given `Union`
--- | * a record value declaration which contains "constructors"
--- |  for this union type
--- | * an Eq instance for trivial cases
--- |
--- | All declarations are built in local module contex.
-unionDeclarations
-  :: TypeName
-  -> Array UnionMember
-  -> { constructors :: AST.Declaration
-     , instances :: List AST.Declaration
-     , type :: AST.Declaration
-     }
-unionDeclarations typeName@(TypeName name) members =
-  { "type": AST.DeclForeignData { typeName } -- , "kind": Nothing }
-  , constructors: AST.DeclValue
-    { value:
-      { expr
-      , binders: []
-      , name: Ident (downfirst name)
-      }
-    , signature: Just signature
-    }
-  , instances
-  }
-  where
-    downfirst :: String -> String
-    downfirst =
-      SCU.uncons >>> foldMap \{ head, tail } ->
-        SCU.singleton (Unicode.toLower head) <> tail
-
-    toUnicodeLower :: String -> String
-    toUnicodeLower =
-      SCU.toCharArray >>> map Unicode.toLower >>> SCU.fromCharArray
-
-    type_ = roll $ TypeConstructor { name: typeName, moduleName: Nothing }
-    literalValue e = { sig: type_, expr: e }
-
-    isConstructor (UnionConstructor _ _) = true
-    isConstructor _ = false
-
-    -- | We are able to provide Eq instance based on `shallowEq`
-    -- | easily whenever there are only literal members of a given
-    -- | union.
-    instances = if all (not <<< isConstructor) members
-      then List.singleton $
-        declInstance
-          (name' "Prelude.Eq")
-          [ type_ ]
-          [ valueBindingFields (Ident "eq") [] (roll $ ExprIdent (name' "Unsafe.Reference.unsafeRefEq")) Nothing ]
-      else mempty
-
-    member (UnionBoolean b) = Tuple (show b) $ literalValue $ exprUnsafeCoerceApp (Expr.boolean b)
-    member (UnionString s) = Tuple s $ literalValue $ exprUnsafeCoerceApp (Expr.string s)
-    member (UnionStringName n s) = Tuple n $ literalValue $ exprUnsafeCoerceApp (Expr.string s)
-    member UnionNull = Tuple "null" $ literalValue $ exprUnsafeCoerceApp exprNull
-    member (UnionNumber n v) = Tuple n $ literalValue $ exprUnsafeCoerceApp (Expr.number v)
-    member UnionUndefined = Tuple "undefined" $ literalValue $ exprUnsafeCoerceApp exprUndefined
-    member (UnionConstructor n t) = Tuple n $ { sig: Type.arr t type_, expr: exprUnsafeCoerce }
-
-    members' = Map.fromFoldable $ map member members
-    _expr = prop (SProxy :: SProxy "expr")
-    _sig = prop (SProxy :: SProxy "sig")
-    expr = roll $ ExprRecord $ map (view _expr) $ members'
-
-    signature
-      = roll
-      <<< TypeRecord
-      <<< Row
-      <<< { tail: Nothing, labels: _ }
-      <<< map (view _sig)
-      $ members'
-
+-- -- | Creates declarations for an union:
+-- -- | * a foreign type declaration for given `Union`
+-- -- | * a record value declaration which contains "constructors"
+-- -- |  for this union type
+-- -- | * an Eq instance for trivial cases
+-- -- |
+-- -- | All declarations are built in local module contex.
+-- unionDeclarations
+--   :: TypeName
+--   -> Array UnionMember
+--   -> { constructors :: AST.Declaration
+--      , instances :: List AST.Declaration
+--      , type :: AST.Declaration
+--      }
+-- unionDeclarations typeName@(TypeName name) members =
+--   { "type": AST.DeclForeignData { typeName } -- , "kind": Nothing }
+--   , constructors: AST.DeclValue
+--     { value:
+--       { expr
+--       , binders: []
+--       , name: Ident (downfirst name)
+--       }
+--     , signature: Just signature
+--     }
+--   , instances
+--   }
+--   where
+--     downfirst :: String -> String
+--     downfirst =
+--       SCU.uncons >>> foldMap \{ head, tail } ->
+--         SCU.singleton (Unicode.toLower head) <> tail
+-- 
+--     toUnicodeLower :: String -> String
+--     toUnicodeLower =
+--       SCU.toCharArray >>> map Unicode.toLower >>> SCU.fromCharArray
+-- 
+--     type_ = roll $ TypeConstructor { name: typeName, moduleName: Nothing }
+--     literalValue e = { sig: type_, expr: e }
+-- 
+--     isConstructor (UnionConstructor _ _) = true
+--     isConstructor _ = false
+-- 
+--     -- | We are able to provide Eq instance based on `shallowEq`
+--     -- | easily whenever there are only literal members of a given
+--     -- | union.
+--     instances = if all (not <<< isConstructor) members
+--       then List.singleton $
+--         declInstance
+--           (name' "Prelude.Eq")
+--           [ type_ ]
+--           [ valueBindingFields (Ident "eq") [] (roll $ ExprIdent (name' "Unsafe.Reference.unsafeRefEq")) Nothing ]
+--       else mempty
+-- 
+--     member (UnionBoolean b) = Tuple (show b) $ literalValue $ exprUnsafeCoerceApp (Expr.boolean b)
+--     member (UnionString s) = Tuple s $ literalValue $ exprUnsafeCoerceApp (Expr.string s)
+--     member (UnionStringName n s) = Tuple n $ literalValue $ exprUnsafeCoerceApp (Expr.string s)
+--     member UnionNull = Tuple "null" $ literalValue $ exprUnsafeCoerceApp exprNull
+--     member (UnionNumber n v) = Tuple n $ literalValue $ exprUnsafeCoerceApp (Expr.number v)
+--     member UnionUndefined = Tuple "undefined" $ literalValue $ exprUnsafeCoerceApp exprUndefined
+--     member (UnionConstructor n t) = Tuple n $ { sig: Type.arr t type_, expr: exprUnsafeCoerce }
+-- 
+--     members' = Map.fromFoldable $ map member members
+--     _expr = prop (SProxy :: SProxy "expr")
+--     _sig = prop (SProxy :: SProxy "sig")
+--     expr = roll $ ExprRecord $ map (view _expr) $ members'
+-- 
+--     signature
+--       = roll
+--       <<< TypeRecord
+--       <<< Row
+--       <<< { tail: Nothing, labels: _ }
+--       <<< map (view _sig)
+--       $ members'
+-- 

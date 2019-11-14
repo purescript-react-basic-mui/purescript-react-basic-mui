@@ -2,7 +2,7 @@ module Codegen.AST.Imports where
 
 import Prelude
 
-import Codegen.AST.Types (ClassName, Declaration(..), ExprF(..), Import(..), ImportDecl(..), Imports(..), ModuleName, QualifiedName, RowF(..), TypeF(..), TypeName)
+import Codegen.AST.Types (ClassName, Declaration(..), ExprF(..), Import(..), ImportDecl(..), Imports(..), ModuleName, OperatorName, QualifiedName, RowF(..), TypeF(..), TypeName)
 import Data.Either (hush)
 import Data.Foldable (fold, foldMap)
 import Data.List (List)
@@ -54,9 +54,11 @@ typeImportsAlgebra = case _ of
   TypeConstructor qn -> qualifiedTypeNameImport' qn
   TypeForall _ t -> t
   TypeNumber -> mempty
+  TypeOperator o → qualifiedOperatorImport o.name
   TypeRow r -> rowImports r
   TypeRecord r -> rowImports r
   TypeString -> mempty
+  TypeSymbol _ -> mempty
   TypeVar _ -> mempty
   where
     qualifiedTypeNameImport' = fromMaybe mempty <<< qualifiedTypeNameImport
@@ -64,6 +66,12 @@ typeImportsAlgebra = case _ of
     rowImports (Row r) =
       (fromMaybe mempty $ r.tail >>= hush >>= qualifiedTypeNameImport)
       <> (fold r.labels)
+
+qualifiedOperatorImport :: QualifiedName OperatorName -> Imports
+qualifiedOperatorImport { moduleName: Just moduleName, name: o } =
+  importsSingleton moduleName (ImportOperator o)
+qualifiedOperatorImport _ = mempty
+
 qualifiedTypeNameImport :: QualifiedName TypeName -> Maybe Imports
 qualifiedTypeNameImport { moduleName: Just moduleName, name: t } =
   Just $ importsSingleton moduleName (ImportType t)

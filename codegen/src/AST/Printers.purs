@@ -55,6 +55,7 @@ printImport (ImportDecl { moduleName, names }) = line
     printName (ImportValue s) = unwrap s
     printName (ImportClass s) = "class " <> unwrap s
     printName (ImportType s) = unwrap s
+    printName (ImportOperator o) = "(" <> unwrap o <> ")"
 
 printModuleHead :: ModuleName -> String
 printModuleHead moduleName =
@@ -147,6 +148,7 @@ printExpr = case _ of
 
 data PrintingContext = StandAlone | InApplication | InArr
 
+printRowLabel :: String → String
 printRowLabel l = case SCU.uncons l of
   Just { head } -> if isUpper head || l `Set.member` reservedNames || not (Regex.test alphanumRegex l)
     then show l
@@ -155,7 +157,6 @@ printRowLabel l = case SCU.uncons l of
   where
     alphanumRegex :: Regex
     alphanumRegex = unsafePartial $ fromRight $ regex "^[A-Za-z0-9_]*$" Regex.Flags.noFlags
-
 
 printType :: Algebra TypeF (PrintingContext -> String)
 printType = case _ of
@@ -176,6 +177,7 @@ printType = case _ of
   TypeRecord r -> const $ "{ " <> printRow r <> " }"
   TypeRow r -> const $ "( " <> printRow r <> " )"
   TypeString -> const $ "String"
+  TypeSymbol s -> const $ show s
   TypeVar (Ident v) -> const $ v
   where
     parens s InArr = s

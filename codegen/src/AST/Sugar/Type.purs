@@ -136,6 +136,9 @@ row labels tail = Row $ { labels: labels, tail }
 string :: Type
 string = roll TypeString
 
+symbol :: String → Type
+symbol = roll <<< TypeSymbol
+
 typeRow :: Row -> Type
 typeRow = roll <<< TypeRow
 
