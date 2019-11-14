@@ -1,2 +1,0 @@
-exports._eqSpacingProp = function(left){ return function(right){ return left === right }};
-exports._ordSpacingProp = function(left){ return function(right){ return (left === right) ? 0 : (left > right) ? 1 : -1 }};
