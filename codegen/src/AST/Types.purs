@@ -230,7 +230,7 @@ instance traversableRowF :: Traversable RowF where
 -- | simplifies structure of most our algebras.
 type Row = RowF Type
 
-emptyRow ∷ Row
+emptyRow :: Row
 emptyRow = Row { labels: mempty, tail: Nothing }
 
 data Union = Union QualifiedTypeName (Array UnionMember)

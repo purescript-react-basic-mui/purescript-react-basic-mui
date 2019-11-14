@@ -100,15 +100,15 @@ printQualifiedName { moduleName: Just m, name } = case m of
 -- | I'm not sure about this whole minimal parens printing strategy
 -- | so please correct me if I'm wrong.
 data Precedence = Zero | One | Two | Three | Four | Five | Six | Seven | Eight | Nine
-derive instance eqPrecedence ∷ Eq Precedence
-derive instance ordPrecedence ∷ Ord Precedence
+derive instance eqPrecedence :: Eq Precedence
+derive instance ordPrecedence :: Ord Precedence
 data Branch = BranchLeft | BranchRight
 data Associativity = AssocLeft | AssocRight
 type ExprPrintingContext =
-  { precedence ∷ Precedence
-  , binary ∷ Maybe
-    { assoc ∷ Associativity
-    , branch ∷ Branch
+  { precedence :: Precedence
+  , binary :: Maybe
+    { assoc :: Associativity
+    , branch :: Branch
     }
   }
 
@@ -120,12 +120,12 @@ printExpr :: Algebra ExprF (ExprPrintingContext -> String)
 printExpr = case _ of
   ExprBoolean b -> const $ show b
   ExprApp x y -> case _ of
-    { precedence, binary: Just { assoc, branch }} → case precedence `compare` Six, assoc, branch of
-      GT, _, _ → "(" <> sub <> ")"
-      EQ, AssocLeft, BranchRight → "(" <> sub <> ")"
-      EQ, AssocRight, BranchLeft → "(" <> sub <> ")"
-      _, _, _ → sub
-    { precedence } → if precedence < Six
+    { precedence, binary: Just { assoc, branch }} -> case precedence `compare` Six, assoc, branch of
+      GT, _, _ -> "(" <> sub <> ")"
+      EQ, AssocLeft, BranchRight -> "(" <> sub <> ")"
+      EQ, AssocRight, BranchLeft -> "(" <> sub <> ")"
+      _, _, _ -> sub
+    { precedence } -> if precedence < Six
       then sub
       else "(" <> sub <> ")"
     where
@@ -162,9 +162,9 @@ printType = case _ of
   TypeApp l params -> parens (line $ Array.cons (l InApplication) (map (_ $ InApplication) params))
   TypeArray t -> parens $ "Array "  <> t StandAlone
   TypeArr f a ->  case _ of
-    InArr → "(" <> s <> ")"
-    InApplication → "(" <> s <> ")"
-    otherwise → s
+    InArr -> "(" <> s <> ")"
+    InApplication -> "(" <> s <> ")"
+    otherwise -> s
     where
       s = f InArr <> " -> " <> a StandAlone
   TypeBoolean -> const "Boolean"

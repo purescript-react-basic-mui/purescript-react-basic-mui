@@ -45,7 +45,7 @@ type Component =
     , generate :: Array RowLabel
     -- | An escape hatch for tweaking low level props extraction
     , instantiation :: Maybe
-        { extractProps :: ReadDTS.Instantiation.Type → Either (Array String) InstanceProps
+        { extractProps :: ReadDTS.Instantiation.Type -> Either (Array String) InstanceProps
         , strategy :: InstantiationStrategy
         }
     }

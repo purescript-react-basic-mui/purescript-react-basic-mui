@@ -32,6 +32,6 @@ type Theme =
 
 foreign import data Direction :: Type
 -- data Direction = LTR | RTL
-direction :: { ltr ∷ Direction, rtl ∷ Direction }
+direction :: { ltr :: Direction, rtl ∷ Direction }
 direction = { ltr: unsafeCoerce "ltr", rtl: unsafeCoerce "rtl" }
 

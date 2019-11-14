@@ -64,7 +64,7 @@ componentProps component@{ modulePath } = do
   case Map.lookup instanceTypeName tsDeclarations, component.propsType.instantiation of
     Nothing, _ -> throwError $ Array.singleton $ line
       ["Unable to find generated props instance type:", show instanceTypeName ]
-    Just ds, Just { extractProps } → except $ extractProps ds.defaultInstance
+    Just ds, Just { extractProps } -> except $ extractProps ds.defaultInstance
     Just { defaultInstance: Mu.In (Instantiation.Object n props), typeConstructor }, _ -> do
       pure { fqn: n, props }
     Just { defaultInstance }, _ -> throwError $ Array.singleton $ lines
@@ -88,8 +88,8 @@ componentProps component@{ modulePath } = do
       -- | Interface extending forces ts type checker to resolve all type fields.
       -- | It won't work with just type aliasing :-(
       , line $ case instantiationStrategy of
-          InterfaceInheritance → ["export interface ", instanceTypeName, "extends", propsName <> " {};"]
-          TypeAlias → ["export type ", instanceTypeName, "=", propsName <> ";"]
+          InterfaceInheritance -> ["export interface ", instanceTypeName, "extends", propsName <> " {};"]
+          TypeAlias -> ["export type ", instanceTypeName, "=", propsName <> ";"]
       ]
 
 componentAST :: Component -> M AST.Module
@@ -128,12 +128,12 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
         propsOptionsTypeDecl = declType (AST.TypeName $ propsName <> "Options") vars c'
         propsTypeDecl = declForeignData (AST.TypeName $ propsName)
         extraVars = case Array.tail propsType.base.vars of
-          Just arr → arr
-          Nothing → []
+          Just arr -> arr
+          Nothing -> []
 
         -- For example:
         --
-        -- foreign import data ModalPropsPartial ∷ Type
+        -- foreign import data ModalPropsPartial :: Type
         -- modalPropsPartial :: ∀ options options_
         --   . Union options options_ (ModalProps Props_div)
         --   => Record options

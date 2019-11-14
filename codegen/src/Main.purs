@@ -1866,6 +1866,7 @@ components =
         }
 
     -- | TODO add TablePaginationActions
+    tablePagination :: Component
     tablePagination =
       { extraDeclarations: []
       , inherits: Just $ Type.app (Type.constructor "MUI.Core.TableCell.TableCellPropsOptions") [Type.constructor "React.Basic.DOM.Props_td" ]
@@ -1894,10 +1895,10 @@ components =
           -- | from the first part component of this union...
           , instantiation: Just
             { strategy: TypeAlias
-            , extractProps: \defaultInstance → case unroll defaultInstance of
-                (Instantiation.Union [ Mu.In (Instantiation.Object fqn props), _]) →
+            , extractProps: \defaultInstance -> case unroll defaultInstance of
+                (Instantiation.Union [ Mu.In (Instantiation.Object fqn props), _]) ->
                   pure { fqn, props }
-                otherwise → throwError
+                otherwise -> throwError
                   [ "Expecting an union as a representation for TablePaginationProps" ]
             }
           }
@@ -1974,7 +1975,7 @@ components =
           }
         }
 
-    textField ∷ Component
+    textField :: Component
     textField =
       { extraDeclarations: []
       , inherits: Just $ Type.app (Type.constructor "MUI.Core.FormControl.FormControlPropsOptions") [ divProps ]
@@ -2018,17 +2019,17 @@ components =
           ]
           , instantiation: Just
             { strategy: TypeAlias
-            , extractProps: \defaultInstance → case unroll defaultInstance of
+            , extractProps: \defaultInstance -> case unroll defaultInstance of
                 (Instantiation.Union
                   [ Mu.In (Instantiation.Object fqn1 props1)
                   , Mu.In (Instantiation.Object fqn2 props2)
                   , Mu.In (Instantiation.Object fqn3 props3)
                   ]
-                ) → throwError
+                ) -> throwError
                   [ "Not sure how to tacke this three props types: " <> fqn1 <> ", " <> fqn2 <> "," <> fqn3 ]
-                (Instantiation.Union _) → throwError
+                (Instantiation.Union _) -> throwError
                   [ "Expecting a two member union as a representation for TextField" ]
-                otherwise → throwError
+                otherwise -> throwError
                   [ "Expecting an union as a representation for TextField" ]
             }
         }
@@ -2207,7 +2208,7 @@ components =
     , tableCell
     , tableFooter
     , tableHead
-    , tablePagination
+    -- , tablePagination
     , tableRow
     , tableSortLabel
     , tabs
@@ -2268,7 +2269,7 @@ iconRead = eitherReader $ \s -> case s `Map.lookup` icons' of
     step i = Tuple (iconName i) i
     icons' = Map.fromFoldable $ map step icons
 
-commaSeparatedComponentList :: { helpText ∷ String, long ∷ String, short ∷ Char } → Parser (Array Component)
+commaSeparatedComponentList :: { helpText :: String, long ∷ String, short ∷ Char } -> Parser (Array Component)
 commaSeparatedComponentList { helpText, long: l, short: s } = option (multiString (Pattern ",") componentRead)
   ( long l
   <> short s
