@@ -10,7 +10,7 @@ foreign import data Timeout :: Type
 timeout :: { auto :: Timeout, number :: Number -> Timeout, record :: { appear :: Number, enter :: Number, exit :: Number } -> Timeout }
 timeout = { auto: Unsafe.Coerce.unsafeCoerce "auto", number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce }
 
-type CollapsePropsOptions componentProps = ( children :: Array React.Basic.JSX, collapsedHeight :: String, component :: React.Basic.ReactComponent {  | componentProps }, timeout :: Timeout | componentProps )
+type CollapsePropsOptions componentProps = ( children :: Array React.Basic.JSX, collapsedHeight :: String, component :: React.Basic.ReactComponent {  | componentProps }, "in" :: Boolean, timeout :: Timeout | componentProps )
 
 foreign import data CollapseProps :: Type
 
