@@ -1,14 +1,12 @@
 module MUI.Core.Styles.Types where
 
-import Foreign (Foreign, unsafeToForeign)
-import MUI.Core.Styles.CreateBreakpoints (BreakpointsOptions, Breakpoints)
-import MUI.Core.Styles.CreateMixins (MixinsOptions, Mixins)
-import MUI.Core.Styles.CreatePalette (PaletteOptions, Palette)
-import MUI.Core.Styles.Shape (ShapeOptions, Shape)
-import MUI.Core.Styles.Transitions (TransitionsOptions, Transitions)
-import MUI.Core.Styles.CreateTypography (Typography, TypographyOptions)
-import MUI.Core.Styles.ZIndex (ZIndex, ZIndexOptions)
-import Prim.Row (class Union)
+import MUI.Core.Styles.CreateBreakpoints (Breakpoints)
+import MUI.Core.Styles.CreateMixins (Mixins)
+import MUI.Core.Styles.CreatePalette (Palette)
+import MUI.Core.Styles.Shape (Shape)
+import MUI.Core.Styles.Transitions (Transitions)
+import MUI.Core.Styles.CreateTypography (Typography)
+import MUI.Core.Styles.ZIndex (ZIndex)
 import Unsafe.Coerce (unsafeCoerce)
 
 foreign import data OverridesPartial :: Type

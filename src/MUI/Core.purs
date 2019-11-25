@@ -1,5 +1,10 @@
 module MUI.Core where
 
+import Prelude
+
+import Foreign (Foreign)
+import Foreign.Object (Object)
+import Foreign.Object as Object
 import Unsafe.Coerce (unsafeCoerce)
 
 type Color =
@@ -23,3 +28,13 @@ jss :: ∀ r. { | r } -> JSS
 jss = unsafeCoerce
 
 foreign import data JSS :: Type
+
+instance semigroupJSS :: Semigroup JSS where
+  append jss1 jss2 = 
+    let
+      (jss1Obj :: Object Foreign) = unsafeCoerce jss1
+      (jss2Obj :: Object Foreign) = unsafeCoerce jss2
+    in unsafeCoerce $ Object.union jss1Obj jss2Obj
+
+instance monoidJSS :: Monoid JSS where mempty = jss {}
+  
