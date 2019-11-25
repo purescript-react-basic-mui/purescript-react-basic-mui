@@ -384,12 +384,13 @@ components =
         }
 
     collapse = simpleComponent
-      { inherits: Nothing -- should extend Transition
+      { inherits: Nothing
       , name: "Collapse"
       , propsType:
         { base: basePropsRow [] $ Map.fromFoldable [ children, component ]
         , generate: 
             [ "collapsedHeight" 
+            , "in"
             , "timeout"
             ]
         }
@@ -1064,9 +1065,9 @@ components =
       { inherits: Nothing
       , name: "ListItemAvatar"
       , propsType:
-        { base: basePropsRow [] $ Map.fromFoldable 
-          [
-          ] 
+        { base: basePropsRow [] $ Map.fromFoldable
+          [ children
+          ]
         , generate:
           [ "classes"
           ]
@@ -1077,9 +1078,9 @@ components =
       { inherits: Just divProps
       , name: "ListItemIcon"
       , propsType:
-        { base: basePropsRow [] $ Map.fromFoldable 
-          [ 
-          ] 
+        { base: basePropsRow [] $ Map.fromFoldable
+          [ children
+          ]
         , generate:
           [ "classes"
           ]
@@ -1090,9 +1091,9 @@ components =
       { inherits: Just divProps
       , name: "ListItemSecondaryAction"
       , propsType:
-        { base: basePropsRow [] $ Map.fromFoldable 
-          [
-          ] 
+        { base: basePropsRow [] $ Map.fromFoldable
+          [ children
+          ]
         , generate:
           [ "classes"
           ]
@@ -2174,6 +2175,8 @@ components =
     , list
     , listItem
     , listItemAvatar
+    , listItemIcon
+    , listItemSecondaryAction
     , listItemText
     , listSubheader
     , menu
