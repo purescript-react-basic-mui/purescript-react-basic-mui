@@ -17,6 +17,11 @@ foreign import data Variant :: Type
 variant :: { fullWidth :: Variant, scrollable :: Variant, standard :: Variant }
 variant = { fullWidth: Unsafe.Coerce.unsafeCoerce "fullWidth", scrollable: Unsafe.Coerce.unsafeCoerce "scrollable", standard: Unsafe.Coerce.unsafeCoerce "standard" }
 
+foreign import data ScrollButtons :: Type
+
+scrollButtons :: { auto :: ScrollButtons, desktop :: ScrollButtons, off :: ScrollButtons, on :: ScrollButtons }
+scrollButtons = { auto: Unsafe.Coerce.unsafeCoerce "auto", desktop: Unsafe.Coerce.unsafeCoerce "desktop", off: Unsafe.Coerce.unsafeCoerce "off", on: Unsafe.Coerce.unsafeCoerce "on" }
+
 foreign import data Orientation :: Type
 
 orientation :: { horizontal :: Orientation, vertical :: Orientation }
@@ -25,10 +30,13 @@ orientation = { horizontal: Unsafe.Coerce.unsafeCoerce "horizontal", vertical: U
 instance eqOrientation :: Eq Orientation where
   eq = Unsafe.Reference.unsafeRefEq
 
+instance eqScrollButtons :: Eq ScrollButtons where
+  eq = Unsafe.Reference.unsafeRefEq
+
 instance eqVariant :: Eq Variant where
   eq = Unsafe.Reference.unsafeRefEq
 
-type TabsPropsOptions componentProps = ( "ScrollButtonComponent" :: Foreign.Foreign, "TabIndicatorProps" :: Foreign.Foreign, action :: Foreign.Foreign, children :: Array React.Basic.JSX, classes :: TabsClassKey, indicatorColor :: String, onChange :: React.Basic.Events.EventHandler, orientation :: Orientation, textColor :: String, value :: Foreign.Foreign, variant :: Variant, width :: String | componentProps )
+type TabsPropsOptions componentProps = ( "ScrollButtonComponent" :: Foreign.Foreign, "TabIndicatorProps" :: Foreign.Foreign, action :: Foreign.Foreign, centered :: Boolean, children :: Array React.Basic.JSX, classes :: TabsClassKey, indicatorColor :: String, onChange :: React.Basic.Events.EventHandler, orientation :: Orientation, scrollButtons :: ScrollButtons, textColor :: String, value :: Foreign.Foreign, variant :: Variant, width :: String | componentProps )
 
 foreign import data TabsProps :: Type
 

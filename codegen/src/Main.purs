@@ -1788,6 +1788,8 @@ components =
               , "disabled"
               , "disableFocusRipple"
               , "disableRipple"
+              , "fullWidth"
+              , "selected"
               , "wrapped"
               ]
           }
@@ -1952,9 +1954,11 @@ components =
               , Tuple "value" foreignType
               ]
           , generate: 
-              [ "classes"
+              [ "centered"
+              , "classes"
               , "indicatorColor"
               , "orientation"
+              , "scrollButtons"
               , "textColor"
               , "variant" 
               , "width" 
