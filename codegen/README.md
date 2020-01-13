@@ -1,20 +1,43 @@
 # Codegen
 
-This project is used to generate code for `purescript-react-basic-mui`. Look in `Main.purs` to get an idea of what happens, and then look at the comments in `Model.purs` to understand how to create `Components` to be generated. `Avatar` is a good simple example and `Grid` and `Typography` are good "kitchen sink" examples. 
+This project is used to generate code for `purescript-react-basic-mui` components and icons. In `Main.purs` modlue there is `components` function which contains a list of declarations which togheter with typescript declarations (from `@material-ui/types` npm package) are base for our codegen process.
 
-# Icons
+Please take into account that some code comments are still out of date and that we are still finishing this major release.
 
-When you run __this__ project (by `spago run`) it will output runnable `.spago/run.js` script. This script can be used to build icons for your project:
+## CLI usage
+
+The main script provides cli (based on wanderful purescript-optparse) which can be called from command line through spago:
+
+``` bash
+$ spago run --node-args "--help"
+```
+
+or going deeper into codegen help:
+
+``` bash
+$ spago run --node-args "codegen --help"
+```
+
+ther is also more developement command to explore mui components types:
+``` bash
+$ spago run --node-args "show-props --help"
+```
+
+In general it is not very pleasant to work through `--node-args` so if you want to pass options directly to the script you can use `.spago/run.js` after calling initial `$ spago run`.
+
+## Icons
+
+You can build any mui icon module it to chosen source code directory. Here we are building `Menu` icon module:
 
 ```bash
-.spago/react-basic-mui/run.js codegen -i $1 --directory $MY_DEVEL_PROJECT/src/Utils/
+node .spago/react-basic-mui/run.js codegen -i Menu --directory $MY_DEVEL_PROJECT/src/Utils/
 ```
 
-# Developement
+## Comonents
 
-Quick component rebuild cycle can be based also on `spago run` which generates initial `.spago/run.js` and then you just modify / build / print in cycle:
+Quick component rebuild cycle can be based on `-c` option for codegen. We can output it to the file by passing output directory as above or to the stdout if we want to debug codegen:
 
 ```
-$ spago build && node .spago/run.js codegen -c Badge --stdout
+$ node .spago/run.js codegen -c Badge --stdout
 ```
 
