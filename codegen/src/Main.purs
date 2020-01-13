@@ -99,7 +99,7 @@ components =
     avatar = simpleComponent
       { inherits: Just $ divProps
       , name: "Avatar"
-      , propsType: 
+      , propsType:
           { base: basePropsRow [] $ Map.fromFoldable []
           , generate: [ 
               "alt"
@@ -119,7 +119,10 @@ components =
           [ divProps ]
       , name: "Backdrop"
       , propsType:
-        { base: basePropsRow [] $ Map.fromFoldable [ children ]
+        { base: basePropsRow [] $ Map.fromFoldable
+          [ children
+          , Tuple "style" (Type.constructor "React.Basic.DOM.CSS")
+          ]
         , generate: [ "classes", "invisible", "open", "transitionDuration" ]
         }
       }
@@ -2352,8 +2355,8 @@ data Options
 
 options :: Parser Options
 options = subparser $
-  command "codegen" (info genOptions (progDesc "Codegen all or a given module"))
-  <> command "show-props" (info showPropsOptions (progDesc "Show information about props for a given component"))
+  command "codegen" (info (genOptions <**> helper) (progDesc "Codegen all or a given module"))
+  <> command "show-props" (info (showPropsOptions <**> helper) (progDesc "Show information about props for a given component"))
 
 main :: Effect Unit
 main = do

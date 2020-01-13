@@ -6,7 +6,7 @@ import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
 import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (element, JSX, ReactComponent) as React.Basic
-import React.Basic.DOM (Props_div) as React.Basic.DOM
+import React.Basic.DOM (CSS, Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
 foreign import data TransitionDuration :: Type
@@ -14,7 +14,7 @@ foreign import data TransitionDuration :: Type
 transitionDuration :: { number :: Number -> TransitionDuration, record :: { appear :: Number, enter :: Number, exit :: Number } -> TransitionDuration }
 transitionDuration = { number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce }
 
-type BackdropPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: BackdropClassKey, invisible :: Boolean, open :: Boolean, transitionDuration :: TransitionDuration | componentProps )
+type BackdropPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: BackdropClassKey, invisible :: Boolean, open :: Boolean, style :: React.Basic.DOM.CSS, transitionDuration :: TransitionDuration | componentProps )
 
 foreign import data BackdropProps :: Type
 
