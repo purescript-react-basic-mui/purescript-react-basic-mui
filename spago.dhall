@@ -3,7 +3,7 @@
 , name =
     "react-basic-mui"
 , dependencies =
-    [ "debug", "react-basic-hooks", "simple-json", "spec", "unsafe-reference" ]
+    [ "debug", "react-basic-hooks", "simple-json", "spec", "unsafe-reference", "typelevel-prelude" ]
 , packages =
     ./packages.dhall
 }
