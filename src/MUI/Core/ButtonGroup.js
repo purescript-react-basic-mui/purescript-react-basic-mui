@@ -1,1 +1,1 @@
-exports._ButtonGroup = require("@material-ui/core/ButtonGroup");
+exports._ButtonGroup = require("@material-ui/core/ButtonGroup").default;
