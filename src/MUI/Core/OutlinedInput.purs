@@ -48,7 +48,7 @@ foreign import data OutlinedInputPropsPartial :: Type
 outlinedInputPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (OutlinedInputPropsOptions (MUI.Core.InputBase.InputBasePropsOptions React.Basic.DOM.Props_div)) => Record options -> OutlinedInputPropsPartial
 outlinedInputPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-type OutlinedInputClassKeyGenericOptions a = ( adornedEnd :: a, adornedStart :: a, colorSecondary :: a, disabled :: a, error :: a, focused :: a, input :: a, inputAdornedEnd :: a, inputAdornedStart :: a, inputMarginDense :: a, inputMultiline :: a, inputSelect :: a, marginDense :: a, multiline :: a, notchedOutline :: a, root :: a )
+type OutlinedInputClassKeyGenericOptions a = ( adornedEnd :: a, adornedStart :: a, colorSecondary :: a, disabled :: a, error :: a, focused :: a, input :: a, inputAdornedEnd :: a, inputAdornedStart :: a, inputMarginDense :: a, inputMultiline :: a, marginDense :: a, multiline :: a, notchedOutline :: a, root :: a )
 
 type OutlinedInputClassKeyOptions  = OutlinedInputClassKeyGenericOptions String
 

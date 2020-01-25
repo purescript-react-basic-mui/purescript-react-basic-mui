@@ -17,7 +17,7 @@ foreign import data PaperPropsPartial :: Type
 paperPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (PaperPropsOptions React.Basic.DOM.Props_div) => Record options -> PaperPropsPartial
 paperPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-type PaperClassKeyGenericOptions a = ( elevation0 :: a, elevation1 :: a, elevation10 :: a, elevation11 :: a, elevation12 :: a, elevation13 :: a, elevation14 :: a, elevation15 :: a, elevation16 :: a, elevation17 :: a, elevation18 :: a, elevation19 :: a, elevation2 :: a, elevation20 :: a, elevation21 :: a, elevation22 :: a, elevation23 :: a, elevation24 :: a, elevation3 :: a, elevation4 :: a, elevation5 :: a, elevation6 :: a, elevation7 :: a, elevation8 :: a, elevation9 :: a, root :: a, rounded :: a )
+type PaperClassKeyGenericOptions a = ( elevation0 :: a, elevation1 :: a, elevation10 :: a, elevation11 :: a, elevation12 :: a, elevation13 :: a, elevation14 :: a, elevation15 :: a, elevation16 :: a, elevation17 :: a, elevation18 :: a, elevation19 :: a, elevation2 :: a, elevation20 :: a, elevation21 :: a, elevation22 :: a, elevation23 :: a, elevation24 :: a, elevation3 :: a, elevation4 :: a, elevation5 :: a, elevation6 :: a, elevation7 :: a, elevation8 :: a, elevation9 :: a, outlined :: a, root :: a, rounded :: a )
 
 type PaperClassKeyOptions  = PaperClassKeyGenericOptions String
 

@@ -44,7 +44,7 @@ foreign import data ButtonPropsPartial :: Type
 buttonPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (ButtonPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Record options -> ButtonPropsPartial
 buttonPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-type ButtonClassKeyGenericOptions a = ( colorInherit :: a, contained :: a, containedPrimary :: a, containedSecondary :: a, containedSizeLarge :: a, containedSizeSmall :: a, disabled :: a, endIcon :: a, focusVisible :: a, fullWidth :: a, iconSizeLarge :: a, iconSizeMedium :: a, iconSizeSmall :: a, label :: a, outlined :: a, outlinedPrimary :: a, outlinedSecondary :: a, outlinedSizeLarge :: a, outlinedSizeSmall :: a, root :: a, sizeLarge :: a, sizeSmall :: a, startIcon :: a, text :: a, textPrimary :: a, textSecondary :: a, textSizeLarge :: a, textSizeSmall :: a )
+type ButtonClassKeyGenericOptions a = ( colorInherit :: a, contained :: a, containedPrimary :: a, containedSecondary :: a, containedSizeLarge :: a, containedSizeSmall :: a, disableElevation :: a, disabled :: a, endIcon :: a, focusVisible :: a, fullWidth :: a, iconSizeLarge :: a, iconSizeMedium :: a, iconSizeSmall :: a, label :: a, outlined :: a, outlinedPrimary :: a, outlinedSecondary :: a, outlinedSizeLarge :: a, outlinedSizeSmall :: a, root :: a, sizeLarge :: a, sizeSmall :: a, startIcon :: a, text :: a, textPrimary :: a, textSecondary :: a, textSizeLarge :: a, textSizeSmall :: a )
 
 type ButtonClassKeyOptions  = ButtonClassKeyGenericOptions String
 

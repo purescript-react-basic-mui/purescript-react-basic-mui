@@ -10,7 +10,7 @@ import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_button) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type TabPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: TabClassKey, disableFocusRipple :: Boolean, disableRipple :: Boolean, disabled :: Boolean, icon :: React.Basic.JSX, label :: React.Basic.JSX, value :: Foreign.Foreign, wrapped :: Boolean | componentProps )
+type TabPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: TabClassKey, disableFocusRipple :: Boolean, disableRipple :: Boolean, disabled :: Boolean, fullWidth :: Boolean, icon :: React.Basic.JSX, label :: React.Basic.JSX, selected :: Boolean, value :: Foreign.Foreign, wrapped :: Boolean | componentProps )
 
 foreign import data TabProps :: Type
 

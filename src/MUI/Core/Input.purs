@@ -48,7 +48,7 @@ foreign import data InputPropsPartial :: Type
 inputPropsPartial :: ∀ options_ options. Prim.Row.Union options options_ (InputPropsOptions (MUI.Core.InputBase.InputBasePropsOptions React.Basic.DOM.Props_div)) => Record options -> InputPropsPartial
 inputPropsPartial = Unsafe.Coerce.unsafeCoerce
 
-type InputClassKeyGenericOptions a = ( colorSecondary :: a, disabled :: a, error :: a, focused :: a, formControl :: a, fullWidth :: a, input :: a, inputMarginDense :: a, inputMultiline :: a, inputTypeSearch :: a, multiline :: a, root :: a, underline :: a )
+type InputClassKeyGenericOptions a = ( colorSecondary :: a, disabled :: a, error :: a, focused :: a, formControl :: a, fullWidth :: a, input :: a, inputMarginDense :: a, inputMultiline :: a, inputTypeSearch :: a, marginDense :: a, multiline :: a, root :: a, underline :: a )
 
 type InputClassKeyOptions  = InputClassKeyGenericOptions String
 
