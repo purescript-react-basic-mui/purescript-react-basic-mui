@@ -112,84 +112,75 @@ let mkPackage =
       https://raw.githubusercontent.com/purescript/package-sets/psc-0.13.2-20190725/src/mkPackage.dhall sha256:0b197efa1d397ace6eb46b243ff2d73a3da5638d8d0ac8473e8e4a8fc528cf57
 
 let upstream =
-      https://raw.githubusercontent.com/purescript/package-sets/psc-0.13.2-20190725/src/packages.dhall sha256:60cc03d2c3a99a0e5eeebb16a22aac219fa76fe6a1686e8c2bd7a11872527ea3
+      https://github.com/purescript/package-sets/releases/download/psc-0.13.6-20200123/packages.dhall sha256:687bb9a2d38f2026a89772c47390d02939340b01e31aaa22de9247eadd64af05
 
 let overrides = {=}
 
 let additions =
-  { matryoshka =
-    { dependencies =
-        [ "fixed-points"
-        , "free"
-        , "prelude"
-        , "profunctor"
-        , "transformers"
-        ]
-    , repo = "https://github.com/slamdata/purescript-matryoshka.git"
-    , version = "v0.4.0"
-    }
-  , moldy =
-    { dependencies =
-        [ "foldable-traversable"
-        , "prelude"
-        , "strings"
-        ]
-    , repo = "https://github.com/paluh/purescript-moldy.git"
-    , version = "master"
-    }
-  , node-fs-extra =
-    { dependencies =
-        [ "aff-promise"
-        , "node-path"
-        , "node-buffer"
-        ]
-    , repo = "https://github.com/nonbili/purescript-node-fs-extra.git"
-    , version = "v0.1.2"
-    }
-  , pprint =
-    { dependencies =
-        [ "arrays"
-        , "strings"
-        , "unfoldable"
-        ]
-    , repo = "https://github.com/paf31/purescript-pprint.git"
-    , version = "v5.0.0"
-    }
-  , react-basic = upstream.react-basic // { version = "df358364ece1cd4760429afae0bcca0eb518eb03" }
-  , read-dts =
-    { dependencies =
-      [ "console"
-      , "debug"
-      , "effect"
-      , "freet"
-      , "foreign"
-      , "foreign-object"
-      , "matryoshka"
-      , "node-fs-aff"
-      , "pprint"
-      , "profunctor"
-      , "profunctor-lenses"
-      , "psci-support"
-      , "variant"
-      ]
-    , repo = "https://github.com/lambdaterms/purescript-read-dts.git"
-    , version = "master"
-    }
-  , strings-extra =
-    { dependencies =
-        [ "arrays"
-        , "either"
-        , "foldable-traversable"
-        , "maybe"
-        , "partial"
-        , "prelude"
-        , "strings"
-        , "unfoldable"
-        , "unicode"
-        ]
-    , repo = "https://github.com/purescript-contrib/purescript-strings-extra.git"
-    , version = "v2.0.0"
-    }
-  }
+      { matryoshka =
+          { dependencies =
+              [ "fixed-points"
+              , "free"
+              , "prelude"
+              , "profunctor"
+              , "transformers"
+              ]
+          , repo = "https://github.com/slamdata/purescript-matryoshka.git"
+          , version = "v0.4.0"
+          }
+      , moldy =
+          { dependencies = [ "foldable-traversable", "prelude", "strings" ]
+          , repo = "https://github.com/paluh/purescript-moldy.git"
+          , version = "master"
+          }
+      , node-fs-extra =
+          { dependencies = [ "aff-promise", "node-path", "node-buffer" ]
+          , repo = "https://github.com/nonbili/purescript-node-fs-extra.git"
+          , version = "v0.1.2"
+          }
+      , pprint =
+          { dependencies = [ "arrays", "strings", "unfoldable" ]
+          , repo = "https://github.com/paf31/purescript-pprint.git"
+          , version = "v5.0.0"
+          }
+      , react-basic =
+              upstream.react-basic
+          //  { version = "df358364ece1cd4760429afae0bcca0eb518eb03" }
+      , read-dts =
+          { dependencies =
+              [ "console"
+              , "debug"
+              , "effect"
+              , "freet"
+              , "foreign"
+              , "foreign-object"
+              , "matryoshka"
+              , "node-fs-aff"
+              , "pprint"
+              , "profunctor"
+              , "profunctor-lenses"
+              , "psci-support"
+              , "variant"
+              ]
+          , repo = "https://github.com/lambdaterms/purescript-read-dts.git"
+          , version = "master"
+          }
+      , strings-extra =
+          { dependencies =
+              [ "arrays"
+              , "either"
+              , "foldable-traversable"
+              , "maybe"
+              , "partial"
+              , "prelude"
+              , "strings"
+              , "unfoldable"
+              , "unicode"
+              ]
+          , repo =
+              "https://github.com/purescript-contrib/purescript-strings-extra.git"
+          , version = "v2.0.0"
+          }
+      }
 
 in  upstream // overrides // additions

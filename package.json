@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "license": "MIT",
   "dependencies": {
-    "@material-ui/core": "^4.6.0",
-    "purescript": "^0.13.4",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6"
+    "@material-ui/core": "^4.9.0",
+    "purescript": "^0.13.6",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0"
   }
 }
