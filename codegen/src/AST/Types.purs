@@ -3,9 +3,7 @@ module Codegen.AST.Types where
 -- | This module is heavily inspired by `purescript-cst` AST types.
 -- | The types and constructor names are take from there to simplify
 -- | further "copy and paste" based development.
-
 import Prelude
-
 import Data.Array (zip) as Array
 import Data.Either (Either)
 import Data.Eq (class Eq1)
@@ -26,33 +24,47 @@ import Data.Tuple (uncurry)
 
 -- | No need for imports list as they are collected from declarations
 -- | during final codegen.
-newtype Module = Module
+newtype Module
+  = Module
   { declarations :: List Declaration
   , moduleName :: ModuleName
   }
 
-newtype ModuleName = ModuleName String
+newtype ModuleName
+  = ModuleName String
+
 derive instance newtypeModuleName :: Newtype ModuleName _
+
 derive instance genericModuleName :: Generic ModuleName _
+
 derive instance eqModuleName :: Eq ModuleName
+
 derive instance ordModuleName :: Ord ModuleName
+
 instance showModuleName :: Show ModuleName where
   show = genericShow
 
-type QualifiedName a =
-  { moduleName :: Maybe ModuleName
-  , name :: a
-  }
+type QualifiedName a
+  = { moduleName :: Maybe ModuleName
+    , name :: a
+    }
 
-newtype TypeName = TypeName String
+newtype TypeName
+  = TypeName String
+
 derive instance newtypeTypeName :: Newtype TypeName _
+
 derive instance genericTypeName :: Generic TypeName _
+
 derive instance eqTypeName :: Eq TypeName
+
 derive instance ordTypeName :: Ord TypeName
+
 instance showTypeName :: Show TypeName where
   show = genericShow
 
-type QualifiedTypeName = QualifiedName TypeName
+type QualifiedTypeName
+  = QualifiedName TypeName
 
 type Constraint ref
   = { className :: QualifiedName ClassName, params :: Array ref }
@@ -73,9 +85,11 @@ data TypeF ref
   | TypeString
   | TypeVar Ident
 
-type Type = Mu TypeF
+type Type
+  = Mu TypeF
 
 derive instance genericPropType :: Generic (TypeF ref) _
+
 instance showPropType :: Show ref => Show (TypeF ref) where
   show p = genericShow p
 
@@ -85,8 +99,7 @@ instance showPropType :: Show ref => Show (TypeF ref) where
 -- | seems working there.
 -- | Should we drop this trivial instance?
 instance eq1TypeF :: Eq1 TypeF where
-  eq1 (TypeApp f1 a1) (TypeApp f2 a2) =
-    eq f1 f2 && (all (uncurry eq) (Array.zip a1 a2))
+  eq1 (TypeApp f1 a1) (TypeApp f2 a2) = eq f1 f2 && (all (uncurry eq) (Array.zip a1 a2))
   eq1 (TypeApp _ _) _ = false
   eq1 _ (TypeApp _ _) = false
   eq1 (TypeArr arg1 res1) (TypeArr arg2 res2) = eq arg1 arg2 && eq res1 res2
@@ -104,9 +117,9 @@ instance eq1TypeF :: Eq1 TypeF where
   eq1 TypeBoolean TypeBoolean = true
   eq1 TypeBoolean _ = false
   eq1 _ TypeBoolean = false
-  eq1 (TypeForall v1 t1) (TypeForall v2 t2)
-    = Set.fromFoldable v1 == Set.fromFoldable v2
-    && eq t1 t2
+  eq1 (TypeForall v1 t1) (TypeForall v2 t2) =
+    Set.fromFoldable v1 == Set.fromFoldable v2
+      && eq t1 t2
   eq1 (TypeForall v1 t1) _ = false
   eq1 _ (TypeForall v1 t1) = false
   eq1 TypeNumber TypeNumber = true
@@ -126,12 +139,10 @@ instance eq1TypeF :: Eq1 TypeF where
 -- | Should we drop this and similar instances and move on
 -- | to unoredred collections when neccessary?
 instance ord1TypeF :: Ord1 TypeF where
-  compare1 (TypeApp f1 a1) (TypeApp f2 a2) =
-    compare f1 f2 <> compare a1 a2
+  compare1 (TypeApp f1 a1) (TypeApp f2 a2) = compare f1 f2 <> compare a1 a2
   compare1 (TypeApp _ _) _ = GT
   compare1 _ (TypeApp _ _) = GT
-  compare1 (TypeArr arg1 res1) (TypeArr arg2 res2) =
-    compare arg1 arg2 <> compare res1 res2
+  compare1 (TypeArr arg1 res1) (TypeArr arg2 res2) = compare arg1 arg2 <> compare res1 res2
   compare1 (TypeArr _ _) _ = GT
   compare1 _ (TypeArr _ _) = GT
   compare1 (TypeArray t1) (TypeArray t2) = compare t1 t2
@@ -146,8 +157,7 @@ instance ord1TypeF :: Ord1 TypeF where
   compare1 (TypeConstructor tc1) (TypeConstructor tc2) = compare tc1 tc2
   compare1 (TypeConstructor tc1) _ = GT
   compare1 _ (TypeConstructor tc1) = GT
-  compare1 (TypeForall v1 t1) (TypeForall v2 t2)
-    = compare v1 v2 <> compare t1 t2
+  compare1 (TypeForall v1 t1) (TypeForall v2 t2) = compare v1 v2 <> compare t1 t2
   compare1 (TypeForall _ _) _ = GT
   compare1 _ (TypeForall _ _) = GT
   compare1 TypeNumber TypeNumber = EQ
@@ -165,13 +175,13 @@ instance ord1TypeF :: Ord1 TypeF where
   compare1 (TypeVar i1) (TypeVar i2) = compare i1 i2
 
 derive instance functorTypeF :: Functor TypeF
+
 instance foldableTypeF :: Foldable TypeF where
   foldMap f (TypeApp l arguments) = f l <> foldMap f arguments
   foldMap f (TypeArr arg res) = f arg <> f res
   foldMap f (TypeArray t) = f t
   foldMap _ TypeBoolean = mempty
-  foldMap f (TypeConstrained { className, params } t) =
-    foldMap f params <> f t
+  foldMap f (TypeConstrained { className, params } t) = foldMap f params <> f t
   foldMap _ (TypeConstructor _) = mempty
   foldMap f (TypeRecord r) = foldMap f r
   foldMap f (TypeRow r) = foldMap f r
@@ -179,18 +189,15 @@ instance foldableTypeF :: Foldable TypeF where
   foldMap f (TypeForall _ t) = f t
   foldMap _ TypeString = mempty
   foldMap _ (TypeVar _) = mempty
-
   foldr f t = foldrDefault f t
   foldl f t = foldlDefault f t
 
 instance traversableTypeF :: Traversable TypeF where
-  sequence (TypeApp l arguments) =
-    TypeApp <$> l <*> sequence arguments
+  sequence (TypeApp l arguments) = TypeApp <$> l <*> sequence arguments
   sequence (TypeArr arg res) = TypeArr <$> arg <*> res
   sequence (TypeArray t) = TypeArray <$> t
   sequence TypeBoolean = pure TypeBoolean
-  sequence (TypeConstrained { className, params } t) =
-    TypeConstrained <<< { className, params: _ } <$> sequence params <*> t
+  sequence (TypeConstrained { className, params } t) = TypeConstrained <<< { className, params: _ } <$> sequence params <*> t
   sequence (TypeConstructor t) = pure $ TypeConstructor t
   sequence (TypeForall v t) = TypeForall v <$> t
   sequence TypeNumber = pure $ TypeNumber
@@ -198,23 +205,26 @@ instance traversableTypeF :: Traversable TypeF where
   sequence (TypeRow ts) = TypeRow <$> sequence ts
   sequence TypeString = pure $ TypeString
   sequence (TypeVar ident) = pure $ TypeVar ident
-
   traverse = traverseDefault
 
 newtype RowF ref
   = Row
-    { labels :: Map String ref
-    -- | Currently we allow only type reference
-    -- | but we should provide full Type support here
-    -- | No polymorhic tail support yet...
-    , tail :: Maybe (Either Ident QualifiedTypeName)
-    }
+  { labels :: Map String ref
+  -- | Currently we allow only type reference
+  -- | but we should provide full Type support here
+  -- | No polymorhic tail support yet...
+  , tail :: Maybe (Either Ident QualifiedTypeName)
+  }
+
 derive instance genericRowType :: Generic (RowF ref) _
+
 derive instance newtypeRowF :: Newtype (RowF ref) _
+
 instance showRowType :: Show ref => Show (RowF ref) where
   show p = genericShow p
 
 derive instance functorRowF :: Functor RowF
+
 derive instance eqRow :: Eq ref => Eq (RowF ref)
 
 instance foldableRowF :: Foldable RowF where
@@ -228,13 +238,17 @@ instance traversableRowF :: Traversable RowF where
 
 -- | I hope that this assymetry between `Row` and `Type`
 -- | simplifies structure of most our algebras.
-type Row = RowF Type
+type Row
+  = RowF Type
 
 emptyRow :: Row
 emptyRow = Row { labels: mempty, tail: Nothing }
 
-data Union = Union QualifiedTypeName (Array UnionMember)
+data Union
+  = Union QualifiedTypeName (Array UnionMember)
+
 derive instance genericUnion :: Generic Union _
+
 instance showUnion :: Show Union where
   show = genericShow
 
@@ -248,18 +262,28 @@ data UnionMember
   | UnionNumber String Number
   | UnionConstructor String Type
   | UnionUndefined
+
 derive instance eqUnionMember :: Eq UnionMember
+
 derive instance ordUnionMember :: Ord UnionMember
+
 derive instance genericUnionMember :: Generic UnionMember _
+
 instance showUnionMember :: Show UnionMember where
   show = genericShow
 
-type RowLabel = String
+type RowLabel
+  = String
 
-newtype Ident = Ident String
+newtype Ident
+  = Ident String
+
 derive instance genericIdent :: Generic Ident _
+
 derive instance eqIdent :: Eq Ident
+
 derive instance ordIdent :: Ord Ident
+
 instance showIdent :: Show Ident where
   show = genericShow
 
@@ -282,7 +306,6 @@ instance foldableExprF :: Foldable ExprF where
   foldMap _ (ExprNumber _) = mempty
   foldMap f (ExprRecord labels) = foldMap f labels
   foldMap _ (ExprString _) = mempty
-
   foldr f t = foldrDefault f t
   foldl f t = foldlDefault f t
 
@@ -296,19 +319,20 @@ instance traversableExprF :: Traversable ExprF where
   sequence (ExprString s) = pure (ExprString s)
   traverse = traverseDefault
 
-type Expr = Mu ExprF
+type Expr
+  = Mu ExprF
 
 -- | Original CST type name doesn't contain a signature.
 -- | Also the rest of the structure is radically simplified
 -- | here to cover only current codegen cases.
-type ValueBindingFields =
-  { value ::
-    { name :: Ident
-    , binders :: Array Ident
-    , expr :: Expr
+type ValueBindingFields
+  = { value ::
+      { name :: Ident
+      , binders :: Array Ident
+      , expr :: Expr
+      }
+    , signature :: Maybe Type
     }
-  , signature :: Maybe Type
-  }
 
 data Declaration
   = DeclInstance
@@ -324,11 +348,17 @@ data Declaration
   | DeclType { typeName :: TypeName, "type" :: Type, vars :: Array Ident }
   | DeclValue ValueBindingFields
 
-newtype ClassName = ClassName String
+newtype ClassName
+  = ClassName String
+
 derive instance newtypeClassName :: Newtype ClassName _
+
 derive instance genericClassName :: Generic ClassName _
+
 derive instance eqClassName :: Eq ClassName
+
 derive instance ordClassName :: Ord ClassName
+
 instance showClassName :: Show ClassName where
   show = genericShow
 
@@ -336,25 +366,37 @@ data Import
   = ImportValue Ident
   | ImportType TypeName
   | ImportClass ClassName
+
 derive instance newtypeIdent :: Newtype Ident _
+
 derive instance genericImport :: Generic Import _
+
 derive instance eqImport :: Eq Import
+
 derive instance ordImport :: Ord Import
+
 instance showImport :: Show Import where
   show = genericShow
 
-newtype ImportDecl = ImportDecl
+newtype ImportDecl
+  = ImportDecl
   { moduleName :: ModuleName
   , names :: List Import
   }
+
 derive instance newtypeImportDecl :: Newtype ImportDecl _
+
 derive instance genericImportDecl :: Generic ImportDecl _
+
 derive instance eqImportDecl :: Eq ImportDecl
+
 derive instance ordImportDecl :: Ord ImportDecl
+
 instance showImportDecl :: Show ImportDecl where
   show = genericShow
 
-newtype Imports = Imports (Map ModuleName (Set Import))
+newtype Imports
+  = Imports (Map ModuleName (Set Import))
 
 instance semigroupImports :: Semigroup Imports where
   append (Imports i1) (Imports i2) = Imports $ Map.unionWith Set.union i1 i2
@@ -363,11 +405,30 @@ instance monoidImports :: Monoid Imports where
   mempty = Imports mempty
 
 reservedNames :: Set String
-reservedNames = Set.fromFoldable
-  [ "ado" , "case" , "class" , "data"
-  , "derive" , "do" , "else" , "false"
-  , "forall" , "foreign" , "import" , "if"
-  , "in" , "infix" , "infixl" , "infixr"
-  , "instance" , "let" , "module" , "newtype"
-  , "of" , "true" , "type" , "where"
-  ]
+reservedNames =
+  Set.fromFoldable
+    [ "ado"
+    , "case"
+    , "class"
+    , "data"
+    , "derive"
+    , "do"
+    , "else"
+    , "false"
+    , "forall"
+    , "foreign"
+    , "import"
+    , "if"
+    , "in"
+    , "infix"
+    , "infixl"
+    , "infixr"
+    , "instance"
+    , "let"
+    , "module"
+    , "newtype"
+    , "of"
+    , "true"
+    , "type"
+    , "where"
+    ]

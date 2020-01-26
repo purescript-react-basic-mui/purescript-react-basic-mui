@@ -1,6 +1,5 @@
 module Codegen.AST
   ( module Types
-  )
-  where
+  ) where
 
 import Codegen.AST.Types as Types

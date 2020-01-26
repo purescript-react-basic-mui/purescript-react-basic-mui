@@ -1,7 +1,6 @@
 module Codegen.AST.Sugar.Expr where
 
 import Prelude
-
 import Codegen.AST.Sugar.Type (name')
 import Codegen.AST.Types (Expr, ExprF(..), RowLabel)
 import Data.Functor.Mu (roll)
@@ -27,4 +26,3 @@ record = roll <<< ExprRecord
 
 string :: String -> Expr
 string = roll <<< ExprString
-

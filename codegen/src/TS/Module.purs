@@ -35,9 +35,7 @@ module Codegen.TS.Module where
 -- | like `FabProps<MyType, OtherType>` if we want to.
 -- |
 -- | We do use this strategy in `Codegen.TS.MUI`.
-
 import Prelude
-
 import Codegen.AST (Declaration(..)) as AST
 import Codegen.AST (Expr, ExprF(..), Ident(..), RowF(..), RowLabel, Type, TypeF(..), TypeName(..), Union(..))
 import Codegen.AST.Sugar (declInstance, valueBindingFields)
@@ -82,21 +80,23 @@ import ReadDTS.Instantiation (Type, instantiate) as ReadDTS.Instantiation
 import ReadDTS.Instantiation (TypeF(..)) as Instantiation
 import Type.Prelude (SProxy(..))
 
-type Declaration =
-  { defaultInstance :: ReadDTS.Instantiation.Type
-  , typeConstructor :: ReadDTS.AST.TypeConstructor ReadDTS.Application'
-  }
+type Declaration
+  = { defaultInstance :: ReadDTS.Instantiation.Type
+    , typeConstructor :: ReadDTS.AST.TypeConstructor ReadDTS.Application'
+    }
 
-type LocalTypeName = String
+type LocalTypeName
+  = String
 
-type Declarations = Map LocalTypeName Declaration
+type Declarations
+  = Map LocalTypeName Declaration
 
 -- | Try to grab all exported types from a given module
 -- | and try to instantiate them without arguments producing
 -- | so called "default instances".
-declarations
-  :: { path :: String , source :: Maybe String }
-  -> M Declarations
+declarations ::
+  { path :: String, source :: Maybe String } ->
+  M Declarations
 declarations file = do
   typeConstructors <- ExceptT $ ReadDTS.AST.build { strictNullChecks: false } file
   let
@@ -104,13 +104,18 @@ declarations file = do
       ReadDTS.AST.UnknownTypeConstructor _ -> Nothing
       tc@(ReadDTS.AST.Interface { name }) -> Just { name, tc }
       tc@(ReadDTS.AST.TypeAlias { name }) -> Just { name, tc }
-  Map.fromFoldable <<< catMaybes <$> for typeConstructors (known >>> case _ of
-    Just { name, tc } -> do
-      t <- mapExceptT (unwrap >>> pure)
-        $ withExceptT Array.singleton
-        $ ReadDTS.Instantiation.instantiate tc []
-      pure $ Just (Tuple name { defaultInstance: t, typeConstructor: tc })
-    Nothing -> pure Nothing)
+  Map.fromFoldable <<< catMaybes
+    <$> for typeConstructors
+        ( known
+            >>> case _ of
+                Just { name, tc } -> do
+                  t <-
+                    mapExceptT (unwrap >>> pure)
+                      $ withExceptT Array.singleton
+                      $ ReadDTS.Instantiation.instantiate tc []
+                  pure $ Just (Tuple name { defaultInstance: t, typeConstructor: tc })
+                Nothing -> pure Nothing
+        )
 
 -- | During a fold over typescript module types we handle unions and their members
 -- | using the type defined below. It allows us to aggregate members of a union during
@@ -120,15 +125,20 @@ data PossibleType
   = ProperType Type
   | UnionMember UnionMember
   | PossibleUnion (Array PossibleType)
+
 derive instance genericPossiblePropType :: Generic PossibleType _
+
 instance showPossiblePropType :: Show PossibleType where
   show t = genericShow t
 
-type UnionTypes = List Union
+type UnionTypes
+  = List Union
 
-type UnionTypeName = String
+type UnionTypeName
+  = String
 
-type ComponentAlgebraM a = ExceptT String (State UnionTypes) a
+type ComponentAlgebraM a
+  = ExceptT String (State UnionTypes) a
 
 -- | Try to build an union from provided cases. For example if we
 -- | have something like `8 | "a" | null` on the TypeScript side
@@ -143,10 +153,10 @@ type ComponentAlgebraM a = ExceptT String (State UnionTypes) a
 -- | If a given union was encountered in the context of a record
 -- | then the label of a property for which this value was defined
 -- | is passed as the first argument.
-union
-  :: Maybe RowLabel
-  -> Array PossibleType
-  -> ComponentAlgebraM (Either Type Union)
+union ::
+  Maybe RowLabel ->
+  Array PossibleType ->
+  ComponentAlgebraM (Either Type Union)
 union (Just l) props = do
   -- | XXX: This flow can be a bit broken when we consider
   -- |      `strictNullChecks: true` because we are going to
@@ -161,61 +171,73 @@ union (Just l) props = do
   -- |   [ UnionMember UnionUndefined, ProperType t ] -> pure $ Left $ t
   -- |   [ ProperType t, UnionMember UnionUndefined ] -> pure $ Left $ t
   -- |   ...
-  props' <- flip evalStateT 0 $ for props $ case _ of
-    UnionMember p -> pure p
-    ProperType t -> do
-      -- | Really naive naming convention but maybe it will
-      -- | somewhat work in "most" simple scenarios
-      n <- case unroll t of
-        TypeNumber -> pure "number"
-        TypeString -> pure "string"
-        t' -> do
-          idx <- get
-          put (idx + 1)
-          let
-            n = case t' of
-              TypeRecord _ -> "record"
-              otherwise -> l
-            n' =
-              if idx > 0
-                then (n <> show idx)
-                else n
-          pure n'
-      pure $ UnionConstructor n t
+  props' <-
+    flip evalStateT 0 $ for props
+      $ case _ of
+          UnionMember p -> pure p
+          ProperType t -> do
+            -- | Really naive naming convention but maybe it will
+            -- | somewhat work in "most" simple scenarios
+            n <- case unroll t of
+              TypeNumber -> pure "number"
+              TypeString -> pure "string"
+              t' -> do
+                idx <- get
+                put (idx + 1)
+                let
+                  n = case t' of
+                    TypeRecord _ -> "record"
+                    otherwise -> l
 
-    p -> lift $ throwError $
-      "Unable to build a variant from non variant props for: " <> l <> ", " <> show p
+                  n' =
+                    if idx > 0 then
+                      (n <> show idx)
+                    else
+                      n
+                pure n'
+            pure $ UnionConstructor n t
+          p ->
+            lift $ throwError
+              $ "Unable to build a variant from non variant props for: "
+              <> l
+              <> ", "
+              <> show p
   -- | Currently building only local variants
-  pure $ Right $ Union
-    { name: TypeName $ typeName l, moduleName: Nothing }
-    props'
+  pure $ Right
+    $ Union
+        { name: TypeName $ typeName l, moduleName: Nothing }
+        props'
   where
-    -- | TOD:
-    -- | * Guard against scope naming collisions too
-    typeName label = if label `Set.member` reservedNames
-      then (pascalCase label) <> "_"
-      else pascalCase label
+  -- | TOD:
+  -- | * Guard against scope naming collisions too
+  typeName label =
+    if label `Set.member` reservedNames then
+      (pascalCase label) <> "_"
+    else
+      pascalCase label
 -- | Escape hatch
 union Nothing props = union (Just "Anonymous") props
+
 -- union Nothing _ = throwError
 --   "Unable to build anonymous Union..."
-
 -- | `union'` constructor which adds new union to the cache
-union'
-  :: Maybe RowLabel
-  -> Array PossibleType
-  -> ComponentAlgebraM Type
-union' label vps = union label vps >>= case _ of
-  Left t -> pure $ t
-  Right v@(Union qn@{ name, moduleName: m } _) -> do
-    -- | TODO: Validate:
-    -- | * check if a given variant declaration is already defined
-    -- | * check if already defined variant with the same name has
-    -- |  the same structure
-    when (isJust m) $
-      throwError "External variants not implemented yet"
-    modify_ (List.Cons v)
-    pure $ roll $ TypeConstructor $ qn
+union' ::
+  Maybe RowLabel ->
+  Array PossibleType ->
+  ComponentAlgebraM Type
+union' label vps =
+  union label vps
+    >>= case _ of
+        Left t -> pure $ t
+        Right v@(Union qn@{ name, moduleName: m } _) -> do
+          -- | TODO: Validate:
+          -- | * check if a given variant declaration is already defined
+          -- | * check if already defined variant with the same name has
+          -- |  the same structure
+          when (isJust m)
+            $ throwError "External variants not implemented yet"
+          modify_ (List.Cons v)
+          pure $ roll $ TypeConstructor $ qn
 
 -- | Given a TypeScript type representation try to build an AST for it.
 -- |
@@ -228,30 +250,30 @@ union' label vps = union label vps >>= case _ of
 -- |
 -- | TODO: At the moment we are not detecting collisions and provide
 -- | only local module union declaration.
-astAlgebra :: AlgebraM
-  ComponentAlgebraM
-  Instantiation.TypeF
-  PossibleType
+astAlgebra ::
+  AlgebraM
+    ComponentAlgebraM
+    Instantiation.TypeF
+    PossibleType
 astAlgebra = case _ of
   (Instantiation.Any) -> throwError "Unable to handle Any type"
-  (Instantiation.Array (PossibleUnion vs)) ->
-    properType <<< TypeArray <=< union' Nothing $ vs
-  (Instantiation.Array v@(UnionMember _)) ->
-    properType <<< TypeArray <=< union' Nothing $ [ v ]
-  (Instantiation.Array (ProperType t)) ->
-    properType $ TypeArray t
+  (Instantiation.Array (PossibleUnion vs)) -> properType <<< TypeArray <=< union' Nothing $ vs
+  (Instantiation.Array v@(UnionMember _)) -> properType <<< TypeArray <=< union' Nothing $ [ v ]
+  (Instantiation.Array (ProperType t)) -> properType $ TypeArray t
   Instantiation.Boolean -> properType TypeBoolean
   (Instantiation.BooleanLiteral b) -> unionMember $ UnionBoolean b
   (Instantiation.Intersection _ _) -> throwError "Unable to handle uninstantiated intersection"
   Instantiation.Null -> unionMember $ UnionNull
   Instantiation.Number -> properType $ TypeNumber
-  (Instantiation.Object _ ts) ->
-    ProperType <<< roll <<< TypeRecord <<< Row <<< { tail: Nothing, labels: _ } <$> ts'
+  (Instantiation.Object _ ts) -> ProperType <<< roll <<< TypeRecord <<< Row <<< { tail: Nothing, labels: _ } <$> ts'
     where
-      step propName { "type": PossibleUnion vs } = union' (Just propName) vs
-      step propName { "type": v@(UnionMember _) } = union' (Just propName) [ v ]
-      step _ { "type": ProperType t } = pure $ t
-      ts' = sequence $ mapWithIndex step ts
+    step propName { "type": PossibleUnion vs } = union' (Just propName) vs
+
+    step propName { "type": v@(UnionMember _) } = union' (Just propName) [ v ]
+
+    step _ { "type": ProperType t } = pure $ t
+
+    ts' = sequence $ mapWithIndex step ts
   Instantiation.String -> properType TypeString
   (Instantiation.Tuple _) -> throwError "Tuple handling is on the way but still not present..."
   (Instantiation.NumberLiteral n) ->
@@ -259,19 +281,26 @@ astAlgebra = case _ of
       constructor = fromMaybe ("_" <> show n) $ Map.lookup n numberLiteralConstructor
     in
       unionMember $ UnionNumber constructor n
-  (Instantiation.StringLiteral s) -> unionMember $ if (String.contains (Pattern "-") s)
-    then UnionStringName (pascalCase s) s
-    else UnionString s
+  (Instantiation.StringLiteral s) ->
+    unionMember
+      $ if (String.contains (Pattern "-") s) then
+          UnionStringName (pascalCase s) s
+        else
+          UnionString s
   Instantiation.Undefined -> unionMember $ UnionUndefined
   (Instantiation.Union ms) -> pure $ PossibleUnion ms
-  (Instantiation.Unknown err) -> throwError $
-    "ReadDTS was not able to instantiate given value: " <> err
+  (Instantiation.Unknown err) ->
+    throwError
+      $ "ReadDTS was not able to instantiate given value: "
+      <> err
   where
-    properType = pure <<< ProperType <<< roll
-    unionMember = pure <<< UnionMember
+  properType = pure <<< ProperType <<< roll
 
-    numberLiteralConstructor :: Map Number UnionTypeName
-    numberLiteralConstructor = Map.fromFoldable
+  unionMember = pure <<< UnionMember
+
+  numberLiteralConstructor :: Map Number UnionTypeName
+  numberLiteralConstructor =
+    Map.fromFoldable
       [ Tuple 1.0 "one"
       , Tuple 2.0 "two"
       , Tuple 3.0 "three"
@@ -305,70 +334,83 @@ exprNull = Expr.ident "Foreign.NullOrUndefined.null"
 -- | * an Eq instance for trivial cases
 -- |
 -- | All declarations are built in local module contex.
-unionDeclarations
-  :: TypeName
-  -> Array UnionMember
-  -> { constructors :: AST.Declaration
-     , instances :: List AST.Declaration
-     , type :: AST.Declaration
-     }
+unionDeclarations ::
+  TypeName ->
+  Array UnionMember ->
+  { constructors :: AST.Declaration
+  , instances :: List AST.Declaration
+  , type :: AST.Declaration
+  }
 unionDeclarations typeName@(TypeName name) members =
   { "type": AST.DeclForeignData { typeName } -- , "kind": Nothing }
-  , constructors: AST.DeclValue
-    { value:
-      { expr
-      , binders: []
-      , name: Ident (downfirst name)
+  , constructors:
+    AST.DeclValue
+      { value:
+        { expr
+        , binders: []
+        , name: Ident (downfirst name)
+        }
+      , signature: Just signature
       }
-    , signature: Just signature
-    }
   , instances
   }
   where
-    downfirst :: String -> String
-    downfirst =
-      SCU.uncons >>> foldMap \{ head, tail } ->
-        SCU.singleton (Unicode.toLower head) <> tail
+  downfirst :: String -> String
+  downfirst =
+    SCU.uncons
+      >>> foldMap \{ head, tail } ->
+          SCU.singleton (Unicode.toLower head) <> tail
 
-    toUnicodeLower :: String -> String
-    toUnicodeLower =
-      SCU.toCharArray >>> map Unicode.toLower >>> SCU.fromCharArray
+  toUnicodeLower :: String -> String
+  toUnicodeLower = SCU.toCharArray >>> map Unicode.toLower >>> SCU.fromCharArray
 
-    type_ = roll $ TypeConstructor { name: typeName, moduleName: Nothing }
-    literalValue e = { sig: type_, expr: e }
+  type_ = roll $ TypeConstructor { name: typeName, moduleName: Nothing }
 
-    isConstructor (UnionConstructor _ _) = true
-    isConstructor _ = false
+  literalValue e = { sig: type_, expr: e }
 
-    -- | We are able to provide Eq instance based on `shallowEq`
-    -- | easily whenever there are only literal members of a given
-    -- | union.
-    instances = if all (not <<< isConstructor) members
-      then List.singleton $
-        declInstance
-          (name' "Prelude.Eq")
-          [ type_ ]
-          [ valueBindingFields (Ident "eq") [] (roll $ ExprIdent (name' "Unsafe.Reference.unsafeRefEq")) Nothing ]
-      else mempty
+  isConstructor (UnionConstructor _ _) = true
 
-    member (UnionBoolean b) = Tuple (show b) $ literalValue $ exprUnsafeCoerceApp (Expr.boolean b)
-    member (UnionString s) = Tuple s $ literalValue $ exprUnsafeCoerceApp (Expr.string s)
-    member (UnionStringName n s) = Tuple n $ literalValue $ exprUnsafeCoerceApp (Expr.string s)
-    member UnionNull = Tuple "null" $ literalValue $ exprUnsafeCoerceApp exprNull
-    member (UnionNumber n v) = Tuple n $ literalValue $ exprUnsafeCoerceApp (Expr.number v)
-    member UnionUndefined = Tuple "undefined" $ literalValue $ exprUnsafeCoerceApp exprUndefined
-    member (UnionConstructor n t) = Tuple n $ { sig: Type.arr t type_, expr: exprUnsafeCoerce }
+  isConstructor _ = false
 
-    members' = Map.fromFoldable $ map member members
-    _expr = prop (SProxy :: SProxy "expr")
-    _sig = prop (SProxy :: SProxy "sig")
-    expr = roll $ ExprRecord $ map (view _expr) $ members'
+  -- | We are able to provide Eq instance based on `shallowEq`
+  -- | easily whenever there are only literal members of a given
+  -- | union.
+  instances =
+    if all (not <<< isConstructor) members then
+      List.singleton
+        $ declInstance
+            (name' "Prelude.Eq")
+            [ type_ ]
+            [ valueBindingFields (Ident "eq") [] (roll $ ExprIdent (name' "Unsafe.Reference.unsafeRefEq")) Nothing ]
+    else
+      mempty
 
-    signature
-      = roll
+  member (UnionBoolean b) = Tuple (show b) $ literalValue $ exprUnsafeCoerceApp (Expr.boolean b)
+
+  member (UnionString s) = Tuple s $ literalValue $ exprUnsafeCoerceApp (Expr.string s)
+
+  member (UnionStringName n s) = Tuple n $ literalValue $ exprUnsafeCoerceApp (Expr.string s)
+
+  member UnionNull = Tuple "null" $ literalValue $ exprUnsafeCoerceApp exprNull
+
+  member (UnionNumber n v) = Tuple n $ literalValue $ exprUnsafeCoerceApp (Expr.number v)
+
+  member UnionUndefined = Tuple "undefined" $ literalValue $ exprUnsafeCoerceApp exprUndefined
+
+  member (UnionConstructor n t) = Tuple n $ { sig: Type.arr t type_, expr: exprUnsafeCoerce }
+
+  members' = Map.fromFoldable $ map member members
+
+  _expr = prop (SProxy :: SProxy "expr")
+
+  _sig = prop (SProxy :: SProxy "sig")
+
+  expr = roll $ ExprRecord $ map (view _expr) $ members'
+
+  signature =
+    roll
       <<< TypeRecord
       <<< Row
       <<< { tail: Nothing, labels: _ }
       <<< map (view _sig)
       $ members'
-
