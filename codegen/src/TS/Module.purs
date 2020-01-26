@@ -268,9 +268,7 @@ astAlgebra = case _ of
   (Instantiation.Object _ ts) -> ProperType <<< roll <<< TypeRecord <<< Row <<< { tail: Nothing, labels: _ } <$> ts'
     where
     step propName { "type": PossibleUnion vs } = union' (Just propName) vs
-
     step propName { "type": v@(UnionMember _) } = union' (Just propName) [ v ]
-
     step _ { "type": ProperType t } = pure $ t
 
     ts' = sequence $ mapWithIndex step ts
@@ -369,7 +367,6 @@ unionDeclarations typeName@(TypeName name) members =
   literalValue e = { sig: type_, expr: e }
 
   isConstructor (UnionConstructor _ _) = true
-
   isConstructor _ = false
 
   -- | We are able to provide Eq instance based on `shallowEq`
@@ -386,17 +383,11 @@ unionDeclarations typeName@(TypeName name) members =
       mempty
 
   member (UnionBoolean b) = Tuple (show b) $ literalValue $ exprUnsafeCoerceApp (Expr.boolean b)
-
   member (UnionString s) = Tuple s $ literalValue $ exprUnsafeCoerceApp (Expr.string s)
-
   member (UnionStringName n s) = Tuple n $ literalValue $ exprUnsafeCoerceApp (Expr.string s)
-
   member UnionNull = Tuple "null" $ literalValue $ exprUnsafeCoerceApp exprNull
-
   member (UnionNumber n v) = Tuple n $ literalValue $ exprUnsafeCoerceApp (Expr.number v)
-
   member UnionUndefined = Tuple "undefined" $ literalValue $ exprUnsafeCoerceApp exprUndefined
-
   member (UnionConstructor n t) = Tuple n $ { sig: Type.arr t type_, expr: exprUnsafeCoerce }
 
   members' = Map.fromFoldable $ map member members

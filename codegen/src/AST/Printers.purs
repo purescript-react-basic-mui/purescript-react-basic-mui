@@ -54,9 +54,7 @@ printImport (ImportDecl { moduleName, names }) =
 
   printName :: Import -> String
   printName (ImportValue s) = unwrap s
-
   printName (ImportClass s) = "class " <> unwrap s
-
   printName (ImportType s) = unwrap s
 
 printModuleHead :: ModuleName -> String
@@ -217,9 +215,7 @@ printType = case _ of
   TypeVar (Ident v) -> const $ v
   where
   parens s InArr = s
-
   parens s InApplication = "(" <> s <> ")"
-
   parens s StandAlone = s
 
   printRow (Row { labels, tail }) = intercalate ", " labels' <> tail'

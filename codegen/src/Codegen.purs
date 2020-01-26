@@ -63,14 +63,12 @@ genComponentJS c@{ modulePath } =
     <> "\").default;"
   where
   jsPath (Path str next) = (String.toLower str) <> "/" <> (jsPath next)
-
   jsPath (Name n) = n
 
 write :: FilePath -> Codegen -> Aff Unit
 write basePath (Codegen file code) = go basePath file
   where
   go path (Directory name next) = go (path <> "/" <> name) next
-
   go path (File name) = do
     mkDir path
     let

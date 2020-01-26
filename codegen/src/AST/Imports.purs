@@ -78,5 +78,4 @@ exprImportsAlgebra = case _ of
   ExprString s -> mempty
   where
   qualifiedValueImport { moduleName: Just moduleName, name: t } = Just $ importsSingleton moduleName (ImportValue t)
-
   qualifiedValueImport _ = Nothing
