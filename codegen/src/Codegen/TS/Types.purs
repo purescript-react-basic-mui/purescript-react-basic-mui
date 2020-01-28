@@ -13,7 +13,7 @@ data InstantiationStrategy
   | InterfaceInheritance
 
 type InstanceProps
-  = { fqn :: String
+  = { fqn :: String -- Fully qualified name
     , props :: Map String (Instantiation.Property Instantiation.Type)
     }
 
