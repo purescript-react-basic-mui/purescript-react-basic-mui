@@ -39,7 +39,7 @@ instance eqColor :: Eq Color where
 instance eqMargin :: Eq Margin where
   eq = Unsafe.Reference.unsafeRefEq
 
-type InputPropsOptions componentProps = ( autoComplete :: String, autoFocus :: Boolean, className :: String, classes :: InputClassKey, color :: Color, defaultValue :: Foreign.Foreign, disabled :: Boolean, endAdornment :: React.Basic.JSX, error :: Boolean, fullWidth :: Boolean, id :: String, inputProps :: Foreign.Foreign, inputRef :: Foreign.Foreign, margin :: Margin, multiline :: Boolean, name :: String, onChange :: React.Basic.Events.EventHandler, placeholder :: String, readOnly :: Boolean, required :: Boolean, rows :: Rows, rowsMax :: RowsMax, startAdornment :: React.Basic.JSX, "type" :: String, value :: Foreign.Foreign | componentProps )
+type InputPropsOptions componentProps = ( autoComplete :: String, autoFocus :: Boolean, className :: String, classes :: InputClassKey, color :: Color, defaultValue :: Foreign.Foreign, disableUnderline :: Boolean, disabled :: Boolean, endAdornment :: React.Basic.JSX, error :: Boolean, fullWidth :: Boolean, id :: String, inputProps :: Foreign.Foreign, inputRef :: Foreign.Foreign, margin :: Margin, multiline :: Boolean, name :: String, onChange :: React.Basic.Events.EventHandler, placeholder :: String, readOnly :: Boolean, required :: Boolean, rows :: Rows, rowsMax :: RowsMax, startAdornment :: React.Basic.JSX, "type" :: String, value :: Foreign.Foreign | componentProps )
 
 foreign import data InputProps :: Type
 

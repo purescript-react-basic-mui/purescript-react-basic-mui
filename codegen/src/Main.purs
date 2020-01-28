@@ -898,6 +898,7 @@ components =
           , "className"
           , "color"
           , "disabled"
+          , "disableUnderline"
           , "error"
           , "fullWidth"
           , "id"
