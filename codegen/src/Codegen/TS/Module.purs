@@ -69,15 +69,14 @@ import Data.Newtype (unwrap)
 import Data.Set (member) as Set
 import Data.String (Pattern(..))
 import Data.String (contains) as String
-import Data.String.CodeUnits (fromCharArray, singleton, toCharArray, uncons) as SCU
+import Data.String.CodeUnits (fromCharArray, singleton, toCharArray, uncons) as Data.String.CodeUnits
 import Data.String.Extra (pascalCase)
 import Data.Traversable (for, sequence)
 import Data.Tuple (Tuple(..))
 import Matryoshka (AlgebraM)
 import ReadDTS.AST (Application') as ReadDTS
 import ReadDTS.AST (TypeConstructor(..), build) as ReadDTS.AST
-import ReadDTS.Instantiation (Type, instantiate) as ReadDTS.Instantiation
-import ReadDTS.Instantiation (TypeF(..)) as Instantiation
+import ReadDTS.Instantiation (Type, instantiate, TypeF(..)) as ReadDTS.Instantiation
 import Type.Prelude (SProxy(..))
 
 type Declaration
@@ -242,7 +241,7 @@ union' label vps =
 -- | Given a TypeScript type representation try to build an AST for it.
 -- |
 -- | During the processes we are accumulating a list of union types which
--- | were encountered as the subnodes. For these subnotes we set
+-- | were encountered as the subnodes. For these subnodes we set
 -- | type reference for created union type and store the union in our cache.
 -- |
 -- | Finaly we hopefully get an AST of the type and list of related
@@ -253,41 +252,41 @@ union' label vps =
 astAlgebra ::
   AlgebraM
     ComponentAlgebraM
-    Instantiation.TypeF
+    ReadDTS.Instantiation.TypeF
     PossibleType
 astAlgebra = case _ of
-  (Instantiation.Any) -> throwError "Unable to handle Any type"
-  (Instantiation.Array (PossibleUnion vs)) -> properType <<< TypeArray <=< union' Nothing $ vs
-  (Instantiation.Array v@(UnionMember _)) -> properType <<< TypeArray <=< union' Nothing $ [ v ]
-  (Instantiation.Array (ProperType t)) -> properType $ TypeArray t
-  Instantiation.Boolean -> properType TypeBoolean
-  (Instantiation.BooleanLiteral b) -> unionMember $ UnionBoolean b
-  (Instantiation.Intersection _ _) -> throwError "Unable to handle uninstantiated intersection"
-  Instantiation.Null -> unionMember $ UnionNull
-  Instantiation.Number -> properType $ TypeNumber
-  (Instantiation.Object _ ts) -> ProperType <<< roll <<< TypeRecord <<< Row <<< { tail: Nothing, labels: _ } <$> ts'
+  (ReadDTS.Instantiation.Any) -> throwError "Unable to handle Any type"
+  (ReadDTS.Instantiation.Array (PossibleUnion vs)) -> properType <<< TypeArray <=< union' Nothing $ vs
+  (ReadDTS.Instantiation.Array v@(UnionMember _)) -> properType <<< TypeArray <=< union' Nothing $ [ v ]
+  (ReadDTS.Instantiation.Array (ProperType t)) -> properType $ TypeArray t
+  ReadDTS.Instantiation.Boolean -> properType TypeBoolean
+  (ReadDTS.Instantiation.BooleanLiteral b) -> unionMember $ UnionBoolean b
+  (ReadDTS.Instantiation.Intersection _ _) -> throwError "Unable to handle uninstantiated intersection"
+  ReadDTS.Instantiation.Null -> unionMember $ UnionNull
+  ReadDTS.Instantiation.Number -> properType $ TypeNumber
+  (ReadDTS.Instantiation.Object _ ts) -> ProperType <<< roll <<< TypeRecord <<< Row <<< { tail: Nothing, labels: _ } <$> ts'
     where
     step propName { "type": PossibleUnion vs } = union' (Just propName) vs
     step propName { "type": v@(UnionMember _) } = union' (Just propName) [ v ]
     step _ { "type": ProperType t } = pure $ t
 
     ts' = sequence $ mapWithIndex step ts
-  Instantiation.String -> properType TypeString
-  (Instantiation.Tuple _) -> throwError "Tuple handling is on the way but still not present..."
-  (Instantiation.NumberLiteral n) ->
+  ReadDTS.Instantiation.String -> properType TypeString
+  (ReadDTS.Instantiation.Tuple _) -> throwError "Tuple handling is on the way but still not present..."
+  (ReadDTS.Instantiation.NumberLiteral n) ->
     let
       constructor = fromMaybe ("_" <> show n) $ Map.lookup n numberLiteralConstructor
     in
       unionMember $ UnionNumber constructor n
-  (Instantiation.StringLiteral s) ->
+  (ReadDTS.Instantiation.StringLiteral s) ->
     unionMember
       $ if (String.contains (Pattern "-") s) then
           UnionStringName (pascalCase s) s
         else
           UnionString s
-  Instantiation.Undefined -> unionMember $ UnionUndefined
-  (Instantiation.Union ms) -> pure $ PossibleUnion ms
-  (Instantiation.Unknown err) ->
+  ReadDTS.Instantiation.Undefined -> unionMember $ UnionUndefined
+  (ReadDTS.Instantiation.Union ms) -> pure $ PossibleUnion ms
+  (ReadDTS.Instantiation.Unknown err) ->
     throwError
       $ "ReadDTS was not able to instantiate given value: "
       <> err
@@ -355,12 +354,12 @@ unionDeclarations typeName@(TypeName name) members =
   where
   downfirst :: String -> String
   downfirst =
-    SCU.uncons
+    Data.String.CodeUnits.uncons
       >>> foldMap \{ head, tail } ->
-          SCU.singleton (Unicode.toLower head) <> tail
+          Data.String.CodeUnits.singleton (Unicode.toLower head) <> tail
 
   toUnicodeLower :: String -> String
-  toUnicodeLower = SCU.toCharArray >>> map Unicode.toLower >>> SCU.fromCharArray
+  toUnicodeLower = Data.String.CodeUnits.toCharArray >>> map Unicode.toLower >>> Data.String.CodeUnits.fromCharArray
 
   type_ = roll $ TypeConstructor { name: typeName, moduleName: Nothing }
 

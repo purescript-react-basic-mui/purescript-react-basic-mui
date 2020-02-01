@@ -3,7 +3,7 @@ module Codegen.TS.Types where
 import Control.Monad.Except (ExceptT)
 import Data.Map (Map)
 import Effect (Effect)
-import ReadDTS.Instantiation (Property, Type) as Instantiation
+import ReadDTS.Instantiation (Property, Type) as ReadDTS.Instantiation
 
 type Errors
   = Array String
@@ -14,7 +14,7 @@ data InstantiationStrategy
 
 type InstanceProps
   = { fqn :: String -- Fully qualified name
-    , props :: Map String (Instantiation.Property Instantiation.Type)
+    , props :: Map String (ReadDTS.Instantiation.Property ReadDTS.Instantiation.Type)
     }
 
 type M a

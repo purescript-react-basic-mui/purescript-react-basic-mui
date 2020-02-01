@@ -35,7 +35,7 @@ import Data.String.Extra (camelCase)
 import Data.Traversable (for)
 import Data.Tuple (Tuple(..))
 import Matryoshka (cata, cataM)
-import ReadDTS.Instantiation (Property, Type, TypeF(..)) as Instantiation
+import ReadDTS.Instantiation (Property, Type, TypeF(..)) as ReadDTS.Instantiation
 import ReadDTS.Instantiation.Pretty (pprintTypeName)
 
 type TsImportPath
@@ -69,7 +69,7 @@ componentProps component@{ modulePath } = do
         $ line
             [ "Unable to find generated props instance type:", show instanceTypeName ]
     Just ds, Just { extractProps } -> except $ extractProps ds.defaultInstance
-    Just { defaultInstance: Mu.In (Instantiation.Object n props), typeConstructor }, _ -> do
+    Just { defaultInstance: Mu.In (ReadDTS.Instantiation.Object n props), typeConstructor }, _ -> do
       pure { fqn: n, props }
     Just { defaultInstance }, _ ->
       throwError $ Array.singleton
@@ -125,8 +125,8 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
 
     -- | Create an new "Object" type from them
     -- | for AST generation.
-    obj :: Instantiation.Type
-    obj = roll $ Instantiation.Object fqn props'
+    obj :: ReadDTS.Instantiation.Type
+    obj = roll $ ReadDTS.Instantiation.Object fqn props'
 
     objInstance = flip runState mempty <<< runExceptT <<< cataM TS.Module.astAlgebra $ obj
   case objInstance of
@@ -359,9 +359,9 @@ componentConstructorsAST { componentName, extraVars, hasStyles, inherits, propsC
 -- | does not translate directly to any expected PS
 -- | construct because it contains `any` types.
 -- |
-classesPropAST :: ComponentName -> Maybe (Instantiation.Property Instantiation.Type) -> M { declarations :: List Declaration, prop :: AST.Type }
+classesPropAST :: ComponentName -> Maybe (ReadDTS.Instantiation.Property ReadDTS.Instantiation.Type) -> M { declarations :: List Declaration, prop :: AST.Type }
 classesPropAST componentName = case _ of
-  Just { "type": Mu.In (Instantiation.Object _ classesProps) } -> do
+  Just { "type": Mu.In (ReadDTS.Instantiation.Object _ classesProps) } -> do
     let
       componentName' = camelCase componentName
 

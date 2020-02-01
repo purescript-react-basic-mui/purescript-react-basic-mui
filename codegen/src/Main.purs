@@ -2631,20 +2631,6 @@ commaSeparatedComponentList { helpText, long: l, short: s } =
         <> value []
     )
 
-showPropsOptions :: Parser Options
-showPropsOptions =
-  map ShowPropsCommand $ { component: _, skip: _ }
-    <$> componentOption
-    <*> commaSeparatedComponentList { helpText, long: "skip-props", short: 's' }
-  where
-  helpText =
-    intercalate "."
-      [ "A comma-separated list of component names "
-      , "which props should be dropped from props list."
-      , "This can be useful if you want to list only component own "
-      , "properties or destil some inheritance etc."
-      ]
-
 data GenOutput
   = Directory FilePath
   | Stdout
@@ -2665,6 +2651,12 @@ genOutput = directory <|> stdout
       <> short 's'
       <> help "Print component to stdout"
 
+data GenTarget
+  = GenAllComponents
+  | GenComponents (Array Component)
+  -- | GenIcons
+  | GenIcon Icon
+
 genTarget :: Parser GenTarget
 genTarget = genComponents <|> genAllComponents <|> genIcon
   where
@@ -2680,27 +2672,35 @@ genTarget = genComponents <|> genAllComponents <|> genIcon
 
   genIcon = map GenIcon iconOption
 
-genOptions :: Parser Options
-genOptions =
-  map Generate $ { target: _, output: _ }
-    <$> genTarget
-    <*> ((Just <$> genOutput) <|> pure Nothing)
-
-data GenTarget
-  = GenAllComponents
-  | GenComponents (Array Component)
-  -- | GenIcons
-  | GenIcon Icon
-
 data Options
   = ShowPropsCommand
     { component :: Component
     , skip :: Array Component
     }
-  | Generate
+  | GenerateCommand
     { target :: GenTarget
     , output :: Maybe GenOutput
     }
+
+genOptions :: Parser Options
+genOptions =
+  map GenerateCommand $ { target: _, output: _ }
+    <$> genTarget
+    <*> ((Just <$> genOutput) <|> pure Nothing)
+
+showPropsOptions :: Parser Options
+showPropsOptions =
+  map ShowPropsCommand $ { component: _, skip: _ }
+    <$> componentOption
+    <*> commaSeparatedComponentList { helpText, long: "skip-props", short: 's' }
+  where
+  helpText =
+    intercalate "."
+      [ "A comma-separated list of component names "
+      , "which props should be dropped from props list."
+      , "This can be useful if you want to list only component own "
+      , "properties or destil some inheritance etc."
+      ]
 
 options :: Parser Options
 options =
@@ -2714,7 +2714,7 @@ main = do
   let
     -- | Should I bring back multimodule handling logic?
     -- | For sure we want to keep track of the naming collisions
-    -- | during codegen so maye we can just require that
+    -- | during codegen so may we can just require that
     -- | we would have an unique naming strategy.
     writeComponentModules dir component code =
       launchAff_
@@ -2788,10 +2788,10 @@ main = do
                     $ Map.filterWithKey (\k v -> k `Set.member` keys) cProps
               log $ intercalate "\n" props
             Left err -> log $ intercalate "\n" err
-    Generate { target: GenComponents components', output } ->
+    GenerateCommand { target: GenComponents components', output } ->
       for_ components' \component ->
         codegenComponent component output
-    Generate { target: GenAllComponents, output } ->
+    GenerateCommand { target: GenAllComponents, output } ->
       for_ components \component ->
         codegenComponent component output
-    Generate { target: GenIcon i, output } -> iconCodegen i output
+    GenerateCommand { target: GenIcon i, output } -> iconCodegen i output

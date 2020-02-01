@@ -13,7 +13,7 @@ import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, unwrap)
 import Data.Set (member) as Set
 import Data.String (joinWith)
-import Data.String.CodeUnits (uncons) as SCU
+import Data.String.CodeUnits (uncons) as Data.String.CodeUnits
 import Data.String.Regex (Regex, regex)
 import Data.String.Regex (test) as Regex
 import Data.String.Regex.Flags (noFlags) as Regex.Flags
@@ -177,7 +177,7 @@ data PrintingContext
   | InArr
 
 printRowLabel :: String -> String
-printRowLabel l = case SCU.uncons l of
+printRowLabel l = case Data.String.CodeUnits.uncons l of
   Just { head } ->
     if isUpper head || l `Set.member` reservedNames || not (Regex.test alphanumRegex l) then
       show l
