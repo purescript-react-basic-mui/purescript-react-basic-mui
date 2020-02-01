@@ -311,6 +311,27 @@ components =
         , tsc: { strictNullChecks: false }
         }
 
+    -- | TODO: make value a type variable
+    bottomNavigationAction =
+      simpleComponent
+        { inherits:
+          Just
+            $ Type.app
+                (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
+                [ divProps ]
+        , name: "BottomNavigationAction"
+        , propsType:
+          { base: emptyBase
+          , generate:
+            [ "classes"
+            , "icon"
+            , "label"
+            , "showLabel"
+            , "selected"
+            ]
+          }
+        }
+
     card =
       simpleComponent
         { inherits:
@@ -739,12 +760,11 @@ components =
         , propsType:
           { base: basePropsRow [] $ Map.fromFoldable [ Tuple "ref" foreignType ]
           , generate:
-            [-- not sure what to do here, "theme"
-            ]
+            [ {-- not sure what to do here, "theme" --}]
           }
         }
 
-    -- | TODO inputComponent, make value a type variable
+    -- | TODO: inputComponent, make value a type variable
     filledInput =
       simpleComponent
         { inherits: Just $ Type.app (Type.constructor "MUI.Core.InputBasePropsOption") [ divProps ]
@@ -809,7 +829,7 @@ components =
           }
         }
 
-    -- | TODO make value a type variable
+    -- | TODO: make value a type variable
     formControlLabel =
       simpleComponent
         { inherits: Just $ Type.constructor "React.Basic.DOM.Props_label"
@@ -983,7 +1003,7 @@ components =
           }
         }
 
-    -- | TODO update when Transition is figured out
+    -- | TODO: update when Transition is figured out
     grow =
       simpleComponent
         { inherits: Nothing
@@ -1243,7 +1263,7 @@ components =
           }
         }
 
-    -- | TODO add ContainerComponent and ContainerProps
+    -- | TODO: add ContainerComponent and ContainerProps
     listItem =
       simpleComponent
         { inherits: Just $ Type.constructor "React.Basic.DOM.Props_li"
@@ -1470,7 +1490,7 @@ components =
             }
           }
 
-    -- | TODO value
+    -- | TODO: value
     nativeSelect =
       simpleComponent
         { inherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ divProps ]
@@ -1493,7 +1513,7 @@ components =
           }
         }
 
-    -- | TODO value
+    -- | TODO: value
     noSsr =
       simpleComponent
         { inherits: Nothing
@@ -1705,7 +1725,7 @@ components =
           }
         }
 
-    -- | TODO value
+    -- | TODO: value
     select =
       simpleComponent
         { inherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ divProps ]
@@ -1754,7 +1774,7 @@ components =
           }
         }
 
-    -- | TODO ThumbComponent ValueLabelComponent
+    -- | TODO: ThumbComponent ValueLabelComponent
     slider =
       simpleComponent
         { inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
@@ -1957,7 +1977,7 @@ components =
           }
         }
 
-    -- | TODO StepIconComponent
+    -- | TODO: StepIconComponent
     stepLabel =
       simpleComponent
         { inherits: Just divProps
@@ -2192,7 +2212,7 @@ components =
           }
         }
 
-    -- | TODO add TablePaginationActions
+    -- | TODO: add TablePaginationActions
     tablePagination :: Component
     tablePagination =
       { extraDeclarations: []
@@ -2254,7 +2274,7 @@ components =
           }
         }
 
-    -- | TODO IconComponent
+    -- | TODO: IconComponent
     tableSortLabel =
       simpleComponent
         { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
@@ -2441,7 +2461,7 @@ components =
       , tsc: { strictNullChecks: false }
       }
 
-    -- | TODO needs to extend HTMLElement
+    -- | TODO: needs to extend HTMLElement
     typography =
       simpleComponent
         { inherits: Nothing
@@ -2467,7 +2487,7 @@ components =
           }
         }
 
-    -- | TODO needs to extend Transition
+    -- | TODO: needs to extend Transition
     zoom =
       simpleComponent
         { inherits: Nothing
@@ -2483,6 +2503,7 @@ components =
     , backdrop
     , badge
     , bottomNavigation
+    , bottomNavigationAction
     , box
     , breadcrumbs
     , buttonBase
