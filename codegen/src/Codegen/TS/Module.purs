@@ -93,10 +93,10 @@ type Declarations
 -- | Try to grab all exported types from a given module
 -- | and try to instantiate them without arguments producing
 -- | so called "default instances".
-declarations ::
+buildAndInstantiateDeclarations ::
   { path :: String, source :: Maybe String } ->
   M Declarations
-declarations file = do
+buildAndInstantiateDeclarations file = do
   typeConstructors <- ExceptT $ ReadDTS.AST.build { strictNullChecks: false } file
   let
     known = case _ of

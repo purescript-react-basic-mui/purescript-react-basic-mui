@@ -10,7 +10,7 @@ import Codegen.AST.Sugar.Type (arr) as T
 import Codegen.AST.Sugar.Type (constrained, forAll, forAll', forAllWith, recordApply)
 import Codegen.Model (Component, ComponentName, ModulePath, componentFullPath, jsImportPath, psImportPath, reactComponentApply)
 import Codegen.Model (componentName, jsx) as Model
-import Codegen.TS.Module (PossibleType(..), astAlgebra, declarations, exprUnsafeCoerce, unionDeclarations) as TS.Module
+import Codegen.TS.Module (PossibleType(..), astAlgebra, buildAndInstantiateDeclarations, exprUnsafeCoerce, unionDeclarations) as TS.Module
 import Codegen.TS.Module (exprUnsafeCoerce)
 import Codegen.TS.Types (InstanceProps, InstantiationStrategy(..), M)
 import Control.Monad.Error.Class (throwError)
@@ -59,7 +59,7 @@ componentProps ::
   M InstanceProps
 componentProps component@{ modulePath } = do
   tsDeclarations <-
-    TS.Module.declarations
+    TS.Module.buildAndInstantiateDeclarations
       { path: instanceModulePath
       , source: Just source
       }
