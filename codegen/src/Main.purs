@@ -237,6 +237,28 @@ components =
           }
         }
 
+    buttonGroup =
+      simpleComponent
+        { inherits:
+          Just divProps
+        , name: "ButtonGroup"
+        , propsType:
+          { base:
+            basePropsRow [] $ Map.fromFoldable [ children ]
+          , generate:
+            [ "classes"
+            , "color"
+            , "disabled"
+            , "disableFocusRipple"
+            , "disableRipple"
+            , "fullWidth"
+            , "orientation"
+            , "size"
+            , "variant"
+            ]
+          }
+        }
+
     buttonBase =
       let
         base =
@@ -2464,6 +2486,7 @@ components =
     , box
     , breadcrumbs
     , buttonBase
+    , buttonGroup
     , button
     , card
     , cardActionArea
