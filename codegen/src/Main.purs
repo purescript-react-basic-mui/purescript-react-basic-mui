@@ -2597,7 +2597,7 @@ components =
     , tableCell
     , tableFooter
     , tableHead
-    -- , tablePagination
+    , tablePagination
     , tableRow
     , tableSortLabel
     , tabs
