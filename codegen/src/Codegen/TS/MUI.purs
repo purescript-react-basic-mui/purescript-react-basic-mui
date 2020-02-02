@@ -1,6 +1,7 @@
 module Codegen.TS.MUI where
 
 import Prelude
+
 import Codegen.AST (Declaration, Ident(..), ModuleName(..), TypeF(..), TypeName(..))
 import Codegen.AST (Module(..), RowF(..), Type, TypeName(..), Union(..), Expr) as AST
 import Codegen.AST.Sugar (declForeignData, declForeignValue, declType, declValue)
@@ -25,11 +26,11 @@ import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Functor.Mu (roll)
 import Data.List (List(..), fromFoldable, singleton) as List
 import Data.List (List)
-import Data.Map (filterKeys, fromFoldable, keys, lookup, singleton, Map) as Map
+import Data.Map (Map, filterKeys, filterWithKey, fromFoldable, keys, lookup, singleton) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), fromMaybe, isJust, maybe)
 import Data.Newtype (unwrap)
-import Data.Set (member) as Set
+import Data.Set (member, fromFoldable, Set) as Set
 import Data.String (joinWith)
 import Data.String.Extra (camelCase)
 import Data.Traversable (for)
@@ -84,6 +85,7 @@ componentProps component@{ modulePath } = do
             , source
             ]
   where
+  componentName :: String
   componentName = Model.componentName component
 
   propsName = propsTypeName componentName
@@ -134,6 +136,12 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
 
     objInstance :: Tuple (Either String TS.Module.PossibleType) (List AST.Union)
     objInstance = flip runState mempty <<< runExceptT <<< cataM TS.Module.astAlgebra $ obj
+
+    componentName :: String
+    componentName = Model.componentName component
+
+    propsName :: String
+    propsName = propsTypeName componentName
   case objInstance of
     Tuple (Right (TS.Module.ProperType (Mu.In (TypeRecord (AST.Row { labels, tail: Nothing }))))) unions -> do
       classes <-
@@ -144,14 +152,46 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
       let
         AST.Row base' = base
 
+        classesProp :: Map.Map String AST.Type
         classesProp = maybe mempty (Map.singleton "classes" <<< _.prop) classes
 
-        c' = Type.typeRow $ Type.row (classesProp <> labels <> base'.labels) base'.tail
+        --------------
 
-        propsOptionsTypeDecl = declType (AST.TypeName $ propsName <> "Options") vars c'
+        optionalLabelNames :: Set.Set String
+        optionalLabelNames = Set.fromFoldable <<< Map.keys <<< Map.filterWithKey (\k v -> v.optional) $ props'
 
+        optionalLabels :: Map.Map String AST.Type
+        optionalLabels = Map.filterKeys (flip Set.member optionalLabelNames) labels
+
+        optionalPropsBody :: AST.Type
+        optionalPropsBody = Type.typeRow $ Type.row (classesProp <> optionalLabels <> base'.labels) base'.tail
+
+        propsOptionalOptionsTypeDecl :: { constructor :: AST.Type , declaration :: Declaration }
+        propsOptionalOptionsTypeDecl = declType (AST.TypeName $ propsName <> "Options") vars optionalPropsBody
+
+        --------------
+
+        requiredIdent :: Ident
+        requiredIdent = Ident "required"
+
+        requiredLabelNames :: Set.Set String
+        requiredLabelNames = Set.fromFoldable <<< Map.keys <<< Map.filterWithKey (\k v -> not v.optional) $ props'
+
+        requiredLabels :: Map.Map String AST.Type
+        requiredLabels = Map.filterKeys (flip Set.member requiredLabelNames) labels
+
+        requiredPropsBody :: AST.Type
+        requiredPropsBody = Type.typeRow $ Type.row requiredLabels (Just <<< Left $ requiredIdent)
+
+        propsRequiredOptionsTypeDecl :: { constructor :: AST.Type , declaration :: Declaration }
+        propsRequiredOptionsTypeDecl = declType (AST.TypeName $ propsName <> "RequiredOptions") [requiredIdent] requiredPropsBody
+
+        --------------
+
+        propsTypeDecl :: { constructor :: AST.Type , declaration :: Declaration }
         propsTypeDecl = declForeignData (AST.TypeName $ propsName)
 
+        extraVars :: Array Ident
         extraVars = case Array.tail propsType.base.vars of
           Just arr -> arr
           Nothing -> []
@@ -164,18 +204,24 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
         --   => Record options
         --   -> ModalPropsPartial
         -- modalPropsPartial = unsafeCoerce
+        propsPartial :: { constructor :: AST.Type, declaration :: Declaration }
         propsPartial = declForeignData (AST.TypeName $ propsName <> "Partial")
 
+        propsPartialConstructor :: { var :: AST.Expr , declaration :: Declaration }
         propsPartialConstructor =
           let
+            signature :: AST.Type
             signature =
               forAllWith extraVars { o: "options", o_: "options_" }
                 $ \{ o, o_ } ->
                     let
+                      inherits' :: AST.Type
                       inherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") inherits
 
-                      u = Type.app propsOptionsTypeDecl.constructor ([ inherits' ] <> (map Type.var extraVars))
+                      u :: AST.Type
+                      u = Type.app propsOptionalOptionsTypeDecl.constructor ([ inherits' ] <> (map Type.var extraVars))
 
+                      fun :: AST.Type
                       fun = Type.arr (recordApply o) propsPartial.constructor
                     in
                       constrained "Prim.Row.Union" [ o, o_, u ] fun
@@ -186,13 +232,15 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
               TS.Module.exprUnsafeCoerce
               (Just signature)
 
+        propsDeclarations :: List Declaration
         propsDeclarations =
-          List.Cons (propsOptionsTypeDecl.declaration)
+          List.Cons (propsOptionalOptionsTypeDecl.declaration)
+            $ List.Cons (propsRequiredOptionsTypeDecl.declaration)
             $ List.Cons (propsTypeDecl.declaration)
             $ List.Cons (propsPartial.declaration)
             $ List.Cons (propsPartialConstructor.declaration)
             $ List.Nil
-      unions' <-
+      (unions' :: List { constructors :: Declaration , instances :: List Declaration , "type" :: Declaration }) <-
         for unions
           $ case _ of
               AST.Union { moduleName: Just _, name } _ ->
@@ -200,12 +248,14 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
                   $ [ "External union generation not implmented yet..." ]
               AST.Union { moduleName: Nothing, name } members -> pure $ TS.Module.unionDeclarations name members
       let
+        step :: { constructors :: Declaration , instances :: List Declaration , "type" :: Declaration } -> List Declaration -> List Declaration
         step { "type": union, constructors, instances } res = List.Cons union (List.Cons constructors res) <> instances
 
         -- | Our final component module consists of:
         -- | * unions declrations
         -- | * classes realted declarations
         -- | * component constructor + foreign component import
+        declarations :: List Declaration
         declarations =
           foldr step List.Nil unions'
             <> List.fromFoldable extraDeclarations
@@ -216,7 +266,8 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
                 , extraVars
                 , hasStyles: isJust classes
                 , inherits
-                , propsConstructor: propsOptionsTypeDecl.constructor
+                , requiredPropsConstructor: propsRequiredOptionsTypeDecl.constructor
+                , optionalPropsConstructor: propsOptionalOptionsTypeDecl.constructor
                 }
       pure $ AST.Module
         $ { declarations
@@ -226,10 +277,6 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
       throwError $ Array.singleton $ line
         $ [ "Expecting object type as a result of props instantiation: ", show result ]
     (Tuple (Left err) _) -> throwError [ err ]
-  where
-  componentName = Model.componentName component
-
-  propsName = propsTypeName componentName
 
 -- | TODO: This is codegen doesn't use typescript AST at all
 -- | so we should move it up.
@@ -238,12 +285,14 @@ componentConstructorsAST ::
   , extraVars :: Array Ident
   , hasStyles :: Boolean
   , inherits :: Maybe AST.Type
-  , propsConstructor :: AST.Type
+  , requiredPropsConstructor :: AST.Type
+  , optionalPropsConstructor :: AST.Type
   } ->
   List Declaration
-componentConstructorsAST { componentName, extraVars, hasStyles, inherits, propsConstructor } = constructors
+componentConstructorsAST { componentName, extraVars, requiredPropsConstructor, hasStyles, inherits, optionalPropsConstructor } = constructors
   where
   -- | Maybe this `Writer` here is a bit overkill ;-)
+  constructors :: List Declaration
   constructors =
     execWriter do
       let
@@ -251,6 +300,8 @@ componentConstructorsAST { componentName, extraVars, hasStyles, inherits, propsC
 
         inherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") inherits
 
+        -- | For example:
+        -- | foreign import _AppBar :: ∀ a. React.Basic.ReactComponent a
         componentValue = foreignReactComponentDecl componentName
 
         -- | For example:
@@ -269,9 +320,11 @@ componentConstructorsAST { componentName, extraVars, hasStyles, inherits, propsC
 
                       extraVars' = map Type.var extraVars
 
-                      u = Type.app propsConstructor (Array.cons inherits' extraVars')
+                      u = Type.app optionalPropsConstructor (Array.cons inherits' extraVars')
+
+                      r' = Type.app requiredPropsConstructor ([r])
                     in
-                      constrained "Prim.Row.Union" [ g, r, u ] fun
+                      constrained "Prim.Row.Union" [ g, r', u ] fun
           in
             declValue
               (Ident componentName')
@@ -280,11 +333,11 @@ componentConstructorsAST { componentName, extraVars, hasStyles, inherits, propsC
               (Just signature)
 
         -- | For example:
-        -- | appBar :: ∀  componentProps given required
+        -- | appBar_component :: ∀  componentProps given required
         -- |   .  Union given required (AppBarPropsOptions componentProps)
         -- |   => Record given
         -- |   -> JSX
-        -- | appBar = element _AppBar
+        -- | appBar_component = element _AppBar
         componentConstructor' =
           let
             signature =
@@ -295,9 +348,11 @@ componentConstructorsAST { componentName, extraVars, hasStyles, inherits, propsC
 
                       extraVars' = map Type.var extraVars
 
-                      u = Type.app propsConstructor (Array.cons c extraVars')
+                      u = Type.app optionalPropsConstructor (Array.cons c extraVars')
+
+                      r' = Type.app requiredPropsConstructor ([r])
                     in
-                      constrained "Prim.Row.Union" [ g, r, u ] fun
+                      constrained "Prim.Row.Union" [ g, r', u ] fun
           in
             declValue
               (Ident $ componentName' <> "_component")
@@ -330,7 +385,7 @@ componentConstructorsAST { componentName, extraVars, hasStyles, inherits, propsC
 
                             extraVars' = map Type.var extraVars
 
-                            u = Type.app propsConstructor (Array.cons inherits' extraVars')
+                            u = Type.app optionalPropsConstructor (Array.cons inherits' extraVars')
                           in
                             constrained "Prim.Row.Union" [ g, r, u ]
                               $ constrained "Prim.Row.Union" [ jss, jss_, Type.constructor $ componentName <> "ClassKeyOptionsJSS" ]

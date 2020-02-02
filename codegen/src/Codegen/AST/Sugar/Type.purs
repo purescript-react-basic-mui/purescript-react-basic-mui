@@ -87,7 +87,7 @@ forAllWith ::
   Record names ->
   (Record vars -> Type) ->
   Type
-forAllWith idents names cont =
+forAllWith extraIdents names cont =
   let
     varsRecord = mapRecord Ident names
 
@@ -95,7 +95,7 @@ forAllWith idents names cont =
 
     varsRecord' = mapRecord (roll <<< TypeVar) varsRecord
 
-    idents' = idents <> Array.fromFoldable (toList varsRecord)
+    idents' = extraIdents <> Array.fromFoldable (toList varsRecord)
   in
     roll (TypeForall idents' (cont varsRecord'))
 
@@ -140,7 +140,7 @@ recordApply v =
         [ v ]
 
 row :: Map RowLabel Type -> Maybe (Either Ident (QualifiedName TypeName)) -> Row
-row labels tail = Row $ { labels: labels, tail }
+row labels tail = Row $ { labels, tail }
 
 string :: Type
 string = roll TypeString

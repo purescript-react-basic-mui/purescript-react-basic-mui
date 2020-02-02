@@ -144,20 +144,17 @@ components =
         }
 
     badge =
-      let
-        base =
-          basePropsRow []
-            $ Map.fromFoldable
-                [ Tuple "badgeContent" jsx
-                , children
-                , component
-                ]
-      in
         simpleComponent
           { inherits: Nothing
           , name: "Badge"
           , propsType:
-            { base
+            { base:
+              basePropsRow []
+              $ Map.fromFoldable
+                  [ Tuple "badgeContent" jsx
+                  , children
+                  , component
+                  ]
             , generate:
               [ "anchorOrigin"
               , "classes"
