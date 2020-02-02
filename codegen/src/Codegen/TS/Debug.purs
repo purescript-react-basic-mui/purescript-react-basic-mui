@@ -3,6 +3,7 @@ module Codegen.TS.Debug where
 import Prelude
 import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Map (lookup) as Map
+import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..))
 import Debug.Trace (class DebugWarning, traceM)
 import Matryoshka (cata)
@@ -17,7 +18,7 @@ data TraceMode
 -- | Traces a value of `Instntiation.Object` property
 tracePropType :: forall m. DebugWarning => Monad m => TraceMode -> ReadDTS.Instantiation.Type -> String -> m Unit
 tracePropType traceMode (Mu.In (ReadDTS.Instantiation.Object n props)) prop = case Map.lookup prop props of
-  Nothing -> traceM $ "Missing prop: " <> prop
+  Nothing -> traceM $ "Missing prop: " <> prop <> "\nAvailable props: " <> show (Map.Internal.keys props)
   Just p ->
     traceM
       $ case traceMode of
