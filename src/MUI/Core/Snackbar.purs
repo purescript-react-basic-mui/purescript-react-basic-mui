@@ -35,7 +35,9 @@ instance eqHorizontal :: Eq Horizontal where
 instance eqVertical :: Eq Vertical where
   eq = Unsafe.Reference.unsafeRefEq
 
-type SnackbarPropsOptions componentProps = ( "ClickAwayListenerProps" :: MUI.Core.ClickAwayListener.ClickAwayListenerProps, "ContentProps" :: MUI.Core.SnackbarContent.SnackbarContentProps, action :: React.Basic.JSX, anchorOrigin :: { horizontal :: Horizontal, vertical :: Vertical }, autoHideDuration :: Number, children :: Array React.Basic.JSX, classes :: SnackbarClassKey, disableWindowBlurListener :: Boolean, message :: React.Basic.JSX, onClose :: React.Basic.Events.EventHandler, onEnter :: React.Basic.Events.EventHandler, onEntered :: React.Basic.Events.EventHandler, onEntering :: React.Basic.Events.EventHandler, onExit :: React.Basic.Events.EventHandler, onExited :: React.Basic.Events.EventHandler, onExiting :: React.Basic.Events.EventHandler, open :: Boolean, resumeHideDuration :: Number, transitionDuration :: TransitionDuration | componentProps )
+type SnackbarPropsOptions componentProps = ( "ClickAwayListenerProps" :: MUI.Core.ClickAwayListener.ClickAwayListenerProps, "ContentProps" :: MUI.Core.SnackbarContent.SnackbarContentProps, action :: React.Basic.JSX, anchorOrigin :: { horizontal :: Horizontal, vertical :: Vertical }, autoHideDuration :: Number, children :: Array React.Basic.JSX, classes :: SnackbarClassKey, disableWindowBlurListener :: Boolean, message :: React.Basic.JSX, onClose :: React.Basic.Events.EventHandler, onEnter :: React.Basic.Events.EventHandler, onEntered :: React.Basic.Events.EventHandler, onEntering :: React.Basic.Events.EventHandler, onExit :: React.Basic.Events.EventHandler, onExited :: React.Basic.Events.EventHandler, onExiting :: React.Basic.Events.EventHandler, resumeHideDuration :: Number, transitionDuration :: TransitionDuration | componentProps )
+
+type SnackbarPropsRequiredOptions required = ( open :: Boolean | required )
 
 foreign import data SnackbarProps :: Type
 
@@ -62,10 +64,10 @@ snackbarClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
 foreign import _Snackbar :: ∀ a. React.Basic.ReactComponent a
 
-snackbar :: ∀ required given. Prim.Row.Union given required (SnackbarPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+snackbar :: ∀ required given. Prim.Row.Union given (SnackbarPropsRequiredOptions required) (SnackbarPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
 snackbar = React.Basic.element _Snackbar
 
-snackbar_component :: ∀ required given componentProps. Prim.Row.Union given required (SnackbarPropsOptions componentProps) => Record given -> React.Basic.JSX
+snackbar_component :: ∀ required given componentProps. Prim.Row.Union given (SnackbarPropsRequiredOptions required) (SnackbarPropsOptions componentProps) => Record given -> React.Basic.JSX
 snackbar_component = React.Basic.element _Snackbar
 
 snackbarWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (SnackbarPropsOptions React.Basic.DOM.Props_div) => Prim.Row.Union jss jss_ SnackbarClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX

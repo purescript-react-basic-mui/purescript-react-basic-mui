@@ -27,7 +27,9 @@ transitionDuration = { auto: Unsafe.Coerce.unsafeCoerce "auto", number: Unsafe.C
 instance eqVariant :: Eq Variant where
   eq = Unsafe.Reference.unsafeRefEq
 
-type MenuPropsOptions componentProps = ( anchorEl :: Data.Nullable.Nullable Web.DOM.Element, autoFocus :: Boolean, children :: Array React.Basic.JSX, classes :: MenuClassKey, disableAutoFocusItem :: Boolean, onClose :: React.Basic.Events.EventHandler, onEnter :: React.Basic.Events.EventHandler, onEntered :: React.Basic.Events.EventHandler, onEntering :: React.Basic.Events.EventHandler, onExit :: React.Basic.Events.EventHandler, onExited :: React.Basic.Events.EventHandler, onExiting :: React.Basic.Events.EventHandler, open :: Boolean, transitionDuration :: TransitionDuration, variant :: Variant | componentProps )
+type MenuPropsOptions componentProps = ( anchorEl :: Data.Nullable.Nullable Web.DOM.Element, autoFocus :: Boolean, children :: Array React.Basic.JSX, classes :: MenuClassKey, disableAutoFocusItem :: Boolean, onClose :: React.Basic.Events.EventHandler, onEnter :: React.Basic.Events.EventHandler, onEntered :: React.Basic.Events.EventHandler, onEntering :: React.Basic.Events.EventHandler, onExit :: React.Basic.Events.EventHandler, onExited :: React.Basic.Events.EventHandler, onExiting :: React.Basic.Events.EventHandler, transitionDuration :: TransitionDuration, variant :: Variant | componentProps )
+
+type MenuPropsRequiredOptions required = ( open :: Boolean | required )
 
 foreign import data MenuProps :: Type
 
@@ -54,10 +56,10 @@ menuClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
 foreign import _Menu :: ∀ a. React.Basic.ReactComponent a
 
-menu :: ∀ required given. Prim.Row.Union given required (MenuPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+menu :: ∀ required given. Prim.Row.Union given (MenuPropsRequiredOptions required) (MenuPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
 menu = React.Basic.element _Menu
 
-menu_component :: ∀ required given componentProps. Prim.Row.Union given required (MenuPropsOptions componentProps) => Record given -> React.Basic.JSX
+menu_component :: ∀ required given componentProps. Prim.Row.Union given (MenuPropsRequiredOptions required) (MenuPropsOptions componentProps) => Record given -> React.Basic.JSX
 menu_component = React.Basic.element _Menu
 
 menuWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (MenuPropsOptions React.Basic.DOM.Props_div) => Prim.Row.Union jss jss_ MenuClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX

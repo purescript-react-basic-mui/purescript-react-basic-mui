@@ -1,7 +1,6 @@
 module Codegen.TS.MUI where
 
 import Prelude
-
 import Codegen.AST (Declaration, Ident(..), ModuleName(..), TypeF(..), TypeName(..))
 import Codegen.AST (Module(..), RowF(..), Type, TypeName(..), Union(..), Expr) as AST
 import Codegen.AST.Sugar (declForeignData, declForeignValue, declType, declValue)
@@ -26,7 +25,7 @@ import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Functor.Mu (roll)
 import Data.List (List(..), fromFoldable, singleton) as List
 import Data.List (List)
-import Data.Map (Map, filterKeys, filterWithKey, fromFoldable, keys, lookup, singleton) as Map
+import Data.Map (Map, filterKeys, filterWithKey, fromFoldable, keys, lookup, singleton, isEmpty) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), fromMaybe, isJust, maybe)
 import Data.Newtype (unwrap)
@@ -156,21 +155,21 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
         classesProp = maybe mempty (Map.singleton "classes" <<< _.prop) classes
 
         --------------
-
         optionalLabelNames :: Set.Set String
         optionalLabelNames = Set.fromFoldable <<< Map.keys <<< Map.filterWithKey (\k v -> v.optional) $ props'
 
         optionalLabels :: Map.Map String AST.Type
         optionalLabels = Map.filterKeys (flip Set.member optionalLabelNames) labels
 
-        optionalPropsBody :: AST.Type
-        optionalPropsBody = Type.typeRow $ Type.row (classesProp <> optionalLabels <> base'.labels) base'.tail
-
-        propsOptionalOptionsTypeDecl :: { constructor :: AST.Type , declaration :: Declaration }
-        propsOptionalOptionsTypeDecl = declType (AST.TypeName $ propsName <> "Options") vars optionalPropsBody
+        propsOptionalOptionsTypeDecl :: { constructor :: AST.Type, declaration :: Declaration }
+        propsOptionalOptionsTypeDecl =
+          let
+            optionalPropsBody :: AST.Type
+            optionalPropsBody = Type.typeRow $ Type.row (classesProp <> optionalLabels <> base'.labels) base'.tail
+          in
+            declType (AST.TypeName $ propsName <> "Options") vars optionalPropsBody
 
         --------------
-
         requiredIdent :: Ident
         requiredIdent = Ident "required"
 
@@ -180,15 +179,19 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
         requiredLabels :: Map.Map String AST.Type
         requiredLabels = Map.filterKeys (flip Set.member requiredLabelNames) labels
 
-        requiredPropsBody :: AST.Type
-        requiredPropsBody = Type.typeRow $ Type.row requiredLabels (Just <<< Left $ requiredIdent)
-
-        propsRequiredOptionsTypeDecl :: { constructor :: AST.Type , declaration :: Declaration }
-        propsRequiredOptionsTypeDecl = declType (AST.TypeName $ propsName <> "RequiredOptions") [requiredIdent] requiredPropsBody
+        propsRequiredOptionsTypeDecl :: Maybe ({ constructor :: AST.Type, declaration :: Declaration })
+        propsRequiredOptionsTypeDecl =
+          if Map.isEmpty requiredLabels then
+            Nothing
+          else
+            let
+              requiredPropsBody :: AST.Type
+              requiredPropsBody = Type.typeRow $ Type.row requiredLabels (Just <<< Left $ requiredIdent)
+            in
+              Just $ declType (AST.TypeName $ propsName <> "RequiredOptions") [ requiredIdent ] requiredPropsBody
 
         --------------
-
-        propsTypeDecl :: { constructor :: AST.Type , declaration :: Declaration }
+        propsTypeDecl :: { constructor :: AST.Type, declaration :: Declaration }
         propsTypeDecl = declForeignData (AST.TypeName $ propsName)
 
         extraVars :: Array Ident
@@ -207,7 +210,7 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
         propsPartial :: { constructor :: AST.Type, declaration :: Declaration }
         propsPartial = declForeignData (AST.TypeName $ propsName <> "Partial")
 
-        propsPartialConstructor :: { var :: AST.Expr , declaration :: Declaration }
+        propsPartialConstructor :: { var :: AST.Expr, declaration :: Declaration }
         propsPartialConstructor =
           let
             signature :: AST.Type
@@ -234,13 +237,15 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
 
         propsDeclarations :: List Declaration
         propsDeclarations =
-          List.Cons (propsOptionalOptionsTypeDecl.declaration)
-            $ List.Cons (propsRequiredOptionsTypeDecl.declaration)
-            $ List.Cons (propsTypeDecl.declaration)
-            $ List.Cons (propsPartial.declaration)
-            $ List.Cons (propsPartialConstructor.declaration)
-            $ List.Nil
-      (unions' :: List { constructors :: Declaration , instances :: List Declaration , "type" :: Declaration }) <-
+          List.fromFoldable
+            $ join
+                [ pure (propsOptionalOptionsTypeDecl.declaration)
+                , maybe [] (_.declaration >>> pure) propsRequiredOptionsTypeDecl
+                , pure (propsTypeDecl.declaration)
+                , pure (propsPartial.declaration)
+                , pure (propsPartialConstructor.declaration)
+                ]
+      (unions' :: List { constructors :: Declaration, instances :: List Declaration, "type" :: Declaration }) <-
         for unions
           $ case _ of
               AST.Union { moduleName: Just _, name } _ ->
@@ -248,7 +253,7 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
                   $ [ "External union generation not implmented yet..." ]
               AST.Union { moduleName: Nothing, name } members -> pure $ TS.Module.unionDeclarations name members
       let
-        step :: { constructors :: Declaration , instances :: List Declaration , "type" :: Declaration } -> List Declaration -> List Declaration
+        step :: { constructors :: Declaration, instances :: List Declaration, "type" :: Declaration } -> List Declaration -> List Declaration
         step { "type": union, constructors, instances } res = List.Cons union (List.Cons constructors res) <> instances
 
         -- | Our final component module consists of:
@@ -266,7 +271,7 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
                 , extraVars
                 , hasStyles: isJust classes
                 , inherits
-                , requiredPropsConstructor: propsRequiredOptionsTypeDecl.constructor
+                , requiredPropsConstructor: map _.constructor propsRequiredOptionsTypeDecl
                 , optionalPropsConstructor: propsOptionalOptionsTypeDecl.constructor
                 }
       pure $ AST.Module
@@ -285,7 +290,7 @@ componentConstructorsAST ::
   , extraVars :: Array Ident
   , hasStyles :: Boolean
   , inherits :: Maybe AST.Type
-  , requiredPropsConstructor :: AST.Type
+  , requiredPropsConstructor :: Maybe AST.Type
   , optionalPropsConstructor :: AST.Type
   } ->
   List Declaration
@@ -322,7 +327,7 @@ componentConstructorsAST { componentName, extraVars, requiredPropsConstructor, h
 
                       u = Type.app optionalPropsConstructor (Array.cons inherits' extraVars')
 
-                      r' = Type.app requiredPropsConstructor ([r])
+                      r' = maybe r (\x -> Type.app x [ r ]) requiredPropsConstructor
                     in
                       constrained "Prim.Row.Union" [ g, r', u ] fun
           in
@@ -350,7 +355,7 @@ componentConstructorsAST { componentName, extraVars, requiredPropsConstructor, h
 
                       u = Type.app optionalPropsConstructor (Array.cons c extraVars')
 
-                      r' = Type.app requiredPropsConstructor ([r])
+                      r' = maybe r (\x -> Type.app x [ r ]) requiredPropsConstructor
                     in
                       constrained "Prim.Row.Union" [ g, r', u ] fun
           in

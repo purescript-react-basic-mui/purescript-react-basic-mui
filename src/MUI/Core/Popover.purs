@@ -28,7 +28,9 @@ foreign import data Horizontal :: Type
 horizontal :: { center :: Horizontal, left :: Horizontal, number :: Number -> Horizontal, right :: Horizontal }
 horizontal = { center: Unsafe.Coerce.unsafeCoerce "center", left: Unsafe.Coerce.unsafeCoerce "left", number: Unsafe.Coerce.unsafeCoerce, right: Unsafe.Coerce.unsafeCoerce "right" }
 
-type PopoverPropsOptions componentProps = ( "PaperProps" :: MUI.Core.Paper.PaperProps, action :: Foreign.Foreign, anchorEl :: Foreign.Foreign, anchorOrigin :: { horizontal :: Horizontal, vertical :: Vertical }, anchorPosition :: { left :: Number, top :: Number }, children :: Array React.Basic.JSX, classes :: PopoverClassKey, elevation :: Number, getContentAnchorEl :: Foreign.Foreign, marginThreshold :: Number, onChange :: React.Basic.Events.EventHandler, onEnter :: React.Basic.Events.EventHandler, onEntering :: React.Basic.Events.EventHandler, onExit :: React.Basic.Events.EventHandler, onExited :: React.Basic.Events.EventHandler, onExiting :: React.Basic.Events.EventHandler, open :: Boolean, transitionDuration :: TransitionDuration | componentProps )
+type PopoverPropsOptions componentProps = ( "PaperProps" :: MUI.Core.Paper.PaperProps, action :: Foreign.Foreign, anchorEl :: Foreign.Foreign, anchorOrigin :: { horizontal :: Horizontal, vertical :: Vertical }, anchorPosition :: { left :: Number, top :: Number }, children :: Array React.Basic.JSX, classes :: PopoverClassKey, elevation :: Number, getContentAnchorEl :: Foreign.Foreign, marginThreshold :: Number, onChange :: React.Basic.Events.EventHandler, onEnter :: React.Basic.Events.EventHandler, onEntering :: React.Basic.Events.EventHandler, onExit :: React.Basic.Events.EventHandler, onExited :: React.Basic.Events.EventHandler, onExiting :: React.Basic.Events.EventHandler, transitionDuration :: TransitionDuration | componentProps )
+
+type PopoverPropsRequiredOptions required = ( open :: Boolean | required )
 
 foreign import data PopoverProps :: Type
 
@@ -55,10 +57,10 @@ popoverClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
 foreign import _Popover :: ∀ a. React.Basic.ReactComponent a
 
-popover :: ∀ required given. Prim.Row.Union given required (PopoverPropsOptions (MUI.Core.Modal.ModalPropsOptions React.Basic.DOM.Props_div)) => Record given -> React.Basic.JSX
+popover :: ∀ required given. Prim.Row.Union given (PopoverPropsRequiredOptions required) (PopoverPropsOptions (MUI.Core.Modal.ModalPropsOptions React.Basic.DOM.Props_div)) => Record given -> React.Basic.JSX
 popover = React.Basic.element _Popover
 
-popover_component :: ∀ required given componentProps. Prim.Row.Union given required (PopoverPropsOptions componentProps) => Record given -> React.Basic.JSX
+popover_component :: ∀ required given componentProps. Prim.Row.Union given (PopoverPropsRequiredOptions required) (PopoverPropsOptions componentProps) => Record given -> React.Basic.JSX
 popover_component = React.Basic.element _Popover
 
 popoverWithStyles :: ∀ required jss_ jss given. Prim.Row.Union given required (PopoverPropsOptions (MUI.Core.Modal.ModalPropsOptions React.Basic.DOM.Props_div)) => Prim.Row.Union jss jss_ PopoverClassKeyOptionsJSS => (MUI.Core.Styles.Types.Theme -> Record jss) -> Record given -> React.Basic.JSX

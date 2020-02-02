@@ -22,7 +22,9 @@ direction = { down: Unsafe.Coerce.unsafeCoerce "down", left: Unsafe.Coerce.unsaf
 instance eqDirection :: Eq Direction where
   eq = Unsafe.Reference.unsafeRefEq
 
-type SlidePropsOptions componentProps = ( direction :: Direction, "in" :: Boolean, onEnter :: React.Basic.Events.EventHandler, onEntered :: React.Basic.Events.EventHandler, onEntering :: React.Basic.Events.EventHandler, onExit :: React.Basic.Events.EventHandler, onExited :: React.Basic.Events.EventHandler, onExiting :: React.Basic.Events.EventHandler, timeout :: Timeout | componentProps )
+type SlidePropsOptions componentProps = ( "in" :: Boolean, onEnter :: React.Basic.Events.EventHandler, onEntered :: React.Basic.Events.EventHandler, onEntering :: React.Basic.Events.EventHandler, onExit :: React.Basic.Events.EventHandler, onExited :: React.Basic.Events.EventHandler, onExiting :: React.Basic.Events.EventHandler, timeout :: Timeout | componentProps )
+
+type SlidePropsRequiredOptions required = ( direction :: Direction | required )
 
 foreign import data SlideProps :: Type
 
@@ -33,8 +35,8 @@ slidePropsPartial = Unsafe.Coerce.unsafeCoerce
 
 foreign import _Slide :: ∀ a. React.Basic.ReactComponent a
 
-slide :: ∀ required given. Prim.Row.Union given required (SlidePropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+slide :: ∀ required given. Prim.Row.Union given (SlidePropsRequiredOptions required) (SlidePropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
 slide = React.Basic.element _Slide
 
-slide_component :: ∀ required given componentProps. Prim.Row.Union given required (SlidePropsOptions componentProps) => Record given -> React.Basic.JSX
+slide_component :: ∀ required given componentProps. Prim.Row.Union given (SlidePropsRequiredOptions required) (SlidePropsOptions componentProps) => Record given -> React.Basic.JSX
 slide_component = React.Basic.element _Slide

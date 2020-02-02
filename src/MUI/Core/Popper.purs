@@ -7,7 +7,9 @@ import React.Basic (element, JSX, ReactComponent) as React.Basic
 import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
-type PopperPropsOptions componentProps = ( anchorEl :: Foreign.Foreign, children :: Array React.Basic.JSX, disablePortal :: Boolean, keepMounted :: Boolean, modifiers :: Foreign.Foreign, open :: Boolean, popperOptions :: Foreign.Foreign, popperRef :: Foreign.Foreign, transition :: Boolean | componentProps )
+type PopperPropsOptions componentProps = ( anchorEl :: Foreign.Foreign, children :: Array React.Basic.JSX, disablePortal :: Boolean, keepMounted :: Boolean, modifiers :: Foreign.Foreign, popperOptions :: Foreign.Foreign, popperRef :: Foreign.Foreign, transition :: Boolean | componentProps )
+
+type PopperPropsRequiredOptions required = ( open :: Boolean | required )
 
 foreign import data PopperProps :: Type
 
@@ -18,8 +20,8 @@ popperPropsPartial = Unsafe.Coerce.unsafeCoerce
 
 foreign import _Popper :: ∀ a. React.Basic.ReactComponent a
 
-popper :: ∀ required given. Prim.Row.Union given required (PopperPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
+popper :: ∀ required given. Prim.Row.Union given (PopperPropsRequiredOptions required) (PopperPropsOptions React.Basic.DOM.Props_div) => Record given -> React.Basic.JSX
 popper = React.Basic.element _Popper
 
-popper_component :: ∀ required given componentProps. Prim.Row.Union given required (PopperPropsOptions componentProps) => Record given -> React.Basic.JSX
+popper_component :: ∀ required given componentProps. Prim.Row.Union given (PopperPropsRequiredOptions required) (PopperPropsOptions componentProps) => Record given -> React.Basic.JSX
 popper_component = React.Basic.element _Popper
