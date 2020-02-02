@@ -119,7 +119,7 @@ componentAST component@{ extraDeclarations, optionalPropsInherits, requiredProps
     propsNamesFromBase :: Array String
     propsNamesFromBase = Array.fromFoldable $ getKeys optionalBase <> getKeys requiredBase
       where
-            getKeys = Map.keys <<< _.labels <<< unwrap <<< _.row
+      getKeys = Map.keys <<< _.labels <<< unwrap <<< _.row
 
     missingFromBase :: Array String
     missingFromBase = Array.filter (not <<< flip Set.member (Map.keys props)) propsNamesFromBase
@@ -152,13 +152,13 @@ componentAST component@{ extraDeclarations, optionalPropsInherits, requiredProps
           pure Nothing
       let
         AST.Row optionalBaseRow' = optionalBase.row
+
         AST.Row requiredBaseRow' = requiredBase.row
 
         classesProp :: Map.Map String AST.Type
         classesProp = maybe mempty (Map.singleton "classes" <<< _.prop) classes
 
         --------------
-
         propsOptionalOptionsTypeDecl :: { constructor :: AST.Type, declaration :: Declaration }
         propsOptionalOptionsTypeDecl =
           let
@@ -177,30 +177,29 @@ componentAST component@{ extraDeclarations, optionalPropsInherits, requiredProps
             declType (AST.TypeName $ propsName <> "Options") optionalBase.vars optionalPropsBody
 
         --------------
-
         propsRequiredOptionsTypeDecl :: Maybe ({ constructor :: AST.Type, declaration :: Declaration })
         propsRequiredOptionsTypeDecl =
           let
-              requiredLabelNames :: Set.Set String
-              requiredLabelNames = Set.fromFoldable <<< Map.keys <<< Map.filterWithKey (\k v -> not v.optional) $ props'
+            requiredLabelNames :: Set.Set String
+            requiredLabelNames = Set.fromFoldable <<< Map.keys <<< Map.filterWithKey (\k v -> not v.optional) $ props'
 
-              requiredLabels :: Map.Map String AST.Type
-              requiredLabels = Map.filterKeys (flip Set.member requiredLabelNames) labels
+            requiredLabels :: Map.Map String AST.Type
+            requiredLabels = Map.filterKeys (flip Set.member requiredLabelNames) labels
 
-              requiredLabels' :: Map.Map String AST.Type
-              requiredLabels' = requiredLabels <> requiredBaseRow'.labels
-           in
-              if Map.isEmpty requiredLabels' then
-                Nothing
-              else
-                let
-                  requiredIdent :: Ident
-                  requiredIdent = Ident "required"
+            requiredLabels' :: Map.Map String AST.Type
+            requiredLabels' = requiredLabels <> requiredBaseRow'.labels
+          in
+            if Map.isEmpty requiredLabels' then
+              Nothing
+            else
+              let
+                requiredIdent :: Ident
+                requiredIdent = Ident "required"
 
-                  requiredPropsBody :: AST.Type
-                  requiredPropsBody = Type.typeRow $ Type.row requiredLabels' (Just <<< Left $ requiredIdent)
-                in
-                  Just $ declType (AST.TypeName $ propsName <> "RequiredOptions") [ requiredIdent ] requiredPropsBody
+                requiredPropsBody :: AST.Type
+                requiredPropsBody = Type.typeRow $ Type.row requiredLabels' (Just <<< Left $ requiredIdent)
+              in
+                Just $ declType (AST.TypeName $ propsName <> "RequiredOptions") [ requiredIdent ] requiredPropsBody
 
         --------------
         propsTypeDecl :: { constructor :: AST.Type, declaration :: Declaration }
@@ -351,8 +350,8 @@ componentConstructorsAST { componentName, optionalBaseExtraVars, hasStyles, opti
 
                       r'' :: AST.Type
                       r'' = case requiredPropsInherits of
-                                 Just requiredPropsInherits' -> Type.app requiredPropsInherits' [r']
-                                 Nothing -> r'
+                        Just requiredPropsInherits' -> Type.app requiredPropsInherits' [ r' ]
+                        Nothing -> r'
                     in
                       constrained "Prim.Row.Union" [ g, r'', u ] fun
           in
