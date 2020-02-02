@@ -25,7 +25,7 @@ import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Functor.Mu (roll)
 import Data.List (List(..), fromFoldable, singleton) as List
 import Data.List (List)
-import Data.Map (filterKeys, fromFoldable, keys, lookup, singleton) as Map
+import Data.Map (filterKeys, fromFoldable, keys, lookup, singleton, Map) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), fromMaybe, isJust, maybe)
 import Data.Newtype (unwrap)
@@ -110,17 +110,21 @@ componentAST :: Component -> M AST.Module
 componentAST component@{ extraDeclarations, inherits, modulePath, propsType: propsType@{ base: { row: base, vars }, generate } } = do
   { fqn, props } <- componentProps component
   let
+    missingFromGenerate :: Array String
     missingFromGenerate = Array.filter (not <<< flip Set.member (Map.keys props)) generate
   when (not <<< Array.null $ missingFromGenerate) do
     throwError $ [ "Properties listed for generation but not found in component props:" <> show missingFromGenerate ]
   let
+    propsNamesFromBase :: Array String
     propsNamesFromBase = Array.fromFoldable <<< Map.keys <<< _.labels <<< unwrap $ base
 
+    missingFromBase :: Array String
     missingFromBase = Array.filter (not <<< flip Set.member (Map.keys props)) propsNamesFromBase
   when (not <<< Array.null $ missingFromBase) do
     throwError $ [ "Properties listed in base row but not found in component props:" <> show missingFromBase ]
   let
     -- | Take only a subset of props using given label set.
+    props' :: Map.Map String { optional :: Boolean, type :: ReadDTS.Instantiation.Type }
     props' = Map.filterKeys ((&&) <$> (not <<< eq "classes") <*> (_ `Array.elem` generate)) props
 
     -- | Create an new "Object" type from them
@@ -128,6 +132,7 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
     obj :: ReadDTS.Instantiation.Type
     obj = roll $ ReadDTS.Instantiation.Object fqn props'
 
+    objInstance :: Tuple (Either String TS.Module.PossibleType) (List AST.Union)
     objInstance = flip runState mempty <<< runExceptT <<< cataM TS.Module.astAlgebra $ obj
   case objInstance of
     Tuple (Right (TS.Module.ProperType (Mu.In (TypeRecord (AST.Row { labels, tail: Nothing }))))) unions -> do
