@@ -2399,7 +2399,7 @@ components =
                   ]
                 ) ->
                   throwError
-                    [ "Not sure how to tacke this three props types: " <> fqn1 <> ", " <> fqn2 <> "," <> fqn3 ]
+                    [ "Not sure how to tackle this three props types: " <> fqn1 <> ", " <> fqn2 <> "," <> fqn3 ]
                 (Instantiation.Union _) ->
                   throwError
                     [ "Expecting a two member union as a representation for TextField" ]
