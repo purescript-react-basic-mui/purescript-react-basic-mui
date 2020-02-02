@@ -321,11 +321,14 @@ components =
                 [ divProps ]
         , name: "BottomNavigationAction"
         , propsType:
-          { base: emptyBase
+          { base:
+            basePropsRow []
+              $ Map.fromFoldable
+                  [ Tuple "icon" jsx
+                  , Tuple "label" jsx
+                  ]
           , generate:
             [ "classes"
-            , "icon"
-            , "label"
             , "showLabel"
             , "selected"
             ]
