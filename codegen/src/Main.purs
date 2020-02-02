@@ -74,13 +74,14 @@ components =
 
     emptyBase = basePropsRow [] mempty
 
-    simpleComponent { inherits, name, propsType: { base, generate } } =
+    simpleComponent { optionalPropsInherits, requiredPropsInherits, name, propsType: { optionalBase, requiredBase, generate } } =
       { extraDeclarations: []
-      , inherits: inherits
-      -- , name
+      , optionalPropsInherits
+      , requiredPropsInherits
       , modulePath: Name name
       , propsType:
-        { base
+        { optionalBase
+        , requiredBase
         , generate
         , instantiation: Nothing
         }
@@ -94,24 +95,28 @@ components =
 
     appBar =
       simpleComponent
-        { inherits:
+        { optionalPropsInherits:
           Just
             $ Type.app
                 (Type.constructor "MUI.Core.Paper.PaperPropsOptions")
                 [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "AppBar"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable [ children ]
+          , requiredBase: emptyBase
           , generate: [ "classes", "color", "position" ]
           }
         }
 
     avatar =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "Avatar"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable []
+          { optionalBase: basePropsRow [] $ Map.fromFoldable []
+          , requiredBase: emptyBase
           , generate:
             [ "alt"
             , "classes"
@@ -126,74 +131,83 @@ components =
 
     backdrop =
       simpleComponent
-        { inherits:
+        { optionalPropsInherits:
           Just
             $ Type.app
                 (Type.constructor "MUI.Core.Fade.FadePropsOptions")
                 [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "Backdrop"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , Tuple "style" (Type.constructor "React.Basic.DOM.CSS")
                   ]
+          , requiredBase: emptyBase
           , generate: [ "classes", "invisible", "open", "transitionDuration" ]
           }
         }
 
     badge =
-        simpleComponent
-          { inherits: Nothing
-          , name: "Badge"
-          , propsType:
-            { base:
-              basePropsRow []
+      simpleComponent
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
+        , name: "Badge"
+        , propsType:
+          { optionalBase:
+            basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "badgeContent" jsx
                   , children
                   , component
                   ]
-            , generate:
-              [ "anchorOrigin"
-              , "classes"
-              , "color"
-              , "invisible"
-              , "max"
-              , "showZero"
-              , "variant"
-              ]
-            }
+          , requiredBase: emptyBase
+          , generate:
+            [ "anchorOrigin"
+            , "classes"
+            , "color"
+            , "invisible"
+            , "max"
+            , "showZero"
+            , "variant"
+            ]
           }
+        }
 
     -- | `children` and `component` are taken from `buttonBase`
     bottomNavigation =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "BottomNavigation"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable $ [ children, component ] <> (map eventHandlerProp [ "onChange" ])
+          { optionalBase: basePropsRow [] $ Map.fromFoldable $ [ children, component ] <> (map eventHandlerProp [ "onChange" ])
+          , requiredBase: emptyBase
           , generate: [ "classes", "showLabels" ]
           }
         }
 
     box =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "Box"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable $ [ children, component, Tuple "css" jss ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable $ [ children, component, Tuple "css" jss ]
+          , requiredBase: emptyBase
           , generate: [ "clone" ]
           }
         }
 
     breadcrumbs =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "Breadcrumbs"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow [] $ Map.fromFoldable
               $ [ children
                 -- Not found on the TS side
@@ -201,25 +215,28 @@ components =
                 , Tuple "separator" jsx
                 , Tuple "ref" foreignType
                 ]
+          , requiredBase: emptyBase
           , generate: [ "classes", "itemsAfterCollapse", "itemsBeforeCollapse", "maxItems" ]
           }
         }
 
     button =
       simpleComponent
-        { inherits:
+        { optionalPropsInherits:
           Just
             $ Type.app
                 (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
                 [ Type.constructor "React.Basic.DOM.Props_button" ]
+        , requiredPropsInherits: Just $ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRequiredOptions"
         , name: "Button"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "endIcon" jsx
                   , Tuple "startIcon" jsx
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "color"
@@ -236,12 +253,14 @@ components =
 
     buttonGroup =
       simpleComponent
-        { inherits:
+        { optionalPropsInherits:
           Just divProps
+        , requiredPropsInherits: Nothing
         , name: "ButtonGroup"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow [] $ Map.fromFoldable [ children ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "color"
@@ -258,25 +277,6 @@ components =
 
     buttonBase =
       let
-        base =
-          basePropsRow []
-            $ Map.fromFoldable
-                [ Tuple "action" foreignType
-                , Tuple "buttonRef" foreignType
-                , children
-                -- XXX: We are catching material ui documentation / type error here.
-                -- ButtonBase doesn't contain `component` prop.
-                -- , component
-                , eventHandlerProp "onFocusVisible"
-                -- | XXX: Provide some sugar for generating relative imports
-                -- | between components
-                , Tuple "TouchRippleProps" $ roll
-                    $ TypeConstructor
-                        { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
-                        , name: TypeName $ (propsTypeName touchRippleType.name)
-                        }
-                ]
-
         buttonBaseActions = declType (TypeName "ButtonBaseActions") [] foreignType
 
         buttonBaseTypeProps = declType (TypeName "ButtonBaseTypeProp") [] foreignType
@@ -285,14 +285,36 @@ components =
           [ buttonBaseActions.declaration
           , buttonBaseTypeProps.declaration
           ]
-        , inherits:
+        , optionalPropsInherits:
           Just
             $ Type.app
                 (Type.constructor "ButtonBasePropsOptions")
                 [ Type.constructor "React.Basic.DOM.Props_button" ]
+        , requiredPropsInherits: Nothing
         , modulePath: Name "ButtonBase"
         , propsType:
-          { base
+          { optionalBase:
+            basePropsRow []
+              $ Map.fromFoldable
+                  [ Tuple "action" foreignType
+                  , Tuple "buttonRef" foreignType
+                  -- XXX: We are catching material ui documentation / type error here.
+                  -- ButtonBase doesn't contain `component` prop.
+                  -- , component
+                  , eventHandlerProp "onFocusVisible"
+                  -- | XXX: Provide some sugar for generating relative imports
+                  -- | between components
+                  , Tuple "TouchRippleProps" $ roll
+                      $ TypeConstructor
+                          { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
+                          , name: TypeName $ (propsTypeName touchRippleType.name)
+                          }
+                  ]
+          , requiredBase:
+            basePropsRow []
+              $ Map.fromFoldable
+                  [ children
+                  ]
           , generate:
             [ "centerRipple"
             , "classes"
@@ -311,19 +333,21 @@ components =
     -- | TODO: make value a type variable
     bottomNavigationAction =
       simpleComponent
-        { inherits:
+        { optionalPropsInherits:
           Just
             $ Type.app
                 (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
                 [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "BottomNavigationAction"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "icon" jsx
                   , Tuple "label" jsx
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "showLabel"
@@ -334,58 +358,67 @@ components =
 
     card =
       simpleComponent
-        { inherits:
+        { optionalPropsInherits:
           Just
             $ Type.app
                 (Type.constructor "MUI.Core.Paper.PaperPropsOptions")
                 [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "Card"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable [ children ]
+          , requiredBase: emptyBase
           , generate: [ "classes", "raised" ]
           }
         }
 
     cardActionArea =
       simpleComponent
-        { inherits:
+        { optionalPropsInherits:
           Just
             $ Type.app
                 (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
                 [ Type.constructor "React.Basic.DOM.Props_button" ]
+        , requiredPropsInherits: Nothing
         , name: "CardActionArea"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable [ children ]
+          , requiredBase: emptyBase
           , generate: [ "classes" ]
           }
         }
 
     cardActions =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "CardActions"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable [ children ]
+          , requiredBase: emptyBase
           , generate: [ "classes", "disableSpacing" ]
           }
         }
 
     cardContent =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "CardContent"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children, component ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable [ children, component ]
+          , requiredBase: emptyBase
           , generate: [ "classes" ]
           }
         }
 
     cardHeader =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "CardHeader"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "action" jsx
@@ -397,32 +430,36 @@ components =
                   , Tuple "title" jsx
                   , Tuple "titleTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyProps")
                   ]
+          , requiredBase: emptyBase
           , generate: [ "classes", "disableTypography" ]
           }
         }
 
     cardMedia =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "CardMedia"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   -- This isn't being found in the .d.ts
                   --, component
                   ]
+          , requiredBase: emptyBase
           , generate: [ "classes", "image", "src" ]
           }
         }
 
     checkbox =
       simpleComponent
-        { inherits: Nothing -- should be IconButon
+        { optionalPropsInherits: Nothing -- should be IconButon
+        , requiredPropsInherits: Nothing
         , name: "Checkbox"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   ( [ Tuple "checkedIcon" jsx
@@ -434,6 +471,7 @@ components =
                     ]
                       <> (map eventHandlerProp [ "onChange" ])
                   )
+          , requiredBase: emptyBase
           , generate:
             [ "checked"
             , "classes"
@@ -450,10 +488,11 @@ components =
 
     chip =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "Chip"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   ( [ Tuple "avatar" jsx
@@ -463,6 +502,7 @@ components =
                     ]
                       <> (map eventHandlerProp [ "onDelete" ])
                   )
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "color"
@@ -475,10 +515,12 @@ components =
 
     circularProgress =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "CircularProgress"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable []
+          { optionalBase: basePropsRow [] $ Map.fromFoldable []
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "color"
@@ -498,23 +540,27 @@ components =
         -- | Single jsx node is required
         child = Tuple "children" jsx
 
-        base = basePropsRow [] $ Map.fromFoldable [ child, onClickAway ]
+        optionalBase = basePropsRow [] $ Map.fromFoldable [ child, onClickAway ]
       in
         simpleComponent
-          { inherits: Nothing
+          { optionalPropsInherits: Nothing
+          , requiredPropsInherits: Nothing
           , name: "ClickAwayListener"
           , propsType:
-            { base
+            { optionalBase
+            , requiredBase: emptyBase
             , generate: [ "mouseEvent", "touchEvent" ]
             }
           }
 
     collapse =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "Collapse"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children, component ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable [ children, component ]
+          , requiredBase: emptyBase
           , generate:
             [ "collapsedHeight"
             , "in"
@@ -525,10 +571,12 @@ components =
 
     container =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "Container"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ component ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable [ component ]
+          , requiredBase: emptyBase
           , generate:
             [ "fixed"
             , "maxWidth"
@@ -538,10 +586,12 @@ components =
 
     cssBaseline =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "CssBaseline"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable [ children ]
+          , requiredBase: emptyBase
           , generate: []
           }
         }
@@ -561,17 +611,19 @@ components =
             , "onExiting"
             ]
 
-        base = basePropsRow [] $ Map.fromFoldable $ [ children ] <> handlers
+        optionalBase = basePropsRow [] $ Map.fromFoldable $ [ children ] <> handlers
       in
         simpleComponent
-          { inherits:
+          { optionalPropsInherits:
             Just
               $ Type.app
                   (Type.constructor "MUI.Core.Modal.ModalPropsOptions")
                   [ divProps ]
+          , requiredPropsInherits: Nothing
           , name: "Dialog"
           , propsType:
-            { base
+            { optionalBase
+            , requiredBase: emptyBase
             , generate:
               [ "aria-describedby"
               , "aria-labelledby"
@@ -587,30 +639,36 @@ components =
 
     dialogActions =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "DialogActions"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable [ children ]
+          , requiredBase: emptyBase
           , generate: [ "classes", "disableSpacing" ]
           }
         }
 
     dialogContent =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "DialogContent"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable [ children ]
+          , requiredBase: emptyBase
           , generate: [ "classes", "dividers" ]
           }
         }
 
     dialogTitle =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "DialogTitle"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable [ children ]
+          , requiredBase: emptyBase
           , generate: [ "classes", "disableTypography" ]
           }
         }
@@ -618,10 +676,12 @@ components =
     -- | TODO: add component
     divider =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_hr"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_hr"
+        , requiredPropsInherits: Nothing
         , name: "Divider"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable []
+          { optionalBase: basePropsRow [] $ Map.fromFoldable []
+          , requiredBase: emptyBase
           , generate:
             [ "absolute"
             , "classes"
@@ -634,10 +694,11 @@ components =
 
     drawer =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Modal.ModalPropsOptions") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.Modal.ModalPropsOptions") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "Drawer"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   ( [ children
@@ -648,6 +709,7 @@ components =
                     ]
                       <> map eventHandlerProp [ "onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
                   )
+          , requiredBase: emptyBase
           , generate:
             [ "anchor"
             , "classes"
@@ -662,15 +724,17 @@ components =
     -- | TODO: TransitionComponent, TransitionProps
     expansionPanel =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "ExpansionPanel"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , eventHandlerProp "onChange"
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "defaultExpanded"
@@ -682,14 +746,16 @@ components =
 
     expansionPanelActions =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "ExpansionPanelActions"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             ]
@@ -698,14 +764,16 @@ components =
 
     expansionPanelDetails =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "ExpansionPanelDetails"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             ]
@@ -714,16 +782,18 @@ components =
 
     expansionPanelSummary =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "ExpansionPanelSummary"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , Tuple "expandIcon" jsx
                   , Tuple "IconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonPropsPartial")
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             ]
@@ -732,14 +802,16 @@ components =
 
     fab =
       simpleComponent
-        { inherits:
+        { optionalPropsInherits:
           Just
             $ Type.app
                 (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
                 [ Type.constructor "React.Basic.DOM.Props_button" ]
+        , requiredPropsInherits: Nothing
         , name: "Fab"
         , propsType:
-          { base: emptyBase
+          { optionalBase: emptyBase
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "color"
@@ -755,10 +827,12 @@ components =
     -- | TODO: TransitionComponent
     fade =
       simpleComponent
-        { inherits: Nothing -- should inherit TransitionComponent
+        { optionalPropsInherits: Nothing -- should inherit TransitionComponent
+        , requiredPropsInherits: Nothing
         , name: "Fade"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ Tuple "ref" foreignType ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable [ Tuple "ref" foreignType ]
+          , requiredBase: emptyBase
           , generate:
             [ {-- not sure what to do here, "theme" --}]
           }
@@ -767,10 +841,11 @@ components =
     -- | TODO: inputComponent, make value a type variable
     filledInput =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.InputBasePropsOption") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.InputBasePropsOption") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "FilledInput"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
@@ -781,6 +856,7 @@ components =
                   , Tuple "startAdornment" jsx
                   , Tuple "value" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "autoComplete"
             , "autoFocus"
@@ -808,14 +884,16 @@ components =
 
     formControl =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "FormControl"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "color"
             , "disabled"
@@ -832,10 +910,11 @@ components =
     -- | TODO: make value a type variable
     formControlLabel =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_label"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_label"
+        , requiredPropsInherits: Nothing
         , name: "FormControlLabel"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
@@ -844,6 +923,7 @@ components =
                   , eventHandlerProp "onChange"
                   , Tuple "value" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "checked"
             , "classes"
@@ -856,14 +936,16 @@ components =
 
     formGroup =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "FormGroup"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "row"
@@ -873,15 +955,17 @@ components =
 
     formHelperText =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_p"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_p"
+        , requiredPropsInherits: Nothing
         , name: "FormHelperText"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , component
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "disabled"
@@ -897,14 +981,16 @@ components =
 
     formLabel =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_label"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_label"
+        , requiredPropsInherits: Nothing
         , name: "FormLabel"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "color"
@@ -919,14 +1005,16 @@ components =
 
     grid =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "Grid"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "alignContent"
             , "alignItems"
@@ -949,7 +1037,7 @@ components =
 
     gridList =
       let
-        base =
+        optionalBase =
           basePropsRow []
             $ Map.fromFoldable
                 [ children
@@ -957,17 +1045,19 @@ components =
                 ]
       in
         simpleComponent
-          { inherits: Just $ Type.constructor "React.Basic.DOM.Props_ul"
+          { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_ul"
+          , requiredPropsInherits: Nothing
           , name: "GridList"
           , propsType:
-            { base
+            { optionalBase
+            , requiredBase: emptyBase
             , generate: [ "cellHeight", "classes", "cols", "spacing" ]
             }
           }
 
     gridListTile =
       let
-        base =
+        optionalBase =
           basePropsRow []
             $ Map.fromFoldable
                 [ children
@@ -975,26 +1065,30 @@ components =
                 ]
       in
         simpleComponent
-          { inherits: Just $ Type.constructor "React.Basic.DOM.Props_li"
+          { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_li"
+          , requiredPropsInherits: Nothing
           , name: "GridListTile"
           , propsType:
-            { base
+            { optionalBase
+            , requiredBase: emptyBase
             , generate: [ "classes", "cols", "rows" ]
             }
           }
 
     gridListTileBar =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "GridListTileBar"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "actionIcon" jsx
                   , Tuple "subtitle" jsx
                   , Tuple "title" jsx
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "actionPosition"
@@ -1006,13 +1100,15 @@ components =
     -- | TODO: update when Transition is figured out
     grow =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "Grow"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   []
+          , requiredBase: emptyBase
           , generate:
             [ "in"
             , "timeout"
@@ -1022,10 +1118,12 @@ components =
 
     hidden =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "Hidden"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ Tuple "only" foreignType ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable [ Tuple "only" foreignType ]
+          , requiredBase: emptyBase
           , generate:
             [ "implementation"
             , "initialWidth"
@@ -1045,14 +1143,16 @@ components =
 
     icon =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
+        , requiredPropsInherits: Nothing
         , name: "Icon"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ component
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "color"
@@ -1063,14 +1163,16 @@ components =
 
     iconButton =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "IconButton"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "color"
@@ -1085,10 +1187,11 @@ components =
 
     input =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.InputBase.InputBasePropsOptions") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.InputBase.InputBasePropsOptions") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "Input"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "defaultValue" foreignType
@@ -1099,6 +1202,7 @@ components =
                   , Tuple "value" foreignType
                   , eventHandlerProp "onChange"
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "autoComplete"
             , "autoFocus"
@@ -1124,15 +1228,17 @@ components =
 
     inputAdornment =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "InputAdornment"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , component
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "disablePointerEvents"
@@ -1146,10 +1252,11 @@ components =
     -- | TODO: inputProps should be something like ReactComponent { | InputProps }
     inputBase =
       simpleComponent
-        { inherits: Just $ divProps
+        { optionalPropsInherits: Just $ divProps
+        , requiredPropsInherits: Nothing
         , name: "InputBase"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "defaultValue" foreignType
@@ -1160,6 +1267,7 @@ components =
                   , Tuple "value" foreignType
                   , eventHandlerProp "onChange"
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "autoComplete"
             , "autoFocus"
@@ -1185,14 +1293,16 @@ components =
 
     inputLabel =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.FormLabel.FormLabelPropsOptions") [ Type.constructor "React.Basic.DOM.Props_label" ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.FormLabel.FormLabelPropsOptions") [ Type.constructor "React.Basic.DOM.Props_label" ]
+        , requiredPropsInherits: Nothing
         , name: "InputLabel"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "color"
@@ -1210,10 +1320,12 @@ components =
 
     linearProgress =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "LinearProgress"
         , propsType:
-          { base: emptyBase
+          { optionalBase: emptyBase
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "color"
@@ -1226,15 +1338,17 @@ components =
 
     link =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_a"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_a"
+        , requiredPropsInherits: Nothing
         , name: "Link"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , Tuple "TypographyClasses" (Type.constructor "MUI.Core.Typography.TypographyClassKey")
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "color"
@@ -1246,15 +1360,17 @@ components =
 
     list =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_ul"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_ul"
+        , requiredPropsInherits: Nothing
         , name: "List"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , Tuple "subheader" jsx
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "dense"
@@ -1266,14 +1382,16 @@ components =
     -- | TODO: add ContainerComponent and ContainerProps
     listItem =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_li"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_li"
+        , requiredPropsInherits: Nothing
         , name: "ListItem"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "alignItems"
             , "autoFocus"
@@ -1290,14 +1408,16 @@ components =
 
     listItemAvatar =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "ListItemAvatar"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             ]
@@ -1306,14 +1426,16 @@ components =
 
     listItemIcon =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "ListItemIcon"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             ]
@@ -1322,14 +1444,16 @@ components =
 
     listItemSecondaryAction =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "ListItemSecondaryAction"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             ]
@@ -1338,10 +1462,11 @@ components =
 
     listItemText =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "ListItemText"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "primary" jsx
@@ -1349,6 +1474,7 @@ components =
                   , Tuple "secondary" jsx
                   , Tuple "secondaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassKey")
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "disableTypography"
@@ -1359,14 +1485,16 @@ components =
 
     listSubheader =
       simpleComponent
-        { inherits: Just $ (Type.constructor "React.Basic.DOM.Props_li")
+        { optionalPropsInherits: Just $ (Type.constructor "React.Basic.DOM.Props_li")
+        , requiredPropsInherits: Nothing
         , name: "ListSubheader"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "color"
@@ -1391,20 +1519,22 @@ components =
 
         anchorEl = Tuple "anchorEl" $ Type.app nullable [ domElement ]
 
-        base = basePropsRow [] $ Map.fromFoldable $ [ anchorEl, children ] <> handlers
+        optionalBase = basePropsRow [] $ Map.fromFoldable $ [ anchorEl, children ] <> handlers
       in
         simpleComponent
-          { inherits: Nothing -- | We should inherit from Popover here
+          { optionalPropsInherits: Nothing -- | We should inherit from Popover here
+          , requiredPropsInherits: Nothing
           , name: "Menu"
           , propsType:
-            { base
+            { optionalBase
+            , requiredBase: emptyBase
             , generate: [ "autoFocus", "classes", "disableAutoFocusItem", "open", "transitionDuration", "variant" ]
             }
           }
 
     menuItem =
       let
-        base =
+        optionalBase =
           basePropsRow []
             $ Map.fromFoldable
                 [ children
@@ -1414,26 +1544,30 @@ components =
                 ]
       in
         simpleComponent
-          { inherits: Just $ Type.app (Type.constructor "MUI.Core.ListItem.ListItemPropsOptions") [ Type.constructor "React.Basic.DOM.Props_li" ]
+          { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.ListItem.ListItemPropsOptions") [ Type.constructor "React.Basic.DOM.Props_li" ]
+          , requiredPropsInherits: Nothing
           , name: "MenuItem"
           , propsType:
-            { base
+            { optionalBase
+            , requiredBase: emptyBase
             , generate: [ "classes", "dense", "disableGutters" ]
             }
           }
 
     mobileStepper =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ Type.constructor "React.Basic.DOM.Props_props" ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ Type.constructor "React.Basic.DOM.Props_props" ]
+        , requiredPropsInherits: Nothing
         , name: "MobileStepper"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "backButton" jsx
                   , Tuple "LinearProgressProps" (Type.constructor "MUI.Core.LinearPropgress.LinearProgressProps")
                   , Tuple "nextButton" jsx
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "activeStep"
             , "backButton"
@@ -1457,7 +1591,7 @@ components =
 
         backdropPropsPartial = Type.constructor "MUI.Core.Backdrop.BackdropPropsPartial"
 
-        base =
+        optionalBase =
           basePropsRow [] $ Map.fromFoldable
             $ [ children
               , Tuple "BackdropComponent" (reactComponentApply backdropPropsPartial)
@@ -1470,10 +1604,12 @@ components =
             <> handlers
       in
         simpleComponent
-          { inherits: Nothing
+          { optionalPropsInherits: Nothing
+          , requiredPropsInherits: Nothing
           , name: "Modal"
           , propsType:
-            { base
+            { optionalBase
+            , requiredBase: emptyBase
             , generate:
               [ "closeAfterTransition"
               , "disableAutoFocus"
@@ -1493,10 +1629,11 @@ components =
     -- | TODO: value
     nativeSelect =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "NativeSelect"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
@@ -1506,6 +1643,7 @@ components =
                   , eventHandlerProp "onChange"
                   , Tuple "value" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "variant"
@@ -1516,15 +1654,17 @@ components =
     -- | TODO: value
     noSsr =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "NoSsr"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , Tuple "fallback" jsx
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "defer"
             ]
@@ -1534,10 +1674,11 @@ components =
     -- | inputComponent
     outlineInput =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.InputBase.InputBasePropsOptions") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.InputBase.InputBasePropsOptions") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "OutlinedInput"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "defaultValue" foreignType
@@ -1548,6 +1689,7 @@ components =
                   , Tuple "value" foreignType
                   , eventHandlerProp "onChange"
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "autoComplete"
             , "autoFocus"
@@ -1574,10 +1716,12 @@ components =
 
     paper =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "Paper"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable $ [ children, component ]
+          { optionalBase: basePropsRow [] $ Map.fromFoldable $ [ children, component ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "elevation"
@@ -1589,10 +1733,11 @@ components =
     -- | TransitionComponent, TransitionProps, transformOrigin
     popover =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Modal.ModalPropsOptions") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.Modal.ModalPropsOptions") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "Popover"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "action" foreignType
@@ -1608,6 +1753,7 @@ components =
                   , eventHandlerProp "onExiting"
                   , Tuple "PaperProps" (Type.constructor "MUI.Core.Paper.PaperProps")
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "anchorOrigin"
             , "anchorPosition"
@@ -1623,10 +1769,11 @@ components =
 
     popper =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "Popper"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "anchorEl" foreignType
@@ -1635,6 +1782,7 @@ components =
                   , Tuple "popperOptions" foreignType
                   , Tuple "popperRef" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "disablePortal"
             , "keepMounted"
@@ -1646,16 +1794,18 @@ components =
 
     portal =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "Portal"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , Tuple "container" foreignType
                   , eventHandlerProp "onRendered"
                   ]
+          , requiredBase: emptyBase
           , generate: [ "disablePortal" ]
           }
         }
@@ -1663,10 +1813,11 @@ components =
     -- | value, inputProps, inputRef
     radio =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.IconButton.IconButtonPropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.IconButton.IconButtonPropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        , requiredPropsInherits: Nothing
         , name: "Radio"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "checkedIcon" jsx
@@ -1676,6 +1827,7 @@ components =
                   , eventHandlerProp "onChange"
                   , Tuple "value" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "checked"
             , "classes"
@@ -1693,10 +1845,11 @@ components =
     -- | value, inputProps, inputRef
     radioGroup =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.FormGroup.FormGroupPropsOptions") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.FormGroup.FormGroupPropsOptions") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "RadioGroup"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
@@ -1704,6 +1857,7 @@ components =
                   , eventHandlerProp "onChange"
                   , Tuple "value" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "name"
             ]
@@ -1712,14 +1866,16 @@ components =
 
     rootRef =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "RootRef"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "rootRef" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             []
           }
@@ -1728,10 +1884,11 @@ components =
     -- | TODO: value
     select =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "Select"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
@@ -1746,6 +1903,7 @@ components =
                   , Tuple "SelectDisplayProps" foreignType
                   , Tuple "value" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "autoWidth"
             , "classes"
@@ -1762,12 +1920,14 @@ components =
 
     slide =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "Slide"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow [] $ Map.fromFoldable
               $ map eventHandlerProp [ "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
+          , requiredBase: emptyBase
           , generate:
             [ "direction", "in", "timeout"
             ]
@@ -1777,10 +1937,11 @@ components =
     -- | TODO: ThumbComponent ValueLabelComponent
     slider =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
+        , requiredPropsInherits: Nothing
         , name: "Slider"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
@@ -1793,6 +1954,7 @@ components =
                   , Tuple "value" foreignType
                   , Tuple "valueLabelFormat" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "aria-label"
             , "aria-labelledby"
@@ -1814,10 +1976,11 @@ components =
     -- | TODO: TransitionComponent, TransitionProps
     snackbar =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "Snackbar"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
@@ -1835,6 +1998,7 @@ components =
                   , eventHandlerProp "onExited"
                   , eventHandlerProp "onExiting"
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "anchorOrigin"
             , "autoHideDuration"
@@ -1849,15 +2013,17 @@ components =
 
     snackbarContent =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "SnackbarContent"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ Tuple "action" jsx
                   , Tuple "message" jsx
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "role"
@@ -1867,15 +2033,17 @@ components =
 
     step =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "Step"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , Tuple "connector" jsx
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "active"
             , "alternativeLabel"
@@ -1890,16 +2058,18 @@ components =
 
     stepButton =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        , requiredPropsInherits: Nothing
         , name: "StepButton"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , Tuple "icon" foreignType
                   , Tuple "optional" jsx
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "active"
             , "alternativeLabel"
@@ -1914,14 +2084,16 @@ components =
 
     stepConnector =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "StepConnector"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "active"
             , "alternativeLabel"
@@ -1937,14 +2109,16 @@ components =
     -- | TODO: TransitionComponent, transitionDuration, TransitionProps
     stepContent =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "StepContent"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "active"
             , "alternativeLabel"
@@ -1959,15 +2133,17 @@ components =
 
     stepIcon =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "StepIcon"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , Tuple "icon" jsx
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "active"
             , "classes"
@@ -1980,10 +2156,11 @@ components =
     -- | TODO: StepIconComponent
     stepLabel =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "StepLabel"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
@@ -1992,6 +2169,7 @@ components =
                   , Tuple "StepIconComponent" foreignType
                   , Tuple "StepIconProps" (Type.constructor "MUI.Core.StepIcon.StepIconProps")
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "disabled"
@@ -2002,15 +2180,17 @@ components =
 
     stepper =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "Stepper"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , Tuple "connector" jsx
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "activeStep"
             , "alternativeLabel"
@@ -2023,14 +2203,16 @@ components =
 
     svgIcon =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.SVG.Props_svg"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.SVG.Props_svg"
+        , requiredPropsInherits: Nothing
         , name: "SvgIcon"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "color"
@@ -2045,10 +2227,11 @@ components =
 
     swipeableDrawer =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Drawer.DrawerPropsOptions") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.Drawer.DrawerPropsOptions") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "SwipeableDrawer"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
@@ -2056,6 +2239,7 @@ components =
                   , eventHandlerProp "onClose"
                   , eventHandlerProp "onOpen"
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "disableBackdropTransition"
             , "disableDiscovery"
@@ -2070,10 +2254,11 @@ components =
 
     switch =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.IconButton.IconButtonPropsOptions") [ divProps ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.IconButton.IconButtonPropsOptions") [ divProps ]
+        , requiredPropsInherits: Nothing
         , name: "Switch"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
@@ -2084,6 +2269,7 @@ components =
                   , eventHandlerProp "onChange"
                   , Tuple "value" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "checked"
             , "classes"
@@ -2101,10 +2287,11 @@ components =
 
     tab =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        , requiredPropsInherits: Nothing
         , name: "Tab"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
@@ -2112,6 +2299,7 @@ components =
                   , Tuple "label" jsx
                   , Tuple "value" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "disabled"
@@ -2126,14 +2314,16 @@ components =
 
     table =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_table"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_table"
+        , requiredPropsInherits: Nothing
         , name: "Table"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "padding"
@@ -2145,14 +2335,16 @@ components =
 
     tableBody =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_tbody"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_tbody"
+        , requiredPropsInherits: Nothing
         , name: "TableBody"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             ]
@@ -2161,14 +2353,16 @@ components =
 
     tableCell =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_td"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_td"
+        , requiredPropsInherits: Nothing
         , name: "TableCell"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "padding"
@@ -2182,14 +2376,16 @@ components =
 
     tableFooter =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_tfoot"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_tfoot"
+        , requiredPropsInherits: Nothing
         , name: "TableFooter"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             ]
@@ -2198,14 +2394,16 @@ components =
 
     tableHead =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_thead"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_thead"
+        , requiredPropsInherits: Nothing
         , name: "TableHead"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             ]
@@ -2216,10 +2414,11 @@ components =
     tablePagination :: Component
     tablePagination =
       { extraDeclarations: []
-      , inherits: Just $ Type.app (Type.constructor "MUI.Core.TableCell.TableCellPropsOptions") [ Type.constructor "React.Basic.DOM.Props_td" ]
+      , optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.TableCell.TableCellPropsOptions") [ Type.constructor "React.Basic.DOM.Props_td" ]
+      , requiredPropsInherits: Nothing
       , modulePath: Name "TablePagination"
       , propsType:
-        { base:
+        { optionalBase:
           basePropsRow []
             $ Map.fromFoldable
                 [ children
@@ -2231,6 +2430,7 @@ components =
                 , eventHandlerProp "onChangeRowsPerPage"
                 , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectProps")
                 ]
+        , requiredBase: emptyBase
         , generate:
           [ "classes"
           , "count"
@@ -2258,14 +2458,16 @@ components =
 
     tableRow =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_tr"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_tr"
+        , requiredPropsInherits: Nothing
         , name: "TableRow"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "hover"
@@ -2277,15 +2479,17 @@ components =
     -- | TODO: IconComponent
     tableSortLabel =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        , requiredPropsInherits: Nothing
         , name: "TableSortLabel"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , Tuple "IconComponent" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "active"
@@ -2297,10 +2501,11 @@ components =
 
     tabs =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "Tabs"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
@@ -2310,6 +2515,7 @@ components =
                   , Tuple "TabIndicatorProps" foreignType
                   , Tuple "value" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "centered"
             , "classes"
@@ -2325,14 +2531,16 @@ components =
 
     textareaAutosize =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_textarea"
+        { optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_textarea"
+        , requiredPropsInherits: Nothing
         , name: "TextareaAutosize"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "rows"
             , "rowsMax"
@@ -2343,10 +2551,11 @@ components =
     textField :: Component
     textField =
       { extraDeclarations: []
-      , inherits: Just $ Type.app (Type.constructor "MUI.Core.FormControl.FormControlPropsOptions") [ divProps ]
+      , optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.FormControl.FormControlPropsOptions") [ divProps ]
+      , requiredPropsInherits: Nothing
       , modulePath: Name "TextField"
       , propsType:
-        { base:
+        { optionalBase:
           basePropsRow []
             $ Map.fromFoldable
                 [ children
@@ -2364,6 +2573,7 @@ components =
                 , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectProps")
                 , Tuple "value" foreignType
                 ]
+        , requiredBase: emptyBase
         , generate:
           [ "autoComplete"
           , "autoFocus"
@@ -2411,15 +2621,17 @@ components =
     -- | It seems that toggle button is still in `material-ui-lab`
     toggleButton =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        { optionalPropsInherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        , requiredPropsInherits: Nothing
         , name: "ToggleButton"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , Tuple "value" foreignType
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "disabled"
@@ -2432,14 +2644,16 @@ components =
 
     toolbar =
       simpleComponent
-        { inherits: Just divProps
+        { optionalPropsInherits: Just divProps
+        , requiredPropsInherits: Nothing
         , name: "Toolbar"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "disableGutters"
@@ -2450,11 +2664,13 @@ components =
 
     touchRipple =
       { extraDeclarations: []
-      , inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
+      , optionalPropsInherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
+      , requiredPropsInherits: Nothing
       -- , name: touchRippleType.name
       , modulePath: touchRippleType.path
       , propsType:
-        { base: emptyBase
+        { optionalBase: emptyBase
+        , requiredBase: emptyBase
         , generate: [ "center", "classes" ]
         , instantiation: Nothing
         }
@@ -2464,15 +2680,17 @@ components =
     -- | TODO: needs to extend HTMLElement
     typography =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "Typography"
         , propsType:
-          { base:
+          { optionalBase:
             basePropsRow []
               $ Map.fromFoldable
                   [ children
                   , component
                   ]
+          , requiredBase: emptyBase
           , generate:
             [ "classes"
             , "align"
@@ -2490,10 +2708,12 @@ components =
     -- | TODO: needs to extend Transition
     zoom =
       simpleComponent
-        { inherits: Nothing
+        { optionalPropsInherits: Nothing
+        , requiredPropsInherits: Nothing
         , name: "Zoom"
         , propsType:
-          { base: emptyBase
+          { optionalBase: emptyBase
+          , requiredBase: emptyBase
           , generate: [ "in", "timeout" ]
           }
         }

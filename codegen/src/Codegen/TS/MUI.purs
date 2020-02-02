@@ -108,7 +108,7 @@ componentProps component@{ modulePath } = do
         ]
 
 componentAST :: Component -> M AST.Module
-componentAST component@{ extraDeclarations, inherits, modulePath, propsType: propsType@{ base: { row: base, vars }, generate } } = do
+componentAST component@{ extraDeclarations, optionalPropsInherits, requiredPropsInherits, modulePath, propsType: { optionalBase, requiredBase, generate } } = do
   { fqn, props } <- componentProps component
   let
     missingFromGenerate :: Array String
@@ -117,7 +117,9 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
     throwError $ [ "Properties listed for generation but not found in component props:" <> show missingFromGenerate ]
   let
     propsNamesFromBase :: Array String
-    propsNamesFromBase = Array.fromFoldable <<< Map.keys <<< _.labels <<< unwrap $ base
+    propsNamesFromBase = Array.fromFoldable $ getKeys optionalBase <> getKeys requiredBase
+      where
+            getKeys = Map.keys <<< _.labels <<< unwrap <<< _.row
 
     missingFromBase :: Array String
     missingFromBase = Array.filter (not <<< flip Set.member (Map.keys props)) propsNamesFromBase
@@ -149,53 +151,65 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
         else
           pure Nothing
       let
-        AST.Row base' = base
+        AST.Row optionalBaseRow' = optionalBase.row
+        AST.Row requiredBaseRow' = requiredBase.row
 
         classesProp :: Map.Map String AST.Type
         classesProp = maybe mempty (Map.singleton "classes" <<< _.prop) classes
 
         --------------
-        optionalLabelNames :: Set.Set String
-        optionalLabelNames = Set.fromFoldable <<< Map.keys <<< Map.filterWithKey (\k v -> v.optional) $ props'
-
-        optionalLabels :: Map.Map String AST.Type
-        optionalLabels = Map.filterKeys (flip Set.member optionalLabelNames) labels
 
         propsOptionalOptionsTypeDecl :: { constructor :: AST.Type, declaration :: Declaration }
         propsOptionalOptionsTypeDecl =
           let
+            optionalLabelNames :: Set.Set String
+            optionalLabelNames = Set.fromFoldable <<< Map.keys <<< Map.filterWithKey (\k v -> v.optional) $ props'
+
+            optionalLabels :: Map.Map String AST.Type
+            optionalLabels = Map.filterKeys (flip Set.member optionalLabelNames) labels
+
+            optionalLabels' :: Map.Map String AST.Type
+            optionalLabels' = classesProp <> optionalLabels <> optionalBaseRow'.labels
+
             optionalPropsBody :: AST.Type
-            optionalPropsBody = Type.typeRow $ Type.row (classesProp <> optionalLabels <> base'.labels) base'.tail
+            optionalPropsBody = Type.typeRow $ Type.row optionalLabels' optionalBaseRow'.tail
           in
-            declType (AST.TypeName $ propsName <> "Options") vars optionalPropsBody
+            declType (AST.TypeName $ propsName <> "Options") optionalBase.vars optionalPropsBody
 
         --------------
-        requiredIdent :: Ident
-        requiredIdent = Ident "required"
-
-        requiredLabelNames :: Set.Set String
-        requiredLabelNames = Set.fromFoldable <<< Map.keys <<< Map.filterWithKey (\k v -> not v.optional) $ props'
-
-        requiredLabels :: Map.Map String AST.Type
-        requiredLabels = Map.filterKeys (flip Set.member requiredLabelNames) labels
 
         propsRequiredOptionsTypeDecl :: Maybe ({ constructor :: AST.Type, declaration :: Declaration })
         propsRequiredOptionsTypeDecl =
-          if Map.isEmpty requiredLabels then
-            Nothing
-          else
-            let
-              requiredPropsBody :: AST.Type
-              requiredPropsBody = Type.typeRow $ Type.row requiredLabels (Just <<< Left $ requiredIdent)
-            in
-              Just $ declType (AST.TypeName $ propsName <> "RequiredOptions") [ requiredIdent ] requiredPropsBody
+          let
+              requiredLabelNames :: Set.Set String
+              requiredLabelNames = Set.fromFoldable <<< Map.keys <<< Map.filterWithKey (\k v -> not v.optional) $ props'
+
+              requiredLabels :: Map.Map String AST.Type
+              requiredLabels = Map.filterKeys (flip Set.member requiredLabelNames) labels
+
+              requiredLabels' :: Map.Map String AST.Type
+              requiredLabels' = requiredLabels <> requiredBaseRow'.labels
+           in
+              if Map.isEmpty requiredLabels' then
+                Nothing
+              else
+                let
+                  requiredIdent :: Ident
+                  requiredIdent = Ident "required"
+
+                  requiredPropsBody :: AST.Type
+                  requiredPropsBody = Type.typeRow $ Type.row requiredLabels' (Just <<< Left $ requiredIdent)
+                in
+                  Just $ declType (AST.TypeName $ propsName <> "RequiredOptions") [ requiredIdent ] requiredPropsBody
 
         --------------
         propsTypeDecl :: { constructor :: AST.Type, declaration :: Declaration }
         propsTypeDecl = declForeignData (AST.TypeName $ propsName)
 
-        extraVars :: Array Ident
-        extraVars = case Array.tail propsType.base.vars of
+        -- TODO: not used
+        -- TODO: split _.vars to _.argumentName (head) and _.extraArguments (tail)
+        optionalBaseExtraVars :: Array Ident
+        optionalBaseExtraVars = case Array.tail optionalBase.vars of
           Just arr -> arr
           Nothing -> []
 
@@ -215,14 +229,14 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
           let
             signature :: AST.Type
             signature =
-              forAllWith extraVars { o: "options", o_: "options_" }
+              forAllWith optionalBaseExtraVars { o: "options", o_: "options_" }
                 $ \{ o, o_ } ->
                     let
-                      inherits' :: AST.Type
-                      inherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") inherits
+                      optionalPropsInherits' :: AST.Type
+                      optionalPropsInherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") optionalPropsInherits
 
                       u :: AST.Type
-                      u = Type.app propsOptionalOptionsTypeDecl.constructor ([ inherits' ] <> (map Type.var extraVars))
+                      u = Type.app propsOptionalOptionsTypeDecl.constructor ([ optionalPropsInherits' ] <> (map Type.var optionalBaseExtraVars))
 
                       fun :: AST.Type
                       fun = Type.arr (recordApply o) propsPartial.constructor
@@ -268,9 +282,10 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
             <> maybe mempty _.declarations classes
             <> componentConstructorsAST
                 { componentName
-                , extraVars
+                , optionalBaseExtraVars
                 , hasStyles: isJust classes
-                , inherits
+                , optionalPropsInherits
+                , requiredPropsInherits
                 , requiredPropsConstructor: map _.constructor propsRequiredOptionsTypeDecl
                 , optionalPropsConstructor: propsOptionalOptionsTypeDecl.constructor
                 }
@@ -287,14 +302,15 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: pro
 -- | so we should move it up.
 componentConstructorsAST ::
   { componentName :: ComponentName
-  , extraVars :: Array Ident
+  , optionalBaseExtraVars :: Array Ident
   , hasStyles :: Boolean
-  , inherits :: Maybe AST.Type
-  , requiredPropsConstructor :: Maybe AST.Type
+  , optionalPropsInherits :: Maybe AST.Type
+  , requiredPropsInherits :: Maybe AST.Type
   , optionalPropsConstructor :: AST.Type
+  , requiredPropsConstructor :: Maybe AST.Type
   } ->
   List Declaration
-componentConstructorsAST { componentName, extraVars, requiredPropsConstructor, hasStyles, inherits, optionalPropsConstructor } = constructors
+componentConstructorsAST { componentName, optionalBaseExtraVars, hasStyles, optionalPropsInherits, requiredPropsInherits, optionalPropsConstructor, requiredPropsConstructor } = constructors
   where
   -- | Maybe this `Writer` here is a bit overkill ;-)
   constructors :: List Declaration
@@ -303,7 +319,7 @@ componentConstructorsAST { componentName, extraVars, requiredPropsConstructor, h
       let
         componentName' = camelCase componentName
 
-        inherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") inherits
+        optionalPropsInherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") optionalPropsInherits
 
         -- | For example:
         -- | foreign import _AppBar :: ∀ a. React.Basic.ReactComponent a
@@ -318,18 +334,27 @@ componentConstructorsAST { componentName, extraVars, requiredPropsConstructor, h
         componentConstructor =
           let
             signature =
-              forAllWith extraVars { g: "given", r: "required" }
+              forAllWith optionalBaseExtraVars { g: "given", r: "required" }
                 $ \{ g, r } ->
                     let
+                      fun :: AST.Type
                       fun = Type.arr (recordApply g) Model.jsx
 
-                      extraVars' = map Type.var extraVars
+                      optionalBaseExtraVars' :: Array AST.Type
+                      optionalBaseExtraVars' = map Type.var optionalBaseExtraVars
 
-                      u = Type.app optionalPropsConstructor (Array.cons inherits' extraVars')
+                      u :: AST.Type
+                      u = Type.app optionalPropsConstructor (Array.cons optionalPropsInherits' optionalBaseExtraVars')
 
+                      r' :: AST.Type
                       r' = maybe r (\x -> Type.app x [ r ]) requiredPropsConstructor
+
+                      r'' :: AST.Type
+                      r'' = case requiredPropsInherits of
+                                 Just requiredPropsInherits' -> Type.app requiredPropsInherits' [r']
+                                 Nothing -> r'
                     in
-                      constrained "Prim.Row.Union" [ g, r', u ] fun
+                      constrained "Prim.Row.Union" [ g, r'', u ] fun
           in
             declValue
               (Ident componentName')
@@ -346,14 +371,14 @@ componentConstructorsAST { componentName, extraVars, requiredPropsConstructor, h
         componentConstructor' =
           let
             signature =
-              forAllWith extraVars { c: "componentProps", g: "given", r: "required" }
+              forAllWith optionalBaseExtraVars { c: "componentProps", g: "given", r: "required" }
                 $ \{ c, g, r } ->
                     let
                       fun = Type.arr (recordApply g) Model.jsx
 
-                      extraVars' = map Type.var extraVars
+                      optionalBaseExtraVars' = map Type.var optionalBaseExtraVars
 
-                      u = Type.app optionalPropsConstructor (Array.cons c extraVars')
+                      u = Type.app optionalPropsConstructor (Array.cons c optionalBaseExtraVars')
 
                       r' = maybe r (\x -> Type.app x [ r ]) requiredPropsConstructor
                     in
@@ -381,16 +406,16 @@ componentConstructorsAST { componentName, extraVars, requiredPropsConstructor, h
               componentConstructorWithStyles =
                 let
                   signature =
-                    forAllWith extraVars { g: "given", jss: "jss", jss_: "jss_", r: "required" }
+                    forAllWith optionalBaseExtraVars { g: "given", jss: "jss", jss_: "jss_", r: "required" }
                       $ \{ g, jss, jss_, r } ->
                           let
                             style = Type.arr (Type.constructor "MUI.Core.Styles.Types.Theme") (recordApply jss)
 
                             fun = Type.arr style (Type.arr (recordApply g) Model.jsx)
 
-                            extraVars' = map Type.var extraVars
+                            optionalBaseExtraVars' = map Type.var optionalBaseExtraVars
 
-                            u = Type.app optionalPropsConstructor (Array.cons inherits' extraVars')
+                            u = Type.app optionalPropsConstructor (Array.cons optionalPropsInherits' optionalBaseExtraVars')
                           in
                             constrained "Prim.Row.Union" [ g, r, u ]
                               $ constrained "Prim.Row.Union" [ jss, jss_, Type.constructor $ componentName <> "ClassKeyOptionsJSS" ]

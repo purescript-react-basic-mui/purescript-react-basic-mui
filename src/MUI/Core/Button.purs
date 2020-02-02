@@ -2,7 +2,7 @@
 module MUI.Core.Button where
 
 import MUI.Core (JSS) as MUI.Core
-import MUI.Core.ButtonBase (ButtonBasePropsOptions) as MUI.Core.ButtonBase
+import MUI.Core.ButtonBase (ButtonBasePropsOptions, ButtonBasePropsRequiredOptions) as MUI.Core.ButtonBase
 import MUI.Core.Styles.Types (Theme) as MUI.Core.Styles.Types
 import MUI.Core.Styles.WithStyles (withStyles) as MUI.Core.Styles.WithStyles
 import Prelude
@@ -63,7 +63,7 @@ buttonClassKeyJSS = Unsafe.Coerce.unsafeCoerce
 
 foreign import _Button :: ∀ a. React.Basic.ReactComponent a
 
-button :: ∀ required given. Prim.Row.Union given required (ButtonPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Record given -> React.Basic.JSX
+button :: ∀ required given. Prim.Row.Union given (MUI.Core.ButtonBase.ButtonBasePropsRequiredOptions required) (ButtonPropsOptions (MUI.Core.ButtonBase.ButtonBasePropsOptions React.Basic.DOM.Props_button)) => Record given -> React.Basic.JSX
 button = React.Basic.element _Button
 
 button_component :: ∀ required given componentProps. Prim.Row.Union given required (ButtonPropsOptions componentProps) => Record given -> React.Basic.JSX

@@ -35,11 +35,13 @@ import ReadDTS.Instantiation (Type) as ReadDTS.Instantiation
 -- |   - Sometimes code needs to be added to an individual component. For example, in `Typography` this is used to add a type called `VariantMapping`
 type Component
   = { extraDeclarations :: Array Declaration
-    , inherits :: Maybe Type
+    , optionalPropsInherits :: Maybe Type
+    , requiredPropsInherits :: Maybe Type
     -- | `ModulePath` value relative to `@material-ui/core/`
     , modulePath :: ModulePath
     , propsType ::
-      { base :: { row :: Row, vars :: Array Ident }
+      { optionalBase :: { row :: Row, vars :: Array Ident }
+      , requiredBase :: { row :: Row, vars :: Array Ident }
       , generate :: Array RowLabel
       -- | An escape hatch for tweaking low level props extraction
       , instantiation ::
