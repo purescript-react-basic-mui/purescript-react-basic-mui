@@ -25,6 +25,14 @@ foreign import data Padding :: Type
 padding :: { checkbox :: Padding, default :: Padding, none :: Padding }
 padding = { checkbox: Unsafe.Coerce.unsafeCoerce "checkbox", default: Unsafe.Coerce.unsafeCoerce "default", none: Unsafe.Coerce.unsafeCoerce "none" }
 
+foreign import data Align :: Type
+
+align :: { center :: Align, inherit :: Align, justify :: Align, left :: Align, right :: Align }
+align = { center: Unsafe.Coerce.unsafeCoerce "center", inherit: Unsafe.Coerce.unsafeCoerce "inherit", justify: Unsafe.Coerce.unsafeCoerce "justify", left: Unsafe.Coerce.unsafeCoerce "left", right: Unsafe.Coerce.unsafeCoerce "right" }
+
+instance eqAlign :: Eq Align where
+  eq = Unsafe.Reference.unsafeRefEq
+
 instance eqPadding :: Eq Padding where
   eq = Unsafe.Reference.unsafeRefEq
 
@@ -34,7 +42,7 @@ instance eqSize :: Eq Size where
 instance eqVariant :: Eq Variant where
   eq = Unsafe.Reference.unsafeRefEq
 
-type TableCellPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: TableCellClassKey, padding :: Padding, scope :: String, size :: Size, variant :: Variant | componentProps )
+type TableCellPropsOptions componentProps = ( align :: Align, children :: Array React.Basic.JSX, classes :: TableCellClassKey, padding :: Padding, scope :: String, size :: Size, variant :: Variant | componentProps )
 
 foreign import data TableCellProps :: Type
 

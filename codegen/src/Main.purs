@@ -1836,7 +1836,8 @@ components =
               [ children
               ]
           , generate: 
-              [ "classes"
+              [ "align"
+              , "classes"
               , "padding"
               , "scope"
               , "size"
