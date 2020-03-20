@@ -12,8 +12,8 @@ import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
 foreign import data TransitionDuration :: Type
 
-transitionDuration :: { number :: Number -> TransitionDuration, record :: { appear :: Number, enter :: Number, exit :: Number } -> TransitionDuration }
-transitionDuration = { number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce }
+transitionDuration :: { number :: Number -> TransitionDuration, record :: { appear :: Number, enter :: Number, exit :: Number } -> TransitionDuration, record1 :: { appear :: Number, enter :: Number, exit :: Number } -> TransitionDuration }
+transitionDuration = { number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce, record1: Unsafe.Coerce.unsafeCoerce }
 
 type BackdropPropsOptions componentProps = ( children :: Array React.Basic.JSX, classes :: BackdropClassKey, invisible :: Boolean, style :: React.Basic.DOM.CSS, transitionDuration :: TransitionDuration | componentProps )
 

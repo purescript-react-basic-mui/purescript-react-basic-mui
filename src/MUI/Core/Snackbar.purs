@@ -16,8 +16,8 @@ import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
 foreign import data TransitionDuration :: Type
 
-transitionDuration :: { number :: Number -> TransitionDuration, record :: { appear :: Number, enter :: Number, exit :: Number } -> TransitionDuration }
-transitionDuration = { number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce }
+transitionDuration :: { number :: Number -> TransitionDuration, record :: { appear :: Number, enter :: Number, exit :: Number } -> TransitionDuration, record1 :: { appear :: Number, enter :: Number, exit :: Number } -> TransitionDuration }
+transitionDuration = { number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce, record1: Unsafe.Coerce.unsafeCoerce }
 
 foreign import data Vertical :: Type
 

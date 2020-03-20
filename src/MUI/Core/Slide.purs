@@ -11,8 +11,8 @@ import Unsafe.Reference (unsafeRefEq) as Unsafe.Reference
 
 foreign import data Timeout :: Type
 
-timeout :: { number :: Number -> Timeout, record :: { appear :: Number, enter :: Number, exit :: Number } -> Timeout }
-timeout = { number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce }
+timeout :: { number :: Number -> Timeout, record :: { appear :: Number, enter :: Number, exit :: Number } -> Timeout, record1 :: { appear :: Number, enter :: Number, exit :: Number } -> Timeout }
+timeout = { number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce, record1: Unsafe.Coerce.unsafeCoerce }
 
 foreign import data Direction :: Type
 

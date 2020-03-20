@@ -8,8 +8,8 @@ import Unsafe.Coerce (unsafeCoerce) as Unsafe.Coerce
 
 foreign import data Timeout :: Type
 
-timeout :: { number :: Number -> Timeout, record :: { appear :: Number, enter :: Number, exit :: Number } -> Timeout }
-timeout = { number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce }
+timeout :: { number :: Number -> Timeout, record :: { appear :: Number, enter :: Number, exit :: Number } -> Timeout, record1 :: { appear :: Number, enter :: Number, exit :: Number } -> Timeout }
+timeout = { number: Unsafe.Coerce.unsafeCoerce, record: Unsafe.Coerce.unsafeCoerce, record1: Unsafe.Coerce.unsafeCoerce }
 
 type ZoomPropsOptions componentProps = ( "in" :: Boolean, timeout :: Timeout | componentProps )
 
