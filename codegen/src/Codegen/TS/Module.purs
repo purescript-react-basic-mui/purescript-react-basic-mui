@@ -74,14 +74,13 @@ import Data.String.Extra (pascalCase)
 import Data.Traversable (for, sequence)
 import Data.Tuple (Tuple(..))
 import Matryoshka (AlgebraM)
-import ReadDTS.AST (Application') as ReadDTS
-import ReadDTS.AST (TypeConstructor(..), build) as ReadDTS.AST
+import ReadDTS.AST (Application', TypeConstructor(..), build) as ReadDTS.AST
 import ReadDTS.Instantiation (Type, instantiate, TypeF(..)) as ReadDTS.Instantiation
 import Type.Prelude (SProxy(..))
 
 type Declaration
   = { defaultInstance :: ReadDTS.Instantiation.Type
-    , typeConstructor :: ReadDTS.AST.TypeConstructor ReadDTS.Application'
+    , typeConstructor :: ReadDTS.AST.TypeConstructor ReadDTS.AST.Application'
     }
 
 type LocalTypeName
@@ -99,8 +98,10 @@ buildAndInstantiateDeclarations ::
 buildAndInstantiateDeclarations file = do
   typeConstructors <- ExceptT $ ReadDTS.AST.build { strictNullChecks: false } file
   let
+    known :: ReadDTS.AST.TypeConstructor ReadDTS.AST.Application' -> Maybe { name :: String, tc :: ReadDTS.AST.TypeConstructor ReadDTS.AST.Application' }
     known = case _ of
       ReadDTS.AST.UnknownTypeConstructor _ -> Nothing
+      ReadDTS.AST.FunctionSignature _ -> Nothing
       tc@(ReadDTS.AST.Interface { name }) -> Just { name, tc }
       tc@(ReadDTS.AST.TypeAlias { name }) -> Just { name, tc }
   Map.fromFoldable <<< catMaybes
@@ -256,6 +257,8 @@ astAlgebra ::
     PossibleType
 astAlgebra = case _ of
   (ReadDTS.Instantiation.Any) -> throwError "Unable to handle Any type"
+  (ReadDTS.Instantiation.Function _) -> throwError "Unable to handle Function type"
+  (ReadDTS.Instantiation.Void) -> throwError "Unable to handle Void type"
   (ReadDTS.Instantiation.Array (PossibleUnion vs)) -> properType <<< TypeArray <=< union' Nothing $ vs
   (ReadDTS.Instantiation.Array v@(UnionMember _)) -> properType <<< TypeArray <=< union' Nothing $ [ v ]
   (ReadDTS.Instantiation.Array (ProperType t)) -> properType $ TypeArray t
