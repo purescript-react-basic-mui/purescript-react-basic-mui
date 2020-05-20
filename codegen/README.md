@@ -27,17 +27,23 @@ In general it is not very pleasant to work through `--node-args` so if you want 
 
 ## Icons
 
-You can build any mui icon module it to chosen source code directory. Here we are building `Menu` icon module:
+You can build any mui icon module for chosen source code directory. Here we are building `Menu` icon module:
 
 ```bash
-node .spago/react-basic-mui/run.js codegen -i Menu --directory $MY_DEVEL_PROJECT/src/Utils/
+$ .spago/run.js codegen -i Menu --directory $MY_DEVEL_PROJECT/src/Utils
 ```
 
-## Comonents
+It will output
+
+```
+Writing: $MY_DEVEL_PROJECT/src/Utils/MUI/Icons/MenuBook.js
+Writing: $MY_DEVEL_PROJECT/src/Utils/MUI/Icons/MenuBook.purs
+```
+
+## Components
 
 Quick component rebuild cycle can be based on `-c` option for codegen. We can output it to the file by passing output directory as above or to the stdout if we want to debug codegen:
 
 ```
-$ node .spago/run.js codegen -c Badge --stdout
+$ .spago/run.js codegen -c Badge --stdout
 ```
-

@@ -1,7 +1,6 @@
 module Codegen.AST.Monomorphic where
 
 import Prelude
-
 import Codegen.AST (ExprF(..), RowF(..), Type, TypeF(..))
 import Codegen.AST.Printers (PrintingContext(..)) as Printers
 import Codegen.AST.Printers (printType)
@@ -19,22 +18,29 @@ build :: ExprF (TypeF Type) -> Either String (TypeF Type)
 build = case _ of
   ExprBoolean _ -> pure $ TypeBoolean
   ExprApp x y -> case x of
-    (TypeArr arg res) | roll y == arg -> pure $ unroll res
-    otherwise -> throwError $
-      "Unable to unify types in application: "
-      <> "(" <> cata printType (roll x) Printers.StandAlone <> ") "
-      <> "(" <> cata printType (roll y) Printers.StandAlone <> ")"
+    (TypeArr arg res)
+      | roll y == arg -> pure $ unroll res
+    otherwise ->
+      throwError
+        $ "Unable to unify types in application: "
+        <> "("
+        <> cata printType (roll x) Printers.StandAlone
+        <> ") "
+        <> "("
+        <> cata printType (roll y) Printers.StandAlone
+        <> ")"
   ExprArray types -> case Array.uncons types of
     Nothing -> throwError "Polymorphic array expression []"
     Just { head, tail } ->
-      if all (eq (roll head) <<< roll) tail
-        then pure head
-        else throwError
+      if all (eq (roll head) <<< roll) tail then
+        pure head
+      else
+        throwError
           $ "Fail to unify array expressions: "
           <> joinWith ", " (map (\t -> cata printType (roll t) Printers.StandAlone) types)
-  ExprIdent x -> throwError $
-    "Unable to handle polymorphic variable"
+  ExprIdent x ->
+    throwError
+      $ "Unable to handle polymorphic variable"
   ExprNumber n -> pure $ TypeNumber
   ExprRecord props -> pure $ TypeRecord (Row { labels: map roll props, tail: Nothing })
   ExprString s -> pure $ TypeString
-
