@@ -1,9 +1,11 @@
 module Codegen.AST.Monomorphic where
 
 import Prelude
+
 import Codegen.AST (ExprF(..), RowF(..), Type, TypeF(..))
 import Codegen.AST.Printers (PrintingContext(..)) as Printers
 import Codegen.AST.Printers (printType)
+import Codegen.AST.Types (recordField)
 import Control.Monad.Error.Class (throwError)
 import Data.Array (uncons) as Array
 import Data.Either (Either)
@@ -42,5 +44,5 @@ build = case _ of
     throwError
       $ "Unable to handle polymorphic variable"
   ExprNumber n -> pure $ TypeNumber
-  ExprRecord props -> pure $ TypeRecord (Row { labels: map roll props, tail: Nothing })
+  ExprRecord props -> pure $ TypeRecord (Row { labels: map (recordField false <<< roll) props, tail: Nothing })
   ExprString s -> pure $ TypeString

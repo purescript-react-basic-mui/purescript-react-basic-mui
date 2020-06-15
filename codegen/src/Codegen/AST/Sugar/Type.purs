@@ -1,7 +1,8 @@
 module Codegen.AST.Sugar.Type where
 
 import Prelude
-import Codegen.AST.Types (Ident(..), ModuleName(..), QualifiedName, Row, RowF(..), RowLabel, Type, TypeF(..), TypeName)
+
+import Codegen.AST.Types (Ident(..), ModuleName(..), QualifiedName, RecordField, RecordRow, Row, RowF(..), RowLabel, Type, TypeF(..), TypeName)
 import Data.Array (fromFoldable) as Array
 import Data.Array (unsnoc)
 import Data.Either (Either)
@@ -129,7 +130,7 @@ name' n = qn n
 number :: Type
 number = roll TypeNumber
 
-record :: Row -> Type
+record :: RecordRow -> Type
 record = roll <<< TypeRecord
 
 recordApply :: Type -> Type
@@ -141,6 +142,9 @@ recordApply v =
 
 row :: Map RowLabel Type -> Maybe (Either Ident (QualifiedName TypeName)) -> Row
 row labels tail = Row $ { labels, tail }
+
+recordRow :: Map RowLabel (RecordField Type) -> Maybe (Either Ident (QualifiedName TypeName)) -> RecordRow
+recordRow labels tail = Row $ { labels, tail }
 
 string :: Type
 string = roll TypeString

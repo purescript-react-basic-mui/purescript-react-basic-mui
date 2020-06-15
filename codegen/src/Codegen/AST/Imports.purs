@@ -1,13 +1,15 @@
 module Codegen.AST.Imports where
 
 import Prelude
-import Codegen.AST.Types (ClassName, Declaration(..), ExprF(..), Import(..), ImportDecl(..), Imports(..), ModuleName, QualifiedName, RowF(..), TypeF(..), TypeName)
+
+import Codegen.AST.Types (ClassName, Declaration(..), ExprF(..), Import(..), ImportDecl(..), Imports(..), ModuleName, QualifiedName, RecordField(..), RowF(..), TypeF(..), TypeName)
 import Data.Either (hush)
 import Data.Foldable (fold, foldMap)
 import Data.List (List)
 import Data.List (fromFoldable) as List
 import Data.Map (singleton, toUnfoldable) as Map
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
+import Data.Newtype (un)
 import Data.Set (singleton) as Set
 import Data.Tuple (Tuple(..))
 import Matryoshka (Algebra, cata)
@@ -49,7 +51,7 @@ typeImportsAlgebra = case _ of
   TypeForall _ t -> t
   TypeNumber -> mempty
   TypeRow r -> rowImports r
-  TypeRecord r -> rowImports r
+  TypeRecord r -> rowImports (map (_.ref <<< un RecordField) r)
   TypeString -> mempty
   TypeVar _ -> mempty
   where

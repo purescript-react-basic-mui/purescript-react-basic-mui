@@ -35,14 +35,16 @@ module Codegen.TS.Module where
 -- | like `FabProps<MyType, OtherType>` if we want to.
 -- |
 -- | We do use this strategy in `Codegen.TS.MUI`.
+
 import Prelude
+
 import Codegen.AST (Declaration(..)) as AST
 import Codegen.AST (Expr, ExprF(..), Ident(..), RowF(..), RowLabel, Type, TypeF(..), TypeName(..), Union(..))
 import Codegen.AST.Sugar (declInstance, valueBindingFields)
 import Codegen.AST.Sugar.Expr (app, boolean, ident, number, string) as Expr
 import Codegen.AST.Sugar.Type (arr) as Type
 import Codegen.AST.Sugar.Type (name')
-import Codegen.AST.Types (UnionMember(..), reservedNames)
+import Codegen.AST.Types (UnionMember(..), recordField, reservedNames)
 import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (ExceptT(..), mapExceptT, withExceptT)
@@ -269,9 +271,9 @@ astAlgebra = case _ of
   ReadDTS.Instantiation.Number -> properType $ TypeNumber
   (ReadDTS.Instantiation.Object _ ts) -> ProperType <<< roll <<< TypeRecord <<< Row <<< { tail: Nothing, labels: _ } <$> ts'
     where
-    step propName { "type": PossibleUnion vs } = union' (Just propName) vs
-    step propName { "type": v@(UnionMember _) } = union' (Just propName) [ v ]
-    step _ { "type": ProperType t } = pure $ t
+    step propName { "type": PossibleUnion vs, optional } = recordField optional <$> union' (Just propName) vs
+    step propName { "type": v@(UnionMember _), optional } = recordField optional <$> union' (Just propName) [ v ]
+    step _ { "type": ProperType t, optional } = pure $ recordField optional t
 
     ts' = sequence $ mapWithIndex step ts
   ReadDTS.Instantiation.String -> properType TypeString
@@ -372,7 +374,7 @@ unionDeclarations typeName@(TypeName name) members =
   isConstructor _ = false
 
   -- | We are able to provide Eq instance based on `shallowEq`
-  -- | easily whenever there are only literal members of a given
+  -- | whenever there are only literal members of a given
   -- | union.
   instances =
     if all (not <<< isConstructor) members then
@@ -398,6 +400,8 @@ unionDeclarations typeName@(TypeName name) members =
 
   _sig = prop (SProxy :: SProxy "sig")
 
+  _type = prop (SProxy :: SProxy "type")
+
   expr = roll $ ExprRecord $ map (view _expr) $ members'
 
   signature =
@@ -405,5 +409,6 @@ unionDeclarations typeName@(TypeName name) members =
       <<< TypeRecord
       <<< Row
       <<< { tail: Nothing, labels: _ }
-      <<< map (view _sig)
+      -- | TODO: What should go here into optional position?
+      <<< map (recordField false <<< view _sig)
       $ members'

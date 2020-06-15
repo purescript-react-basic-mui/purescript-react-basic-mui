@@ -1,8 +1,9 @@
 module Codegen.AST.Printers where
 
 import Prelude
+
 import Codegen.AST.Imports (declarationImports, importsDeclarations)
-import Codegen.AST.Types (Declaration(..), ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), QualifiedName, RowF(..), TypeF(..), TypeName(..), ValueBindingFields, reservedNames)
+import Codegen.AST.Types (Declaration(..), ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), QualifiedName, RecordField(..), RowF(..), TypeF(..), TypeName(..), ValueBindingFields, reservedNames)
 import Data.Array (cons, fromFoldable, null) as Array
 import Data.Char.Unicode (isUpper)
 import Data.Either (Either(..), fromRight)
@@ -209,7 +210,7 @@ printType = case _ of
       <> t StandAlone
   TypeForall vs t -> const $ "∀" <> " " <> line (map unwrap vs) <> "." <> " " <> t StandAlone
   TypeNumber -> const "Number"
-  TypeRecord r -> const $ "{ " <> printRow r <> " }"
+  TypeRecord r -> const $ "{ " <> printRecordRow r <> " }"
   TypeRow r -> const $ "( " <> printRow r <> " )"
   TypeString -> const $ "String"
   TypeVar (Ident v) -> const $ v
@@ -218,12 +219,20 @@ printType = case _ of
   parens s InApplication = "(" <> s <> ")"
   parens s StandAlone = s
 
-  printRow (Row { labels, tail }) = intercalate ", " labels' <> tail'
+  printRecordRow (Row { labels, tail }) = intercalate ", " labels' <> printTail tail
+    where
+    labels' :: Array String
+    labels' = map (\(Tuple n (RecordField { ref: t, optional: o })) ->
+      printRowLabel n <> " :: " <> opt o <> t StandAlone) <<< Map.toUnfoldable $ labels
+
+    opt b = if b then "? " else ""
+
+  printRow (Row { labels, tail }) = intercalate ", " labels' <> printTail tail
     where
     labels' :: Array String
     labels' = map (\(Tuple n t) -> printRowLabel n <> " :: " <> t StandAlone) <<< Map.toUnfoldable $ labels
 
-    tail' = case tail of
-      Nothing -> mempty
-      Just (Left ident) -> " | " <> unwrap ident
-      Just (Right qn) -> " | " <> printQualifiedName qn
+  printTail = case _ of
+    Nothing -> mempty
+    Just (Left ident) -> " | " <> unwrap ident
+    Just (Right qn) -> " | " <> printQualifiedName qn

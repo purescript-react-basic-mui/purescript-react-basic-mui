@@ -3,7 +3,9 @@ module Codegen.AST.Types where
 -- | This module is heavily inspired by `purescript-cst` AST types.
 -- | The types and constructor names are take from there to simplify
 -- | further "copy and paste" based development.
+
 import Prelude
+
 import Data.Array (zip) as Array
 import Data.Either (Either)
 import Data.Eq (class Eq1)
@@ -19,7 +21,7 @@ import Data.Newtype (class Newtype)
 import Data.Ord (class Ord1)
 import Data.Set (Set)
 import Data.Set (fromFoldable, union) as Set
-import Data.Traversable (class Traversable, sequence, traverseDefault)
+import Data.Traversable (class Traversable, sequence, traverse, traverseDefault)
 import Data.Tuple (uncurry)
 
 -- | No need for imports list as they are collected from declarations
@@ -69,6 +71,25 @@ type QualifiedTypeName
 type Constraint ref
   = { className :: QualifiedName ClassName, params :: Array ref }
 
+recordField :: forall ref. Boolean -> ref -> RecordField ref
+recordField optional ref = RecordField { ref, optional }
+
+newtype RecordField ref = RecordField { "ref" :: ref, optional :: Boolean }
+derive instance newtypeRecordField :: Newtype (RecordField ref) _
+derive instance genericRecordField :: Generic (RecordField ref) _
+derive instance eqRecordField :: Eq ref => Eq (RecordField ref)
+derive instance ordRecordField :: Ord ref => Ord (RecordField ref)
+derive instance functorRecordField :: Functor RecordField
+instance foldableRecordField :: Foldable RecordField where
+  foldMap f (RecordField { ref } ) = f ref
+  foldr f t = foldrDefault f t
+  foldl f t = foldlDefault f t
+instance traversableRecordField :: Traversable RecordField where
+  sequence (RecordField { optional, ref }) = recordField optional <$> ref
+  traverse = traverseDefault
+instance showRecordField :: Show ref => Show (RecordField ref) where
+  show p = genericShow p
+
 data TypeF ref
   = TypeApp ref (Array ref)
   | TypeArr ref ref
@@ -80,10 +101,13 @@ data TypeF ref
   | TypeNumber
   -- | I'm handling this mututal recursion by hand
   -- | because I'm not sure how to do this better.
-  | TypeRecord (RowF ref)
+  | TypeRecord (RowF (RecordField ref))
   | TypeRow (RowF ref)
   | TypeString
   | TypeVar Ident
+
+--   sequence (TypeRecord (Row ts)) = TypeRecord <<< Row <<< { tail: ts.tail, labels: _ } <$> for ts.labels \{ "type": t, optional } ->
+--       { optional, type: _ } <$> t
 
 type Type
   = Mu TypeF
@@ -183,7 +207,7 @@ instance foldableTypeF :: Foldable TypeF where
   foldMap _ TypeBoolean = mempty
   foldMap f (TypeConstrained { className, params } t) = foldMap f params <> f t
   foldMap _ (TypeConstructor _) = mempty
-  foldMap f (TypeRecord r) = foldMap f r
+  foldMap f (TypeRecord r) = foldMap (foldMap f) r
   foldMap f (TypeRow r) = foldMap f r
   foldMap _ TypeNumber = mempty
   foldMap f (TypeForall _ t) = f t
@@ -201,7 +225,7 @@ instance traversableTypeF :: Traversable TypeF where
   sequence (TypeConstructor t) = pure $ TypeConstructor t
   sequence (TypeForall v t) = TypeForall v <$> t
   sequence TypeNumber = pure $ TypeNumber
-  sequence (TypeRecord ts) = TypeRecord <$> sequence ts
+  sequence (TypeRecord ts) = TypeRecord <$> traverse sequence ts
   sequence (TypeRow ts) = TypeRow <$> sequence ts
   sequence TypeString = pure $ TypeString
   sequence (TypeVar ident) = pure $ TypeVar ident
@@ -240,6 +264,9 @@ instance traversableRowF :: Traversable RowF where
 -- | simplifies structure of most our algebras.
 type Row
   = RowF Type
+
+type RecordRow
+  = RowF (RecordField Type)
 
 emptyRow :: Row
 emptyRow = Row { labels: mempty, tail: Nothing }
