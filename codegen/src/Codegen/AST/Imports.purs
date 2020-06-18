@@ -2,17 +2,21 @@ module Codegen.AST.Imports where
 
 import Prelude
 
-import Codegen.AST.Types (ClassName, Declaration(..), ExprF(..), Import(..), ImportDecl(..), Imports(..), ModuleName, QualifiedName, RecordField(..), RowF(..), TypeF(..), TypeName)
-import Data.Either (hush)
+import Codegen.AST.Types (ClassName, Declaration(..), ExprF(..), Import(..), ImportDecl(..), Imports(..), ModuleName, QualifiedName, RowF(..), TypeF(..), TypeName, ValueBindingFields(..))
 import Data.Foldable (fold, foldMap)
 import Data.List (List)
 import Data.List (fromFoldable) as List
+import Data.Map (Map)
 import Data.Map (singleton, toUnfoldable) as Map
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (un)
 import Data.Set (singleton) as Set
 import Data.Tuple (Tuple(..))
 import Matryoshka (Algebra, cata)
+
+type Alias = String
+
+type ImportAlias = Map ModuleName (Maybe Alias)
 
 importsDeclarations :: Imports -> List ImportDecl
 importsDeclarations (Imports i) = map step <<< Map.toUnfoldable $ i
@@ -26,17 +30,25 @@ declarationImports :: Declaration -> Imports
 declarationImports (DeclForeignValue { ident, "type": t }) = cata typeImportsAlgebra t
 declarationImports (DeclInstance { head: { className, types }, body }) = bei <> bst <> ti <> ci
   where
-  bei = foldMap (cata exprImportsAlgebra <<< _.value.expr) body
+  bei = foldMap (cata exprImportsAlgebra <<< _.value.expr <<< un ValueBindingFields) body
 
-  bst = foldMap (maybe mempty (cata typeImportsAlgebra) <<< _.signature) body
+  bst = foldMap (maybe mempty (cata typeImportsAlgebra) <<< _.signature <<< un ValueBindingFields) body
 
   ti = foldMap (cata typeImportsAlgebra) types
 
   ci = fromMaybe mempty $ qualifiedClassNameImport className
 declarationImports (DeclForeignData { typeName }) = mempty
 declarationImports (DeclType { typeName, "type": t }) = cata typeImportsAlgebra t
-declarationImports (DeclValue { value, signature: Just s }) = cata typeImportsAlgebra s <> cata exprImportsAlgebra value.expr
-declarationImports (DeclValue { value, signature: Nothing }) = cata exprImportsAlgebra value.expr
+declarationImports (DeclValue vb) = valueBindingFieldsImports vb
+
+valueBindingFieldsImports :: ValueBindingFields -> Imports
+valueBindingFieldsImports (ValueBindingFields { value, signature }) =
+  typeImports <> cata exprImportsAlgebra value.expr <> whereBindingsImports
+  where
+    whereBindingsImports = foldMap valueBindingFieldsImports value.whereBindings
+    typeImports = case signature of
+      Just s -> cata typeImportsAlgebra s
+      Nothing ->mempty
 
 typeImportsAlgebra :: Algebra TypeF Imports
 typeImportsAlgebra = case _ of
@@ -50,16 +62,17 @@ typeImportsAlgebra = case _ of
   TypeConstructor qn -> qualifiedTypeNameImport' qn
   TypeForall _ t -> t
   TypeNumber -> mempty
+  TypeOpt t -> t
   TypeRow r -> rowImports r
-  TypeRecord r -> rowImports (map (_.ref <<< un RecordField) r)
+  TypeRecord r -> rowImports r
   TypeString -> mempty
+  (TypeSymbol _) -> mempty
   TypeVar _ -> mempty
   where
   qualifiedTypeNameImport' = fromMaybe mempty <<< qualifiedTypeNameImport
 
   rowImports (Row r) =
-    (fromMaybe mempty $ r.tail >>= hush >>= qualifiedTypeNameImport)
-      <> (fold r.labels)
+    (fromMaybe mempty r.tail <> fold r.labels)
 
 qualifiedTypeNameImport :: QualifiedName TypeName -> Maybe Imports
 qualifiedTypeNameImport { moduleName: Just moduleName, name: t } = Just $ importsSingleton moduleName (ImportType t)
@@ -79,5 +92,6 @@ exprImportsAlgebra = case _ of
   ExprRecord props -> fold props
   ExprString s -> mempty
   where
+  -- | Don't import type constructors here - check if t starts with capital letter
   qualifiedValueImport { moduleName: Just moduleName, name: t } = Just $ importsSingleton moduleName (ImportValue t)
   qualifiedValueImport _ = Nothing

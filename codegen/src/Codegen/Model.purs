@@ -1,8 +1,10 @@
 module Codegen.Model where
 
 import Prelude
-import Codegen.AST (Declaration, Ident, Row, RowLabel, Type)
+
+import Codegen.AST (Declaration, Ident, RowLabel, Type)
 import Codegen.AST.Sugar.Type (app, array, constructor) as Type
+import Codegen.AST.Types (Fields) as AST.Types
 import Codegen.TS.Types (InstanceProps, InstantiationStrategy)
 import Data.Either (Either)
 import Data.Foldable (intercalate)
@@ -21,8 +23,9 @@ import ReadDTS.Instantiation (Type) as ReadDTS.Instantiation
 -- |
 -- | * `instantiation` - a hook into codegen type specizliation step
 -- |
+
 type PropsType =
-  { base :: { row :: Row, vars :: Array Ident }
+  { base :: AST.Types.Fields Type
   , generate :: Array RowLabel
   -- | An escape hatch for tweaking low level props extraction
   , instantiation :: Maybe
@@ -117,6 +120,9 @@ reactComponentApply t = Type.app (Type.constructor "React.Basic.ReactComponent")
 
 divProps :: Type
 divProps = Type.constructor "React.Basic.DOM.Props_div"
+
+nativeElementProps :: Type
+nativeElementProps = Type.constructor "MUI.Core.NativeElementProps"
 
 -- effectFn2 :: PropType -> PropType
 -- effectFn2 = PropList (ImportProp "Effect.Uncurried" "EffectFn2")

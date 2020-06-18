@@ -1,6 +1,8 @@
 module Codegen.TS.Types where
 
+import Codegen.AST.Imports (ImportAlias)
 import Control.Monad.Except (ExceptT)
+import Control.Monad.Reader (ReaderT)
 import Data.Map (Map)
 import Effect (Effect)
 import ReadDTS.Instantiation (Property, Type) as ReadDTS.Instantiation
@@ -17,5 +19,4 @@ type InstanceProps
     , props :: Map String (ReadDTS.Instantiation.Property ReadDTS.Instantiation.Type)
     }
 
-type M a
-  = ExceptT (Array String) Effect a
+type M a = ExceptT (Array String) (ReaderT ImportAlias Effect) a

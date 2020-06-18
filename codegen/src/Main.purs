@@ -6,8 +6,8 @@ import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconP
 import Codegen (component, icon, write) as Codegen
 import Codegen.AST (Ident(..), ModuleName(..), TypeF(..), TypeName(..))
 import Codegen.AST.Sugar (declType)
-import Codegen.AST.Sugar.Type (app, constructor, record, recordRow, row) as Type
-import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, divProps, iconName, jsx, psImportPath, reactComponentApply)
+import Codegen.AST.Sugar.Type (app, constructor, record, row) as Type
+import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, divProps, iconName, jsx, nativeElementProps, psImportPath, reactComponentApply)
 import Codegen.Model (componentName) as Model
 import Codegen.TS.MUI (componentProps) as TS.MUI
 import Codegen.TS.MUI (propsTypeName)
@@ -15,7 +15,7 @@ import Codegen.TS.Types (InstantiationStrategy(..))
 import Control.Alt ((<|>))
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExceptT)
-import Control.Monad.Reader (runReaderT)
+import Control.Monad.Reader (runReader, runReaderT)
 import Control.Monad.Trans.Class (lift)
 import Data.Array (filter)
 import Data.Array (null, sort) as Array
@@ -24,7 +24,7 @@ import Data.Foldable (for_, intercalate)
 import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Functor.Mu (roll, unroll)
 import Data.List (sort) as List
-import Data.Map (filterWithKey, fromFoldable, keys, lookup, toUnfoldable) as Map
+import Data.Map (filterWithKey, fromFoldable, fromFoldableWithIndex, keys, lookup, toUnfoldable) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap, wrap)
@@ -33,9 +33,11 @@ import Data.String (Pattern(..), split)
 import Data.String (null) as String
 import Data.Traversable (for, traverse)
 import Data.Tuple (Tuple(..))
+import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class.Console (log)
+import Foreign.Object (fromHomogeneous) as Object
 import Matryoshka (cata)
 import Node.Path (FilePath)
 import Options.Applicative (Parser, ReadM, command, eitherReader, execParser, flag', fullDesc, help, helper, info, long, metavar, option, progDesc, readerError, short, strOption, subparser, value, (<**>))
@@ -54,23 +56,11 @@ components =
 
     jss = Type.constructor "MUI.Core.JSS"
 
-    -- | variable used For example:
-    -- | type AppBarPropsOptions componentProps = (... | componentProps)
-    componentPropsIdent = Ident "componentProps"
+    -- | It is nice to have parametrized `Row` by default
+    -- | because it allows us
+    basePropsRow props = props
 
-    component =
-      Tuple "component"
-        $ reactComponentApply
-            (Type.record <<< Type.recordRow mempty $ Just $ Left componentPropsIdent)
-
-    basePropsRow extraVars props =
-      { row: Type.row props (Just (Left componentPropsIdent))
-      , vars: [ componentPropsIdent ] <> extraVars
-      }
-
-    basePropsRow' = basePropsRow [] <<< Map.fromFoldable
-
-    emptyBase = basePropsRow [] mempty
+    emptyBase = basePropsRow mempty
 
     simpleComponent { inherits, name, propsType: { base, generate }} =
       { extraDeclarations: []
@@ -98,7 +88,7 @@ components =
                 [ divProps ]
         , name: "AppBar"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { base:  Map.fromFoldable [ children ]
           , generate: [ "classes", "color", "position" ]
           }
         }
@@ -108,7 +98,7 @@ components =
         { inherits: Just $ divProps
         , name: "Avatar"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable []
+          { base:  Map.fromFoldable []
           , generate:
             [ "alt"
             , "classes"
@@ -130,12 +120,10 @@ components =
                 [ divProps ]
         , name: "Backdrop"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ children
-                  , Tuple "style" (Type.constructor "React.Basic.DOM.CSS")
-                  ]
+          { base: Map.fromFoldable
+              [ children
+              , Tuple "style" (Type.constructor "React.Basic.DOM.CSS")
+              ]
           , generate: [ "classes", "invisible", "open", "transitionDuration" ]
           }
         }
@@ -145,14 +133,10 @@ components =
         { inherits: Nothing
         , name: "Badge"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ Tuple "badgeContent" jsx
-                  , children
-                  -- | Not in props?
-                  -- , component
-                  ]
+          { base: Map.fromFoldable
+              [ Tuple "badgeContent" jsx
+              , children
+              ]
           , generate:
             [ "anchorOrigin"
             , "classes"
@@ -171,7 +155,7 @@ components =
         { inherits: Just $ divProps
         , name: "BottomNavigation"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable
+          { base:  Map.fromFoldable
               [ children
               -- , component
               , eventHandlerProp "onChange"
@@ -185,7 +169,7 @@ components =
         { inherits: Just $ divProps
         , name: "Box"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable $ [ children, component, Tuple "css" jss ]
+          { base:  Map.fromFoldable $ [ children, Tuple "css" jss ]
           , generate: [ "clone" ]
           }
         }
@@ -196,7 +180,7 @@ components =
         , name: "Breadcrumbs"
         , propsType:
           { base:
-            basePropsRow [] $ Map.fromFoldable
+             Map.fromFoldable
               $ [ children
                 -- Not found on the TS side
                 -- , component
@@ -216,7 +200,7 @@ components =
                 [ Type.constructor "React.Basic.DOM.Props_button" ]
         , name: "Button"
         , propsType:
-          { base: basePropsRow'
+          { base: Map.fromFoldable
               [ Tuple "endIcon" jsx
               , Tuple "startIcon" jsx
               ]
@@ -241,7 +225,7 @@ components =
         , name: "ButtonGroup"
         , propsType:
           { base:
-            basePropsRow [] $ Map.fromFoldable [ children ]
+             Map.fromFoldable [ children ]
           , generate:
             [ "classes"
             , "color"
@@ -273,7 +257,7 @@ components =
                 [ Type.constructor "React.Basic.DOM.Props_button" ]
         , modulePath: Name "ButtonBase"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable
+          { base:  Map.fromFoldable
               [ Tuple "action" foreignType
               , Tuple "buttonRef" foreignType
               -- XXX: We are catching material ui documentation / type error here.
@@ -282,11 +266,11 @@ components =
               , eventHandlerProp "onFocusVisible"
               -- | XXX: Provide some sugar for generating relative imports
               -- | between components
-              , Tuple "TouchRippleProps" $ roll
-                  $ TypeConstructor
-                      { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
-                      , name: TypeName $ (propsTypeName touchRippleType.name)
-                      }
+              -- , Tuple "TouchRippleProps" $ roll
+              --     $ TypeConstructor
+              --         { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
+              --         , name: TypeName $ (propsTypeName touchRippleType.name)
+              --         }
               ]
           , generate:
             [ "centerRipple"
@@ -313,12 +297,10 @@ components =
                 [ divProps ]
         , name: "BottomNavigationAction"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ Tuple "icon" jsx
-                  , Tuple "label" jsx
-                  ]
+          { base: Map.fromFoldable
+              [ Tuple "icon" jsx
+              , Tuple "label" jsx
+              ]
           , generate:
             [ "classes"
             , "showLabel"
@@ -336,7 +318,7 @@ components =
                 [ divProps ]
         , name: "Card"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { base:  Map.fromFoldable [ children ]
           , generate: [ "classes", "raised" ]
           }
         }
@@ -350,7 +332,7 @@ components =
                 [ Type.constructor "React.Basic.DOM.Props_button" ]
         , name: "CardActionArea"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { base:  Map.fromFoldable [ children ]
           , generate: [ "classes" ]
           }
         }
@@ -360,7 +342,7 @@ components =
         { inherits: Just $ divProps
         , name: "CardActions"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { base:  Map.fromFoldable [ children ]
           , generate: [ "classes", "disableSpacing" ]
           }
         }
@@ -370,7 +352,7 @@ components =
         { inherits: Just $ divProps
         , name: "CardContent"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { base:  Map.fromFoldable [ children ]
           , generate: [ "classes" ]
           }
         }
@@ -380,7 +362,7 @@ components =
         { inherits: Just $ divProps
         , name: "CardHeader"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable
+          { base:  Map.fromFoldable
               [ Tuple "action" jsx
               , Tuple "avatar" jsx
               , children
@@ -398,7 +380,7 @@ components =
         { inherits: Just $ divProps
         , name: "CardMedia"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable
+          { base:  Map.fromFoldable
               [ children
               -- This isn't being found in the .d.ts
               --, component
@@ -412,18 +394,16 @@ components =
         { inherits: Nothing -- should be IconButon
         , name: "Checkbox"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  ( [ Tuple "checkedIcon" jsx
-                    , Tuple "icon" jsx
-                    , Tuple "indeterminateIcon" jsx
-                    , Tuple "inputProps" foreignType
-                    , Tuple "inputRef" foreignType
-                    , Tuple "value" foreignType
-                    ]
-                      <> (map eventHandlerProp [ "onChange" ])
-                  )
+          { base: Map.fromFoldable
+              ( [ Tuple "checkedIcon" jsx
+                , Tuple "icon" jsx
+                , Tuple "indeterminateIcon" jsx
+                , Tuple "inputProps" foreignType
+                , Tuple "inputRef" foreignType
+                , Tuple "value" foreignType
+                ]
+                  <> (map eventHandlerProp [ "onChange" ])
+              )
           , generate:
             [ "checked"
             , "classes"
@@ -442,7 +422,7 @@ components =
         { inherits: Just $ divProps
         , name: "Chip"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable
+          { base:  Map.fromFoldable
             [ Tuple "avatar" jsx
             , Tuple "deleteIcon" jsx
             , Tuple "icon" jsx
@@ -464,7 +444,7 @@ components =
         { inherits: Just $ divProps
         , name: "CircularProgress"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable []
+          { base:  Map.fromFoldable []
           , generate:
             [ "classes"
             , "color"
@@ -484,7 +464,7 @@ components =
         -- | Single jsx node is required
         child = Tuple "children" jsx
 
-        base = basePropsRow [] $ Map.fromFoldable [ child, onClickAway ]
+        base =  Map.fromFoldable [ child, onClickAway ]
       in
         simpleComponent
           { inherits: Nothing
@@ -500,7 +480,7 @@ components =
         { inherits: Nothing
         , name: "Collapse"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children, component ]
+          { base:  Map.fromFoldable [ children ]
           , generate:
             [ "collapsedHeight"
             , "in"
@@ -527,7 +507,7 @@ components =
         { inherits: Nothing
         , name: "CssBaseline"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { base:  Map.fromFoldable [ children ]
           , generate: []
           }
         }
@@ -547,7 +527,7 @@ components =
             , "onExiting"
             ]
 
-        base = basePropsRow [] $ Map.fromFoldable $ [ children ] <> handlers
+        base =  Map.fromFoldable $ [ children ] <> handlers
       in
         simpleComponent
           { inherits:
@@ -576,7 +556,7 @@ components =
         { inherits: Nothing
         , name: "DialogActions"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { base:  Map.fromFoldable [ children ]
           , generate: [ "classes", "disableSpacing" ]
           }
         }
@@ -586,7 +566,7 @@ components =
         { inherits: Nothing
         , name: "DialogContent"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { base:  Map.fromFoldable [ children ]
           , generate: [ "classes", "dividers" ]
           }
         }
@@ -596,7 +576,7 @@ components =
         { inherits: Nothing
         , name: "DialogTitle"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ children ]
+          { base:  Map.fromFoldable [ children ]
           , generate: [ "classes", "disableTypography" ]
           }
         }
@@ -607,7 +587,7 @@ components =
         { inherits: Just $ Type.constructor "React.Basic.DOM.Props_hr"
         , name: "Divider"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable []
+          { base:  Map.fromFoldable []
           , generate:
             [ "absolute"
             , "classes"
@@ -623,17 +603,15 @@ components =
         { inherits: Just $ Type.app (Type.constructor "MUI.Core.Modal.ModalPropsOptions") [ divProps ]
         , name: "Drawer"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  ( [ children
-                    , Tuple "ModalProps" (Type.constructor "MUI.Core.Modal.ModalPropsPartial")
-                    , eventHandlerProp "onClose"
-                    , Tuple "PaperProps" (Type.constructor "MUI.Core.Modal.ModalPropsPartial")
-                    , Tuple "SlideProps" (Type.constructor "MUI.Core.Slide.SlidePropsPartial")
-                    ]
-                      <> map eventHandlerProp [ "onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
-                  )
+          { base: Map.fromFoldable
+              ( [ children
+                , Tuple "ModalProps" (Type.constructor "MUI.Core.Modal.ModalPropsPartial")
+                , eventHandlerProp "onClose"
+                , Tuple "PaperProps" (Type.constructor "MUI.Core.Modal.ModalPropsPartial")
+                , Tuple "SlideProps" (Type.constructor "MUI.Core.Slide.SlidePropsPartial")
+                ]
+                  <> map eventHandlerProp [ "onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
+              )
           , generate:
             [ "anchor"
             , "classes"
@@ -651,12 +629,10 @@ components =
         { inherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ divProps ]
         , name: "ExpansionPanel"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ children
-                  , eventHandlerProp "onChange"
-                  ]
+          { base: Map.fromFoldable
+              [ children
+              , eventHandlerProp "onChange"
+              ]
           , generate:
             [ "classes"
             , "defaultExpanded"
@@ -671,14 +647,8 @@ components =
         { inherits: Just divProps
         , name: "ExpansionPanelActions"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            ]
+          { base: Map.fromFoldable [ children ]
+          , generate: [ "classes" ]
           }
         }
 
@@ -687,14 +657,8 @@ components =
         { inherits: Just divProps
         , name: "ExpansionPanelDetails"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            ]
+          { base: Map.fromFoldable [ children ]
+          , generate: [ "classes" ]
           }
         }
 
@@ -703,16 +667,12 @@ components =
         { inherits: Just divProps
         , name: "ExpansionPanelSummary"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ children
-                  , Tuple "expandIcon" jsx
-                  , Tuple "IconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonPropsPartial")
-                  ]
-          , generate:
-            [ "classes"
-            ]
+          { base: Map.fromFoldable
+              [ children
+              , Tuple "expandIcon" jsx
+              , Tuple "IconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonPropsPartial")
+              ]
+          , generate: [ "classes" ]
           }
         }
 
@@ -744,7 +704,7 @@ components =
         { inherits: Nothing -- should inherit TransitionComponent
         , name: "Fade"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ Tuple "ref" foreignType ]
+          { base:  Map.fromFoldable [ Tuple "ref" foreignType ]
           , generate:
             [ {-- not sure what to do here, "theme" --}]
           }
@@ -756,39 +716,37 @@ components =
         { inherits: Just $ Type.app (Type.constructor "MUI.Core.InputBasePropsOption") [ divProps ]
         , name: "FilledInput"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ children
-                  , Tuple "endAdornment" jsx
-                  , Tuple "inputProps" (Type.constructor "MUI.Core.InputBasePartial")
-                  , Tuple "inputRef" foreignType
-                  , eventHandlerProp "onChange"
-                  , Tuple "startAdornment" jsx
-                  , Tuple "value" foreignType
-                  ]
+          { base:  Map.fromFoldable
+              [ children
+              , Tuple "endAdornment" jsx
+              , Tuple "inputProps" (Type.constructor "MUI.Core.InputBasePartial")
+              , Tuple "inputRef" foreignType
+              , eventHandlerProp "onChange"
+              , Tuple "startAdornment" jsx
+              , Tuple "value" foreignType
+              ]
           , generate:
-            [ "autoComplete"
-            , "autoFocus"
-            , "classes"
-            , "className"
-            , "color"
-            , "defaultValue"
-            , "disabled"
-            , "disableUnderline"
-            , "error"
-            , "fullWidth"
-            , "id"
-            , "margin"
-            , "multiline"
-            , "name"
-            , "placeholder"
-            , "readOnly"
-            , "required"
-            , "rows"
-            , "rowsMax"
-            , "type"
-            ]
+              [ "autoComplete"
+              , "autoFocus"
+              , "classes"
+              , "className"
+              , "color"
+              , "defaultValue"
+              , "disabled"
+              , "disableUnderline"
+              , "error"
+              , "fullWidth"
+              , "id"
+              , "margin"
+              , "multiline"
+              , "name"
+              , "placeholder"
+              , "readOnly"
+              , "required"
+              , "rows"
+              , "rowsMax"
+              , "type"
+              ]
           }
         }
 
@@ -797,11 +755,7 @@ components =
         { inherits: Just $ divProps
         , name: "FormControl"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ children
-                  ]
+          { base: Map.fromFoldable [ children ]
           , generate:
             [ "color"
             , "disabled"
@@ -821,14 +775,12 @@ components =
         { inherits: Just $ Type.constructor "React.Basic.DOM.Props_label"
         , name: "FormControlLabel"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ Tuple "control" jsx
-                  , Tuple "label" jsx
-                  , eventHandlerProp "onChange"
-                  , Tuple "value" foreignType
-                  ]
+          { base: Map.fromFoldable
+              [ Tuple "control" jsx
+              , Tuple "label" jsx
+              , eventHandlerProp "onChange"
+              , Tuple "value" foreignType
+              ]
           , generate:
             [ "checked"
             , "classes"
@@ -844,11 +796,7 @@ components =
         { inherits: Just $ divProps
         , name: "FormGroup"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ children
-                  ]
+          { base: Map.fromFoldable [ children ]
           , generate:
             [ "classes"
             , "row"
@@ -861,8 +809,7 @@ components =
         { inherits: Just $ Type.constructor "React.Basic.DOM.Props_p"
         , name: "FormHelperText"
         , propsType:
-          { base:
-            basePropsRow [] $ Map.fromFoldable [ children ]
+          { base: Map.fromFoldable [ children ]
           , generate:
             [ "classes"
             , "disabled"
@@ -881,11 +828,7 @@ components =
         { inherits: Just $ Type.constructor "React.Basic.DOM.Props_label"
         , name: "FormLabel"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ children
-                  ]
+          { base: Map.fromFoldable [ children ]
           , generate:
             [ "classes"
             , "color"
@@ -903,11 +846,7 @@ components =
         { inherits: Just divProps
         , name: "Grid"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ children
-                  ]
+          { base: Map.fromFoldable [ children ]
           , generate:
             [ "alignContent"
             , "alignItems"
@@ -928,53 +867,34 @@ components =
           }
         }
 
-    gridList =
-      let
-        base =
-          basePropsRow []
-            $ Map.fromFoldable
-                [ children
-                , component
-                ]
-      in
-        simpleComponent
-          { inherits: Just $ Type.constructor "React.Basic.DOM.Props_ul"
-          , name: "GridList"
-          , propsType:
-            { base: emptyBase
-            , generate: [ "cellHeight", "classes", "cols", "spacing" ]
-            }
-          }
+    gridList = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_ul"
+      , name: "GridList"
+      , propsType:
+        { base: Map.fromFoldable [ children ]
+        , generate: [ "cellHeight", "classes", "cols", "spacing" ]
+        }
+      }
 
-    gridListTile =
-      let
-        base =
-          basePropsRow []
-            $ Map.fromFoldable
-                [ children
-                ]
-      in
-        simpleComponent
-          { inherits: Just $ Type.constructor "React.Basic.DOM.Props_li"
-          , name: "GridListTile"
-          , propsType:
-            { base: emptyBase
-            , generate: [ "classes", "cols", "rows" ]
-            }
-          }
+    gridListTile = simpleComponent
+      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_li"
+      , name: "GridListTile"
+      , propsType:
+        { base: Map.fromFoldable [ children ]
+        , generate: [ "classes", "cols", "rows" ]
+        }
+      }
 
     gridListTileBar =
       simpleComponent
         { inherits: Nothing
         , name: "GridListTileBar"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ Tuple "actionIcon" jsx
-                  , Tuple "subtitle" jsx
-                  , Tuple "title" jsx
-                  ]
+          { base: Map.fromFoldable
+              [ Tuple "actionIcon" jsx
+              , Tuple "subtitle" jsx
+              , Tuple "title" jsx
+              ]
           , generate:
             [ "classes"
             , "actionPosition"
@@ -989,14 +909,8 @@ components =
         { inherits: Nothing
         , name: "Grow"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  []
-          , generate:
-            [ "in"
-            , "timeout"
-            ]
+          { base: emptyBase
+          , generate: [ "in" , "timeout" ]
           }
         }
 
@@ -1005,7 +919,7 @@ components =
         { inherits: Nothing
         , name: "Hidden"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable [ Tuple "only" foreignType ]
+          { base: Map.fromFoldable [ Tuple "only" foreignType ]
           , generate:
             [ "implementation"
             , "initialWidth"
@@ -1042,11 +956,7 @@ components =
         { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ divProps ]
         , name: "IconButton"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ children
-                  ]
+          { base: Map.fromFoldable [ children ]
           , generate:
             [ "classes"
             , "color"
@@ -1065,8 +975,7 @@ components =
         , name: "Input"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ Tuple "defaultValue" foreignType
                   , Tuple "endAdornment" jsx
                   , Tuple "inputProps" foreignType
@@ -1104,7 +1013,7 @@ components =
         , name: "InputAdornment"
         , propsType:
           { base:
-              basePropsRow [] $ Map.fromFoldable [ children ]
+               Map.fromFoldable [ children ]
           , generate:
             [ "classes"
             , "disablePointerEvents"
@@ -1122,8 +1031,7 @@ components =
         , name: "InputBase"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ Tuple "defaultValue" foreignType
                   , Tuple "endAdornment" jsx
                   , Tuple "inputProps" foreignType
@@ -1161,8 +1069,7 @@ components =
         , name: "InputLabel"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -1202,8 +1109,7 @@ components =
         , name: "Link"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "TypographyClasses" (Type.constructor "MUI.Core.Typography.TypographyClassKey")
                   ]
@@ -1222,8 +1128,7 @@ components =
         , name: "List"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "subheader" jsx
                   ]
@@ -1242,8 +1147,7 @@ components =
         , name: "ListItem"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -1266,8 +1170,7 @@ components =
         , name: "ListItemAvatar"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -1282,8 +1185,7 @@ components =
         , name: "ListItemIcon"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ -- children
                   ]
           , generate:
@@ -1298,8 +1200,7 @@ components =
         , name: "ListItemSecondaryAction"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -1314,8 +1215,7 @@ components =
         , name: "ListItemText"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ Tuple "primary" jsx
                   , Tuple "primaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassKey")
                   , Tuple "secondary" jsx
@@ -1335,8 +1235,7 @@ components =
         , name: "ListSubheader"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -1363,7 +1262,7 @@ components =
 
         anchorEl = Tuple "anchorEl" $ Type.app nullable [ domElement ]
 
-        base = basePropsRow [] $ Map.fromFoldable $ [ anchorEl, children ] <> handlers
+        base =  Map.fromFoldable $ [ anchorEl, children ] <> handlers
       in
         simpleComponent
           { inherits: Nothing -- | We should inherit from Popover here
@@ -1377,8 +1276,7 @@ components =
     menuItem =
       let
         base =
-          basePropsRow []
-            $ Map.fromFoldable
+            Map.fromFoldable
                 [ children
                 -- XXX: We are catching material ui documentation / type error here.
                 -- MenuItem doesn't contain `component` prop.
@@ -1400,8 +1298,7 @@ components =
         , name: "MobileStepper"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ Tuple "backButton" jsx
                   , Tuple "LinearProgressProps" (Type.constructor "MUI.Core.LinearPropgress.LinearProgressProps")
                   , Tuple "nextButton" jsx
@@ -1430,7 +1327,7 @@ components =
         backdropPropsPartial = Type.constructor "MUI.Core.Backdrop.BackdropPropsPartial"
 
         base =
-          basePropsRow [] $ Map.fromFoldable
+           Map.fromFoldable
             $ [ children
               , Tuple "BackdropComponent" (reactComponentApply backdropPropsPartial)
               , Tuple "BackdropProps" backdropPropsPartial
@@ -1469,8 +1366,7 @@ components =
         , name: "NativeSelect"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "IconComponent" jsx
                   , Tuple "input" jsx
@@ -1492,8 +1388,7 @@ components =
         , name: "NoSsr"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "fallback" jsx
                   ]
@@ -1510,8 +1405,7 @@ components =
         , name: "OutlinedInput"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ Tuple "defaultValue" foreignType
                   , Tuple "endAdornment" jsx
                   , Tuple "inputProps" foreignType
@@ -1549,7 +1443,7 @@ components =
         { inherits: Just divProps
         , name: "Paper"
         , propsType:
-          { base: basePropsRow [] $ Map.fromFoldable $ [ children, component ]
+          { base:  Map.fromFoldable $ [ children ]
           , generate:
             [ "classes"
             , "elevation"
@@ -1565,8 +1459,7 @@ components =
         , name: "Popover"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ Tuple "action" foreignType
                   , Tuple "anchorEl" foreignType
                   , Tuple "anchorPosition" foreignType
@@ -1599,8 +1492,7 @@ components =
         , name: "Popper"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ Tuple "anchorEl" foreignType
                   , children
                   , Tuple "modifiers" foreignType
@@ -1622,8 +1514,7 @@ components =
         , name: "Portal"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "container" foreignType
                   , eventHandlerProp "onRendered"
@@ -1639,8 +1530,7 @@ components =
         , name: "Radio"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ Tuple "checkedIcon" jsx
                   , Tuple "icon" jsx
                   , Tuple "inputProps" foreignType
@@ -1668,8 +1558,7 @@ components =
         , name: "RadioGroup"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "defaultValue" foreignType
                   , eventHandlerProp "onChange"
@@ -1687,8 +1576,7 @@ components =
         , name: "RootRef"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ Tuple "rootRef" foreignType
                   ]
           , generate:
@@ -1703,8 +1591,7 @@ components =
         , name: "Select"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "IconComponent" jsx
                   , Tuple "input" jsx
@@ -1737,7 +1624,7 @@ components =
         , name: "Slide"
         , propsType:
           { base:
-            basePropsRow [] $ Map.fromFoldable
+             Map.fromFoldable
               $ map eventHandlerProp [ "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
           , generate:
             [ "direction", "in", "timeout"
@@ -1752,8 +1639,7 @@ components =
         , name: "Slider"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "defaultValue" foreignType
                   , Tuple "getAriaLabel" foreignType
@@ -1789,8 +1675,7 @@ components =
         , name: "Snackbar"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "action" jsx
                   , Tuple "ClickAwayListenerProps" (Type.constructor "MUI.Core.ClickAwayListener.ClickAwayListenerProps")
@@ -1824,8 +1709,7 @@ components =
         , name: "SnackbarContent"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ Tuple "action" jsx
                   , Tuple "message" jsx
                   ]
@@ -1842,8 +1726,7 @@ components =
         , name: "Step"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable [ children ]
+              Map.fromFoldable [ children ]
           , generate:
             [ "active"
             , "classes"
@@ -1860,8 +1743,7 @@ components =
         , name: "StepButton"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "icon" foreignType
                   , Tuple "optional" jsx
@@ -1895,8 +1777,7 @@ components =
         , name: "StepContent"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -1914,8 +1795,7 @@ components =
         , name: "StepIcon"
         , propsType:
           { base:
-              basePropsRow []
-                $ Map.fromFoldable
+                Map.fromFoldable
                     [ Tuple "icon" jsx
                     ]
           , generate:
@@ -1934,8 +1814,7 @@ components =
         , name: "StepLabel"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "icon" jsx
                   , Tuple "optional" jsx
@@ -1956,8 +1835,7 @@ components =
         , name: "Stepper"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "connector" jsx
                   ]
@@ -1977,8 +1855,7 @@ components =
         , name: "SvgIcon"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -1999,8 +1876,7 @@ components =
         , name: "SwipeableDrawer"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "SwipeAreaProps" foreignType
                   , eventHandlerProp "onClose"
@@ -2024,8 +1900,7 @@ components =
         , name: "Switch"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ Tuple "checkedIcon" jsx
                   , Tuple "icon" jsx
                   , Tuple "inputProps" foreignType
@@ -2054,8 +1929,7 @@ components =
         , name: "Tab"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "icon" jsx
                   , Tuple "label" jsx
@@ -2079,8 +1953,7 @@ components =
         , name: "Table"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -2098,8 +1971,7 @@ components =
         , name: "TableBody"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -2114,8 +1986,7 @@ components =
         , name: "TableCell"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -2135,8 +2006,7 @@ components =
         , name: "TableFooter"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -2151,8 +2021,7 @@ components =
         , name: "TableHead"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -2169,8 +2038,7 @@ components =
       , modulePath: Name "TablePagination"
       , propsType:
         { base:
-          basePropsRow []
-            $ Map.fromFoldable
+            Map.fromFoldable
                 [ children
                 , Tuple "backIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonProps")
                 , Tuple "labelDisplayedRows" foreignType
@@ -2211,8 +2079,7 @@ components =
         , name: "TableRow"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -2230,8 +2097,7 @@ components =
         , name: "TableSortLabel"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "IconComponent" foreignType
                   ]
@@ -2250,8 +2116,7 @@ components =
         , name: "Tabs"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "action" foreignType
                   , eventHandlerProp "onChange"
@@ -2278,8 +2143,7 @@ components =
         , name: "TextareaAutosize"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -2296,8 +2160,7 @@ components =
       , modulePath: Name "TextField"
       , propsType:
         { base:
-          basePropsRow []
-            $ Map.fromFoldable
+            Map.fromFoldable
                 [ children
                 , Tuple "defaultValue" foreignType
                 , Tuple "endAdornment" jsx
@@ -2364,8 +2227,7 @@ components =
         , name: "ToggleButton"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   , Tuple "value" foreignType
                   ]
@@ -2385,8 +2247,7 @@ components =
         , name: "Toolbar"
         , propsType:
           { base:
-            basePropsRow []
-              $ Map.fromFoldable
+              Map.fromFoldable
                   [ children
                   ]
           , generate:
@@ -2416,10 +2277,7 @@ components =
         { inherits: Nothing
         , name: "Typography"
         , propsType:
-          { base:
-            basePropsRow []
-              $ Map.fromFoldable
-                  [ children ]
+          { base: Map.fromFoldable [ children ]
           , generate:
             [ "classes"
             , "align"
@@ -2703,7 +2561,16 @@ main :: Effect Unit
 main = do
   opts <- execParser (info (options <**> helper) fullDesc)
   let
-    -- | Should I bring back multimodule handling logic?
+    -- | Currently we use global import aliasing setup which works quite well.
+    importAliases = Map.fromFoldable $
+      [ ModuleName "Data.Undefined.NoProblem" /\ Nothing
+      , ModuleName "Data.Undefined.NoProblem.Mono" /\ Nothing
+      , ModuleName "Unsafe.Coerce" /\ Nothing
+      , ModuleName "Unsafe.Reference" /\ Nothing
+      , ModuleName "MUI.Core" /\ Just "MUI"
+      ]
+
+    -- | Should we introduce multimodule handling logic back?
     -- | For sure we want to keep track of the naming collisions
     -- | during codegen so may we can just require that
     -- | we would have an unique naming strategy.
@@ -2718,7 +2585,7 @@ main = do
             Codegen.write dir ps
 
     codegenComponent component output =
-      runExceptT (Codegen.component component)
+      runReaderT (runExceptT (Codegen.component component)) importAliases
         >>= case _ of
             Right code -> case output of
               Just Stdout -> do
@@ -2754,7 +2621,7 @@ main = do
       Nothing -> do
         writeIconModules "./src" icon code
       where
-        code = Codegen.icon icon
+        code = runReader (Codegen.icon icon) importAliases
   case opts of
     ShowPropsCommand { component, skip } -> do
       let
@@ -2762,7 +2629,7 @@ main = do
           { props: c } <- TS.MUI.componentProps component
           s <- traverse (\s -> TS.MUI.componentProps s) skip <#> map _.props
           pure { component: c, skip: s }
-      runExceptT getProps
+      runReaderT (runExceptT getProps) mempty
         >>= case _ of
             Right { component: cProps, skip: s } -> do
               let

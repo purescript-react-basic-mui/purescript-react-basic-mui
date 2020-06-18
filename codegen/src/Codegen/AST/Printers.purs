@@ -2,15 +2,18 @@ module Codegen.AST.Printers where
 
 import Prelude
 
-import Codegen.AST.Imports (declarationImports, importsDeclarations)
-import Codegen.AST.Types (Declaration(..), ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), QualifiedName, RecordField(..), RowF(..), TypeF(..), TypeName(..), ValueBindingFields, reservedNames)
+import Codegen.AST.Imports (ImportAlias, declarationImports, importsDeclarations)
+import Codegen.AST.Types (Declaration(..), ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), QualifiedName, RowF(..), TypeF(..), TypeName(..), ValueBindingFields(..), reservedNames)
+import Control.Monad.Reader (ask)
+import Control.Monad.Reader.Class (class MonadReader)
+import Data.Array (concat)
 import Data.Array (cons, fromFoldable, null) as Array
 import Data.Char.Unicode (isUpper)
-import Data.Either (Either(..), fromRight)
-import Data.Foldable (foldMap, intercalate)
+import Data.Either (fromRight)
+import Data.Foldable (foldMap, intercalate, length)
 import Data.List (intercalate) as List
-import Data.Map (toUnfoldable) as Map
-import Data.Maybe (Maybe(..))
+import Data.Map (lookup, toUnfoldable) as Map
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (class Newtype, unwrap)
 import Data.Set (member) as Set
 import Data.String (joinWith)
@@ -18,8 +21,9 @@ import Data.String.CodeUnits (uncons) as Data.String.CodeUnits
 import Data.String.Regex (Regex, regex)
 import Data.String.Regex (test) as Regex
 import Data.String.Regex.Flags (noFlags) as Regex.Flags
+import Data.Traversable (for, traverse)
 import Data.Tuple (Tuple(..))
-import Matryoshka (Algebra, cata)
+import Matryoshka (AlgebraM, cataM)
 import Partial.Unsafe (unsafePartial)
 
 lines :: Array String -> String
@@ -28,80 +32,115 @@ lines = joinWith "\n"
 line :: Array String -> String
 line = joinWith " "
 
-printModule :: Module -> String
-printModule (Module { moduleName, declarations }) =
-  lines
+printModule :: forall m. MonadReader ImportAlias m => Module -> m String
+printModule (Module { moduleName, declarations }) = do
+  declarations' <- traverse printDeclaration declarations
+  imports' <- traverse printImport imports
+  pure $ lines
     $ [ printModuleHead moduleName
       , ""
-      , List.intercalate "\n" $ map printImport imports
+      , List.intercalate "\n" $ imports'
       , ""
-      , List.intercalate "\n\n" $ map printDeclaration declarations
+      , List.intercalate "\n\n" $ declarations'
       ]
   where
   imports = importsDeclarations <<< foldMap (declarationImports) $ declarations
 
-printImport :: ImportDecl -> String
-printImport (ImportDecl { moduleName: ModuleName "Prelude" }) = "import Prelude"
-printImport (ImportDecl { moduleName, names }) =
-  line
+printImport :: forall m. MonadReader ImportAlias m => ImportDecl -> m String
+printImport (ImportDecl { moduleName: ModuleName "Prelude" }) = pure "import Prelude"
+printImport (ImportDecl { moduleName, names }) = do
+  let
+    mn = printModuleName moduleName
+  alias <- ask >>= Map.lookup moduleName >>> case _ of
+    Just Nothing -> pure Nothing
+    Just a -> pure a
+    Nothing -> pure (Just mn)
+  pure $ line $
     [ "import"
     , mn
     , "(" <> (joinWith ", " <<< Array.fromFoldable <<< map printName $ names) <> ")"
-    , "as"
-    , mn
     ]
+    <> case alias of
+      Just a -> [ "as", a ]
+      Nothing -> []
   where
-  mn = printModuleName moduleName
 
   printName :: Import -> String
   printName (ImportValue s) = unwrap s
   printName (ImportClass s) = "class " <> unwrap s
-  printName (ImportType s) = unwrap s
+  printName (ImportType s) = unwrap s <> "(..)"
+
+indent :: String -> String
+indent = append "  "
 
 printModuleHead :: ModuleName -> String
 printModuleHead moduleName = line [ "module", printModuleName moduleName, "where" ]
 
-printDeclaration :: Declaration -> String
+printDeclaration :: forall m. MonadReader ImportAlias m => Declaration -> m String
 -- , "kind": k }) =
-printDeclaration (DeclForeignData { typeName: TypeName name }) = line [ "foreign import data", name, "::", "Type" ] -- fromMaybe "Type" k
+printDeclaration (DeclForeignData { typeName: TypeName name }) = pure $
+  line [ "foreign import data", name, "::", "Type" ] -- fromMaybe "Type" k
 -- , "kind": k }) =
-printDeclaration (DeclForeignValue { ident: Ident ident, "type": t }) = line [ "foreign import", ident, "::", cata printType t StandAlone ] -- fromMaybe "Type" k
-printDeclaration (DeclInstance { head, body }) = lines $ Array.cons h (map (indent <<< printValueBindingFields) body)
+printDeclaration (DeclForeignValue { ident: Ident ident, "type": t }) = do
+  p <- cataM printType t <@> StandAlone
+  pure $ line [ "foreign import", ident, "::", p ] -- fromMaybe "Type" k
+printDeclaration (DeclInstance { head, body }) = do
+  cp <- printQualifiedName head.className
+  params <- for head.types \t ->
+    cataM printType t <@> InApplication
+  let
+    h =
+      line
+        [ "instance"
+        , unwrap head.name
+        , "::"
+        , cp
+        , line params
+        , "where"
+        ]
+  body' <- for body \d ->
+    map indent <$> printValueBindingFields d
+  pure $ lines $ Array.cons h (concat body')
+printDeclaration (DeclValue v) = lines <$> printValueBindingFields v
+printDeclaration (DeclType { typeName, "type": t, vars }) = do
+  body <- cataM printType t <@> StandAlone
+  pure $ line [ "type", unwrap typeName, line $ (map unwrap) vars, "=", body ]
+
+printValueBindingFields :: forall m. MonadReader ImportAlias m => ValueBindingFields -> m (Array String)
+printValueBindingFields (ValueBindingFields { value: { binders, name: Ident name, expr, whereBindings }, signature }) = do
+  e <- cataM printExpr expr <@> { precedence: Zero, binary: Nothing }
+  w <- whereBindingsSection
+  let
+    vb = name <> bs <> " = " <> e
+  s <- case signature of
+    Nothing -> pure mempty
+    Just s -> do
+      p <- cataM printType s <@> StandAlone
+      pure [ name <> " :: " <> p ]
+  pure $ s <> [ vb ] <> w
   where
-  indent = append "  "
+    bs = if Array.null binders then mempty else " " <> line (map unwrap binders)
+    whereBindingsSection = do
+      w <- for whereBindings \b ->
+        map (indent <<< indent) <$> printValueBindingFields b
+      pure $ case w of
+        [] -> []
+        otherwise -> Array.cons (indent "where") (concat w)
 
-  h =
-    line
-      [ "instance"
-      , unwrap head.name
-      , "::"
-      , printQualifiedName head.className
-      , line (map (flip (cata printType) InApplication) head.types)
-      , "where"
-      ]
-printDeclaration (DeclValue v) = printValueBindingFields v
-printDeclaration (DeclType { typeName, "type": t, vars }) = line [ "type", unwrap typeName, line $ (map unwrap) vars, "=", cata printType t StandAlone ]
-
-printValueBindingFields :: ValueBindingFields -> String
-printValueBindingFields { value: { binders, name: Ident name, expr }, signature } = case signature of
-  Nothing -> v
-  Just s ->
-    name <> " :: " <> cata printType s StandAlone
-      <> "\n"
-      <> v
-  where
-  bs = if Array.null binders then mempty else " " <> line (map unwrap binders)
-
-  v = name <> bs <> " = " <> (cata printExpr expr { precedence: Zero, binary: Nothing })
 
 printModuleName :: ModuleName -> String
 printModuleName (ModuleName n) = n
 
-printQualifiedName :: ∀ n. Newtype n String => QualifiedName n -> String
-printQualifiedName { moduleName: Nothing, name } = unwrap name
+printQualifiedName :: forall m n. Newtype n String => MonadReader ImportAlias m => QualifiedName n -> m String
+printQualifiedName { moduleName: Nothing, name } = pure $ unwrap name
 printQualifiedName { moduleName: Just m, name } = case m of
-  (ModuleName "Prelude") -> unwrap name
-  otherwise -> printModuleName m <> "." <> unwrap name
+  (ModuleName "Prelude") -> pure $ unwrap name
+  mn -> do
+    aliases <- ask
+    pure $ case Map.lookup mn aliases of
+      Just Nothing -> unwrap name
+      Just (Just alias) -> alias <> "." <> unwrap name
+      otherwise -> printModuleName mn <> "." <> unwrap name
 
 -- | I'm not sure about this whole minimal parens printing strategy
 -- | so please correct me if I'm wrong.
@@ -142,10 +181,10 @@ type ExprPrintingContext
 -- | a bit nicer output for an application but
 -- | probably we should just use the same strategy
 -- | as in case of `printType` and pass printing context.
-printExpr :: Algebra ExprF (ExprPrintingContext -> String)
+printExpr :: forall m. MonadReader ImportAlias m => AlgebraM m ExprF (ExprPrintingContext -> String)
 printExpr = case _ of
-  ExprBoolean b -> const $ show b
-  ExprApp x y -> case _ of
+  ExprBoolean b -> pure $ const (show b)
+  ExprApp x y -> pure $ case _ of
     { precedence, binary: Just { assoc, branch } } -> case precedence `compare` Six, assoc, branch of
       GT, _, _ -> "(" <> sub <> ")"
       EQ, AssocLeft, BranchRight -> "(" <> sub <> ")"
@@ -161,14 +200,14 @@ printExpr = case _ of
       x { precedence: Six, binary: Just { assoc: AssocLeft, branch: BranchLeft } }
         <> " "
         <> y { precedence: Six, binary: Just { assoc: AssocLeft, branch: BranchRight } }
-  ExprArray arr -> const $ "[" <> intercalate ", " (map (_ $ zero) arr) <> "]"
-  ExprIdent x -> const $ printQualifiedName x
-  ExprNumber n -> const $ show n
-  ExprRecord props -> const $ "{ " <> intercalate ", " props' <> " }"
+  ExprArray arr -> pure $ const $ "[" <> intercalate ", " (map (_ $ zero) arr) <> "]"
+  ExprIdent x -> const <$> printQualifiedName x
+  ExprNumber n -> pure $ const (show n)
+  ExprRecord props -> pure $ const $ "{ " <> intercalate ", " props' <> " }"
     where
     props' :: Array String
     props' = map (\(Tuple n v) -> printRowLabel n <> ": " <> v zero) <<< Map.toUnfoldable $ props
-  ExprString s -> const $ show s
+  ExprString s -> pure $ const $ show s
   where
   zero = { precedence: Zero, binary: Nothing }
 
@@ -189,50 +228,50 @@ printRowLabel l = case Data.String.CodeUnits.uncons l of
   alphanumRegex :: Regex
   alphanumRegex = unsafePartial $ fromRight $ regex "^[A-Za-z0-9_]*$" Regex.Flags.noFlags
 
-printType :: Algebra TypeF (PrintingContext -> String)
+printType :: forall m. MonadReader ImportAlias m => AlgebraM m TypeF (PrintingContext -> String)
 printType = case _ of
-  TypeApp l params -> parens (line $ Array.cons (l InApplication) (map (_ $ InApplication) params))
-  TypeArray t -> parens $ "Array " <> t StandAlone
-  TypeArr f a -> case _ of
+  TypeApp l params -> pure $ parens (line $ Array.cons (l InApplication) (map (_ $ InApplication) params))
+  TypeArray t -> pure $ parens $ "Array " <> t StandAlone
+  TypeArr f a -> pure $ case _ of
     InArr -> "(" <> s <> ")"
     InApplication -> "(" <> s <> ")"
     otherwise -> s
     where
     s = f InArr <> " -> " <> a StandAlone
-  TypeBoolean -> const "Boolean"
-  TypeConstructor qn -> const $ printQualifiedName qn
-  TypeConstrained { className, params } t ->
-    const
-      $ printQualifiedName className
+  TypeBoolean -> pure $ const "Boolean"
+  TypeConstructor qn -> const <$> printQualifiedName qn
+  TypeConstrained { className, params } t -> do
+    constraint <- printQualifiedName className
+    pure $ const
+      $ constraint
       <> " "
       <> line (map (_ $ InApplication) params)
       <> " => "
       <> t StandAlone
-  TypeForall vs t -> const $ "∀" <> " " <> line (map unwrap vs) <> "." <> " " <> t StandAlone
-  TypeNumber -> const "Number"
-  TypeRecord r -> const $ "{ " <> printRecordRow r <> " }"
-  TypeRow r -> const $ "( " <> printRow r <> " )"
-  TypeString -> const $ "String"
-  TypeVar (Ident v) -> const $ v
+  TypeForall vs t -> pure $ const $ case vs of
+    [] -> t StandAlone
+    otherwise ->
+      "forall" <> " " <> line (map unwrap vs) <> "." <> " " <> t StandAlone
+  TypeNumber -> pure $ const "Number"
+  TypeOpt t -> pure $ case _ of
+    InApplication -> "(" <> s <> ")"
+    otherwise -> s
+    where
+      s = "Opt (" <> t StandAlone <> ")"
+  TypeRecord r -> pure $ const $ "{ " <> printRow r <> " }"
+  TypeRow r@(Row { labels, tail })  -> pure $ const $ case length labels, tail of
+    0, Nothing -> "()"
+    _, _ -> "( " <> printRow r <> " )"
+  TypeString -> pure $ const $ "String"
+  (TypeSymbol s) -> pure $ const $ show s
+  TypeVar (Ident v) -> pure $ const $ v
   where
   parens s InArr = s
   parens s InApplication = "(" <> s <> ")"
   parens s StandAlone = s
 
-  printRecordRow (Row { labels, tail }) = intercalate ", " labels' <> printTail tail
-    where
-    labels' :: Array String
-    labels' = map (\(Tuple n (RecordField { ref: t, optional: o })) ->
-      printRowLabel n <> " :: " <> opt o <> t StandAlone) <<< Map.toUnfoldable $ labels
-
-    opt b = if b then "? " else ""
-
-  printRow (Row { labels, tail }) = intercalate ", " labels' <> printTail tail
+  printRow (Row { labels, tail }) = intercalate ", " labels' <> fromMaybe mempty ((\p -> " | " <> p StandAlone) <$> tail)
     where
     labels' :: Array String
     labels' = map (\(Tuple n t) -> printRowLabel n <> " :: " <> t StandAlone) <<< Map.toUnfoldable $ labels
 
-  printTail = case _ of
-    Nothing -> mempty
-    Just (Left ident) -> " | " <> unwrap ident
-    Just (Right qn) -> " | " <> printQualifiedName qn

@@ -7,7 +7,6 @@ module Codegen.AST.Types where
 import Prelude
 
 import Data.Array (zip) as Array
-import Data.Either (Either)
 import Data.Eq (class Eq1)
 import Data.Foldable (class Foldable, all, foldMap, foldlDefault, foldrDefault)
 import Data.Functor.Mu (Mu)
@@ -16,12 +15,12 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.List (List)
 import Data.Map (Map)
 import Data.Map (unionWith) as Map
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (class Newtype)
 import Data.Ord (class Ord1)
 import Data.Set (Set)
 import Data.Set (fromFoldable, union) as Set
-import Data.Traversable (class Traversable, sequence, traverse, traverseDefault)
+import Data.Traversable (class Traversable, sequence, traverseDefault)
 import Data.Tuple (uncurry)
 
 -- | No need for imports list as they are collected from declarations
@@ -71,25 +70,6 @@ type QualifiedTypeName
 type Constraint ref
   = { className :: QualifiedName ClassName, params :: Array ref }
 
-recordField :: forall ref. Boolean -> ref -> RecordField ref
-recordField optional ref = RecordField { ref, optional }
-
-newtype RecordField ref = RecordField { "ref" :: ref, optional :: Boolean }
-derive instance newtypeRecordField :: Newtype (RecordField ref) _
-derive instance genericRecordField :: Generic (RecordField ref) _
-derive instance eqRecordField :: Eq ref => Eq (RecordField ref)
-derive instance ordRecordField :: Ord ref => Ord (RecordField ref)
-derive instance functorRecordField :: Functor RecordField
-instance foldableRecordField :: Foldable RecordField where
-  foldMap f (RecordField { ref } ) = f ref
-  foldr f t = foldrDefault f t
-  foldl f t = foldlDefault f t
-instance traversableRecordField :: Traversable RecordField where
-  sequence (RecordField { optional, ref }) = recordField optional <$> ref
-  traverse = traverseDefault
-instance showRecordField :: Show ref => Show (RecordField ref) where
-  show p = genericShow p
-
 data TypeF ref
   = TypeApp ref (Array ref)
   | TypeArr ref ref
@@ -99,11 +79,14 @@ data TypeF ref
   | TypeConstrained (Constraint ref) ref
   | TypeForall (Array Ident) ref
   | TypeNumber
+  -- | Currently handling only union of `Undefined |+| ref`
+  | TypeOpt ref
   -- | I'm handling this mututal recursion by hand
   -- | because I'm not sure how to do this better.
-  | TypeRecord (RowF (RecordField ref))
+  | TypeRecord (RowF ref)
   | TypeRow (RowF ref)
   | TypeString
+  | TypeSymbol String
   | TypeVar Ident
 
 --   sequence (TypeRecord (Row ts)) = TypeRecord <<< Row <<< { tail: ts.tail, labels: _ } <$> for ts.labels \{ "type": t, optional } ->
@@ -149,6 +132,9 @@ instance eq1TypeF :: Eq1 TypeF where
   eq1 TypeNumber TypeNumber = true
   eq1 TypeNumber _ = false
   eq1 _ TypeNumber = false
+  eq1 (TypeOpt t1) (TypeOpt t2) = t1 == t2
+  eq1 (TypeOpt _) _ = false
+  eq1 _ (TypeOpt _) = false
   eq1 (TypeRecord row1) (TypeRecord row2) = row1 == row2
   eq1 (TypeRecord _) _ = false
   eq1 _ (TypeRecord _) = false
@@ -158,6 +144,9 @@ instance eq1TypeF :: Eq1 TypeF where
   eq1 TypeString TypeString = true
   eq1 TypeString _ = false
   eq1 _ TypeString = false
+  eq1 (TypeSymbol s1) (TypeSymbol s2) = s1 == s2
+  eq1 (TypeSymbol _)  _ = false
+  eq1 _ (TypeSymbol _) = false
   eq1 (TypeVar v1) (TypeVar v2) = v1 == v2
 
 -- | Should we drop this and similar instances and move on
@@ -187,6 +176,9 @@ instance ord1TypeF :: Ord1 TypeF where
   compare1 TypeNumber TypeNumber = EQ
   compare1 TypeNumber _ = GT
   compare1 _ TypeNumber = GT
+  compare1 (TypeOpt t1) (TypeOpt t2) = EQ
+  compare1 (TypeOpt _) _ = GT
+  compare1 _ (TypeOpt _) = GT
   compare1 (TypeRecord (Row row1)) (TypeRecord (Row row2)) = compare row1 row2
   compare1 (TypeRecord _) _ = GT
   compare1 _ (TypeRecord _) = GT
@@ -196,6 +188,9 @@ instance ord1TypeF :: Ord1 TypeF where
   compare1 TypeString TypeString = EQ
   compare1 TypeString _ = GT
   compare1 _ TypeString = GT
+  compare1 (TypeSymbol s1) (TypeSymbol s2) = compare s1 s2
+  compare1 (TypeSymbol _) _ = GT
+  compare1 _ (TypeSymbol _) = GT
   compare1 (TypeVar i1) (TypeVar i2) = compare i1 i2
 
 derive instance functorTypeF :: Functor TypeF
@@ -207,11 +202,13 @@ instance foldableTypeF :: Foldable TypeF where
   foldMap _ TypeBoolean = mempty
   foldMap f (TypeConstrained { className, params } t) = foldMap f params <> f t
   foldMap _ (TypeConstructor _) = mempty
-  foldMap f (TypeRecord r) = foldMap (foldMap f) r
+  foldMap f (TypeRecord r) = foldMap f r
   foldMap f (TypeRow r) = foldMap f r
   foldMap _ TypeNumber = mempty
+  foldMap f (TypeOpt ref) = f ref
   foldMap f (TypeForall _ t) = f t
   foldMap _ TypeString = mempty
+  foldMap _ (TypeSymbol _) = mempty
   foldMap _ (TypeVar _) = mempty
   foldr f t = foldrDefault f t
   foldl f t = foldlDefault f t
@@ -225,19 +222,24 @@ instance traversableTypeF :: Traversable TypeF where
   sequence (TypeConstructor t) = pure $ TypeConstructor t
   sequence (TypeForall v t) = TypeForall v <$> t
   sequence TypeNumber = pure $ TypeNumber
-  sequence (TypeRecord ts) = TypeRecord <$> traverse sequence ts
+  sequence (TypeOpt ref) = TypeOpt <$> ref
+  sequence (TypeRecord ts) = TypeRecord <$> sequence ts
   sequence (TypeRow ts) = TypeRow <$> sequence ts
   sequence TypeString = pure $ TypeString
+  sequence (TypeSymbol s) = pure (TypeSymbol s)
   sequence (TypeVar ident) = pure $ TypeVar ident
   traverse = traverseDefault
 
+type Fields ref = Map String ref
+
 newtype RowF ref
   = Row
-  { labels :: Map String ref
+  { labels :: Fields ref
   -- | Currently we allow only type reference
   -- | but we should provide full Type support here
   -- | No polymorhic tail support yet...
-  , tail :: Maybe (Either Ident QualifiedTypeName)
+  , tail :: Maybe ref
+  -- , tail :: Maybe (Either Ident QualifiedTypeName)
   }
 
 derive instance genericRowType :: Generic (RowF ref) _
@@ -252,21 +254,18 @@ derive instance functorRowF :: Functor RowF
 derive instance eqRow :: Eq ref => Eq (RowF ref)
 
 instance foldableRowF :: Foldable RowF where
-  foldMap f (Row { labels }) = foldMap f labels
+  foldMap f (Row { labels, tail }) = foldMap f labels <> fromMaybe mempty (f <$> tail)
   foldr f t = foldrDefault f t
   foldl f t = foldlDefault f t
 
 instance traversableRowF :: Traversable RowF where
-  sequence (Row { labels, tail }) = Row <<< { labels: _, tail } <$> sequence labels
+  sequence (Row { labels, tail }) = map Row $ { labels: _, tail: _ } <$> sequence labels <*> sequence tail
   traverse = traverseDefault
 
 -- | I hope that this assymetry between `Row` and `Type`
 -- | simplifies structure of most our algebras.
 type Row
   = RowF Type
-
-type RecordRow
-  = RowF (RecordField Type)
 
 emptyRow :: Row
 emptyRow = Row { labels: mempty, tail: Nothing }
@@ -351,15 +350,26 @@ type Expr
 
 -- | Original CST type name doesn't contain a signature.
 -- | Also the rest of the structure is radically simplified
--- | here to cover only current codegen cases.
-type ValueBindingFields
-  = { value ::
-      { name :: Ident
-      , binders :: Array Ident
-      , expr :: Expr
-      }
-    , signature :: Maybe Type
+-- | here to cover only current codegen cases:
+-- |
+-- |  * No guards support.
+-- |
+-- |  * No let support yet.
+-- |
+-- |  * Only `where` support.
+-- |
+-- |  * This representation (as well as original cst) allows definition of
+-- |  binidings with `where` which is illegal in the body of instances.
+newtype ValueBindingFields = ValueBindingFields
+  { value ::
+    { name :: Ident
+    , binders :: Array Ident
+    , expr :: Expr
+    , whereBindings :: Array ValueBindingFields
     }
+  , signature :: Maybe Type
+  }
+derive instance newtypeValueBindingFields ∷ Newtype ValueBindingFields _
 
 data Declaration
   = DeclInstance

@@ -9,12 +9,12 @@ module Codegen.TS.Module where
 -- | or a zoo of the "utility types" like `Omit`, `Exclude` etc.
 -- | Additionally TS compiler public API seems to be a bit limited and it is even
 -- | hard to fetch full type information from it in those advanced cases.
--- | `purescript-read-dts` provides an instantiation function but it is
+-- | `purescript-read-dts` provides a specialization function but it is
 -- | really, really simple and incomplete.
 -- |
 -- | This is a proposition of a less generic so a bit more
 -- | restricted approach to the problem. Strategy is simple. Build a virtual
--- | module (or phisical if you prefer ;-)) with an instantiated version
+-- | module (or phisical if you prefer ;-)) with a specialized version
 -- | of a given interface so TypeScript compiler do the hard work for us.
 -- | Then we can process effects of its substitution.
 -- |
@@ -39,15 +39,17 @@ module Codegen.TS.Module where
 import Prelude
 
 import Codegen.AST (Declaration(..)) as AST
-import Codegen.AST (Expr, ExprF(..), Ident(..), RowF(..), RowLabel, Type, TypeF(..), TypeName(..), Union(..))
-import Codegen.AST.Sugar (declInstance, valueBindingFields)
-import Codegen.AST.Sugar.Expr (app, boolean, ident, number, string) as Expr
-import Codegen.AST.Sugar.Type (arr) as Type
+import Codegen.AST (Expr, ExprF(..), Ident(..), RowF(..), RowLabel, Type, TypeName(..), Union(..))
+import Codegen.AST.Imports (ImportAlias)
+import Codegen.AST.Sugar (SListProxy(..), declInstance, forAllValueBinding, valueBindingFields)
+import Codegen.AST.Sugar.Expr (app, boolean, ident', number, string) as Expr
+import Codegen.AST.Sugar.Type (app, arr, constructor, var) as Type
 import Codegen.AST.Sugar.Type (name')
-import Codegen.AST.Types (UnionMember(..), recordField, reservedNames)
+import Codegen.AST.Types (TypeF(..), UnionMember(..), ValueBindingFields(..), reservedNames)
 import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
-import Control.Monad.Except (ExceptT(..), mapExceptT, withExceptT)
+import Control.Monad.Except (ExceptT, except, mapExceptT, withExceptT)
+import Control.Monad.Reader (class MonadReader)
 import Control.Monad.State (State, get, modify_, put)
 import Control.Monad.State.Trans (evalStateT)
 import Control.Monad.Trans.Class (lift)
@@ -75,9 +77,11 @@ import Data.String.CodeUnits (fromCharArray, singleton, toCharArray, uncons) as 
 import Data.String.Extra (pascalCase)
 import Data.Traversable (for, sequence)
 import Data.Tuple (Tuple(..))
+import Effect.Class (liftEffect)
 import Matryoshka (AlgebraM)
 import ReadDTS.AST (Application', TypeConstructor(..), build) as ReadDTS.AST
 import ReadDTS.Instantiation (Type, instantiate, TypeF(..)) as ReadDTS.Instantiation
+import Record.Extra (SNil)
 import Type.Prelude (SProxy(..))
 
 type Declaration
@@ -98,7 +102,7 @@ buildAndInstantiateDeclarations ::
   { path :: String, source :: Maybe String } ->
   M Declarations
 buildAndInstantiateDeclarations file = do
-  typeConstructors <- ExceptT $ ReadDTS.AST.build { strictNullChecks: false } file
+  typeConstructors <- liftEffect (ReadDTS.AST.build { strictNullChecks: false } file) >>= except
   let
     known :: ReadDTS.AST.TypeConstructor ReadDTS.AST.Application' -> Maybe { name :: String, tc :: ReadDTS.AST.TypeConstructor ReadDTS.AST.Application' }
     known = case _ of
@@ -271,9 +275,12 @@ astAlgebra = case _ of
   ReadDTS.Instantiation.Number -> properType $ TypeNumber
   (ReadDTS.Instantiation.Object _ ts) -> ProperType <<< roll <<< TypeRecord <<< Row <<< { tail: Nothing, labels: _ } <$> ts'
     where
-    step propName { "type": PossibleUnion vs, optional } = recordField optional <$> union' (Just propName) vs
-    step propName { "type": v@(UnionMember _), optional } = recordField optional <$> union' (Just propName) [ v ]
-    step _ { "type": ProperType t, optional } = pure $ recordField optional t
+    typeOpt = if _
+      then roll <<< TypeOpt
+      else identity
+    step propName { "type": PossibleUnion vs, optional } = typeOpt optional <$> union' (Just propName) vs
+    step propName { "type": v@(UnionMember _), optional } = typeOpt optional <$> union' (Just propName) [ v ]
+    step _ { "type": ProperType t, optional } = pure $ typeOpt optional t
 
     ts' = sequence $ mapWithIndex step ts
   ReadDTS.Instantiation.String -> properType TypeString
@@ -318,16 +325,30 @@ astAlgebra = case _ of
       ]
 
 exprUnsafeCoerce :: Expr
-exprUnsafeCoerce = Expr.ident "Unsafe.Coerce.unsafeCoerce"
+exprUnsafeCoerce = Expr.ident' "Unsafe.Coerce.unsafeCoerce"
 
 exprUnsafeCoerceApp :: Expr -> Expr
 exprUnsafeCoerceApp = Expr.app exprUnsafeCoerce
 
 exprUndefined :: Expr
-exprUndefined = Expr.ident "Foreign.NullOrUndefined.undefined"
+exprUndefined = Expr.ident' "Foreign.NullOrUndefined.undefined"
+
+exprSProxy :: String -> { value :: ValueBindingFields, var ∷ Expr }
+exprSProxy label =
+  let
+    name = "_" <> label
+  in
+    { var: Expr.ident' name
+    , value: forAllValueBinding {} name (SListProxy ∷ _ SNil) \{} ->
+        { expr: Expr.ident' "Type.Prelude.SProxy"
+        , signature: Just $ Type.app (Type.constructor "Type.Prelude.SProxy") [ roll $ TypeSymbol label ]
+        , whereBindings: []
+        }
+    }
+
 
 exprNull :: Expr
-exprNull = Expr.ident "Foreign.NullOrUndefined.null"
+exprNull = Expr.ident' "Foreign.NullOrUndefined.null"
 
 -- | Creates declarations for an union:
 -- | * a foreign type declaration for given `Union`
@@ -336,26 +357,44 @@ exprNull = Expr.ident "Foreign.NullOrUndefined.null"
 -- | * an Eq instance for trivial cases
 -- |
 -- | All declarations are built in local module contex.
-unionDeclarations ::
-  TypeName ->
-  Array UnionMember ->
-  { constructors :: AST.Declaration
-  , instances :: List AST.Declaration
-  , type :: AST.Declaration
-  }
-unionDeclarations typeName@(TypeName name) members =
-  { "type": AST.DeclForeignData { typeName } -- , "kind": Nothing }
-  , constructors:
-    AST.DeclValue
-      { value:
-        { expr
-        , binders: []
-        , name: Ident (downfirst name)
+unionDeclarations
+  :: forall m
+  . MonadReader ImportAlias m
+  => TypeName
+  -> Array UnionMember
+  -> m
+    { constructors :: AST.Declaration
+    , instances :: List AST.Declaration
+    , type :: AST.Declaration
+    }
+unionDeclarations typeName@(TypeName name) members = do
+
+  -- | We are able to provide Eq instance based on `shallowEq`
+  -- | whenever there are only literal members of a given
+  -- | union.
+  instances <-
+    if all (not <<< isConstructor) members then
+      List.singleton <$>
+        declInstance
+          (name' "Prelude.Eq")
+          [ type_ ]
+          [ valueBindingFields (Ident "eq") [] (roll $ ExprIdent (name' "Unsafe.Reference.unsafeRefEq")) Nothing [] ]
+    else
+      pure mempty
+  pure
+    { "type": AST.DeclForeignData { typeName } -- , "kind": Nothing }
+    , constructors:
+      AST.DeclValue $ ValueBindingFields
+        { value:
+          { expr
+          , binders: []
+          , name: Ident (downfirst name)
+          , whereBindings: []
+          }
+        , signature: Just signature
         }
-      , signature: Just signature
-      }
-  , instances
-  }
+    , instances
+    }
   where
   downfirst :: String -> String
   downfirst =
@@ -373,18 +412,6 @@ unionDeclarations typeName@(TypeName name) members =
   isConstructor (UnionConstructor _ _) = true
   isConstructor _ = false
 
-  -- | We are able to provide Eq instance based on `shallowEq`
-  -- | whenever there are only literal members of a given
-  -- | union.
-  instances =
-    if all (not <<< isConstructor) members then
-      List.singleton
-        $ declInstance
-            (name' "Prelude.Eq")
-            [ type_ ]
-            [ valueBindingFields (Ident "eq") [] (roll $ ExprIdent (name' "Unsafe.Reference.unsafeRefEq")) Nothing ]
-    else
-      mempty
 
   member (UnionBoolean b) = Tuple (show b) $ literalValue $ exprUnsafeCoerceApp (Expr.boolean b)
   member (UnionString s) = Tuple s $ literalValue $ exprUnsafeCoerceApp (Expr.string s)
@@ -410,5 +437,5 @@ unionDeclarations typeName@(TypeName name) members =
       <<< Row
       <<< { tail: Nothing, labels: _ }
       -- | TODO: What should go here into optional position?
-      <<< map (recordField false <<< view _sig)
+      <<< map (view _sig)
       $ members'

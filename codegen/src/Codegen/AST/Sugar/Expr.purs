@@ -1,8 +1,10 @@
 module Codegen.AST.Sugar.Expr where
 
 import Prelude
-import Codegen.AST.Sugar.Type (name')
-import Codegen.AST.Types (Expr, ExprF(..), RowLabel)
+
+import Codegen.AST (Ident)
+import Codegen.AST.Sugar (qualifiedIdent) as Sugar
+import Codegen.AST.Types (Expr, ExprF(..), RowLabel, QualifiedName)
 import Data.Functor.Mu (roll)
 import Data.Map (Map)
 
@@ -15,8 +17,11 @@ array = roll <<< ExprArray
 boolean :: Boolean -> Expr
 boolean = roll <<< ExprBoolean
 
-ident :: String -> Expr
-ident = roll <<< ExprIdent <<< name'
+ident :: QualifiedName Ident -> Expr
+ident = roll <<< ExprIdent
+
+ident' :: String -> Expr
+ident' = ident <<< Sugar.qualifiedIdent
 
 number :: Number -> Expr
 number = roll <<< ExprNumber
