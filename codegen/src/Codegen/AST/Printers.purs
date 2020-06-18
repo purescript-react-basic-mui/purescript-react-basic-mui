@@ -10,7 +10,7 @@ module Codegen.AST.Printers where
 import Prelude
 
 import Codegen.AST.Imports (ImportAlias, declarationImports, importsDeclarations)
-import Codegen.AST.Types (Declaration(..), ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), QualifiedName, RowF(..), TypeF(..), TypeName(..), ValueBindingFields(..), reservedNames)
+import Codegen.AST.Types (Associativity(..), Declaration(..), ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), Precedence(..), QualifiedName, RowF(..), TypeF(..), TypeName(..), ValueBindingFields(..), reservedNames)
 import Control.Monad.Reader (ask)
 import Control.Monad.Reader.Class (class MonadReader)
 import Data.Array (concat)
@@ -21,6 +21,7 @@ import Data.Foldable (foldMap, intercalate, length)
 import Data.List (intercalate) as List
 import Data.Map (lookup, toUnfoldable) as Map
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Monoid (guard)
 import Data.Newtype (class Newtype, unwrap)
 import Data.Set (member) as Set
 import Data.String (joinWith)
@@ -75,7 +76,8 @@ printImport (ImportDecl { moduleName, names }) = do
   printName :: Import -> String
   printName (ImportValue s) = unwrap s
   printName (ImportClass s) = "class " <> unwrap s
-  printName (ImportType s) = unwrap s <> "(..)"
+  printName (ImportType { typeName: s, importConstructors }) =
+    unwrap s <> guard importConstructors "(..)"
 
 indent :: String -> String
 indent = append "  "
@@ -124,8 +126,8 @@ printValueBindingFields (ValueBindingFields { value: { binders, name: Ident name
     Just s -> do
       p <- cataM printType s <@> StandAlone
       pure $ case Array.uncons p of
-        Just { head, tail } → [ name <> "::" <> head ] <> tail
-        otherwise → [ name <> "::"] <> p
+        Just { head, tail } -> [ name <> "::" <> head ] <> tail
+        otherwise -> [ name <> "::"] <> p
   pure $ s <> [ vb ] <> w
   where
     bs = if Array.null binders then mempty else " " <> line (map unwrap binders)
@@ -151,32 +153,12 @@ printQualifiedName { moduleName: Just m, name } = case m of
       Just (Just alias) -> alias <> "." <> unwrap name
       otherwise -> printModuleName mn <> "." <> unwrap name
 
--- | I'm not sure about this whole minimal parens printing strategy
--- | so please correct me if I'm wrong.
-data Precedence
-  = Zero
-  | One
-  | Two
-  | Three
-  | Four
-  | Five
-  | Six
-  | Seven
-  | Eight
-  | Nine
-
-derive instance eqPrecedence :: Eq Precedence
-
-derive instance ordPrecedence :: Ord Precedence
-
 data Branch
   = BranchLeft
   | BranchRight
 
-data Associativity
-  = AssocLeft
-  | AssocRight
-
+-- | I'm not sure about this whole minimal parens printing strategy
+-- | so please correct me if I'm wrong.
 type ExprPrintingContext
   = { precedence :: Precedence
     , binary ::
@@ -210,7 +192,7 @@ printExpr = case _ of
         <> " "
         <> y { precedence: Six, binary: Just { assoc: AssocLeft, branch: BranchRight } }
   ExprArray arr -> pure $ const $ "[" <> intercalate ", " (map (_ $ zero) arr) <> "]"
-  ExprIdent x -> const <$> printQualifiedName x
+  ExprIdent x -> const <$> printQualifiedName x.qualifiedName
   ExprNumber n -> pure $ const (show n)
   ExprRecord props -> pure $ const $ "{ " <> intercalate ", " props' <> " }"
     where
@@ -280,13 +262,13 @@ printType = case _ of
     parens s InApplication = "(" <> s <> ")"
     parens s StandAlone = s
 
-    printRow ∷ _ → Array String
-    printRow (Row { labels, tail }) = mapButLast (_ <> ",") labels' <> fromMaybe mempty ((\p -> append " | " <$> p StandAlone) <$> tail)
+    printRow :: _ -> Array String
+    printRow (Row { labels, tail }) = map indent (mapButLast (_ <> ",") labels') <> fromMaybe mempty ((\p -> append " | " <$> p StandAlone) <$> tail)
       where
-      mapButLast :: ∀ a. (a → a) → Array a → Array a
+      mapButLast :: forall a. (a -> a) -> Array a -> Array a
       mapButLast f arr = case Array.unsnoc arr of
-        Just { init, last } → map f init <> [ last ]
-        Nothing → []
+        Just { init, last } -> map f init <> [ last ]
+        Nothing -> []
 
       labels' :: Array String
       labels' = map (\(Tuple n t) -> printRowLabel n <> " :: " <> line (t StandAlone)) <<< Map.toUnfoldable $ labels

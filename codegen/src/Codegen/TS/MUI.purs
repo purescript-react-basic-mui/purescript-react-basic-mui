@@ -3,13 +3,13 @@ module Codegen.TS.MUI where
 import Prelude
 
 import Codegen.AST (Declaration(..), Ident(..), ModuleName(..), TypeName(..))
-import Codegen.AST (Module(..), RowF(..), Type, TypeName(..), Union(..)) as AST
+import Codegen.AST (Module(..), RowF(..), TypeName(..), Union(..), Type) as AST
 import Codegen.AST.Sugar (SListProxy(..), declForeignValue, declType, declValue, forAllValueBinding, local)
 import Codegen.AST.Sugar (local) as Sugar
 import Codegen.AST.Sugar.Expr (app, ident, ident') as Expr
-import Codegen.AST.Sugar.Type (app, arr, constructor, recordLiteral, row, string, symbol, typeRow, var) as Type
+import Codegen.AST.Sugar.Type (app, arr, constructor, recordLiteral, row, string, symbol, typeRow, typeRow', var) as Type
 import Codegen.AST.Sugar.Type (arr) as T
-import Codegen.AST.Sugar.Type (constrained, forAll, opt, recordLiteral, recordLiteral', typeRow')
+import Codegen.AST.Sugar.Type (constrained, forAll, opt, recordLiteral, recordLiteral')
 import Codegen.AST.Types (TypeF(..))
 import Codegen.Model (Component, ComponentName, ModulePath, PropsType, componentFullPath, jsImportPath, jsx, psImportPath, reactComponentApply)
 import Codegen.Model (componentName) as Model
@@ -45,8 +45,26 @@ type TsImportPath = String
 tsImportPath :: ModulePath -> TsImportPath
 tsImportPath modulePath = "@material-ui/core/" <> (jsImportPath modulePath)
 
-propsTypeName :: ComponentName -> String
-propsTypeName componentName = componentName <> "Props"
+propsRowTypeName :: ComponentName -> String
+propsRowTypeName componentName = componentName <> "PropsRow"
+
+propsRowOpenTypeName :: ComponentName -> String
+propsRowOpenTypeName componentName = componentName <> "PropsRowOpen"
+
+
+rCons :: AST.Type → AST.Type → AST.Type
+rCons h t = Type.app (Type.constructor "MUI.Core.RCons") [ h, t ]
+
+rNil :: AST.Type
+rNil = Type.constructor "MUI.Core.RNil"
+
+rList :: Array AST.Type → AST.Type
+rList types = foldr step rNil types
+  where
+    step h l = rCons h l
+
+rList' :: Array String  → AST.Type
+rList' = rList <<< map Type.constructor
 
 componentProps ::
   Component ->
@@ -81,7 +99,7 @@ componentProps component@{ modulePath } = do
   componentName :: String
   componentName = Model.componentName component
 
-  propsName = propsTypeName componentName
+  propsName = componentName <> "Props"
 
   instanceTypeName = propsName <> "Instance"
 
@@ -140,9 +158,6 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: exp
     componentName :: String
     componentName = Model.componentName component
 
-    propsName :: String
-    propsName = propsTypeName componentName
-
   case objInstance of
     Tuple (Right (TS.Module.ProperType (Mu.In (TypeRecord (AST.Row { labels, tail: Nothing }))))) unions -> do
       classes <-
@@ -157,8 +172,8 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: exp
 
         componentPropsParam = let ident = Ident "componentProps" in { ident, var: Type.var ident }
 
-        propsRowTypeDecl :: { constructor :: AST.Type, declaration :: Declaration }
-        propsRowTypeDecl =
+        propsRowOpenTypeDecl :: { constructor :: AST.Type, declaration :: Declaration }
+        propsRowOpenTypeDecl =
           let
             toOpt (In (TypeOpt ref)) = opt ref
             toOpt ref = ref
@@ -175,7 +190,17 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: exp
             propsBody :: AST.Type
             propsBody = Type.typeRow $ Type.row (classesProp <> labels' <> baseProps) (Just componentPropsParam.var)
           in
-            declType (AST.TypeName $ propsName <> "Row") [ componentPropsParam.ident ] propsBody
+            declType
+              (AST.TypeName $ propsRowOpenTypeName componentName)
+              [ componentPropsParam.ident ]
+              propsBody
+
+        propsRowTypeDecl :: { constructor :: AST.Type, declaration :: Declaration }
+        propsRowTypeDecl =
+            declType
+              (AST.TypeName $ propsRowTypeName componentName)
+              [ ]
+              (Type.app (propsRowOpenTypeDecl.constructor) [ Type.typeRow' mempty Nothing ])
 
       (unions' :: List { constructors :: Declaration, instances :: List Declaration, "type" :: Declaration }) <-
         for unions
@@ -197,10 +222,12 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: exp
           foldr step List.Nil unions'
             <> List.fromFoldable extraDeclarations
             <> maybe mempty _.declarations classes
+            <> List.singleton propsRowOpenTypeDecl.declaration
             <> List.singleton propsRowTypeDecl.declaration
             <> componentConstructorsAST
                 { componentName
                 , propsRowConstructor: propsRowTypeDecl.constructor
+                , propsRowOpenConstructor: propsRowOpenTypeDecl.constructor
                 , hasStyles: isJust classes
                 , inherits
                 }
@@ -217,11 +244,12 @@ componentAST component@{ extraDeclarations, inherits, modulePath, propsType: exp
 componentConstructorsAST ::
   { componentName :: ComponentName
   , propsRowConstructor :: AST.Type
+  , propsRowOpenConstructor :: AST.Type
   , hasStyles :: Boolean
   , inherits :: Maybe AST.Type
   } ->
   List Declaration
-componentConstructorsAST { componentName, propsRowConstructor, hasStyles, inherits } = constructors
+componentConstructorsAST { componentName, propsRowConstructor, propsRowOpenConstructor, hasStyles, inherits } = constructors
   where
   -- | Maybe this `Writer` here is a bit overkill ;-)
   constructors :: List Declaration
@@ -235,23 +263,23 @@ componentConstructorsAST { componentName, propsRowConstructor, hasStyles, inheri
       -- |
       unsafeComponentIdent = Ident ("_" <> "Unsafe" <> componentName)
       unsafeComponentDecl = declForeignValue unsafeComponentIdent $ forAll { c: "componentProps" } \{ c } →
-        reactComponentApply (recordLiteral (Type.app propsRowConstructor [ c ]))
+        reactComponentApply (recordLiteral (Type.app propsRowOpenConstructor [ c ]))
 
-      -- | `MergeProps Props inherits p ⇒ t`
+      defaultRoot = Type.constructor "React.Basic.DOM.Props_div"
+
+      inherits' = fromMaybe (rCons defaultRoot rNil) inherits
+      -- | `MergeProps (Tuple Props inherits) p ⇒ t`
       mergeConstraint p t =
         let
-          propsRow = Type.app propsRowConstructor [ typeRow' mempty Nothing ]
+          propsChain = rCons propsRowConstructor inherits'
         in
-          constrained "MUI.Core.MergeProps" [ propsRow, inherits', p ] t
+          constrained "MUI.Core.MergeProps" [ propsChain, p ] t
 
       -- | `Coerce { | i } { | o } ⇒ t`
       coerceConstraint i o t =
-        let
-          propsRow = Type.app propsRowConstructor [ typeRow' mempty Nothing ]
-        in
-          constrained
-            "Data.Undefined.NoProblem.Mono.Coerce"
-            [ Type.recordLiteral i, Type.recordLiteral o ] t
+        constrained
+          "Data.Undefined.NoProblem.Mono.Coerce"
+          [ Type.recordLiteral i, Type.recordLiteral o ] t
 
       rowLacksConstraint l r t = constrained "Prim.Row.Lacks" [ l, r ] t
 
@@ -264,7 +292,6 @@ componentConstructorsAST { componentName, propsRowConstructor, hasStyles, inheri
       -- | _Badge = unsafeCoerce _UnsafeBadge
       componentIdent = Ident ("_" <> componentName)
       componentVarExpr = Expr.ident (Sugar.local componentIdent)
-      inherits' = fromMaybe (Type.constructor "React.Basic.DOM.Props_div") inherits
       componentDecl = declValue componentIdent [] (exprUnsafeCoerceApp unsafeComponentDecl.var) (Just signature) []
         where
           signature = forAll { p: "props" } \{ p } →
@@ -330,47 +357,50 @@ componentConstructorsAST { componentName, propsRowConstructor, hasStyles, inheri
       -- |     _SafeBadge ∷ ReactComponent { component ∷ ReactComponent { | componentProps } | props }
       -- |     _SafeBadge = unsafeCoerce _UnsafeBadge
       -- |
-      constructorRooted = DeclValue $
-        forAllValueBinding
-          { cp: "componentProps", pp: "propsPartial", p: "props" }
-          "badgeRooted"
-          (SListProxy ∷ _ ("component" ::: "propsPartial" ::: SNil))
-            \{ bindersVars, typeVars } →
-              let
-                rootComponent = reactComponentApply (recordLiteral typeVars.cp)
+      constructorRooted =
+        let
+          constructorRootedName = camelCase (componentName <> "Rooted")
+        in DeclValue $
+          forAllValueBinding
+            { cp: "componentProps", pp: "propsPartial", p: "props" }
+            constructorRootedName
+            (SListProxy ∷ _ ("component" ::: "propsPartial" ::: SNil))
+              \{ bindersVars, typeVars } →
+                let
+                  rootComponent = reactComponentApply (recordLiteral typeVars.cp)
 
-                signature = Just $
-                  mergeConstraint typeVars.p $
-                  coerceConstraint typeVars.pp typeVars.p $
-                  rowLacksConstraint (Type.symbol "component") typeVars.p $
-                  Type.arr
-                    (reactComponentApply (recordLiteral typeVars.cp)) $
+                  signature = Just $
+                    mergeConstraint typeVars.p $
+                    coerceConstraint typeVars.pp typeVars.p $
+                    rowLacksConstraint (Type.symbol "component") typeVars.p $
                     Type.arr
-                      (Type.recordLiteral typeVars.pp)
-                      jsx
+                      (reactComponentApply (recordLiteral typeVars.cp)) $
+                      Type.arr
+                        (Type.recordLiteral typeVars.pp)
+                        jsx
 
-                safeComponentName = "_Save" <> componentName
-                safeComponent = forAllValueBinding {} (safeComponentName) (SListProxy ∷ _ SNil) \x →
-                  { signature: Just $ reactComponentApply (recordLiteral' (Map.singleton "component" rootComponent) typeVars.p)
-                  , expr: exprUnsafeCoerceApp (Expr.ident $ local unsafeComponentIdent)
-                  , whereBindings: []
-                  }
+                  safeComponentName = "_Save" <> componentName
+                  safeComponent = forAllValueBinding {} (safeComponentName) (SListProxy ∷ _ SNil) \x →
+                    { signature: Just $ reactComponentApply (recordLiteral' (Map.singleton "component" rootComponent) typeVars.p)
+                    , expr: exprUnsafeCoerceApp (Expr.ident $ local unsafeComponentIdent)
+                    , whereBindings: []
+                    }
 
-                sProxy = exprSProxy "component"
+                  sProxy = exprSProxy "component"
 
-                props = forAllValueBinding {} "props" (SListProxy ∷ _ SNil) \_ →
-                  { expr:
-                      let
-                        p = coerceAppExpr bindersVars.propsPartial
-                      in
-                        Expr.app (Expr.app (Expr.app (Expr.ident' "Record.insert") sProxy.var) bindersVars.component) p
-                  , signature: Nothing
-                  , whereBindings: []
-                  }
+                  props = forAllValueBinding {} "props" (SListProxy ∷ _ SNil) \_ →
+                    { expr:
+                        let
+                          p = coerceAppExpr bindersVars.propsPartial
+                        in
+                          Expr.app (Expr.app (Expr.app (Expr.ident' "Record.insert") sProxy.var) bindersVars.component) p
+                    , signature: Nothing
+                    , whereBindings: []
+                    }
 
-                expr = reactElemApp (Expr.ident' safeComponentName) (Expr.ident' "props")
-              in
-                { signature, whereBindings: [ sProxy.value, props, safeComponent ], expr }
+                  expr = reactElemApp (Expr.ident' safeComponentName) (Expr.ident' "props")
+                in
+                  { signature, whereBindings: [ sProxy.value, props, safeComponent ], expr }
 
     unsafeComponentDecl.declaration
       : componentDecl.declaration

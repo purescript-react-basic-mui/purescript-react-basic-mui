@@ -4,13 +4,14 @@ import Prelude
 
 import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconPSFile, icons)
 import Codegen (component, icon, write) as Codegen
-import Codegen.AST (Ident(..), ModuleName(..), TypeF(..), TypeName(..))
+import Codegen.AST (ModuleName(..), TypeF(..), TypeName(..))
 import Codegen.AST.Sugar (declType)
-import Codegen.AST.Sugar.Type (app, constructor, record, row) as Type
-import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, divProps, iconName, jsx, nativeElementProps, psImportPath, reactComponentApply)
+import Codegen.AST.Sugar.Type (app, constructor, recordLiteral) as Type
+import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, divProps, iconName, jsx, psImportPath, reactComponentApply)
 import Codegen.Model (componentName) as Model
 import Codegen.TS.MUI (componentProps) as TS.MUI
-import Codegen.TS.MUI (propsTypeName)
+import Codegen.TS.MUI (propsRowTypeName)
+import Codegen.TS.MUI (rList, rList') as MUI
 import Codegen.TS.Types (InstantiationStrategy(..))
 import Control.Alt ((<|>))
 import Control.Monad.Error.Class (throwError)
@@ -18,13 +19,13 @@ import Control.Monad.Except (runExceptT)
 import Control.Monad.Reader (runReader, runReaderT)
 import Control.Monad.Trans.Class (lift)
 import Data.Array (filter)
-import Data.Array (null, sort) as Array
+import Data.Array (fromFoldable, null, sort) as Array
 import Data.Either (Either(..))
 import Data.Foldable (for_, intercalate)
 import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Functor.Mu (roll, unroll)
 import Data.List (sort) as List
-import Data.Map (filterWithKey, fromFoldable, fromFoldableWithIndex, keys, lookup, toUnfoldable) as Map
+import Data.Map (filterWithKey, fromFoldable, keys, lookup, toUnfoldable) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap, wrap)
@@ -37,7 +38,6 @@ import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class.Console (log)
-import Foreign.Object (fromHomogeneous) as Object
 import Matryoshka (cata)
 import Node.Path (FilePath)
 import Options.Applicative (Parser, ReadM, command, eitherReader, execParser, flag', fullDesc, help, helper, info, long, metavar, option, progDesc, readerError, short, strOption, subparser, value, (<**>))
@@ -81,11 +81,10 @@ components =
 
     appBar =
       simpleComponent
-        { inherits:
-          Just
-            $ Type.app
-                (Type.constructor "MUI.Core.Paper.PaperPropsOptions")
-                [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
+            , divProps
+            ]
         , name: "AppBar"
         , propsType:
           { base:  Map.fromFoldable [ children ]
@@ -95,7 +94,7 @@ components =
 
     avatar =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Nothing
         , name: "Avatar"
         , propsType:
           { base:  Map.fromFoldable []
@@ -113,11 +112,10 @@ components =
 
     backdrop =
       simpleComponent
-        { inherits:
-          Just
-            $ Type.app
-                (Type.constructor "MUI.Core.Fade.FadePropsOptions")
-                [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.Fade.FadePropsRow"
+            , divProps
+            ]
         , name: "Backdrop"
         , propsType:
           { base: Map.fromFoldable
@@ -152,7 +150,7 @@ components =
     -- | `children` and `component` are taken from `buttonBase`
     bottomNavigation =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "BottomNavigation"
         , propsType:
           { base:  Map.fromFoldable
@@ -166,7 +164,7 @@ components =
 
     box =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "Box"
         , propsType:
           { base:  Map.fromFoldable $ [ children, Tuple "css" jss ]
@@ -176,7 +174,7 @@ components =
 
     breadcrumbs =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "Breadcrumbs"
         , propsType:
           { base:
@@ -193,11 +191,10 @@ components =
 
     button =
       simpleComponent
-        { inherits:
-          Just
-            $ Type.app
-                (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
-                [ Type.constructor "React.Basic.DOM.Props_button" ]
+        { inherits: Just $ MUI.rList'
+            [ "MUI.Core.ButtonBase.ButtonBasePropsRow"
+            , "React.Basic.DOM.Props_button"
+            ]
         , name: "Button"
         , propsType:
           { base: Map.fromFoldable
@@ -220,8 +217,7 @@ components =
 
     buttonGroup =
       simpleComponent
-        { inherits:
-          Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "ButtonGroup"
         , propsType:
           { base:
@@ -250,27 +246,22 @@ components =
           [ buttonBaseActions.declaration
           , buttonBaseTypeProps.declaration
           ]
-        , inherits:
-          Just
-            $ Type.app
-                (Type.constructor "ButtonBasePropsOptions")
-                [ Type.constructor "React.Basic.DOM.Props_button" ]
+        , inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_button" ]
         , modulePath: Name "ButtonBase"
         , propsType:
           { base:  Map.fromFoldable
               [ Tuple "action" foreignType
               , Tuple "buttonRef" foreignType
-              -- XXX: We are catching material ui documentation / type error here.
-              -- ButtonBase doesn't contain `component` prop.
-              -- , component
               , eventHandlerProp "onFocusVisible"
               -- | XXX: Provide some sugar for generating relative imports
               -- | between components
-              -- , Tuple "TouchRippleProps" $ roll
-              --     $ TypeConstructor
-              --         { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
-              --         , name: TypeName $ (propsTypeName touchRippleType.name)
-              --         }
+              , Tuple "TouchRippleProps" $ Type.recordLiteral $ Type.app
+                  ( roll $ TypeConstructor
+                      { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
+                      , name: TypeName $ (propsRowTypeName touchRippleType.name)
+                      }
+                  )
+                  (Array.fromFoldable touchRipple.inherits)
               ]
           , generate:
             [ "centerRipple"
@@ -290,11 +281,10 @@ components =
     -- | TODO: make value a type variable
     bottomNavigationAction =
       simpleComponent
-        { inherits:
-          Just
-            $ Type.app
-                (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
-                [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
+            , divProps
+            ]
         , name: "BottomNavigationAction"
         , propsType:
           { base: Map.fromFoldable
@@ -311,11 +301,10 @@ components =
 
     card =
       simpleComponent
-        { inherits:
-          Just
-            $ Type.app
-                (Type.constructor "MUI.Core.Paper.PaperPropsOptions")
-                [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
+            , divProps
+            ]
         , name: "Card"
         , propsType:
           { base:  Map.fromFoldable [ children ]
@@ -325,11 +314,10 @@ components =
 
     cardActionArea =
       simpleComponent
-        { inherits:
-          Just
-            $ Type.app
-                (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
-                [ Type.constructor "React.Basic.DOM.Props_button" ]
+        { inherits: Just $ MUI.rList'
+            [ "MUI.Core.ButtonBase.ButtonBasePropsRow"
+            , "React.Basic.DOM.Props_button"
+            ]
         , name: "CardActionArea"
         , propsType:
           { base:  Map.fromFoldable [ children ]
@@ -339,7 +327,7 @@ components =
 
     cardActions =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "CardActions"
         , propsType:
           { base:  Map.fromFoldable [ children ]
@@ -349,7 +337,7 @@ components =
 
     cardContent =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "CardContent"
         , propsType:
           { base:  Map.fromFoldable [ children ]
@@ -359,7 +347,7 @@ components =
 
     cardHeader =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "CardHeader"
         , propsType:
           { base:  Map.fromFoldable
@@ -377,7 +365,7 @@ components =
 
     cardMedia =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "CardMedia"
         , propsType:
           { base:  Map.fromFoldable
@@ -419,7 +407,7 @@ components =
 
     chip =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "Chip"
         , propsType:
           { base:  Map.fromFoldable
@@ -441,7 +429,7 @@ components =
 
     circularProgress =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "CircularProgress"
         , propsType:
           { base:  Map.fromFoldable []
@@ -491,7 +479,7 @@ components =
 
     container =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "Container"
         , propsType:
           { base: emptyBase
@@ -530,11 +518,10 @@ components =
         base =  Map.fromFoldable $ [ children ] <> handlers
       in
         simpleComponent
-          { inherits:
-            Just
-              $ Type.app
-                  (Type.constructor "MUI.Core.Modal.ModalPropsOptions")
-                  [ divProps ]
+          { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.Modal.ModalPropsRow"
+            , divProps
+            ]
           , name: "Dialog"
           , propsType:
             { base: emptyBase
@@ -584,7 +571,7 @@ components =
     -- | TODO: add component
     divider =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_hr"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_hr" ]
         , name: "Divider"
         , propsType:
           { base:  Map.fromFoldable []
@@ -600,7 +587,10 @@ components =
 
     drawer =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Modal.ModalPropsOptions") [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.Modal.ModalPropsRow"
+            , divProps
+            ]
         , name: "Drawer"
         , propsType:
           { base: Map.fromFoldable
@@ -626,7 +616,10 @@ components =
     -- | TODO: TransitionComponent, TransitionProps
     expansionPanel =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
+            , divProps
+            ]
         , name: "ExpansionPanel"
         , propsType:
           { base: Map.fromFoldable
@@ -644,7 +637,7 @@ components =
 
     expansionPanelActions =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "ExpansionPanelActions"
         , propsType:
           { base: Map.fromFoldable [ children ]
@@ -654,7 +647,7 @@ components =
 
     expansionPanelDetails =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "ExpansionPanelDetails"
         , propsType:
           { base: Map.fromFoldable [ children ]
@@ -664,7 +657,7 @@ components =
 
     expansionPanelSummary =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "ExpansionPanelSummary"
         , propsType:
           { base: Map.fromFoldable
@@ -678,11 +671,10 @@ components =
 
     fab =
       simpleComponent
-        { inherits:
-          Just
-            $ Type.app
-                (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions")
-                [ Type.constructor "React.Basic.DOM.Props_button" ]
+        { inherits: Just $ MUI.rList'
+            [ "MUI.Core.ButtonBase.ButtonBasePropsRow"
+            , "React.Basic.DOM.Props_button"
+            ]
         , name: "Fab"
         , propsType:
           { base: emptyBase
@@ -713,7 +705,7 @@ components =
     -- | TODO: inputComponent, make value a type variable
     filledInput =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.InputBasePropsOption") [ divProps ]
+        { inherits: Just $ MUI.rList' [ "MUI.Core.InputBasePropsRow" ]
         , name: "FilledInput"
         , propsType:
           { base:  Map.fromFoldable
@@ -752,7 +744,7 @@ components =
 
     formControl =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "FormControl"
         , propsType:
           { base: Map.fromFoldable [ children ]
@@ -772,7 +764,7 @@ components =
     -- | TODO: make value a type variable
     formControlLabel =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_label"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_label" ]
         , name: "FormControlLabel"
         , propsType:
           { base: Map.fromFoldable
@@ -793,7 +785,7 @@ components =
 
     formGroup =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "FormGroup"
         , propsType:
           { base: Map.fromFoldable [ children ]
@@ -806,7 +798,7 @@ components =
 
     formHelperText =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_p"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_p" ]
         , name: "FormHelperText"
         , propsType:
           { base: Map.fromFoldable [ children ]
@@ -825,7 +817,7 @@ components =
 
     formLabel =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_label"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_label" ]
         , name: "FormLabel"
         , propsType:
           { base: Map.fromFoldable [ children ]
@@ -843,7 +835,7 @@ components =
 
     grid =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "Grid"
         , propsType:
           { base: Map.fromFoldable [ children ]
@@ -868,7 +860,7 @@ components =
         }
 
     gridList = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_ul"
+      { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_ul" ]
       , name: "GridList"
       , propsType:
         { base: Map.fromFoldable [ children ]
@@ -877,7 +869,7 @@ components =
       }
 
     gridListTile = simpleComponent
-      { inherits: Just $ Type.constructor "React.Basic.DOM.Props_li"
+      { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_li" ]
       , name: "GridListTile"
       , propsType:
         { base: Map.fromFoldable [ children ]
@@ -939,7 +931,7 @@ components =
 
     icon =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_span" ]
         , name: "Icon"
         , propsType:
           { base: emptyBase
@@ -953,7 +945,8 @@ components =
 
     iconButton =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow", divProps ]
         , name: "IconButton"
         , propsType:
           { base: Map.fromFoldable [ children ]
@@ -971,7 +964,8 @@ components =
 
     input =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.InputBase.InputBasePropsOptions") [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.InputBase.InputBasePropsRow", divProps ]
         , name: "Input"
         , propsType:
           { base:
@@ -1009,7 +1003,7 @@ components =
 
     inputAdornment =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "InputAdornment"
         , propsType:
           { base:
@@ -1027,7 +1021,7 @@ components =
     -- | TODO: inputProps should be something like ReactComponent { | InputProps }
     inputBase =
       simpleComponent
-        { inherits: Just $ divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "InputBase"
         , propsType:
           { base:
@@ -1065,7 +1059,8 @@ components =
 
     inputLabel =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.FormLabel.FormLabelPropsOptions") [ Type.constructor "React.Basic.DOM.Props_label" ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.FormLabel.FormLabelPropsRow", Type.constructor "React.Basic.DOM.Props_label" ]
         , name: "InputLabel"
         , propsType:
           { base:
@@ -1089,7 +1084,7 @@ components =
 
     linearProgress =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "LinearProgress"
         , propsType:
           { base: emptyBase
@@ -1105,7 +1100,7 @@ components =
 
     link =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_a"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_a" ]
         , name: "Link"
         , propsType:
           { base:
@@ -1124,7 +1119,7 @@ components =
 
     list =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_ul"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_ul" ]
         , name: "List"
         , propsType:
           { base:
@@ -1143,7 +1138,7 @@ components =
     -- | TODO: add ContainerComponent and ContainerProps
     listItem =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_li"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_li" ]
         , name: "ListItem"
         , propsType:
           { base:
@@ -1181,7 +1176,7 @@ components =
 
     listItemIcon =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "ListItemIcon"
         , propsType:
           { base:
@@ -1196,7 +1191,7 @@ components =
 
     listItemSecondaryAction =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "ListItemSecondaryAction"
         , propsType:
           { base:
@@ -1211,7 +1206,7 @@ components =
 
     listItemText =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "ListItemText"
         , propsType:
           { base:
@@ -1284,7 +1279,10 @@ components =
                 ]
       in
         simpleComponent
-          { inherits: Just $ Type.app (Type.constructor "MUI.Core.ListItem.ListItemPropsOptions") [ Type.constructor "React.Basic.DOM.Props_li" ]
+          { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.ListItem.ListItemPropsRow"
+            , Type.constructor "React.Basic.DOM.Props_li"
+            ]
           , name: "MenuItem"
           , propsType:
             { base: emptyBase
@@ -1294,7 +1292,8 @@ components =
 
     mobileStepper =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ Type.constructor "React.Basic.DOM.Props_props" ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.Paper.PaperPropsRow", Type.constructor "React.Basic.DOM.Props_props" ]
         , name: "MobileStepper"
         , propsType:
           { base:
@@ -1362,7 +1361,8 @@ components =
     -- | TODO: value
     nativeSelect =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.Input.InputPropsRow", divProps ]
         , name: "NativeSelect"
         , propsType:
           { base:
@@ -1401,7 +1401,8 @@ components =
     -- | inputComponent
     outlineInput =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.InputBase.InputBasePropsOptions") [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.InputBase.InputBasePropsRow", divProps ]
         , name: "OutlinedInput"
         , propsType:
           { base:
@@ -1440,7 +1441,7 @@ components =
 
     paper =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "Paper"
         , propsType:
           { base:  Map.fromFoldable $ [ children ]
@@ -1455,7 +1456,8 @@ components =
     -- | TransitionComponent, TransitionProps, transformOrigin
     popover =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Modal.ModalPropsOptions") [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.Modal.ModalPropsRow", divProps ]
         , name: "Popover"
         , propsType:
           { base:
@@ -1488,7 +1490,7 @@ components =
 
     popper =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "Popper"
         , propsType:
           { base:
@@ -1526,7 +1528,8 @@ components =
     -- | value, inputProps, inputRef
     radio =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.IconButton.IconButtonPropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.IconButton.IconButtonPropsRow", Type.constructor "React.Basic.DOM.Props_button" ]
         , name: "Radio"
         , propsType:
           { base:
@@ -1554,7 +1557,8 @@ components =
     -- | value, inputProps, inputRef
     radioGroup =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.FormGroup.FormGroupPropsOptions") [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.FormGroup.FormGroupPropsRow", divProps ]
         , name: "RadioGroup"
         , propsType:
           { base:
@@ -1587,7 +1591,8 @@ components =
     -- | TODO: value
     select =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Input.InputPropsOptions") [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.Input.InputPropsRow", divProps ]
         , name: "Select"
         , propsType:
           { base:
@@ -1635,7 +1640,7 @@ components =
     -- | TODO: ThumbComponent ValueLabelComponent
     slider =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_span" ]
         , name: "Slider"
         , propsType:
           { base:
@@ -1671,7 +1676,7 @@ components =
     -- | TODO: TransitionComponent, TransitionProps
     snackbar =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "Snackbar"
         , propsType:
           { base:
@@ -1705,7 +1710,8 @@ components =
 
     snackbarContent =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.Paper.PaperPropsRow", divProps ]
         , name: "SnackbarContent"
         , propsType:
           { base:
@@ -1722,7 +1728,7 @@ components =
 
     step =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "Step"
         , propsType:
           { base:
@@ -1739,7 +1745,10 @@ components =
 
     stepButton =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
+            , Type.constructor "React.Basic.DOM.Props_button"
+            ]
         , name: "StepButton"
         , propsType:
           { base:
@@ -1762,7 +1771,7 @@ components =
 
     stepConnector =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "StepConnector"
         , propsType:
           { base: emptyBase
@@ -1773,7 +1782,7 @@ components =
     -- | TODO: handle TransitionComponent
     stepContent =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "StepContent"
         , propsType:
           { base:
@@ -1791,7 +1800,7 @@ components =
 
     stepIcon =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "StepIcon"
         , propsType:
           { base:
@@ -1810,7 +1819,7 @@ components =
     -- | TODO: StepIconComponent
     stepLabel =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "StepLabel"
         , propsType:
           { base:
@@ -1831,7 +1840,10 @@ components =
 
     stepper =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Paper.PaperPropsOptions") [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
+            , divProps
+            ]
         , name: "Stepper"
         , propsType:
           { base:
@@ -1851,7 +1863,7 @@ components =
 
     svgIcon =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.SVG.Props_svg"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.SVG.Props_svg" ]
         , name: "SvgIcon"
         , propsType:
           { base:
@@ -1872,7 +1884,10 @@ components =
 
     swipeableDrawer =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.Drawer.DrawerPropsOptions") [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.Drawer.DrawerPropsRow"
+            , divProps
+            ]
         , name: "SwipeableDrawer"
         , propsType:
           { base:
@@ -1896,7 +1911,10 @@ components =
 
     switch =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.IconButton.IconButtonPropsOptions") [ divProps ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.IconButton.IconButtonPropsRow"
+            , divProps
+            ]
         , name: "Switch"
         , propsType:
           { base:
@@ -1925,7 +1943,10 @@ components =
 
     tab =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
+            , Type.constructor "React.Basic.DOM.Props_button"
+            ]
         , name: "Tab"
         , propsType:
           { base:
@@ -1949,7 +1970,7 @@ components =
 
     table =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_table"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_table" ]
         , name: "Table"
         , propsType:
           { base:
@@ -1967,7 +1988,7 @@ components =
 
     tableBody =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_tbody"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_tbody" ]
         , name: "TableBody"
         , propsType:
           { base:
@@ -1982,7 +2003,7 @@ components =
 
     tableCell =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_td"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_td" ]
         , name: "TableCell"
         , propsType:
           { base:
@@ -2002,7 +2023,7 @@ components =
 
     tableFooter =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_tfoot"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_tfoot" ]
         , name: "TableFooter"
         , propsType:
           { base:
@@ -2017,7 +2038,7 @@ components =
 
     tableHead =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_thead"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_thead" ]
         , name: "TableHead"
         , propsType:
           { base:
@@ -2034,7 +2055,10 @@ components =
     tablePagination :: Component
     tablePagination =
       { extraDeclarations: []
-      , inherits: Just $ Type.app (Type.constructor "MUI.Core.TableCell.TableCellPropsOptions") [ Type.constructor "React.Basic.DOM.Props_td" ]
+      , inherits: Just $ MUI.rList
+          [ Type.constructor "MUI.Core.TableCell.TableCellPropsRow"
+          , Type.constructor "React.Basic.DOM.Props_td"
+          ]
       , modulePath: Name "TablePagination"
       , propsType:
         { base:
@@ -2075,7 +2099,7 @@ components =
 
     tableRow =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_tr"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_tr" ]
         , name: "TableRow"
         , propsType:
           { base:
@@ -2093,7 +2117,10 @@ components =
     -- | TODO: IconComponent
     tableSortLabel =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
+            , Type.constructor "React.Basic.DOM.Props_button"
+            ]
         , name: "TableSortLabel"
         , propsType:
           { base:
@@ -2115,15 +2142,14 @@ components =
         { inherits: Nothing
         , name: "Tabs"
         , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "action" foreignType
-                  , eventHandlerProp "onChange"
-                  , Tuple "ScrollButtonComponent" foreignType
-                  , Tuple "TabIndicatorProps" foreignType
-                  , Tuple "value" foreignType
-                  ]
+          { base: Map.fromFoldable
+            [ children
+            , Tuple "action" foreignType
+            , eventHandlerProp "onChange"
+            , Tuple "ScrollButtonComponent" foreignType
+            , Tuple "TabIndicatorProps" foreignType
+            , Tuple "value" foreignType
+            ]
           , generate:
             [ "centered"
             , "classes"
@@ -2139,13 +2165,10 @@ components =
 
     textareaAutosize =
       simpleComponent
-        { inherits: Just $ Type.constructor "React.Basic.DOM.Props_textarea"
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_textarea" ]
         , name: "TextareaAutosize"
         , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
+          { base: emptyBase
           , generate:
             [ "rows"
             , "rowsMax"
@@ -2156,7 +2179,10 @@ components =
     textField :: Component
     textField =
       { extraDeclarations: []
-      , inherits: Just $ Type.app (Type.constructor "MUI.Core.FormControl.FormControlPropsOptions") [ divProps ]
+      , inherits: Just $ MUI.rList
+          [ Type.constructor "MUI.Core.FormControl.FormControlPropsRow"
+          , divProps
+          ]
       , modulePath: Name "TextField"
       , propsType:
         { base:
@@ -2223,7 +2249,10 @@ components =
     -- | It seems that toggle button is still in `material-ui-lab`
     toggleButton =
       simpleComponent
-        { inherits: Just $ Type.app (Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsOptions") [ Type.constructor "React.Basic.DOM.Props_button" ]
+        { inherits: Just $ MUI.rList
+            [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
+            , Type.constructor "React.Basic.DOM.Props_button"
+            ]
         , name: "ToggleButton"
         , propsType:
           { base:
@@ -2243,7 +2272,7 @@ components =
 
     toolbar =
       simpleComponent
-        { inherits: Just divProps
+        { inherits: Just $ MUI.rList [ divProps ]
         , name: "Toolbar"
         , propsType:
           { base:
@@ -2260,7 +2289,7 @@ components =
 
     touchRipple =
       { extraDeclarations: []
-      , inherits: Just $ Type.constructor "React.Basic.DOM.Props_span"
+      , inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_span" ]
       -- , name: touchRippleType.name
       , modulePath: touchRippleType.path
       , propsType:
@@ -2567,7 +2596,7 @@ main = do
       , ModuleName "Data.Undefined.NoProblem.Mono" /\ Nothing
       , ModuleName "Unsafe.Coerce" /\ Nothing
       , ModuleName "Unsafe.Reference" /\ Nothing
-      , ModuleName "MUI.Core" /\ Just "MUI"
+      , ModuleName "MUI.Core" /\ Nothing
       , ModuleName "React.Basic" /\ Nothing
       , ModuleName "React.Basic.DOM" /\ Just "DOM"
       ]
@@ -2588,7 +2617,9 @@ main = do
 
     codegenComponent component output =
       runReaderT (runExceptT (Codegen.component component)) importAliases
-        >>= case _ of
+        >>= \c → do
+          log $ "Generating module:" <> show component.modulePath
+          case c of
             Right code -> case output of
               Just Stdout -> do
                 log "\nPureScript:"

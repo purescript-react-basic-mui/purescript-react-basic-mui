@@ -75,7 +75,8 @@ typeImportsAlgebra = case _ of
     (fromMaybe mempty r.tail <> fold r.labels)
 
 qualifiedTypeNameImport :: QualifiedName TypeName -> Maybe Imports
-qualifiedTypeNameImport { moduleName: Just moduleName, name: t } = Just $ importsSingleton moduleName (ImportType t)
+qualifiedTypeNameImport { moduleName: Just moduleName, name: t } =
+  Just $ importsSingleton moduleName (ImportType { typeName: t, importConstructors: false })
 qualifiedTypeNameImport _ = Nothing
 
 qualifiedClassNameImport :: QualifiedName ClassName -> Maybe Imports
@@ -87,11 +88,15 @@ exprImportsAlgebra = case _ of
   ExprBoolean _ -> mempty
   ExprApp f arg -> f <> arg
   ExprArray arr -> fold arr
-  ExprIdent x -> fromMaybe mempty $ qualifiedValueImport x
+  ExprIdent ident ->
+    fromMaybe mempty $ qualifiedValueImport ident
   ExprNumber n -> mempty
   ExprRecord props -> fold props
   ExprString s -> mempty
   where
   -- | Don't import type constructors here - check if t starts with capital letter
-  qualifiedValueImport { moduleName: Just moduleName, name: t } = Just $ importsSingleton moduleName (ImportValue t)
+  qualifiedValueImport { typeName: Just typeName, qualifiedName: { moduleName: Just moduleName }} =
+    Just $ importsSingleton moduleName (ImportType { typeName, importConstructors: true })
+  qualifiedValueImport { qualifiedName: { moduleName: Just moduleName, name: t }} =
+    Just $ importsSingleton moduleName (ImportValue t)
   qualifiedValueImport _ = Nothing

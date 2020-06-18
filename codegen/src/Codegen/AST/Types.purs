@@ -70,6 +70,26 @@ type QualifiedTypeName
 type Constraint ref
   = { className :: QualifiedName ClassName, params :: Array ref }
 
+data Precedence
+  = Zero
+  | One
+  | Two
+  | Three
+  | Four
+  | Five
+  | Six
+  | Seven
+  | Eight
+  | Nine
+
+derive instance eqPrecedence :: Eq Precedence
+
+derive instance ordPrecedence :: Ord Precedence
+
+data Associativity
+  = AssocLeft
+  | AssocRight
+
 data TypeF ref
   = TypeApp ref (Array ref)
   | TypeArr ref ref
@@ -79,7 +99,9 @@ data TypeF ref
   | TypeConstrained (Constraint ref) ref
   | TypeForall (Array Ident) ref
   | TypeNumber
-  -- | Currently handling only union of `Undefined |+| ref`
+  -- | TypeOperator String Associativity Precedence
+  -- | `Opt` handles union of `Undefined |+| ref`.
+  -- | We want to move to `oneof` at some point.
   | TypeOpt ref
   -- | I'm handling this mututal recursion by hand
   -- | because I'm not sure how to do this better.
@@ -317,7 +339,14 @@ data ExprF ref
   = ExprApp ref ref
   | ExprArray (Array ref)
   | ExprBoolean Boolean
-  | ExprIdent (QualifiedName Ident)
+  -- | We want to somehow handle automatic imports
+  -- | in the case of imported constructors.
+  -- | This is a simple representation which allows
+  -- | us to do this.
+  | ExprIdent
+      { qualifiedName :: (QualifiedName Ident)
+      , typeName :: Maybe TypeName
+      }
   | ExprNumber Number
   | ExprRecord (Map RowLabel ref)
   | ExprString String
@@ -369,7 +398,7 @@ newtype ValueBindingFields = ValueBindingFields
     }
   , signature :: Maybe Type
   }
-derive instance newtypeValueBindingFields ∷ Newtype ValueBindingFields _
+derive instance newtypeValueBindingFields :: Newtype ValueBindingFields _
 
 data Declaration
   = DeclInstance
@@ -401,7 +430,10 @@ instance showClassName :: Show ClassName where
 
 data Import
   = ImportValue Ident
-  | ImportType TypeName
+  | ImportType
+    { importConstructors :: Boolean
+    , typeName :: TypeName
+    }
   | ImportClass ClassName
 
 derive instance newtypeIdent :: Newtype Ident _

@@ -42,8 +42,8 @@ import Codegen.AST (Declaration(..)) as AST
 import Codegen.AST (Expr, ExprF(..), Ident(..), RowF(..), RowLabel, Type, TypeName(..), Union(..))
 import Codegen.AST.Imports (ImportAlias)
 import Codegen.AST.Sugar (SListProxy(..), declInstance, forAllValueBinding, valueBindingFields)
-import Codegen.AST.Sugar.Expr (app, boolean, ident', number, string) as Expr
-import Codegen.AST.Sugar.Type (app, arr, constructor, var) as Type
+import Codegen.AST.Sugar.Expr (app, boolean, ident', identTyped', number, string) as Expr
+import Codegen.AST.Sugar.Type (app, arr, constructor) as Type
 import Codegen.AST.Sugar.Type (name')
 import Codegen.AST.Types (TypeF(..), UnionMember(..), ValueBindingFields(..), reservedNames)
 import Codegen.TS.Types (M)
@@ -340,7 +340,7 @@ exprSProxy label =
   in
     { var: Expr.ident' name
     , value: forAllValueBinding {} name (SListProxy ∷ _ SNil) \{} ->
-        { expr: Expr.ident' "Type.Prelude.SProxy"
+        { expr: Expr.identTyped' "SProxy" "Type.Prelude.SProxy"
         , signature: Just $ Type.app (Type.constructor "Type.Prelude.SProxy") [ roll $ TypeSymbol label ]
         , whereBindings: []
         }
@@ -378,7 +378,7 @@ unionDeclarations typeName@(TypeName name) members = do
         declInstance
           (name' "Prelude.Eq")
           [ type_ ]
-          [ valueBindingFields (Ident "eq") [] (roll $ ExprIdent (name' "Unsafe.Reference.unsafeRefEq")) Nothing [] ]
+          [ valueBindingFields (Ident "eq") [] (Expr.ident' "Unsafe.Reference.unsafeRefEq") Nothing [] ]
     else
       pure mempty
   pure

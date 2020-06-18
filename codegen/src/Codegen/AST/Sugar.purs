@@ -53,7 +53,7 @@ declValue name binders expr signature whereBindings =
   let
     declaration = DeclValue (valueBindingFields name binders expr signature whereBindings)
 
-    var = roll $ ExprIdent { name, moduleName: Nothing }
+    var = roll $ ExprIdent { typeName: Nothing, qualifiedName: { name, moduleName: Nothing }}
   in
     { declaration, var }
 
@@ -62,7 +62,8 @@ declForeignValue i t =
   let
     declaration = DeclForeignValue { ident: i, "type": t }
 
-    var = roll $ ExprIdent { name: i, moduleName: Nothing }
+    var = roll $ ExprIdent
+      { typeName: Nothing, qualifiedName: { name: i, moduleName: Nothing }}
   in
     { declaration, var }
 
@@ -109,7 +110,8 @@ instance bindersRowCons :: (BindersRow t tr_ tr, IsSymbol h, Row.Lacks h tr, Row
       { binders, builder } = bindersRow (SListProxy :: SListProxy t)
     in
       { binders: Ident h : binders
-      , builder: Record.Builder.insert _h (roll $ ExprIdent $ qualifiedIdent h) <<< builder
+      , builder: Record.Builder.insert _h
+          (roll $ ExprIdent $ { typeName: Nothing, qualifiedName: qualifiedIdent h}) <<< builder
       }
 
 
