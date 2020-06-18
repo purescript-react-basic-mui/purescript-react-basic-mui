@@ -3,11 +3,11 @@ module Codegen.AST.Sugar where
 import Prelude
 
 import Codegen.AST.Imports (ImportAlias)
-import Codegen.AST.Printers (PrintingContext(..), printQualifiedName, printType)
+import Codegen.AST.Printers (PrintingContext(..), line, printQualifiedName, printType)
 import Codegen.AST.Types (ClassName, Declaration(..), Expr, ExprF(..), Ident(..), ModuleName(..), QualifiedName, Type, TypeF(..), TypeName, ValueBindingFields(..))
 import Control.Monad.Reader (class MonadReader)
 import Data.Array (fromFoldable, unsnoc) as Array
-import Data.Foldable (fold)
+import Data.Foldable (foldMap)
 import Data.Functor.Mu (roll)
 import Data.List (List(..)) as List
 import Data.List (List(..), (:))
@@ -75,7 +75,7 @@ declInstance className types body = do
     { head:
       { className
       , name:
-        Ident $ camelCase $ cn <> fold types'
+        Ident $ camelCase $ cn <> foldMap line types'
       , types
       }
     , body

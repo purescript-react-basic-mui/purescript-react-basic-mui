@@ -2568,6 +2568,8 @@ main = do
       , ModuleName "Unsafe.Coerce" /\ Nothing
       , ModuleName "Unsafe.Reference" /\ Nothing
       , ModuleName "MUI.Core" /\ Just "MUI"
+      , ModuleName "React.Basic" /\ Nothing
+      , ModuleName "React.Basic.DOM" /\ Just "DOM"
       ]
 
     -- | Should we introduce multimodule handling logic back?

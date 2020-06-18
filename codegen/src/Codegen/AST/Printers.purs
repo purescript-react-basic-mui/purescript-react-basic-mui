@@ -1,3 +1,10 @@
+-- | The current printing goal:
+-- | * Do whatever is needed to force `purty` make the formatting.
+-- |
+-- | Not the current goals:
+-- | * Be efficient.
+-- | * Clear code structure.
+-- |
 module Codegen.AST.Printers where
 
 import Prelude
@@ -7,7 +14,7 @@ import Codegen.AST.Types (Declaration(..), ExprF(..), Ident(..), Import(..), Imp
 import Control.Monad.Reader (ask)
 import Control.Monad.Reader.Class (class MonadReader)
 import Data.Array (concat)
-import Data.Array (cons, fromFoldable, null) as Array
+import Data.Array (cons, fromFoldable, null, singleton, uncons, unsnoc) as Array
 import Data.Char.Unicode (isUpper)
 import Data.Either (fromRight)
 import Data.Foldable (foldMap, intercalate, length)
@@ -83,7 +90,7 @@ printDeclaration (DeclForeignData { typeName: TypeName name }) = pure $
 -- , "kind": k }) =
 printDeclaration (DeclForeignValue { ident: Ident ident, "type": t }) = do
   p <- cataM printType t <@> StandAlone
-  pure $ line [ "foreign import", ident, "::", p ] -- fromMaybe "Type" k
+  pure $ line $ [ "foreign import", ident, "::" ] <> p -- fromMaybe "Type" k
 printDeclaration (DeclInstance { head, body }) = do
   cp <- printQualifiedName head.className
   params <- for head.types \t ->
@@ -95,7 +102,7 @@ printDeclaration (DeclInstance { head, body }) = do
         , unwrap head.name
         , "::"
         , cp
-        , line params
+        , line (map line params)
         , "where"
         ]
   body' <- for body \d ->
@@ -104,7 +111,7 @@ printDeclaration (DeclInstance { head, body }) = do
 printDeclaration (DeclValue v) = lines <$> printValueBindingFields v
 printDeclaration (DeclType { typeName, "type": t, vars }) = do
   body <- cataM printType t <@> StandAlone
-  pure $ line [ "type", unwrap typeName, line $ (map unwrap) vars, "=", body ]
+  pure $ lines $ [ line [ "type", unwrap typeName, line $ (map unwrap) vars, "=" ] ] <> map indent body
 
 printValueBindingFields :: forall m. MonadReader ImportAlias m => ValueBindingFields -> m (Array String)
 printValueBindingFields (ValueBindingFields { value: { binders, name: Ident name, expr, whereBindings }, signature }) = do
@@ -116,7 +123,9 @@ printValueBindingFields (ValueBindingFields { value: { binders, name: Ident name
     Nothing -> pure mempty
     Just s -> do
       p <- cataM printType s <@> StandAlone
-      pure [ name <> " :: " <> p ]
+      pure $ case Array.uncons p of
+        Just { head, tail } → [ name <> "::" <> head ] <> tail
+        otherwise → [ name <> "::"] <> p
   pure $ s <> [ vb ] <> w
   where
     bs = if Array.null binders then mempty else " " <> line (map unwrap binders)
@@ -228,50 +237,57 @@ printRowLabel l = case Data.String.CodeUnits.uncons l of
   alphanumRegex :: Regex
   alphanumRegex = unsafePartial $ fromRight $ regex "^[A-Za-z0-9_]*$" Regex.Flags.noFlags
 
-printType :: forall m. MonadReader ImportAlias m => AlgebraM m TypeF (PrintingContext -> String)
+printType :: forall m. MonadReader ImportAlias m => AlgebraM m TypeF (PrintingContext -> Array String)
 printType = case _ of
-  TypeApp l params -> pure $ parens (line $ Array.cons (l InApplication) (map (_ $ InApplication) params))
-  TypeArray t -> pure $ parens $ "Array " <> t StandAlone
+  TypeApp l params -> pure $ Array.singleton <<< parens (line $ (l InApplication) <> foldMap (_ $ InApplication) params)
+  TypeArray t -> pure $ Array.singleton <<<  parens (line (Array.cons "Array " $ t StandAlone))
   TypeArr f a -> pure $ case _ of
-    InArr -> "(" <> s <> ")"
-    InApplication -> "(" <> s <> ")"
-    otherwise -> s
+    InArr -> [ "(" <> line s <> ")" ]
+    InApplication -> [ "(" <> line s <> ")" ]
+    otherwise -> [ line s ]
     where
-    s = f InArr <> " -> " <> a StandAlone
-  TypeBoolean -> pure $ const "Boolean"
-  TypeConstructor qn -> const <$> printQualifiedName qn
+    s = f InArr <> [ " -> " ] <> a StandAlone
+  TypeBoolean -> pure $ const [ "Boolean" ]
+  TypeConstructor qn -> const <<< Array.singleton <$> printQualifiedName qn
   TypeConstrained { className, params } t -> do
     constraint <- printQualifiedName className
-    pure $ const
-      $ constraint
-      <> " "
-      <> line (map (_ $ InApplication) params)
-      <> " => "
-      <> t StandAlone
+    let
+      params' = foldMap (_ $ InApplication) params
+    pure $ const $
+      [ line $ [ constraint ] <> params' <> [ "=>" ] ]
+      <>
+      t StandAlone
   TypeForall vs t -> pure $ const $ case vs of
     [] -> t StandAlone
     otherwise ->
-      "forall" <> " " <> line (map unwrap vs) <> "." <> " " <> t StandAlone
-  TypeNumber -> pure $ const "Number"
+      [ "forall" <> " " <> line (map unwrap vs) <> "." <> " " ] <> map indent (t StandAlone)
+  TypeNumber -> pure $ const [ "Number" ]
   TypeOpt t -> pure $ case _ of
-    InApplication -> "(" <> s <> ")"
-    otherwise -> s
+    InApplication -> [ "(" <> s <> ")" ]
+    otherwise -> [ s ]
     where
-      s = "Opt (" <> t StandAlone <> ")"
-  TypeRecord r -> pure $ const $ "{ " <> printRow r <> " }"
+      s = "Opt (" <> line (t StandAlone) <> ")"
+  TypeRecord r -> pure $ const $ [ "{ " ] <> printRow r <> [ " }" ]
   TypeRow r@(Row { labels, tail })  -> pure $ const $ case length labels, tail of
-    0, Nothing -> "()"
-    _, _ -> "( " <> printRow r <> " )"
-  TypeString -> pure $ const $ "String"
-  (TypeSymbol s) -> pure $ const $ show s
-  TypeVar (Ident v) -> pure $ const $ v
-  where
-  parens s InArr = s
-  parens s InApplication = "(" <> s <> ")"
-  parens s StandAlone = s
+    0, Nothing -> [ "()" ]
+    _, _ -> [ "( " ] <> printRow r <> [ " )" ]
+  TypeString -> pure $ const [ "String" ]
+  (TypeSymbol s) -> pure $ const [ show s ]
+  TypeVar (Ident v) -> pure $ const $ [ v ]
 
-  printRow (Row { labels, tail }) = intercalate ", " labels' <> fromMaybe mempty ((\p -> " | " <> p StandAlone) <$> tail)
-    where
-    labels' :: Array String
-    labels' = map (\(Tuple n t) -> printRowLabel n <> " :: " <> t StandAlone) <<< Map.toUnfoldable $ labels
+  where
+    parens s InArr = s
+    parens s InApplication = "(" <> s <> ")"
+    parens s StandAlone = s
+
+    printRow ∷ _ → Array String
+    printRow (Row { labels, tail }) = mapButLast (_ <> ",") labels' <> fromMaybe mempty ((\p -> append " | " <$> p StandAlone) <$> tail)
+      where
+      mapButLast :: ∀ a. (a → a) → Array a → Array a
+      mapButLast f arr = case Array.unsnoc arr of
+        Just { init, last } → map f init <> [ last ]
+        Nothing → []
+
+      labels' :: Array String
+      labels' = map (\(Tuple n t) -> printRowLabel n <> " :: " <> line (t StandAlone)) <<< Map.toUnfoldable $ labels
 
