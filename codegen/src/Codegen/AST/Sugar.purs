@@ -4,7 +4,7 @@ import Prelude
 
 import Codegen.AST.Imports (ImportAlias)
 import Codegen.AST.Printers (PrintingContext(..), line, printQualifiedName, printType)
-import Codegen.AST.Types (ClassName, Declaration(..), Expr, ExprF(..), Ident(..), ModuleName(..), QualifiedName, Type, TypeF(..), TypeName, ValueBindingFields(..))
+import Codegen.AST.Types (ClassName, Declaration(..), Expr, ExprF(..), Ident(..), ModuleName(..), QualifiedName, Type, TypeF(..), TypeName(..), ValueBindingFields(..))
 import Control.Monad.Reader (class MonadReader)
 import Data.Array (fromFoldable, unsnoc) as Array
 import Data.Foldable (foldMap)
@@ -43,6 +43,9 @@ declForeignData typeName =
     constructor = roll $ TypeConstructor { name: typeName, moduleName: Nothing }
   in
     { declaration, constructor }
+
+declForeignData' :: String -> { declaration :: Declaration, constructor :: Type }
+declForeignData' = declForeignData <<< TypeName
 
 valueBindingFields :: Ident -> Array Ident -> Expr -> Maybe Type -> Array ValueBindingFields -> ValueBindingFields
 valueBindingFields name binders expr signature whereBindings = ValueBindingFields

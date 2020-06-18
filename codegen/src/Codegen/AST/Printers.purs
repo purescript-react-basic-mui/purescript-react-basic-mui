@@ -16,10 +16,12 @@ import Control.Monad.Reader.Class (class MonadReader)
 import Data.Array (concat)
 import Data.Array (cons, fromFoldable, null, singleton, uncons, unsnoc) as Array
 import Data.Char.Unicode (isUpper)
-import Data.Either (fromRight)
+import Data.Either (Either(..), fromRight)
+import Data.Filterable (partitionMap)
 import Data.Foldable (foldMap, intercalate, length)
-import Data.List (intercalate) as List
-import Data.Map (lookup, toUnfoldable) as Map
+import Data.FoldableWithIndex (foldMapWithIndex)
+import Data.List (intercalate, singleton) as List
+import Data.Map (fromFoldableWith, lookup, toUnfoldable) as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Monoid (guard)
 import Data.Newtype (class Newtype, unwrap)
@@ -66,18 +68,22 @@ printImport (ImportDecl { moduleName, names }) = do
   pure $ line $
     [ "import"
     , mn
-    , "(" <> (joinWith ", " <<< Array.fromFoldable <<< map printName $ names) <> ")"
+    , "(" <> (joinWith ", " <<< Array.fromFoldable $ (foldTypeImports typeImports <> otherImports)) <> ")"
     ]
     <> case alias of
       Just a -> [ "as", a ]
       Nothing -> []
   where
+    partitionStep (ImportType { typeName, importConstructors }) = Left (Tuple typeName importConstructors)
+    partitionStep (ImportClass s) = Right ("class " <> unwrap s)
+    partitionStep (ImportValue s) = Right (unwrap s)
 
-  printName :: Import -> String
-  printName (ImportValue s) = unwrap s
-  printName (ImportClass s) = "class " <> unwrap s
-  printName (ImportType { typeName: s, importConstructors }) =
-    unwrap s <> guard importConstructors "(..)"
+    printTypeImport (TypeName tn) importConstructors =
+      (List.singleton (tn <> guard importConstructors "(..)"))
+
+    foldTypeImports = foldMapWithIndex printTypeImport <<< Map.fromFoldableWith (||)
+
+    { left: typeImports, right: otherImports } = partitionMap partitionStep $ names
 
 indent :: String -> String
 indent = append "  "

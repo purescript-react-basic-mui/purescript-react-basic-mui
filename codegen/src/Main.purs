@@ -239,7 +239,6 @@ components =
     buttonBase =
       let
         buttonBaseActions = declType (TypeName "ButtonBaseActions") [] foreignType
-
         buttonBaseTypeProps = declType (TypeName "ButtonBaseTypeProp") [] foreignType
       in
         { extraDeclarations:
@@ -253,15 +252,15 @@ components =
               [ Tuple "action" foreignType
               , Tuple "buttonRef" foreignType
               , eventHandlerProp "onFocusVisible"
-              -- | XXX: Provide some sugar for generating relative imports
-              -- | between components
-              , Tuple "TouchRippleProps" $ Type.recordLiteral $ Type.app
-                  ( roll $ TypeConstructor
-                      { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
-                      , name: TypeName $ (propsRowTypeName touchRippleType.name)
-                      }
-                  )
-                  (Array.fromFoldable touchRipple.inherits)
+              -- | I'm not sure hot to handle this kind of props parameter
+              -- | in the current architecture.
+              -- , Tuple "TouchRippleProps" $ Type.recordLiteral $ Type.app
+              --     ( roll $ TypeConstructor
+              --         { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
+              --         , name: TypeName $ (propsRowTypeName touchRippleType.name)
+              --         }
+              --     )
+              --     (Array.fromFoldable touchRipple.inherits)
               ]
           , generate:
             [ "centerRipple"
@@ -355,9 +354,9 @@ components =
               , Tuple "avatar" jsx
               , children
               , Tuple "subheader" jsx
-              , Tuple "subheaderTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyProps")
+              , Tuple "subheaderTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyOpaqueProps")
               , Tuple "title" jsx
-              , Tuple "titleTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyProps")
+              , Tuple "titleTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyOpaqueProps")
               ]
           , generate: [ "classes", "disableTypography" ]
           }
@@ -595,10 +594,10 @@ components =
         , propsType:
           { base: Map.fromFoldable
               ( [ children
-                , Tuple "ModalProps" (Type.constructor "MUI.Core.Modal.ModalPropsPartial")
+                , Tuple "ModalProps" (Type.constructor "MUI.Core.Modal.ModalOpaqueProps")
                 , eventHandlerProp "onClose"
-                , Tuple "PaperProps" (Type.constructor "MUI.Core.Modal.ModalPropsPartial")
-                , Tuple "SlideProps" (Type.constructor "MUI.Core.Slide.SlidePropsPartial")
+                , Tuple "PaperProps" (Type.constructor "MUI.Core.Modal.ModalOpaqueProps")
+                , Tuple "SlideProps" (Type.constructor "MUI.Core.Slide.SlideOpaqueProps")
                 ]
                   <> map eventHandlerProp [ "onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
               )
@@ -663,7 +662,7 @@ components =
           { base: Map.fromFoldable
               [ children
               , Tuple "expandIcon" jsx
-              , Tuple "IconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonPropsPartial")
+              , Tuple "IconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
               ]
           , generate: [ "classes" ]
           }
@@ -711,7 +710,9 @@ components =
           { base:  Map.fromFoldable
               [ children
               , Tuple "endAdornment" jsx
-              , Tuple "inputProps" (Type.constructor "MUI.Core.InputBasePartial")
+              , Tuple
+                  "inputProps"
+                  (Type.constructor "MUI.Core.InputBaseOpaqueProps")
               , Tuple "inputRef" foreignType
               , eventHandlerProp "onChange"
               , Tuple "startAdornment" jsx
@@ -1106,7 +1107,7 @@ components =
           { base:
               Map.fromFoldable
                   [ children
-                  , Tuple "TypographyClasses" (Type.constructor "MUI.Core.Typography.TypographyClassKey")
+                  , Tuple "TypographyClasses" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
                   ]
           , generate:
             [ "classes"
@@ -1212,9 +1213,9 @@ components =
           { base:
               Map.fromFoldable
                   [ Tuple "primary" jsx
-                  , Tuple "primaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassKey")
+                  , Tuple "primaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
                   , Tuple "secondary" jsx
-                  , Tuple "secondaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassKey")
+                  , Tuple "secondaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
                   ]
           , generate:
             [ "classes"
@@ -1226,7 +1227,7 @@ components =
 
     listSubheader =
       simpleComponent
-        { inherits: Just $ (Type.constructor "React.Basic.DOM.Props_li")
+        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_li" ]
         , name: "ListSubheader"
         , propsType:
           { base:
@@ -1299,7 +1300,7 @@ components =
           { base:
               Map.fromFoldable
                   [ Tuple "backButton" jsx
-                  , Tuple "LinearProgressProps" (Type.constructor "MUI.Core.LinearPropgress.LinearProgressProps")
+                  , Tuple "LinearProgressProps" (Type.constructor "MUI.Core.LinearPropgress.LinearProgressOpaqueProps")
                   , Tuple "nextButton" jsx
                   ]
           , generate:
@@ -1323,13 +1324,13 @@ components =
             , "onRendered"
             ]
 
-        backdropPropsPartial = Type.constructor "MUI.Core.Backdrop.BackdropPropsPartial"
+        backdropOpaqueProps = Type.constructor "MUI.Core.Backdrop.BackdropOpaqueProps"
 
         base =
            Map.fromFoldable
             $ [ children
-              , Tuple "BackdropComponent" (reactComponentApply backdropPropsPartial)
-              , Tuple "BackdropProps" backdropPropsPartial
+              , Tuple "BackdropComponent" (reactComponentApply backdropOpaqueProps)
+              , Tuple "BackdropProps" backdropOpaqueProps
               -- , container
               , Tuple
                   "manager"
@@ -1370,7 +1371,7 @@ components =
                   [ children
                   , Tuple "IconComponent" jsx
                   , Tuple "input" jsx
-                  , Tuple "inputProps" (Type.constructor "MUI.Core.Input.InputProps")
+                  , Tuple "inputProps" (Type.constructor "MUI.Core.Input.InputOpaqueProps")
                   , eventHandlerProp "onChange"
                   , Tuple "value" foreignType
                   ]
@@ -1473,7 +1474,7 @@ components =
                   , eventHandlerProp "onExit"
                   , eventHandlerProp "onExited"
                   , eventHandlerProp "onExiting"
-                  , Tuple "PaperProps" (Type.constructor "MUI.Core.Paper.PaperProps")
+                  , Tuple "PaperProps" (Type.constructor "MUI.Core.Paper.PaperOpaqueProps")
                   ]
           , generate:
             [ "anchorOrigin"
@@ -1600,8 +1601,8 @@ components =
                   [ children
                   , Tuple "IconComponent" jsx
                   , Tuple "input" jsx
-                  , Tuple "inputProps" (Type.constructor "MUI.Core.Input.InputProps")
-                  , Tuple "MenuProps" (Type.constructor "MUI.Core.Menu.MenuProps")
+                  , Tuple "inputProps" (Type.constructor "MUI.Core.Input.InputOpaqueProps")
+                  , Tuple "MenuProps" (Type.constructor "MUI.Core.Menu.MenuOpaqueProps")
                   , eventHandlerProp "onChange"
                   , eventHandlerProp "onClose"
                   , eventHandlerProp "onOpen"
@@ -1683,10 +1684,12 @@ components =
               Map.fromFoldable
                   [ children
                   , Tuple "action" jsx
-                  , Tuple "ClickAwayListenerProps" (Type.constructor "MUI.Core.ClickAwayListener.ClickAwayListenerProps")
-                  , Tuple "ContentProps" (Type.constructor "MUI.Core.SnackbarContent.SnackbarContentProps")
+                  , Tuple "ClickAwayListenerProps" (Type.constructor "MUI.Core.ClickAwayListener.ClickAwayListenerOpaqueProps")
+                  , Tuple "ContentProps" (Type.constructor "MUI.Core.SnackbarContent.SnackbarContentOpaqueProps")
+
                   -- `key` is in the docs but not in the typedef
                   --, Tuple "key" foreignType
+
                   , Tuple "message" jsx
                   , eventHandlerProp "onClose"
                   , eventHandlerProp "onEnter"
@@ -1828,7 +1831,7 @@ components =
                   , Tuple "icon" jsx
                   , Tuple "optional" jsx
                   , Tuple "StepIconComponent" foreignType
-                  , Tuple "StepIconProps" (Type.constructor "MUI.Core.StepIcon.StepIconProps")
+                  , Tuple "StepIconProps" (Type.constructor "MUI.Core.StepIcon.StepIconOpaqueProps")
                   ]
           , generate:
             [ "classes"
@@ -2064,13 +2067,13 @@ components =
         { base:
             Map.fromFoldable
                 [ children
-                , Tuple "backIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonProps")
+                , Tuple "backIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
                 , Tuple "labelDisplayedRows" foreignType
                 , Tuple "labelRowsPerPage" jsx
-                , Tuple "nextIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonProps")
+                , Tuple "nextIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
                 , eventHandlerProp "onChangePage"
                 , eventHandlerProp "onChangeRowsPerPage"
-                , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectProps")
+                , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectOpaqueProps")
                 ]
         , generate:
           [ "classes"
@@ -2091,7 +2094,7 @@ components =
                 (Instantiation.Union [ Mu.In (Instantiation.Object fqn props), _ ]) -> pure { fqn, props }
                 otherwise ->
                   throwError
-                    [ "Expecting an union as a representation for TablePaginationProps" ]
+                    [ "Expecting an union as a representation for TablePaginationOpaqueProps" ]
             }
         }
       , tsc: { strictNullChecks: false }
@@ -2191,15 +2194,15 @@ components =
                 , Tuple "defaultValue" foreignType
                 , Tuple "endAdornment" jsx
                 , Tuple "helperText" jsx
-                , Tuple "InputLabelProps" (Type.constructor "MUI.Core.InputLabel.InputLabelProps")
+                , Tuple "InputLabelProps" (Type.constructor "MUI.Core.InputLabel.InputLabelOpaqueProps")
                 , Tuple "inputProps" foreignType
                 , Tuple "inputRef" foreignType
-                , Tuple "FormHelperTextProps" (Type.constructor "MUI.Core.FormHelperText.FormHelperTextProps")
+                , Tuple "FormHelperTextProps" (Type.constructor "MUI.Core.FormHelperText.FormHelperTextOpaqueProps")
                 , Tuple "label" jsx
                 , eventHandlerProp "onChange"
                 , eventHandlerProp "onBlur"
                 , eventHandlerProp "onFocus"
-                , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectProps")
+                , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectOpaqueProps")
                 , Tuple "value" foreignType
                 ]
         , generate:
