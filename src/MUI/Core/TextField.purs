@@ -1,106 +1,78 @@
+-- | This module was written by hand ;-)
+-- |
+-- | I'm not sure how to better encode this union
+-- | on the PS side. On the TS side we have a union
+-- | of props records which are dispatched on the
+-- | `variant` property which in every case is a different
+-- | literal:
+-- |
+-- | https://github.com/mui-org/material-ui/blob/3f9e9a50b4f36ab9b12baf7a16d9f35457702bae/packages/material-ui/src/TextField/TextField.d.ts#L209
+-- |
+-- | In some sens we are doing here exactly the same but
+-- | the code is just a pile of constraints ;-)
+-- |
 module MUI.Core.TextField where
 
-import Effect (Effect)
-import Foreign (Foreign)
-import Foreign.Object (Object)
-import MUI.Core (JSS)
-import Prim.Row (class Union)
+import MUI.Core (class Nub')
+import MUI.Core.FormControl (FormControlPropsRow, FormControlReqPropsRow)
+import MUI.Core.TextField.FilledTextField (FilledTextFieldReqPropsRow, FilledTextFieldPropsRow)
+import MUI.Core.TextField.FilledTextField (Variant, filledTextField, variant) as FilledTextField
+import MUI.Core.TextField.OutlinedTextField (OutlinedTextFieldPropsRow, OutlinedTextFieldReqPropsRow)
+import MUI.Core.TextField.OutlinedTextField (Variant, outlinedTextField, variant) as OutlinedTextField
+import MUI.Core.TextField.StandardTextField (StandardTextFieldReqPropsRow, StandardTextFieldPropsRow)
+import MUI.Core.TextField.StandardTextField (Variant, standardTextField, variant) as StandardTextField
+import Prim.Row (class Cons, class Lacks) as Row
+import Prim.Row (class Union) as Prim.Row
+import React.Basic (JSX)
 import React.Basic.DOM (Props_div)
-import React.Basic.Events (EventHandler)
-import React.Basic.Hooks (JSX, ReactComponent, Ref, element)
-import Unsafe.Coerce (unsafeCoerce)
+import Record (insert) as Record
+import Type.Equality (from)
+import Type.Prelude (class TypeEquals, SProxy(..))
 
-type TextFieldProps componentProps =
-  ( autoComplete :: String
-  , autoFocus :: Boolean
-  , classes :: TextFieldClassKey
-  , component :: ReactComponent { | componentProps }
-  , defaultValue :: String
-  , disabled :: Boolean
-  , error :: Boolean
-  , "FormHelperTextProps" :: Object Foreign
-  , fullWidth :: Boolean
-  , helperText :: JSX
-  , id :: String
-  , "InputLabelProps" :: Object Foreign
-  , "InputProps" :: Object Foreign
-  , inputProps :: Object Foreign
-  , inputRef :: Effect (Ref Foreign)
-  , label :: JSX
-  , margin :: MarginProp
-  , multiline :: Boolean
-  , name :: String
-  , onBlur :: EventHandler
-  , onChange :: EventHandler
-  , onFocus :: EventHandler
-  , placeholder :: String
-  , required :: Boolean
-  , rows :: Number
-  , rowsMax :: Number
-  , select :: Boolean
-  , "SelectProps" :: Object Foreign
-  , type :: String
-  , value :: String
-  , variant :: VariantProp
-  | componentProps
-  )
+_variant = SProxy ∷ SProxy "variant"
 
-foreign import data MarginProp :: Type
-data Margin = None | Dense | Normal
-margin :: Margin -> MarginProp
-margin None = unsafeCoerce "none"
-margin Dense = unsafeCoerce "dense"
-margin Normal = unsafeCoerce "normal"
+standard ∷ ∀ given given_ optionalGiven optionalMissing props required. 
+  Nub' (StandardTextFieldReqPropsRow (FormControlReqPropsRow ())) required =>
+  Prim.Row.Union required optionalGiven given =>
+  Nub' (StandardTextFieldPropsRow (FormControlPropsRow Props_div)) props =>
+  TypeEquals { | given } { variant ∷ StandardTextField.Variant | given_ } ⇒
+  Row.Lacks "variant" given_ ⇒
+  Row.Cons "variant" StandardTextField.Variant given_ given ⇒
+  Prim.Row.Union given optionalMissing props =>
+  {   | given_  }  ->  JSX
+standard given =
+  let
+    given' = from (Record.insert _variant StandardTextField.variant.standard given)
+  in
+    StandardTextField.standardTextField (given' ∷ { | given })
 
-foreign import data VariantProp :: Type
-data Variant = Standard | Outlined | Filled
-variant :: Variant -> VariantProp
-variant Standard = unsafeCoerce "standard"
-variant Outlined = unsafeCoerce "outlines"
-variant Filled = unsafeCoerce "filled"
+outlined ∷ ∀ given given_ optionalGiven optionalMissing props required. 
+  Nub' (OutlinedTextFieldReqPropsRow (FormControlReqPropsRow ())) required =>
+  Prim.Row.Union required optionalGiven given =>
+  Nub' (OutlinedTextFieldPropsRow (FormControlPropsRow Props_div)) props =>
+  TypeEquals { | given } { variant ∷ OutlinedTextField.Variant | given_ } ⇒
+  Row.Lacks "variant" given_ ⇒
+  Row.Cons "variant" OutlinedTextField.Variant given_ given ⇒
+  Prim.Row.Union given optionalMissing props =>
+  {   | given_  }  ->  JSX
+outlined given =
+  let
+    given' = from (Record.insert _variant OutlinedTextField.variant.outlined given)
+  in
+    OutlinedTextField.outlinedTextField (given' ∷ { | given })
 
-foreign import data TextFieldClassKey :: Type
-foreign import data TextFieldClassKeyJSS :: Type
-foreign import data TextFieldPropsPartial :: Type
+filled ∷ ∀ given given_ optionalGiven optionalMissing props required. 
+  Nub' (FilledTextFieldReqPropsRow (FormControlReqPropsRow ())) required =>
+  Prim.Row.Union required optionalGiven given =>
+  Nub' (FilledTextFieldPropsRow (FormControlPropsRow Props_div)) props =>
+  TypeEquals { | given } { variant ∷ FilledTextField.Variant | given_ } ⇒
+  Row.Lacks "variant" given_ ⇒
+  Row.Cons "variant" FilledTextField.Variant given_ given ⇒
+  Prim.Row.Union given optionalMissing props =>
+  {   | given_  }  ->  JSX
+filled given =
+  let
+    given' = from (Record.insert _variant FilledTextField.variant.filled given)
+  in
+    FilledTextField.filledTextField (given' ∷ { | given })
 
-type TextFieldClassKeyOptionsJSS = TextFieldClassKeyOptionsR JSS
-type TextFieldClassKeyOptions = TextFieldClassKeyOptionsR String
-type TextFieldClassKeyOptionsR a = ( root :: a )
-
-textFieldClassKey :: ∀ options options_
-  . Union options options_ TextFieldClassKeyOptions
-  => Record options
-  -> TextFieldClassKey
-textFieldClassKey = unsafeCoerce
-
-textFieldClassKeyJSS :: ∀ options options_
-  . Union options options_ TextFieldClassKeyOptionsJSS
-  => Record options
-  -> TextFieldClassKeyJSS
-textFieldClassKeyJSS = unsafeCoerce
-
-textFieldPropsPartial_component :: ∀ componentProps props props_
-  . Union props props_ (TextFieldProps componentProps)
-  => Record props 
-  -> TextFieldPropsPartial 
-textFieldPropsPartial_component = unsafeCoerce
-
-textFieldPropsPartial :: ∀ props props_
-  . Union props props_ (TextFieldProps Props_div)
-  => Record props 
-  -> TextFieldPropsPartial 
-textFieldPropsPartial = unsafeCoerce
-
-textField_component :: ∀ componentProps props props_
-  . Union props props_ (TextFieldProps componentProps)
-  => Record props 
-  -> JSX
-textField_component = element _TextField
-
-textField :: ∀ props props_
-  . Union props props_ (TextFieldProps Props_div)
-  => Record props 
-  -> JSX
-textField = element _TextField
-
-foreign import _TextField :: ∀ a. ReactComponent a
