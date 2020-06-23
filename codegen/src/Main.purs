@@ -4,14 +4,13 @@ import Prelude
 
 import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconPSFile, icons)
 import Codegen (component, icon, write) as Codegen
-import Codegen.AST (ModuleName(..), TypeF(..), TypeName(..))
+import Codegen.AST (ModuleName(..), TypeName(..))
 import Codegen.AST.Sugar (declType)
-import Codegen.AST.Sugar.Type (app, constructor, recordLiteral) as Type
-import Codegen.Model (Component, Icon, ModulePath(..), arrayJSX, componentFullPath, divProps, iconName, jsx, psImportPath, reactComponentApply)
+import Codegen.AST.Sugar.Type (app, constructor) as Type
+import Codegen.AST.Sugar.Type (string)
+import Codegen.Model (Component, Icon, ModulePath(..), Root(..), arrayJSX, iconName, jsx, psImportPath, rbProps, reactComponentApply)
 import Codegen.Model (componentName) as Model
 import Codegen.TS.MUI (componentProps) as TS.MUI
-import Codegen.TS.MUI (propsRowTypeName)
-import Codegen.TS.MUI (rList, rList') as MUI
 import Codegen.TS.Types (InstantiationStrategy(..))
 import Control.Alt ((<|>))
 import Control.Monad.Error.Class (throwError)
@@ -19,11 +18,11 @@ import Control.Monad.Except (runExceptT)
 import Control.Monad.Reader (runReader, runReaderT)
 import Control.Monad.Trans.Class (lift)
 import Data.Array (filter)
-import Data.Array (fromFoldable, null, sort) as Array
+import Data.Array (null, sort) as Array
 import Data.Either (Either(..))
 import Data.Foldable (for_, intercalate)
 import Data.Functor.Mu (Mu(..)) as Mu
-import Data.Functor.Mu (roll, unroll)
+import Data.Functor.Mu (unroll)
 import Data.List (sort) as List
 import Data.Map (filterWithKey, fromFoldable, keys, lookup, toUnfoldable) as Map
 import Data.Map.Internal (keys) as Map.Internal
@@ -38,6 +37,7 @@ import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class.Console (log)
+import Global.Unsafe (unsafeStringify)
 import Matryoshka (cata)
 import Node.Path (FilePath)
 import Options.Applicative (Parser, ReadM, command, eitherReader, execParser, flag', fullDesc, help, helper, info, long, metavar, option, progDesc, readerError, short, strOption, subparser, value, (<**>))
@@ -58,20 +58,21 @@ components =
 
     -- | It is nice to have parametrized `Row` by default
     -- | because it allows us
-    basePropsRow props = props
+    -- basePropsRow props = props
+    -- emptyBase = basePropsRow mempty
 
-    emptyBase = basePropsRow mempty
-
-    simpleComponent { inherits, name, propsType: { base, generate }} =
+    simpleComponent { name, propsRow: { base, generate }, root } =
       { extraDeclarations: []
-      , inherits
-      , modulePath: Name name
-      , propsType:
+      , modulePath:
+          { input: Name name
+          , output: Name name
+          }
+      , propsRow:
         { base
         , generate
         , instantiation: Nothing
         }
-      , tsc: { strictNullChecks: false }
+      , root
       }
 
     touchRippleType =
@@ -79,58 +80,58 @@ components =
       , name: "TouchRipple"
       }
 
-    appBar =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
-            , divProps
-            ]
-        , name: "AppBar"
-        , propsType:
-          { base:  Map.fromFoldable [ children ]
-          , generate: [ "classes", "color", "position" ]
-          }
-        }
+    -- appBar =
+    --   simpleComponent
+    --     { inherits: Just $ MUI.rList
+    --         [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
+    --         , divProps
+    --         ]
+    --     , name: "AppBar"
+    --     , propsRow:
+    --       { base:  Map.fromFoldable [ children ]
+    --       , generate: [ "classes", "color", "position" ]
+    --       }
+    --     }
 
-    avatar =
-      simpleComponent
-        { inherits: Nothing
-        , name: "Avatar"
-        , propsType:
-          { base:  Map.fromFoldable []
-          , generate:
-            [ "alt"
-            , "classes"
-            -- not sure what to do here, "imgProps"
-            , "sizes"
-            , "src"
-            , "srcSet"
-            , "variant"
-            ]
-          }
-        }
+    -- avatar =
+    --   simpleComponent
+    --     { inherits: Nothing
+    --     , name: "Avatar"
+    --     , propsRow:
+    --       { base:  Map.fromFoldable []
+    --       , generate:
+    --         [ "alt"
+    --         , "classes"
+    --         -- not sure what to do here, "imgProps"
+    --         , "sizes"
+    --         , "src"
+    --         , "srcSet"
+    --         , "variant"
+    --         ]
+    --       }
+    --     }
 
-    backdrop =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.Fade.FadePropsRow"
-            , divProps
-            ]
-        , name: "Backdrop"
-        , propsType:
-          { base: Map.fromFoldable
-              [ children
-              , Tuple "style" (Type.constructor "React.Basic.DOM.CSS")
-              ]
-          , generate: [ "classes", "invisible", "open", "transitionDuration" ]
-          }
-        }
+    -- backdrop =
+    --   simpleComponent
+    --     { inherits: Just $ MUI.rList
+    --         [ Type.constructor "MUI.Core.Fade.FadePropsRow"
+    --         , divProps
+    --         ]
+    --     , name: "Backdrop"
+    --     , propsRow:
+    --       { base: Map.fromFoldable
+    --           [ children
+    --           , Tuple "style" (Type.constructor "React.Basic.DOM.CSS")
+    --           ]
+    --       , generate: [ "classes", "invisible", "open", "transitionDuration" ]
+    --       }
+    --     }
 
     badge =
       simpleComponent
-        { inherits: Nothing
+        { root: rbProps.div
         , name: "Badge"
-        , propsType:
+        , propsRow:
           { base: Map.fromFoldable
               [ Tuple "badgeContent" jsx
               , children
@@ -147,610 +148,610 @@ components =
           }
         }
 
-    -- | `children` and `component` are taken from `buttonBase`
-    bottomNavigation =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "BottomNavigation"
-        , propsType:
-          { base:  Map.fromFoldable
-              [ children
-              -- , component
-              , eventHandlerProp "onChange"
-              ]
-          , generate: [ "classes", "showLabels" ]
-          }
-        }
+    ---- | `children` and `component` are taken from `buttonBase`
+    --bottomNavigation =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "BottomNavigation"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable
+    --          [ children
+    --          -- , component
+    --          , eventHandlerProp "onChange"
+    --          ]
+    --      , generate: [ "classes", "showLabels" ]
+    --      }
+    --    }
 
-    box =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "Box"
-        , propsType:
-          { base:  Map.fromFoldable $ [ children, Tuple "css" jss ]
-          , generate: [ "clone" ]
-          }
-        }
+    --box =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "Box"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable $ [ children, Tuple "css" jss ]
+    --      , generate: [ "clone" ]
+    --      }
+    --    }
 
-    breadcrumbs =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "Breadcrumbs"
-        , propsType:
-          { base:
-             Map.fromFoldable
-              $ [ children
-                -- Not found on the TS side
-                -- , component
-                , Tuple "separator" jsx
-                , Tuple "ref" foreignType
-                ]
-          , generate: [ "classes", "itemsAfterCollapse", "itemsBeforeCollapse", "maxItems" ]
-          }
-        }
+    --breadcrumbs =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "Breadcrumbs"
+    --    , propsRow:
+    --      { base:
+    --         Map.fromFoldable
+    --          $ [ children
+    --            -- Not found on the TS side
+    --            -- , component
+    --            , Tuple "separator" jsx
+    --            , Tuple "ref" foreignType
+    --            ]
+    --      , generate: [ "classes", "itemsAfterCollapse", "itemsBeforeCollapse", "maxItems" ]
+    --      }
+    --    }
 
-    button =
-      simpleComponent
-        { inherits: Just $ MUI.rList'
-            [ "MUI.Core.ButtonBase.ButtonBasePropsRow"
-            , "React.Basic.DOM.Props_button"
-            ]
-        , name: "Button"
-        , propsType:
-          { base: Map.fromFoldable
-              [ Tuple "endIcon" jsx
-              , Tuple "startIcon" jsx
-              ]
-          , generate:
-            [ "classes"
-            , "color"
-            , "disabled"
-            , "disableFocusRipple"
-            , "disableRipple"
-            , "fullWidth"
-            , "href"
-            , "size"
-            , "variant"
-            ]
-          }
-        }
+    --button =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList'
+    --        [ "MUI.Core.ButtonBase.ButtonBasePropsRow"
+    --        , "MUI.DOM.Generated.Props_button"
+    --        ]
+    --    , name: "Button"
+    --    , propsRow:
+    --      { base: Map.fromFoldable
+    --          [ Tuple "endIcon" jsx
+    --          , Tuple "startIcon" jsx
+    --          ]
+    --      , generate:
+    --        [ "classes"
+    --        , "color"
+    --        , "disabled"
+    --        , "disableFocusRipple"
+    --        , "disableRipple"
+    --        , "fullWidth"
+    --        , "href"
+    --        , "size"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    buttonGroup =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "ButtonGroup"
-        , propsType:
-          { base:
-             Map.fromFoldable [ children ]
-          , generate:
-            [ "classes"
-            , "color"
-            , "disabled"
-            , "disableFocusRipple"
-            , "disableRipple"
-            , "fullWidth"
-            , "orientation"
-            , "size"
-            , "variant"
-            ]
-          }
-        }
+    --buttonGroup =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "ButtonGroup"
+    --    , propsRow:
+    --      { base:
+    --         Map.fromFoldable [ children ]
+    --      , generate:
+    --        [ "classes"
+    --        , "color"
+    --        , "disabled"
+    --        , "disableFocusRipple"
+    --        , "disableRipple"
+    --        , "fullWidth"
+    --        , "orientation"
+    --        , "size"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    buttonBase =
-      let
-        buttonBaseActions = declType (TypeName "ButtonBaseActions") [] foreignType
-        buttonBaseTypeProps = declType (TypeName "ButtonBaseTypeProp") [] foreignType
-      in
-        { extraDeclarations:
-          [ buttonBaseActions.declaration
-          , buttonBaseTypeProps.declaration
-          ]
-        , inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_button" ]
-        , modulePath: Name "ButtonBase"
-        , propsType:
-          { base:  Map.fromFoldable
-              [ Tuple "action" foreignType
-              , Tuple "buttonRef" foreignType
-              , eventHandlerProp "onFocusVisible"
-              -- | I'm not sure hot to handle this kind of props parameter
-              -- | in the current architecture.
-              -- , Tuple "TouchRippleProps" $ Type.recordLiteral $ Type.app
-              --     ( roll $ TypeConstructor
-              --         { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
-              --         , name: TypeName $ (propsRowTypeName touchRippleType.name)
-              --         }
-              --     )
-              --     (Array.fromFoldable touchRipple.inherits)
-              ]
-          , generate:
-            [ "centerRipple"
-            , "classes"
-            , "color"
-            , "disabled"
-            , "disableRipple"
-            , "focusRipple"
-            , "focusVisibleClassName"
-            , "type"
-            ]
-          , instantiation: Nothing
-          }
-        , tsc: { strictNullChecks: false }
-        }
+    --buttonBase =
+    --  let
+    --    buttonBaseActions = declType (TypeName "ButtonBaseActions") [] foreignType
+    --    buttonBaseTypeProps = declType (TypeName "ButtonBaseTypeProp") [] foreignType
+    --  in
+    --    { extraDeclarations:
+    --      [ buttonBaseActions.declaration
+    --      , buttonBaseTypeProps.declaration
+    --      ]
+    --    , inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_button" ]
+    --    , modulePath: Name "ButtonBase"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable
+    --          [ Tuple "action" foreignType
+    --          , Tuple "buttonRef" foreignType
+    --          , eventHandlerProp "onFocusVisible"
+    --          -- | I'm not sure hot to handle this kind of props parameter
+    --          -- | in the current architecture.
+    --          -- , Tuple "TouchRippleProps" $ Type.recordLiteral $ Type.app
+    --          --     ( roll $ TypeConstructor
+    --          --         { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
+    --          --         , name: TypeName $ (propsRowTypeName touchRippleType.name)
+    --          --         }
+    --          --     )
+    --          --     (Array.fromFoldable touchRipple.inherits)
+    --          ]
+    --      , generate:
+    --        [ "centerRipple"
+    --        , "classes"
+    --        , "color"
+    --        , "disabled"
+    --        , "disableRipple"
+    --        , "focusRipple"
+    --        , "focusVisibleClassName"
+    --        , "type"
+    --        ]
+    --      , instantiation: Nothing
+    --      }
+    --    , tsc: { strictNullChecks: false }
+    --    }
 
-    -- | TODO: make value a type variable
-    bottomNavigationAction =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
-            , divProps
-            ]
-        , name: "BottomNavigationAction"
-        , propsType:
-          { base: Map.fromFoldable
-              [ Tuple "icon" jsx
-              , Tuple "label" jsx
-              ]
-          , generate:
-            [ "classes"
-            , "showLabel"
-            , "selected"
-            ]
-          }
-        }
+    ---- | TODO: make value a type variable
+    --bottomNavigationAction =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
+    --        , divProps
+    --        ]
+    --    , name: "BottomNavigationAction"
+    --    , propsRow:
+    --      { base: Map.fromFoldable
+    --          [ Tuple "icon" jsx
+    --          , Tuple "label" jsx
+    --          ]
+    --      , generate:
+    --        [ "classes"
+    --        , "showLabel"
+    --        , "selected"
+    --        ]
+    --      }
+    --    }
 
-    card =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
-            , divProps
-            ]
-        , name: "Card"
-        , propsType:
-          { base:  Map.fromFoldable [ children ]
-          , generate: [ "classes", "raised" ]
-          }
-        }
+    --card =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
+    --        , divProps
+    --        ]
+    --    , name: "Card"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable [ children ]
+    --      , generate: [ "classes", "raised" ]
+    --      }
+    --    }
 
-    cardActionArea =
-      simpleComponent
-        { inherits: Just $ MUI.rList'
-            [ "MUI.Core.ButtonBase.ButtonBasePropsRow"
-            , "React.Basic.DOM.Props_button"
-            ]
-        , name: "CardActionArea"
-        , propsType:
-          { base:  Map.fromFoldable [ children ]
-          , generate: [ "classes" ]
-          }
-        }
+    --cardActionArea =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList'
+    --        [ "MUI.Core.ButtonBase.ButtonBasePropsRow"
+    --        , "MUI.DOM.Generated.Props_button"
+    --        ]
+    --    , name: "CardActionArea"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable [ children ]
+    --      , generate: [ "classes" ]
+    --      }
+    --    }
 
-    cardActions =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "CardActions"
-        , propsType:
-          { base:  Map.fromFoldable [ children ]
-          , generate: [ "classes", "disableSpacing" ]
-          }
-        }
+    --cardActions =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "CardActions"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable [ children ]
+    --      , generate: [ "classes", "disableSpacing" ]
+    --      }
+    --    }
 
-    cardContent =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "CardContent"
-        , propsType:
-          { base:  Map.fromFoldable [ children ]
-          , generate: [ "classes" ]
-          }
-        }
+    --cardContent =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "CardContent"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable [ children ]
+    --      , generate: [ "classes" ]
+    --      }
+    --    }
 
-    cardHeader =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "CardHeader"
-        , propsType:
-          { base:  Map.fromFoldable
-              [ Tuple "action" jsx
-              , Tuple "avatar" jsx
-              , children
-              , Tuple "subheader" jsx
-              , Tuple "subheaderTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyOpaqueProps")
-              , Tuple "title" jsx
-              , Tuple "titleTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyOpaqueProps")
-              ]
-          , generate: [ "classes", "disableTypography" ]
-          }
-        }
+    --cardHeader =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "CardHeader"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable
+    --          [ Tuple "action" jsx
+    --          , Tuple "avatar" jsx
+    --          , children
+    --          , Tuple "subheader" jsx
+    --          , Tuple "subheaderTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyOpaqueProps")
+    --          , Tuple "title" jsx
+    --          , Tuple "titleTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyOpaqueProps")
+    --          ]
+    --      , generate: [ "classes", "disableTypography" ]
+    --      }
+    --    }
 
-    cardMedia =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "CardMedia"
-        , propsType:
-          { base:  Map.fromFoldable
-              [ children
-              -- This isn't being found in the .d.ts
-              --, component
-              ]
-          , generate: [ "classes", "image", "src" ]
-          }
-        }
+    --cardMedia =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "CardMedia"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable
+    --          [ children
+    --          -- This isn't being found in the .d.ts
+    --          --, component
+    --          ]
+    --      , generate: [ "classes", "image", "src" ]
+    --      }
+    --    }
 
-    checkbox =
-      simpleComponent
-        { inherits: Nothing -- should be IconButon
-        , name: "Checkbox"
-        , propsType:
-          { base: Map.fromFoldable
-              ( [ Tuple "checkedIcon" jsx
-                , Tuple "icon" jsx
-                , Tuple "indeterminateIcon" jsx
-                , Tuple "inputProps" foreignType
-                , Tuple "inputRef" foreignType
-                , Tuple "value" foreignType
-                ]
-                  <> (map eventHandlerProp [ "onChange" ])
-              )
-          , generate:
-            [ "checked"
-            , "classes"
-            , "color"
-            , "disabled"
-            , "disableRipple"
-            , "id"
-            , "indeterminate"
-            , "required"
-            ]
-          }
-        }
+    --checkbox =
+    --  simpleComponent
+    --    { inherits: Nothing -- should be IconButon
+    --    , name: "Checkbox"
+    --    , propsRow:
+    --      { base: Map.fromFoldable
+    --          ( [ Tuple "checkedIcon" jsx
+    --            , Tuple "icon" jsx
+    --            , Tuple "indeterminateIcon" jsx
+    --            , Tuple "inputProps" foreignType
+    --            , Tuple "inputRef" foreignType
+    --            , Tuple "value" foreignType
+    --            ]
+    --              <> (map eventHandlerProp [ "onChange" ])
+    --          )
+    --      , generate:
+    --        [ "checked"
+    --        , "classes"
+    --        , "color"
+    --        , "disabled"
+    --        , "disableRipple"
+    --        , "id"
+    --        , "indeterminate"
+    --        , "required"
+    --        ]
+    --      }
+    --    }
 
-    chip =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "Chip"
-        , propsType:
-          { base:  Map.fromFoldable
-            [ Tuple "avatar" jsx
-            , Tuple "deleteIcon" jsx
-            , Tuple "icon" jsx
-            , Tuple "label" jsx
-            , eventHandlerProp "onDelete"
-            ]
-          , generate:
-            [ "classes"
-            , "color"
-            , "disabled"
-            , "size"
-            , "variant"
-            ]
-          }
-        }
+    --chip =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "Chip"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable
+    --        [ Tuple "avatar" jsx
+    --        , Tuple "deleteIcon" jsx
+    --        , Tuple "icon" jsx
+    --        , Tuple "label" jsx
+    --        , eventHandlerProp "onDelete"
+    --        ]
+    --      , generate:
+    --        [ "classes"
+    --        , "color"
+    --        , "disabled"
+    --        , "size"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    circularProgress =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "CircularProgress"
-        , propsType:
-          { base:  Map.fromFoldable []
-          , generate:
-            [ "classes"
-            , "color"
-            , "disableShrink"
-            , "size"
-            , "thickness"
-            , "value"
-            , "variant"
-            ]
-          }
-        }
+    --circularProgress =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "CircularProgress"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable []
+    --      , generate:
+    --        [ "classes"
+    --        , "color"
+    --        , "disableShrink"
+    --        , "size"
+    --        , "thickness"
+    --        , "value"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    clickAwayListener =
-      let
-        onClickAway = eventHandlerProp "onClickAway"
+    --clickAwayListener =
+    --  let
+    --    onClickAway = eventHandlerProp "onClickAway"
 
-        -- | Single jsx node is required
-        child = Tuple "children" jsx
+    --    -- | Single jsx node is required
+    --    child = Tuple "children" jsx
 
-        base =  Map.fromFoldable [ child, onClickAway ]
-      in
-        simpleComponent
-          { inherits: Nothing
-          , name: "ClickAwayListener"
-          , propsType:
-            { base: emptyBase
-            , generate: [ "mouseEvent", "touchEvent" ]
-            }
-          }
+    --    base =  Map.fromFoldable [ child, onClickAway ]
+    --  in
+    --    simpleComponent
+    --      { inherits: Nothing
+    --      , name: "ClickAwayListener"
+    --      , propsRow:
+    --        { base: emptyBase
+    --        , generate: [ "mouseEvent", "touchEvent" ]
+    --        }
+    --      }
 
-    collapse =
-      simpleComponent
-        { inherits: Nothing
-        , name: "Collapse"
-        , propsType:
-          { base:  Map.fromFoldable [ children ]
-          , generate:
-            [ "collapsedHeight"
-            , "in"
-            , "timeout"
-            ]
-          }
-        }
+    --collapse =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "Collapse"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable [ children ]
+    --      , generate:
+    --        [ "collapsedHeight"
+    --        , "in"
+    --        , "timeout"
+    --        ]
+    --      }
+    --    }
 
-    container =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "Container"
-        , propsType:
-          { base: emptyBase
-          , generate:
-            [ "fixed"
-            , "maxWidth"
-            ]
-          }
-        }
+    --container =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "Container"
+    --    , propsRow:
+    --      { base: emptyBase
+    --      , generate:
+    --        [ "fixed"
+    --        , "maxWidth"
+    --        ]
+    --      }
+    --    }
 
-    cssBaseline =
-      simpleComponent
-        { inherits: Nothing
-        , name: "CssBaseline"
-        , propsType:
-          { base:  Map.fromFoldable [ children ]
-          , generate: []
-          }
-        }
+    --cssBaseline =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "CssBaseline"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable [ children ]
+    --      , generate: []
+    --      }
+    --    }
 
-    dialog =
-      let
-        -- | TODO:
-        -- | migration.
-        -- | * `PaperComponent`, `PaperProps`, `TransitionComponent`, `TransitionDuration`
-        handlers =
-          map eventHandlerProp
-            [ "onEnter"
-            , "onEntered"
-            , "onEntering"
-            , "onExit"
-            , "onExited"
-            , "onExiting"
-            ]
+    --dialog =
+    --  let
+    --    -- | TODO:
+    --    -- | migration.
+    --    -- | * `PaperComponent`, `PaperProps`, `TransitionComponent`, `TransitionDuration`
+    --    handlers =
+    --      map eventHandlerProp
+    --        [ "onEnter"
+    --        , "onEntered"
+    --        , "onEntering"
+    --        , "onExit"
+    --        , "onExited"
+    --        , "onExiting"
+    --        ]
 
-        base =  Map.fromFoldable $ [ children ] <> handlers
-      in
-        simpleComponent
-          { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.Modal.ModalPropsRow"
-            , divProps
-            ]
-          , name: "Dialog"
-          , propsType:
-            { base: emptyBase
-            , generate:
-              [ "aria-describedby"
-              , "aria-labelledby"
-              , "classes"
-              , "fullScreen"
-              , "fullWidth"
-              , "maxWidth"
-              , "scroll"
-              , "transitionDuration"
-              ]
-            }
-          }
+    --    base =  Map.fromFoldable $ [ children ] <> handlers
+    --  in
+    --    simpleComponent
+    --      { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.Modal.ModalPropsRow"
+    --        , divProps
+    --        ]
+    --      , name: "Dialog"
+    --      , propsRow:
+    --        { base: emptyBase
+    --        , generate:
+    --          [ "aria-describedby"
+    --          , "aria-labelledby"
+    --          , "classes"
+    --          , "fullScreen"
+    --          , "fullWidth"
+    --          , "maxWidth"
+    --          , "scroll"
+    --          , "transitionDuration"
+    --          ]
+    --        }
+    --      }
 
-    dialogActions =
-      simpleComponent
-        { inherits: Nothing
-        , name: "DialogActions"
-        , propsType:
-          { base:  Map.fromFoldable [ children ]
-          , generate: [ "classes", "disableSpacing" ]
-          }
-        }
+    --dialogActions =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "DialogActions"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable [ children ]
+    --      , generate: [ "classes", "disableSpacing" ]
+    --      }
+    --    }
 
-    dialogContent =
-      simpleComponent
-        { inherits: Nothing
-        , name: "DialogContent"
-        , propsType:
-          { base:  Map.fromFoldable [ children ]
-          , generate: [ "classes", "dividers" ]
-          }
-        }
+    --dialogContent =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "DialogContent"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable [ children ]
+    --      , generate: [ "classes", "dividers" ]
+    --      }
+    --    }
 
-    dialogTitle =
-      simpleComponent
-        { inherits: Nothing
-        , name: "DialogTitle"
-        , propsType:
-          { base:  Map.fromFoldable [ children ]
-          , generate: [ "classes", "disableTypography" ]
-          }
-        }
+    --dialogTitle =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "DialogTitle"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable [ children ]
+    --      , generate: [ "classes", "disableTypography" ]
+    --      }
+    --    }
 
-    -- | TODO: add component
-    divider =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_hr" ]
-        , name: "Divider"
-        , propsType:
-          { base:  Map.fromFoldable []
-          , generate:
-            [ "absolute"
-            , "classes"
-            , "light"
-            , "orientation"
-            , "variant"
-            ]
-          }
-        }
+    ---- | TODO: add component
+    --divider =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_hr" ]
+    --    , name: "Divider"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable []
+    --      , generate:
+    --        [ "absolute"
+    --        , "classes"
+    --        , "light"
+    --        , "orientation"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    drawer =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.Modal.ModalPropsRow"
-            , divProps
-            ]
-        , name: "Drawer"
-        , propsType:
-          { base: Map.fromFoldable
-              ( [ children
-                , Tuple "ModalProps" (Type.constructor "MUI.Core.Modal.ModalOpaqueProps")
-                , eventHandlerProp "onClose"
-                , Tuple "PaperProps" (Type.constructor "MUI.Core.Modal.ModalOpaqueProps")
-                , Tuple "SlideProps" (Type.constructor "MUI.Core.Slide.SlideOpaqueProps")
-                ]
-                  <> map eventHandlerProp [ "onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
-              )
-          , generate:
-            [ "anchor"
-            , "classes"
-            , "elevation"
-            , "open"
-            , "transitionDuration"
-            , "variant"
-            ]
-          }
-        }
+    --drawer =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.Modal.ModalPropsRow"
+    --        , divProps
+    --        ]
+    --    , name: "Drawer"
+    --    , propsRow:
+    --      { base: Map.fromFoldable
+    --          ( [ children
+    --            , Tuple "ModalProps" (Type.constructor "MUI.Core.Modal.ModalOpaqueProps")
+    --            , eventHandlerProp "onClose"
+    --            , Tuple "PaperProps" (Type.constructor "MUI.Core.Modal.ModalOpaqueProps")
+    --            , Tuple "SlideProps" (Type.constructor "MUI.Core.Slide.SlideOpaqueProps")
+    --            ]
+    --              <> map eventHandlerProp [ "onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
+    --          )
+    --      , generate:
+    --        [ "anchor"
+    --        , "classes"
+    --        , "elevation"
+    --        , "open"
+    --        , "transitionDuration"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    -- | TODO: TransitionComponent, TransitionProps
-    expansionPanel =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
-            , divProps
-            ]
-        , name: "ExpansionPanel"
-        , propsType:
-          { base: Map.fromFoldable
-              [ children
-              , eventHandlerProp "onChange"
-              ]
-          , generate:
-            [ "classes"
-            , "defaultExpanded"
-            , "disabled"
-            , "expanded"
-            ]
-          }
-        }
+    ---- | TODO: TransitionComponent, TransitionProps
+    --expansionPanel =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
+    --        , divProps
+    --        ]
+    --    , name: "ExpansionPanel"
+    --    , propsRow:
+    --      { base: Map.fromFoldable
+    --          [ children
+    --          , eventHandlerProp "onChange"
+    --          ]
+    --      , generate:
+    --        [ "classes"
+    --        , "defaultExpanded"
+    --        , "disabled"
+    --        , "expanded"
+    --        ]
+    --      }
+    --    }
 
-    expansionPanelActions =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "ExpansionPanelActions"
-        , propsType:
-          { base: Map.fromFoldable [ children ]
-          , generate: [ "classes" ]
-          }
-        }
+    --expansionPanelActions =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "ExpansionPanelActions"
+    --    , propsRow:
+    --      { base: Map.fromFoldable [ children ]
+    --      , generate: [ "classes" ]
+    --      }
+    --    }
 
-    expansionPanelDetails =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "ExpansionPanelDetails"
-        , propsType:
-          { base: Map.fromFoldable [ children ]
-          , generate: [ "classes" ]
-          }
-        }
+    --expansionPanelDetails =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "ExpansionPanelDetails"
+    --    , propsRow:
+    --      { base: Map.fromFoldable [ children ]
+    --      , generate: [ "classes" ]
+    --      }
+    --    }
 
-    expansionPanelSummary =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "ExpansionPanelSummary"
-        , propsType:
-          { base: Map.fromFoldable
-              [ children
-              , Tuple "expandIcon" jsx
-              , Tuple "IconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
-              ]
-          , generate: [ "classes" ]
-          }
-        }
+    --expansionPanelSummary =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "ExpansionPanelSummary"
+    --    , propsRow:
+    --      { base: Map.fromFoldable
+    --          [ children
+    --          , Tuple "expandIcon" jsx
+    --          , Tuple "IconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
+    --          ]
+    --      , generate: [ "classes" ]
+    --      }
+    --    }
 
-    fab =
-      simpleComponent
-        { inherits: Just $ MUI.rList'
-            [ "MUI.Core.ButtonBase.ButtonBasePropsRow"
-            , "React.Basic.DOM.Props_button"
-            ]
-        , name: "Fab"
-        , propsType:
-          { base: emptyBase
-          , generate:
-            [ "classes"
-            , "color"
-            , "disabled"
-            , "disableFocusRipple"
-            , "href"
-            , "size"
-            , "variant"
-            ]
-          }
-        }
+    --fab =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList'
+    --        [ "MUI.Core.ButtonBase.ButtonBasePropsRow"
+    --        , "MUI.DOM.Generated.Props_button"
+    --        ]
+    --    , name: "Fab"
+    --    , propsRow:
+    --      { base: emptyBase
+    --      , generate:
+    --        [ "classes"
+    --        , "color"
+    --        , "disabled"
+    --        , "disableFocusRipple"
+    --        , "href"
+    --        , "size"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    -- | TODO: TransitionComponent
-    fade =
-      simpleComponent
-        { inherits: Nothing -- should inherit TransitionComponent
-        , name: "Fade"
-        , propsType:
-          { base:  Map.fromFoldable [ Tuple "ref" foreignType ]
-          , generate:
-            [ {-- not sure what to do here, "theme" --}]
-          }
-        }
+    ---- | TODO: TransitionComponent
+    --fade =
+    --  simpleComponent
+    --    { inherits: Nothing -- should inherit TransitionComponent
+    --    , name: "Fade"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable [ Tuple "ref" foreignType ]
+    --      , generate:
+    --        [ {-- not sure what to do here, "theme" --}]
+    --      }
+    --    }
 
-    -- | TODO: inputComponent, make value a type variable
-    filledInput =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "MUI.Core.InputBasePropsRow" ]
-        , name: "FilledInput"
-        , propsType:
-          { base:  Map.fromFoldable
-              [ children
-              , Tuple "endAdornment" jsx
-              , Tuple
-                  "inputProps"
-                  (Type.constructor "MUI.Core.InputBaseOpaqueProps")
-              , Tuple "inputRef" foreignType
-              , eventHandlerProp "onChange"
-              , Tuple "startAdornment" jsx
-              , Tuple "value" foreignType
-              ]
-          , generate:
-              [ "autoComplete"
-              , "autoFocus"
-              , "classes"
-              , "className"
-              , "color"
-              , "defaultValue"
-              , "disabled"
-              , "disableUnderline"
-              , "error"
-              , "fullWidth"
-              , "id"
-              , "margin"
-              , "multiline"
-              , "name"
-              , "placeholder"
-              , "readOnly"
-              , "required"
-              , "rows"
-              , "rowsMax"
-              , "type"
-              ]
-          }
-        }
+    ---- | TODO: inputComponent, make value a type variable
+    --filledInput =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.Core.InputBasePropsRow" ]
+    --    , name: "FilledInput"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable
+    --          [ children
+    --          , Tuple "endAdornment" jsx
+    --          , Tuple
+    --              "inputProps"
+    --              (Type.constructor "MUI.Core.InputBaseOpaqueProps")
+    --          , Tuple "inputRef" foreignType
+    --          , eventHandlerProp "onChange"
+    --          , Tuple "startAdornment" jsx
+    --          , Tuple "value" foreignType
+    --          ]
+    --      , generate:
+    --          [ "autoComplete"
+    --          , "autoFocus"
+    --          , "classes"
+    --          , "className"
+    --          , "color"
+    --          , "defaultValue"
+    --          , "disabled"
+    --          , "disableUnderline"
+    --          , "error"
+    --          , "fullWidth"
+    --          , "id"
+    --          , "margin"
+    --          , "multiline"
+    --          , "name"
+    --          , "placeholder"
+    --          , "readOnly"
+    --          , "required"
+    --          , "rows"
+    --          , "rowsMax"
+    --          , "type"
+    --          ]
+    --      }
+    --    }
 
     formControl =
       simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "FormControl"
-        , propsType:
+        { name: "FormControl"
+        , propsRow:
           { base: Map.fromFoldable [ children ]
           , generate:
-            [ "color"
+            [ "classes"
+            , "color"
             , "disabled"
             , "error"
             , "fullWidth"
@@ -760,14 +761,13 @@ components =
             , "variant"
             ]
           }
+        , root: rbProps.div
         }
 
-    -- | TODO: make value a type variable
     formControlLabel =
       simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_label" ]
-        , name: "FormControlLabel"
-        , propsType:
+        { name: "FormControlLabel"
+        , propsRow:
           { base: Map.fromFoldable
               [ Tuple "control" jsx
               , Tuple "label" jsx
@@ -782,26 +782,26 @@ components =
             , "name"
             ]
           }
+        , root: rbProps.label
         }
 
     formGroup =
       simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "FormGroup"
-        , propsType:
+        { name: "FormGroup"
+        , propsRow:
           { base: Map.fromFoldable [ children ]
           , generate:
             [ "classes"
             , "row"
             ]
           }
+        , root: rbProps.div
         }
 
     formHelperText =
       simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_p" ]
-        , name: "FormHelperText"
-        , propsType:
+        { name: "FormHelperText"
+        , propsRow:
           { base: Map.fromFoldable [ children ]
           , generate:
             [ "classes"
@@ -814,13 +814,13 @@ components =
             , "variant"
             ]
           }
+        , root: rbProps.div
         }
 
     formLabel =
       simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_label" ]
-        , name: "FormLabel"
-        , propsType:
+        { name: "FormLabel"
+        , propsRow:
           { base: Map.fromFoldable [ children ]
           , generate:
             [ "classes"
@@ -832,153 +832,151 @@ components =
             , "required"
             ]
           }
+        , root: rbProps.label
         }
 
-    grid =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "Grid"
-        , propsType:
-          { base: Map.fromFoldable [ children ]
-          , generate:
-            [ "alignContent"
-            , "alignItems"
-            , "classes"
-            , "container"
-            , "direction"
-            , "item"
-            , "justify"
-            , "lg"
-            , "md"
-            , "sm"
-            , "spacing"
-            , "wrap"
-            , "xl"
-            , "xs"
-            , "zeroMinWidth"
-            ]
-          }
-        }
+    --grid =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "Grid"
+    --    , propsRow:
+    --      { base: Map.fromFoldable [ children ]
+    --      , generate:
+    --        [ "alignContent"
+    --        , "alignItems"
+    --        , "classes"
+    --        , "container"
+    --        , "direction"
+    --        , "item"
+    --        , "justify"
+    --        , "lg"
+    --        , "md"
+    --        , "sm"
+    --        , "spacing"
+    --        , "wrap"
+    --        , "xl"
+    --        , "xs"
+    --        , "zeroMinWidth"
+    --        ]
+    --      }
+    --    }
 
-    gridList = simpleComponent
-      { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_ul" ]
-      , name: "GridList"
-      , propsType:
-        { base: Map.fromFoldable [ children ]
-        , generate: [ "cellHeight", "classes", "cols", "spacing" ]
-        }
-      }
+    --gridList = simpleComponent
+    --  { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_ul" ]
+    --  , name: "GridList"
+    --  , propsRow:
+    --    { base: Map.fromFoldable [ children ]
+    --    , generate: [ "cellHeight", "classes", "cols", "spacing" ]
+    --    }
+    --  }
 
-    gridListTile = simpleComponent
-      { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_li" ]
-      , name: "GridListTile"
-      , propsType:
-        { base: Map.fromFoldable [ children ]
-        , generate: [ "classes", "cols", "rows" ]
-        }
-      }
+    --gridListTile = simpleComponent
+    --  { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_li" ]
+    --  , name: "GridListTile"
+    --  , propsRow:
+    --    { base: Map.fromFoldable [ children ]
+    --    , generate: [ "classes", "cols", "rows" ]
+    --    }
+    --  }
 
-    gridListTileBar =
-      simpleComponent
-        { inherits: Nothing
-        , name: "GridListTileBar"
-        , propsType:
-          { base: Map.fromFoldable
-              [ Tuple "actionIcon" jsx
-              , Tuple "subtitle" jsx
-              , Tuple "title" jsx
-              ]
-          , generate:
-            [ "classes"
-            , "actionPosition"
-            , "titlePosition"
-            ]
-          }
-        }
+    --gridListTileBar =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "GridListTileBar"
+    --    , propsRow:
+    --      { base: Map.fromFoldable
+    --          [ Tuple "actionIcon" jsx
+    --          , Tuple "subtitle" jsx
+    --          , Tuple "title" jsx
+    --          ]
+    --      , generate:
+    --        [ "classes"
+    --        , "actionPosition"
+    --        , "titlePosition"
+    --        ]
+    --      }
+    --    }
 
-    -- | TODO: update when Transition is figured out
-    grow =
-      simpleComponent
-        { inherits: Nothing
-        , name: "Grow"
-        , propsType:
-          { base: emptyBase
-          , generate: [ "in" , "timeout" ]
-          }
-        }
+    ---- | TODO: update when Transition is figured out
+    --grow =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "Grow"
+    --    , propsRow:
+    --      { base: emptyBase
+    --      , generate: [ "in" , "timeout" ]
+    --      }
+    --    }
 
-    hidden =
-      simpleComponent
-        { inherits: Nothing
-        , name: "Hidden"
-        , propsType:
-          { base: Map.fromFoldable [ Tuple "only" foreignType ]
-          , generate:
-            [ "implementation"
-            , "initialWidth"
-            , "lgDown"
-            , "lgUp"
-            , "mdDown"
-            , "mdUp"
-            , "smDown"
-            , "smUp"
-            , "xlDown"
-            , "xlUp"
-            , "xsDown"
-            , "xsUp"
-            ]
-          }
-        }
+    --hidden =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "Hidden"
+    --    , propsRow:
+    --      { base: Map.fromFoldable [ Tuple "only" foreignType ]
+    --      , generate:
+    --        [ "implementation"
+    --        , "initialWidth"
+    --        , "lgDown"
+    --        , "lgUp"
+    --        , "mdDown"
+    --        , "mdUp"
+    --        , "smDown"
+    --        , "smUp"
+    --        , "xlDown"
+    --        , "xlUp"
+    --        , "xsDown"
+    --        , "xsUp"
+    --        ]
+    --      }
+    --    }
 
-    icon =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_span" ]
-        , name: "Icon"
-        , propsType:
-          { base: emptyBase
-          , generate:
-            [ "classes"
-            , "color"
-            , "fontSize"
-            ]
-          }
-        }
+    --icon =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_span" ]
+    --    , name: "Icon"
+    --    , propsRow:
+    --      { base: emptyBase
+    --      , generate:
+    --        [ "classes"
+    --        , "color"
+    --        , "fontSize"
+    --        ]
+    --      }
+    --    }
 
-    iconButton =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow", divProps ]
-        , name: "IconButton"
-        , propsType:
-          { base: Map.fromFoldable [ children ]
-          , generate:
-            [ "classes"
-            , "color"
-            , "disabled"
-            , "disableFocusRipple"
-            , "disableRipple"
-            , "edge"
-            , "size"
-            ]
-          }
-        }
+    --iconButton =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow", divProps ]
+    --    , name: "IconButton"
+    --    , propsRow:
+    --      { base: Map.fromFoldable [ children ]
+    --      , generate:
+    --        [ "classes"
+    --        , "color"
+    --        , "disabled"
+    --        , "disableFocusRipple"
+    --        , "disableRipple"
+    --        , "edge"
+    --        , "size"
+    --        ]
+    --      }
+    --    }
 
     input =
       simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.InputBase.InputBasePropsRow", divProps ]
-        , name: "Input"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ Tuple "defaultValue" foreignType
-                  , Tuple "endAdornment" jsx
-                  , Tuple "inputProps" foreignType
-                  , Tuple "inputRef" foreignType
-                  , Tuple "startAdornment" jsx
-                  , Tuple "value" foreignType
-                  , eventHandlerProp "onChange"
-                  ]
+        { name: "Input"
+        , propsRow:
+          { base: Map.fromFoldable
+            [ Tuple "defaultValue" foreignType
+            , Tuple "endAdornment" jsx
+            , Tuple "inputProps" foreignType
+            , Tuple "inputRef" foreignType
+            , Tuple "startAdornment" jsx
+            , Tuple "value" foreignType
+            , eventHandlerProp "onChange"
+            ]
           , generate:
             [ "autoComplete"
             , "autoFocus"
@@ -1000,70 +998,67 @@ components =
             , "type"
             ]
           }
+        , root: MUIComponent inputBase
         }
 
-    inputAdornment =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "InputAdornment"
-        , propsType:
-          { base:
-               Map.fromFoldable [ children ]
-          , generate:
-            [ "classes"
-            , "disablePointerEvents"
-            , "disableTypography"
-            , "position"
-            , "variant"
-            ]
-          }
-        }
+    --inputAdornment =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "InputAdornment"
+    --    , propsRow:
+    --      { base:
+    --           Map.fromFoldable [ children ]
+    --      , generate:
+    --        [ "classes"
+    --        , "disablePointerEvents"
+    --        , "disableTypography"
+    --        , "position"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    -- | TODO: inputProps should be something like ReactComponent { | InputProps }
-    inputBase =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "InputBase"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ Tuple "defaultValue" foreignType
-                  , Tuple "endAdornment" jsx
-                  , Tuple "inputProps" foreignType
-                  , Tuple "inputRef" foreignType
-                  , Tuple "startAdornment" jsx
-                  , Tuple "value" foreignType
-                  , eventHandlerProp "onChange"
-                  ]
-          , generate:
-            [ "autoComplete"
-            , "autoFocus"
-            , "classes"
-            , "className"
-            , "color"
-            , "disabled"
-            , "error"
-            , "fullWidth"
-            , "id"
-            , "margin"
-            , "multiline"
-            , "name"
-            , "placeholder"
-            , "readOnly"
-            , "required"
-            , "rows"
-            , "rowsMax"
-            , "type"
+    ---- | TODO: inputProps should be something like ReactComponent { | InputProps }
+    inputBase = simpleComponent
+      { name: "InputBase"
+      , propsRow:
+        { base: Map.fromFoldable
+            [ Tuple "defaultValue" foreignType
+            , Tuple "endAdornment" jsx
+            , Tuple "inputProps" foreignType
+            , Tuple "inputRef" foreignType
+            , Tuple "startAdornment" jsx
+            , Tuple "value" foreignType
+            , eventHandlerProp "onChange"
             ]
-          }
+        , generate:
+          [ "autoComplete"
+          , "autoFocus"
+          , "classes"
+          , "className"
+          , "color"
+          , "disabled"
+          , "error"
+          , "fullWidth"
+          , "id"
+          , "margin"
+          , "multiline"
+          , "name"
+          , "placeholder"
+          , "readOnly"
+          , "required"
+          , "rows"
+          , "rowsMax"
+          , "type"
+          ]
         }
+      , root: rbProps.div
+      }
 
     inputLabel =
       simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.FormLabel.FormLabelPropsRow", Type.constructor "React.Basic.DOM.Props_label" ]
-        , name: "InputLabel"
-        , propsType:
+        { name: "InputLabel"
+        , propsRow:
           { base:
               Map.fromFoldable
                   [ children
@@ -1081,794 +1076,796 @@ components =
             , "variant"
             ]
           }
+        , root: MUIComponent formLabel
+          -- [ Type.constructor "MUI.Core.FormLabel.FormLabelPropsRow", Type.constructor "MUI.DOM.Generated.Props_label" ]
         }
 
-    linearProgress =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "LinearProgress"
-        , propsType:
-          { base: emptyBase
-          , generate:
-            [ "classes"
-            , "color"
-            , "value"
-            , "valueBuffer"
-            , "variant"
-            ]
-          }
-        }
+    --linearProgress =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "LinearProgress"
+    --    , propsRow:
+    --      { base: emptyBase
+    --      , generate:
+    --        [ "classes"
+    --        , "color"
+    --        , "value"
+    --        , "valueBuffer"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    link =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_a" ]
-        , name: "Link"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "TypographyClasses" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
-                  ]
-          , generate:
-            [ "classes"
-            , "color"
-            , "underline"
-            , "variant"
-            ]
-          }
-        }
+    --link =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_a" ]
+    --    , name: "Link"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "TypographyClasses" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "color"
+    --        , "underline"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    list =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_ul" ]
-        , name: "List"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "subheader" jsx
-                  ]
-          , generate:
-            [ "classes"
-            , "dense"
-            , "disablePadding"
-            ]
-          }
-        }
+    --list =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_ul" ]
+    --    , name: "List"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "subheader" jsx
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "dense"
+    --        , "disablePadding"
+    --        ]
+    --      }
+    --    }
 
-    -- | TODO: add ContainerComponent and ContainerProps
-    listItem =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_li" ]
-        , name: "ListItem"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "alignItems"
-            , "autoFocus"
-            , "button"
-            , "classes"
-            , "dense"
-            , "disabled"
-            , "disableGutters"
-            , "divider"
-            , "selected"
-            ]
-          }
-        }
+    ---- | TODO: add ContainerComponent and ContainerProps
+    --listItem =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_li" ]
+    --    , name: "ListItem"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              ]
+    --      , generate:
+    --        [ "alignItems"
+    --        , "autoFocus"
+    --        , "button"
+    --        , "classes"
+    --        , "dense"
+    --        , "disabled"
+    --        , "disableGutters"
+    --        , "divider"
+    --        , "selected"
+    --        ]
+    --      }
+    --    }
 
-    listItemAvatar =
-      simpleComponent
-        { inherits: Nothing
-        , name: "ListItemAvatar"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            ]
-          }
-        }
+    --listItemAvatar =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "ListItemAvatar"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        ]
+    --      }
+    --    }
 
-    listItemIcon =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "ListItemIcon"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ -- children
-                  ]
-          , generate:
-            [ "classes"
-            ]
-          }
-        }
+    --listItemIcon =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "ListItemIcon"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ -- children
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        ]
+    --      }
+    --    }
 
-    listItemSecondaryAction =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "ListItemSecondaryAction"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            ]
-          }
-        }
+    --listItemSecondaryAction =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "ListItemSecondaryAction"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        ]
+    --      }
+    --    }
 
-    listItemText =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "ListItemText"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ Tuple "primary" jsx
-                  , Tuple "primaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
-                  , Tuple "secondary" jsx
-                  , Tuple "secondaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
-                  ]
-          , generate:
-            [ "classes"
-            , "disableTypography"
-            , "inset"
-            ]
-          }
-        }
+    --listItemText =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "ListItemText"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ Tuple "primary" jsx
+    --              , Tuple "primaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
+    --              , Tuple "secondary" jsx
+    --              , Tuple "secondaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "disableTypography"
+    --        , "inset"
+    --        ]
+    --      }
+    --    }
 
-    listSubheader =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_li" ]
-        , name: "ListSubheader"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            , "color"
-            , "disableGutters"
-            , "disableSticky"
-            , "inset"
-            ]
-          }
-        }
+    --listSubheader =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_li" ]
+    --    , name: "ListSubheader"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "color"
+    --        , "disableGutters"
+    --        , "disableSticky"
+    --        , "inset"
+    --        ]
+    --      }
+    --    }
 
-    menu =
-      let
-        -- | Still missing: anchorEl, onClose, MenuListProps, PopoverClasses, transitionDuration
-        handlers =
-          map eventHandlerProp
-            [ "onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
+    --menu =
+    --  let
+    --    -- | Still missing: anchorEl, onClose, MenuListProps, PopoverClasses, transitionDuration
+    --    handlers =
+    --      map eventHandlerProp
+    --        [ "onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
 
-        -- | I'm not sure what is the difference between `React.Element` and `DOM.Element`
-        nullable = Type.constructor "Data.Nullable.Nullable"
+    --    -- | I'm not sure what is the difference between `React.Element` and `DOM.Element`
+    --    nullable = Type.constructor "Data.Nullable.Nullable"
 
-        domElement = Type.constructor "Web.DOM.Element"
+    --    domElement = Type.constructor "Web.DOM.Element"
 
-        anchorEl = Tuple "anchorEl" $ Type.app nullable [ domElement ]
+    --    anchorEl = Tuple "anchorEl" $ Type.app nullable [ domElement ]
 
-        base =  Map.fromFoldable $ [ anchorEl, children ] <> handlers
-      in
-        simpleComponent
-          { inherits: Nothing -- | We should inherit from Popover here
-          , name: "Menu"
-          , propsType:
-            { base: emptyBase
-            , generate: [ "autoFocus", "classes", "disableAutoFocusItem", "open", "transitionDuration", "variant" ]
-            }
-          }
+    --    base =  Map.fromFoldable $ [ anchorEl, children ] <> handlers
+    --  in
+    --    simpleComponent
+    --      { inherits: Nothing -- | We should inherit from Popover here
+    --      , name: "Menu"
+    --      , propsRow:
+    --        { base: emptyBase
+    --        , generate: [ "autoFocus", "classes", "disableAutoFocusItem", "open", "transitionDuration", "variant" ]
+    --        }
+    --      }
 
-    menuItem =
-      let
-        base =
-            Map.fromFoldable
-                [ children
-                -- XXX: We are catching material ui documentation / type error here.
-                -- MenuItem doesn't contain `component` prop.
-                -- , component
-                ]
-      in
-        simpleComponent
-          { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.ListItem.ListItemPropsRow"
-            , Type.constructor "React.Basic.DOM.Props_li"
-            ]
-          , name: "MenuItem"
-          , propsType:
-            { base: emptyBase
-            , generate: [ "classes", "dense", "disableGutters" ]
-            }
-          }
+    --menuItem =
+    --  let
+    --    base =
+    --        Map.fromFoldable
+    --            [ children
+    --            -- XXX: We are catching material ui documentation / type error here.
+    --            -- MenuItem doesn't contain `component` prop.
+    --            -- , component
+    --            ]
+    --  in
+    --    simpleComponent
+    --      { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.ListItem.ListItemPropsRow"
+    --        , Type.constructor "MUI.DOM.Generated.Props_li"
+    --        ]
+    --      , name: "MenuItem"
+    --      , propsRow:
+    --        { base: emptyBase
+    --        , generate: [ "classes", "dense", "disableGutters" ]
+    --        }
+    --      }
 
-    mobileStepper =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.Paper.PaperPropsRow", Type.constructor "React.Basic.DOM.Props_props" ]
-        , name: "MobileStepper"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ Tuple "backButton" jsx
-                  , Tuple "LinearProgressProps" (Type.constructor "MUI.Core.LinearPropgress.LinearProgressOpaqueProps")
-                  , Tuple "nextButton" jsx
-                  ]
-          , generate:
-            [ "activeStep"
-            , "backButton"
-            , "classes"
-            , "position"
-            , "steps"
-            , "variant"
-            ]
-          }
-        }
+    --mobileStepper =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.Paper.PaperPropsRow", Type.constructor "MUI.DOM.Generated.Props_props" ]
+    --    , name: "MobileStepper"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ Tuple "backButton" jsx
+    --              , Tuple "LinearProgressProps" (Type.constructor "MUI.Core.LinearPropgress.LinearProgressOpaqueProps")
+    --              , Tuple "nextButton" jsx
+    --              ]
+    --      , generate:
+    --        [ "activeStep"
+    --        , "backButton"
+    --        , "classes"
+    --        , "position"
+    --        , "steps"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    modal =
-      let
-        handlers =
-          map eventHandlerProp
-            [ "onBackdropClick"
-            , "onClose"
-            , "onEscapeKeyDown"
-            , "onRendered"
-            ]
+    --modal =
+    --  let
+    --    handlers =
+    --      map eventHandlerProp
+    --        [ "onBackdropClick"
+    --        , "onClose"
+    --        , "onEscapeKeyDown"
+    --        , "onRendered"
+    --        ]
 
-        backdropOpaqueProps = Type.constructor "MUI.Core.Backdrop.BackdropOpaqueProps"
+    --    backdropOpaqueProps = Type.constructor "MUI.Core.Backdrop.BackdropOpaqueProps"
 
-        base =
-           Map.fromFoldable
-            $ [ children
-              , Tuple "BackdropComponent" (reactComponentApply backdropOpaqueProps)
-              , Tuple "BackdropProps" backdropOpaqueProps
-              -- , container
-              , Tuple
-                  "manager"
-                  (Type.constructor "MUI.Core.Modal.ModalManager.ModalManager")
-              ]
-            <> handlers
-      in
-        simpleComponent
-          { inherits: Nothing
-          , name: "Modal"
-          , propsType:
-            { base: emptyBase
-            , generate:
-              [ "closeAfterTransition"
-              , "disableAutoFocus"
-              , "disableBackdropClick"
-              , "disableEnforceFocus"
-              , "disableEscapeKeyDown"
-              , "disablePortal"
-              , "disableRestoreFocus"
-              , "disableScrollLock"
-              , "hideBackdrop"
-              , "keepMounted"
-              , "open"
-              ]
-            }
-          }
+    --    base =
+    --       Map.fromFoldable
+    --        $ [ children
+    --          , Tuple "BackdropComponent" (reactComponentApply backdropOpaqueProps)
+    --          , Tuple "BackdropProps" backdropOpaqueProps
+    --          -- , container
+    --          , Tuple
+    --              "manager"
+    --              (Type.constructor "MUI.Core.Modal.ModalManager.ModalManager")
+    --          ]
+    --        <> handlers
+    --  in
+    --    simpleComponent
+    --      { inherits: Nothing
+    --      , name: "Modal"
+    --      , propsRow:
+    --        { base: emptyBase
+    --        , generate:
+    --          [ "closeAfterTransition"
+    --          , "disableAutoFocus"
+    --          , "disableBackdropClick"
+    --          , "disableEnforceFocus"
+    --          , "disableEscapeKeyDown"
+    --          , "disablePortal"
+    --          , "disableRestoreFocus"
+    --          , "disableScrollLock"
+    --          , "hideBackdrop"
+    --          , "keepMounted"
+    --          , "open"
+    --          ]
+    --        }
+    --      }
 
-    -- | TODO: value
-    nativeSelect =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.Input.InputPropsRow", divProps ]
-        , name: "NativeSelect"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "IconComponent" jsx
-                  , Tuple "input" jsx
-                  , Tuple "inputProps" (Type.constructor "MUI.Core.Input.InputOpaqueProps")
-                  , eventHandlerProp "onChange"
-                  , Tuple "value" foreignType
-                  ]
-          , generate:
-            [ "classes"
-            , "variant"
-            ]
-          }
-        }
+    ---- | TODO: value
+    --nativeSelect =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.Input.InputPropsRow", divProps ]
+    --    , name: "NativeSelect"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "IconComponent" jsx
+    --              , Tuple "input" jsx
+    --              , Tuple "inputProps" (Type.constructor "MUI.Core.Input.InputOpaqueProps")
+    --              , eventHandlerProp "onChange"
+    --              , Tuple "value" foreignType
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    -- | TODO: value
-    noSsr =
-      simpleComponent
-        { inherits: Nothing
-        , name: "NoSsr"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "fallback" jsx
-                  ]
-          , generate:
-            [ "defer"
-            ]
-          }
-        }
+    ---- | TODO: value
+    --noSsr =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "NoSsr"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "fallback" jsx
+    --              ]
+    --      , generate:
+    --        [ "defer"
+    --        ]
+    --      }
+    --    }
 
-    -- | inputComponent
-    outlineInput =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.InputBase.InputBasePropsRow", divProps ]
-        , name: "OutlinedInput"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ Tuple "defaultValue" foreignType
-                  , Tuple "endAdornment" jsx
-                  , Tuple "inputProps" foreignType
-                  , Tuple "inputRef" foreignType
-                  , Tuple "startAdornment" jsx
-                  , Tuple "value" foreignType
-                  , eventHandlerProp "onChange"
-                  ]
-          , generate:
-            [ "autoComplete"
-            , "autoFocus"
-            , "classes"
-            , "className"
-            , "color"
-            , "disabled"
-            , "error"
-            , "fullWidth"
-            , "id"
-            , "margin"
-            , "multiline"
-            , "name"
-            , "notched"
-            , "placeholder"
-            , "readOnly"
-            , "required"
-            , "rows"
-            , "rowsMax"
-            , "type"
-            ]
-          }
-        }
+    ---- | inputComponent
+    --outlineInput =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.InputBase.InputBasePropsRow", divProps ]
+    --    , name: "OutlinedInput"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ Tuple "defaultValue" foreignType
+    --              , Tuple "endAdornment" jsx
+    --              , Tuple "inputProps" foreignType
+    --              , Tuple "inputRef" foreignType
+    --              , Tuple "startAdornment" jsx
+    --              , Tuple "value" foreignType
+    --              , eventHandlerProp "onChange"
+    --              ]
+    --      , generate:
+    --        [ "autoComplete"
+    --        , "autoFocus"
+    --        , "classes"
+    --        , "className"
+    --        , "color"
+    --        , "disabled"
+    --        , "error"
+    --        , "fullWidth"
+    --        , "id"
+    --        , "margin"
+    --        , "multiline"
+    --        , "name"
+    --        , "notched"
+    --        , "placeholder"
+    --        , "readOnly"
+    --        , "required"
+    --        , "rows"
+    --        , "rowsMax"
+    --        , "type"
+    --        ]
+    --      }
+    --    }
 
-    paper =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "Paper"
-        , propsType:
-          { base:  Map.fromFoldable $ [ children ]
-          , generate:
-            [ "classes"
-            , "elevation"
-            , "square"
-            ]
-          }
-        }
+    --paper =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "Paper"
+    --    , propsRow:
+    --      { base:  Map.fromFoldable $ [ children ]
+    --      , generate:
+    --        [ "classes"
+    --        , "elevation"
+    --        , "square"
+    --        ]
+    --      }
+    --    }
 
-    -- | TransitionComponent, TransitionProps, transformOrigin
-    popover =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.Modal.ModalPropsRow", divProps ]
-        , name: "Popover"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ Tuple "action" foreignType
-                  , Tuple "anchorEl" foreignType
-                  , Tuple "anchorPosition" foreignType
-                  , children
-                  , Tuple "getContentAnchorEl" foreignType
-                  , eventHandlerProp "onChange"
-                  , eventHandlerProp "onEnter"
-                  , eventHandlerProp "onEntering"
-                  , eventHandlerProp "onExit"
-                  , eventHandlerProp "onExited"
-                  , eventHandlerProp "onExiting"
-                  , Tuple "PaperProps" (Type.constructor "MUI.Core.Paper.PaperOpaqueProps")
-                  ]
-          , generate:
-            [ "anchorOrigin"
-            , "anchorPosition"
-            , "classes"
-            , "elevation"
-            , "marginThreshold"
-            , "open"
-            --, "transformOrigin"
-            , "transitionDuration"
-            ]
-          }
-        }
+    ---- | TransitionComponent, TransitionProps, transformOrigin
+    --popover =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.Modal.ModalPropsRow", divProps ]
+    --    , name: "Popover"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ Tuple "action" foreignType
+    --              , Tuple "anchorEl" foreignType
+    --              , Tuple "anchorPosition" foreignType
+    --              , children
+    --              , Tuple "getContentAnchorEl" foreignType
+    --              , eventHandlerProp "onChange"
+    --              , eventHandlerProp "onEnter"
+    --              , eventHandlerProp "onEntering"
+    --              , eventHandlerProp "onExit"
+    --              , eventHandlerProp "onExited"
+    --              , eventHandlerProp "onExiting"
+    --              , Tuple "PaperProps" (Type.constructor "MUI.Core.Paper.PaperOpaqueProps")
+    --              ]
+    --      , generate:
+    --        [ "anchorOrigin"
+    --        , "anchorPosition"
+    --        , "classes"
+    --        , "elevation"
+    --        , "marginThreshold"
+    --        , "open"
+    --        --, "transformOrigin"
+    --        , "transitionDuration"
+    --        ]
+    --      }
+    --    }
 
-    popper =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "Popper"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ Tuple "anchorEl" foreignType
-                  , children
-                  , Tuple "modifiers" foreignType
-                  , Tuple "popperOptions" foreignType
-                  , Tuple "popperRef" foreignType
-                  ]
-          , generate:
-            [ "disablePortal"
-            , "keepMounted"
-            , "open"
-            , "transition"
-            ]
-          }
-        }
+    --popper =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "Popper"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ Tuple "anchorEl" foreignType
+    --              , children
+    --              , Tuple "modifiers" foreignType
+    --              , Tuple "popperOptions" foreignType
+    --              , Tuple "popperRef" foreignType
+    --              ]
+    --      , generate:
+    --        [ "disablePortal"
+    --        , "keepMounted"
+    --        , "open"
+    --        , "transition"
+    --        ]
+    --      }
+    --    }
 
-    portal =
-      simpleComponent
-        { inherits: Nothing
-        , name: "Portal"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "container" foreignType
-                  , eventHandlerProp "onRendered"
-                  ]
-          , generate: [ "disablePortal" ]
-          }
-        }
+    --portal =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "Portal"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "container" foreignType
+    --              , eventHandlerProp "onRendered"
+    --              ]
+    --      , generate: [ "disablePortal" ]
+    --      }
+    --    }
 
-    -- | value, inputProps, inputRef
-    radio =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.IconButton.IconButtonPropsRow", Type.constructor "React.Basic.DOM.Props_button" ]
-        , name: "Radio"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ Tuple "checkedIcon" jsx
-                  , Tuple "icon" jsx
-                  , Tuple "inputProps" foreignType
-                  , Tuple "inputRef" foreignType
-                  , eventHandlerProp "onChange"
-                  , Tuple "value" foreignType
-                  ]
-          , generate:
-            [ "checked"
-            , "classes"
-            , "color"
-            , "disabled"
-            , "disableRipple"
-            , "id"
-            , "name"
-            , "required"
-            ]
-          }
-        }
+    ---- | value, inputProps, inputRef
+    --radio =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.IconButton.IconButtonPropsRow", Type.constructor "MUI.DOM.Generated.Props_button" ]
+    --    , name: "Radio"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ Tuple "checkedIcon" jsx
+    --              , Tuple "icon" jsx
+    --              , Tuple "inputProps" foreignType
+    --              , Tuple "inputRef" foreignType
+    --              , eventHandlerProp "onChange"
+    --              , Tuple "value" foreignType
+    --              ]
+    --      , generate:
+    --        [ "checked"
+    --        , "classes"
+    --        , "color"
+    --        , "disabled"
+    --        , "disableRipple"
+    --        , "id"
+    --        , "name"
+    --        , "required"
+    --        ]
+    --      }
+    --    }
 
-    -- | value, inputProps, inputRef
-    radioGroup =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.FormGroup.FormGroupPropsRow", divProps ]
-        , name: "RadioGroup"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "defaultValue" foreignType
-                  , eventHandlerProp "onChange"
-                  , Tuple "value" foreignType
-                  ]
-          , generate:
-            [ "name"
-            ]
-          }
-        }
+    ---- | value, inputProps, inputRef
+    --radioGroup =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.FormGroup.FormGroupPropsRow", divProps ]
+    --    , name: "RadioGroup"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "defaultValue" foreignType
+    --              , eventHandlerProp "onChange"
+    --              , Tuple "value" foreignType
+    --              ]
+    --      , generate:
+    --        [ "name"
+    --        ]
+    --      }
+    --    }
 
-    rootRef =
-      simpleComponent
-        { inherits: Nothing
-        , name: "RootRef"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ Tuple "rootRef" foreignType
-                  ]
-          , generate:
-            []
-          }
-        }
+    --rootRef =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "RootRef"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ Tuple "rootRef" foreignType
+    --              ]
+    --      , generate:
+    --        []
+    --      }
+    --    }
 
-    -- | TODO: value
-    select =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.Input.InputPropsRow", divProps ]
-        , name: "Select"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "IconComponent" jsx
-                  , Tuple "input" jsx
-                  , Tuple "inputProps" (Type.constructor "MUI.Core.Input.InputOpaqueProps")
-                  , Tuple "MenuProps" (Type.constructor "MUI.Core.Menu.MenuOpaqueProps")
-                  , eventHandlerProp "onChange"
-                  , eventHandlerProp "onClose"
-                  , eventHandlerProp "onOpen"
-                  , Tuple "renderValue" foreignType
-                  , Tuple "SelectDisplayProps" foreignType
-                  , Tuple "value" foreignType
-                  ]
-          , generate:
-            [ "autoWidth"
-            , "classes"
-            , "displayEmpty"
-            , "labelWidth"
-            , "multiple"
-            , "native"
-            , "open"
-            , "renderValue"
-            , "variant"
-            ]
-          }
-        }
+    ---- | TODO: value
+    --select =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.Input.InputPropsRow", divProps ]
+    --    , name: "Select"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "IconComponent" jsx
+    --              , Tuple "input" jsx
+    --              , Tuple "inputProps" (Type.constructor "MUI.Core.Input.InputOpaqueProps")
+    --              , Tuple "MenuProps" (Type.constructor "MUI.Core.Menu.MenuOpaqueProps")
+    --              , eventHandlerProp "onChange"
+    --              , eventHandlerProp "onClose"
+    --              , eventHandlerProp "onOpen"
+    --              , Tuple "renderValue" foreignType
+    --              , Tuple "SelectDisplayProps" foreignType
+    --              , Tuple "value" foreignType
+    --              ]
+    --      , generate:
+    --        [ "autoWidth"
+    --        , "classes"
+    --        , "displayEmpty"
+    --        , "labelWidth"
+    --        , "multiple"
+    --        , "native"
+    --        , "open"
+    --        , "renderValue"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    slide =
-      simpleComponent
-        { inherits: Nothing
-        , name: "Slide"
-        , propsType:
-          { base:
-             Map.fromFoldable
-              $ map eventHandlerProp [ "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
-          , generate:
-            [ "direction", "in", "timeout"
-            ]
-          }
-        }
+    --slide =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "Slide"
+    --    , propsRow:
+    --      { base:
+    --         Map.fromFoldable
+    --          $ map eventHandlerProp [ "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
+    --      , generate:
+    --        [ "direction", "in", "timeout"
+    --        ]
+    --      }
+    --    }
 
-    -- | TODO: ThumbComponent ValueLabelComponent
-    slider =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_span" ]
-        , name: "Slider"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "defaultValue" foreignType
-                  , Tuple "getAriaLabel" foreignType
-                  , Tuple "getAriaValueText" foreignType
-                  , eventHandlerProp "onChange"
-                  , eventHandlerProp "onChangeCommitted"
-                  , Tuple "marks" foreignType
-                  , Tuple "value" foreignType
-                  , Tuple "valueLabelFormat" foreignType
-                  ]
-          , generate:
-            [ "aria-label"
-            , "aria-labelledby"
-            , "aria-valuetext"
-            , "classes"
-            , "color"
-            , "disabled"
-            , "max"
-            , "min"
-            , "name"
-            , "orientation"
-            , "step"
-            , "track"
-            , "valueLabelDisplay"
-            ]
-          }
-        }
+    ---- | TODO: ThumbComponent ValueLabelComponent
+    --slider =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_span" ]
+    --    , name: "Slider"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "defaultValue" foreignType
+    --              , Tuple "getAriaLabel" foreignType
+    --              , Tuple "getAriaValueText" foreignType
+    --              , eventHandlerProp "onChange"
+    --              , eventHandlerProp "onChangeCommitted"
+    --              , Tuple "marks" foreignType
+    --              , Tuple "value" foreignType
+    --              , Tuple "valueLabelFormat" foreignType
+    --              ]
+    --      , generate:
+    --        [ "aria-label"
+    --        , "aria-labelledby"
+    --        , "aria-valuetext"
+    --        , "classes"
+    --        , "color"
+    --        , "disabled"
+    --        , "max"
+    --        , "min"
+    --        , "name"
+    --        , "orientation"
+    --        , "step"
+    --        , "track"
+    --        , "valueLabelDisplay"
+    --        ]
+    --      }
+    --    }
 
-    -- | TODO: TransitionComponent, TransitionProps
-    snackbar =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "Snackbar"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "action" jsx
-                  , Tuple "ClickAwayListenerProps" (Type.constructor "MUI.Core.ClickAwayListener.ClickAwayListenerOpaqueProps")
-                  , Tuple "ContentProps" (Type.constructor "MUI.Core.SnackbarContent.SnackbarContentOpaqueProps")
+    ---- | TODO: TransitionComponent, TransitionProps
+    --snackbar =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "Snackbar"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "action" jsx
+    --              , Tuple "ClickAwayListenerProps" (Type.constructor "MUI.Core.ClickAwayListener.ClickAwayListenerOpaqueProps")
+    --              , Tuple "ContentProps" (Type.constructor "MUI.Core.SnackbarContent.SnackbarContentOpaqueProps")
 
-                  -- `key` is in the docs but not in the typedef
-                  --, Tuple "key" foreignType
+    --              -- `key` is in the docs but not in the typedef
+    --              --, Tuple "key" foreignType
 
-                  , Tuple "message" jsx
-                  , eventHandlerProp "onClose"
-                  , eventHandlerProp "onEnter"
-                  , eventHandlerProp "onEntered"
-                  , eventHandlerProp "onEntering"
-                  , eventHandlerProp "onExit"
-                  , eventHandlerProp "onExited"
-                  , eventHandlerProp "onExiting"
-                  ]
-          , generate:
-            [ "anchorOrigin"
-            , "autoHideDuration"
-            , "classes"
-            , "disableWindowBlurListener"
-            , "open"
-            , "resumeHideDuration"
-            , "transitionDuration"
-            ]
-          }
-        }
+    --              , Tuple "message" jsx
+    --              , eventHandlerProp "onClose"
+    --              , eventHandlerProp "onEnter"
+    --              , eventHandlerProp "onEntered"
+    --              , eventHandlerProp "onEntering"
+    --              , eventHandlerProp "onExit"
+    --              , eventHandlerProp "onExited"
+    --              , eventHandlerProp "onExiting"
+    --              ]
+    --      , generate:
+    --        [ "anchorOrigin"
+    --        , "autoHideDuration"
+    --        , "classes"
+    --        , "disableWindowBlurListener"
+    --        , "open"
+    --        , "resumeHideDuration"
+    --        , "transitionDuration"
+    --        ]
+    --      }
+    --    }
 
-    snackbarContent =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.Paper.PaperPropsRow", divProps ]
-        , name: "SnackbarContent"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ Tuple "action" jsx
-                  , Tuple "message" jsx
-                  ]
-          , generate:
-            [ "classes"
-            , "role"
-            ]
-          }
-        }
+    --snackbarContent =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.Paper.PaperPropsRow", divProps ]
+    --    , name: "SnackbarContent"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ Tuple "action" jsx
+    --              , Tuple "message" jsx
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "role"
+    --        ]
+    --      }
+    --    }
 
-    step =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "Step"
-        , propsType:
-          { base:
-              Map.fromFoldable [ children ]
-          , generate:
-            [ "active"
-            , "classes"
-            , "completed"
-            , "disabled"
-            , "expanded"
-            ]
-          }
-        }
+    --step =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "Step"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable [ children ]
+    --      , generate:
+    --        [ "active"
+    --        , "classes"
+    --        , "completed"
+    --        , "disabled"
+    --        , "expanded"
+    --        ]
+    --      }
+    --    }
 
-    stepButton =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
-            , Type.constructor "React.Basic.DOM.Props_button"
-            ]
-        , name: "StepButton"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "icon" foreignType
-                  , Tuple "optional" jsx
-                  ]
-          , generate:
-            [ "active"
-            , "alternativeLabel"
-            , "classes"
-            , "completed"
-            , "disabled"
-            , "last"
-            , "orientation"
-            ]
-          }
-        }
+    --stepButton =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
+    --        , Type.constructor "MUI.DOM.Generated.Props_button"
+    --        ]
+    --    , name: "StepButton"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "icon" foreignType
+    --              , Tuple "optional" jsx
+    --              ]
+    --      , generate:
+    --        [ "active"
+    --        , "alternativeLabel"
+    --        , "classes"
+    --        , "completed"
+    --        , "disabled"
+    --        , "last"
+    --        , "orientation"
+    --        ]
+    --      }
+    --    }
 
-    stepConnector =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "StepConnector"
-        , propsType:
-          { base: emptyBase
-          , generate: [ "classes" ]
-          }
-        }
+    --stepConnector =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "StepConnector"
+    --    , propsRow:
+    --      { base: emptyBase
+    --      , generate: [ "classes" ]
+    --      }
+    --    }
 
-    -- | TODO: handle TransitionComponent
-    stepContent =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "StepContent"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            , "transitionDuration"
-            -- , "TransitionComponent"
-            , "TransitionProps"
-            ]
-          }
-        }
+    ---- | TODO: handle TransitionComponent
+    --stepContent =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "StepContent"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "transitionDuration"
+    --        -- , "TransitionComponent"
+    --        , "TransitionProps"
+    --        ]
+    --      }
+    --    }
 
-    stepIcon =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "StepIcon"
-        , propsType:
-          { base:
-                Map.fromFoldable
-                    [ Tuple "icon" jsx
-                    ]
-          , generate:
-            [ "active"
-            , "classes"
-            , "completed"
-            , "error"
-            ]
-          }
-        }
+    --stepIcon =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "StepIcon"
+    --    , propsRow:
+    --      { base:
+    --            Map.fromFoldable
+    --                [ Tuple "icon" jsx
+    --                ]
+    --      , generate:
+    --        [ "active"
+    --        , "classes"
+    --        , "completed"
+    --        , "error"
+    --        ]
+    --      }
+    --    }
 
-    -- | TODO: StepIconComponent
-    stepLabel =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "StepLabel"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "icon" jsx
-                  , Tuple "optional" jsx
-                  , Tuple "StepIconComponent" foreignType
-                  , Tuple "StepIconProps" (Type.constructor "MUI.Core.StepIcon.StepIconOpaqueProps")
-                  ]
-          , generate:
-            [ "classes"
-            , "disabled"
-            , "error"
-            ]
-          }
-        }
+    ---- | TODO: StepIconComponent
+    --stepLabel =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "StepLabel"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "icon" jsx
+    --              , Tuple "optional" jsx
+    --              , Tuple "StepIconComponent" foreignType
+    --              , Tuple "StepIconProps" (Type.constructor "MUI.Core.StepIcon.StepIconOpaqueProps")
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "disabled"
+    --        , "error"
+    --        ]
+    --      }
+    --    }
 
-    stepper =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
-            , divProps
-            ]
-        , name: "Stepper"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "connector" jsx
-                  ]
-          , generate:
-            [ "activeStep"
-            , "alternativeLabel"
-            , "classes"
-            , "nonLinear"
-            , "orientation"
-            ]
-          }
-        }
+    --stepper =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
+    --        , divProps
+    --        ]
+    --    , name: "Stepper"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "connector" jsx
+    --              ]
+    --      , generate:
+    --        [ "activeStep"
+    --        , "alternativeLabel"
+    --        , "classes"
+    --        , "nonLinear"
+    --        , "orientation"
+    --        ]
+    --      }
+    --    }
 
     svgIcon =
       simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.SVG.Props_svg" ]
+        { root: rbProps.svg
         , name: "SvgIcon"
-        , propsType:
+        , propsRow:
           { base:
               Map.fromFoldable
                   [ children
@@ -1885,563 +1882,563 @@ components =
           }
         }
 
-    swipeableDrawer =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.Drawer.DrawerPropsRow"
-            , divProps
-            ]
-        , name: "SwipeableDrawer"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "SwipeAreaProps" foreignType
-                  , eventHandlerProp "onClose"
-                  , eventHandlerProp "onOpen"
-                  ]
-          , generate:
-            [ "disableBackdropTransition"
-            , "disableDiscovery"
-            , "disableSwipeToOpen"
-            , "hysteresis"
-            , "minFlingVelocity"
-            , "open"
-            , "swipeAreaWidth"
-            ]
-          }
-        }
+    --swipeableDrawer =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.Drawer.DrawerPropsRow"
+    --        , divProps
+    --        ]
+    --    , name: "SwipeableDrawer"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "SwipeAreaProps" foreignType
+    --              , eventHandlerProp "onClose"
+    --              , eventHandlerProp "onOpen"
+    --              ]
+    --      , generate:
+    --        [ "disableBackdropTransition"
+    --        , "disableDiscovery"
+    --        , "disableSwipeToOpen"
+    --        , "hysteresis"
+    --        , "minFlingVelocity"
+    --        , "open"
+    --        , "swipeAreaWidth"
+    --        ]
+    --      }
+    --    }
 
-    switch =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.IconButton.IconButtonPropsRow"
-            , divProps
+    --switch =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.IconButton.IconButtonPropsRow"
+    --        , divProps
+    --        ]
+    --    , name: "Switch"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ Tuple "checkedIcon" jsx
+    --              , Tuple "icon" jsx
+    --              , Tuple "inputProps" foreignType
+    --              , Tuple "inputRef" foreignType
+    --              , eventHandlerProp "onChange"
+    --              , Tuple "value" foreignType
+    --              ]
+    --      , generate:
+    --        [ "checked"
+    --        , "classes"
+    --        , "color"
+    --        , "disabled"
+    --        , "disableRipple"
+    --        , "edge"
+    --        , "id"
+    --        , "required"
+    --        , "size"
+    --        , "type"
+    --        ]
+    --      }
+    --    }
+
+    --tab =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
+    --        , Type.constructor "MUI.DOM.Generated.Props_button"
+    --        ]
+    --    , name: "Tab"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "icon" jsx
+    --              , Tuple "label" jsx
+    --              , Tuple "value" foreignType
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "disabled"
+    --        , "disableFocusRipple"
+    --        , "disableRipple"
+    --        , "fullWidth"
+    --        , "selected"
+    --        , "wrapped"
+    --        ]
+    --      }
+    --    }
+
+    --table =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_table" ]
+    --    , name: "Table"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "padding"
+    --        , "size"
+    --        , "stickyHeader"
+    --        ]
+    --      }
+    --    }
+
+    --tableBody =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_tbody" ]
+    --    , name: "TableBody"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        ]
+    --      }
+    --    }
+
+    --tableCell =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_td" ]
+    --    , name: "TableCell"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "padding"
+    --        , "scope"
+    --        , "size"
+    --        --, "scopeDirection"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
+
+    --tableFooter =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_tfoot" ]
+    --    , name: "TableFooter"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        ]
+    --      }
+    --    }
+
+    --tableHead =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_thead" ]
+    --    , name: "TableHead"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        ]
+    --      }
+    --    }
+
+    ---- | TODO: add TablePaginationActions
+    --tablePagination :: Component
+    --tablePagination =
+    --  { extraDeclarations: []
+    --  , inherits: Just $ MUI.rList
+    --      [ Type.constructor "MUI.Core.TableCell.TableCellPropsRow"
+    --      , Type.constructor "MUI.DOM.Generated.Props_td"
+    --      ]
+    --  , modulePath: Name "TablePagination"
+    --  , propsRow:
+    --    { base:
+    --        Map.fromFoldable
+    --            [ children
+    --            , Tuple "backIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
+    --            , Tuple "labelDisplayedRows" foreignType
+    --            , Tuple "labelRowsPerPage" jsx
+    --            , Tuple "nextIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
+    --            , eventHandlerProp "onChangePage"
+    --            , eventHandlerProp "onChangeRowsPerPage"
+    --            , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectOpaqueProps")
+    --            ]
+    --    , generate:
+    --      [ "classes"
+    --      , "count"
+    --      , "page"
+    --      , "rowsPerPage"
+    --      , "rowsPerPageOptions"
+    --      ]
+    --    -- | Long story short `TablePaginationProps` is a union
+    --    -- | so we are not able to create an interface instance for it.
+    --    -- | Fortunately we are able to extract interesting props
+    --    -- | from the first part component of this union...
+    --    , instantiation:
+    --      Just
+    --        { strategy: TypeAlias
+    --        , extractProps:
+    --          \defaultInstance -> case unroll defaultInstance of
+    --            (Instantiation.Union [ Mu.In (Instantiation.Object fqn props), _ ]) -> pure { fqn, props }
+    --            otherwise ->
+    --              throwError
+    --                [ "Expecting an union as a representation for TablePaginationOpaqueProps" ]
+    --        }
+    --    }
+    --  , tsc: { strictNullChecks: false }
+    --  }
+
+    --tableRow =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_tr" ]
+    --    , name: "TableRow"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "hover"
+    --        , "selected"
+    --        ]
+    --      }
+    --    }
+
+    ---- | TODO: IconComponent
+    --tableSortLabel =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
+    --        , Type.constructor "MUI.DOM.Generated.Props_button"
+    --        ]
+    --    , name: "TableSortLabel"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "IconComponent" foreignType
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "active"
+    --        , "direction"
+    --        , "hideSortIcon"
+    --        ]
+    --      }
+    --    }
+
+    --tabs =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "Tabs"
+    --    , propsRow:
+    --      { base: Map.fromFoldable
+    --        [ children
+    --        , Tuple "action" foreignType
+    --        , eventHandlerProp "onChange"
+    --        , Tuple "ScrollButtonComponent" foreignType
+    --        , Tuple "TabIndicatorProps" foreignType
+    --        , Tuple "value" foreignType
+    --        ]
+    --      , generate:
+    --        [ "centered"
+    --        , "classes"
+    --        , "indicatorColor"
+    --        , "orientation"
+    --        , "scrollButtons"
+    --        , "textColor"
+    --        , "variant"
+    --        , "width"
+    --        ]
+    --      }
+    --    }
+
+    --textareaAutosize =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_textarea" ]
+    --    , name: "TextareaAutosize"
+    --    , propsRow:
+    --      { base: emptyBase
+    --      , generate:
+    --        [ "rows"
+    --        , "rowsMax"
+    --        ]
+    --      }
+    --    }
+
+    textField textFieldType unionMember =
+      { extraDeclarations: []
+      , modulePath:
+        { input: Name "TextField"
+        , output: Path "TextField" (Name textFieldType)
+        }
+      , propsRow:
+        { base: Map.fromFoldable
+            [ children
+            , Tuple "defaultValue" foreignType
+            , Tuple "helperText" jsx
+            --, Tuple "InputLabelProps" (Type.constructor "MUI.Core.InputLabel.InputLabelOpaqueProps")
+            -- , Tuple "inputProps" foreignType
+            -- , Tuple "inputRef" foreignType
+            --, Tuple "FormHelperTextProps" (Type.constructor "MUI.Core.FormHelperText.FormHelperTextOpaqueProps")
+            , Tuple "label" jsx
+            , eventHandlerProp "onChange"
+            , eventHandlerProp "onBlur"
+            , eventHandlerProp "onFocus"
+            --, Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectOpaqueProps")
+            , Tuple "value" foreignType
             ]
-        , name: "Switch"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ Tuple "checkedIcon" jsx
-                  , Tuple "icon" jsx
-                  , Tuple "inputProps" foreignType
-                  , Tuple "inputRef" foreignType
-                  , eventHandlerProp "onChange"
-                  , Tuple "value" foreignType
-                  ]
-          , generate:
-            [ "checked"
+        , generate:
+            [ "autoComplete"
+            , "autoFocus"
             , "classes"
             , "color"
             , "disabled"
-            , "disableRipple"
-            , "edge"
-            , "id"
-            , "required"
-            , "size"
-            , "type"
-            ]
-          }
-        }
-
-    tab =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
-            , Type.constructor "React.Basic.DOM.Props_button"
-            ]
-        , name: "Tab"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "icon" jsx
-                  , Tuple "label" jsx
-                  , Tuple "value" foreignType
-                  ]
-          , generate:
-            [ "classes"
-            , "disabled"
-            , "disableFocusRipple"
-            , "disableRipple"
+            , "error"
             , "fullWidth"
-            , "selected"
-            , "wrapped"
-            ]
-          }
-        }
-
-    table =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_table" ]
-        , name: "Table"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            , "padding"
-            , "size"
-            , "stickyHeader"
-            ]
-          }
-        }
-
-    tableBody =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_tbody" ]
-        , name: "TableBody"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            ]
-          }
-        }
-
-    tableCell =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_td" ]
-        , name: "TableCell"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            , "padding"
-            , "scope"
-            , "size"
-            --, "scopeDirection"
-            , "variant"
-            ]
-          }
-        }
-
-    tableFooter =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_tfoot" ]
-        , name: "TableFooter"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            ]
-          }
-        }
-
-    tableHead =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_thead" ]
-        , name: "TableHead"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            ]
-          }
-        }
-
-    -- | TODO: add TablePaginationActions
-    tablePagination :: Component
-    tablePagination =
-      { extraDeclarations: []
-      , inherits: Just $ MUI.rList
-          [ Type.constructor "MUI.Core.TableCell.TableCellPropsRow"
-          , Type.constructor "React.Basic.DOM.Props_td"
-          ]
-      , modulePath: Name "TablePagination"
-      , propsType:
-        { base:
-            Map.fromFoldable
-                [ children
-                , Tuple "backIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
-                , Tuple "labelDisplayedRows" foreignType
-                , Tuple "labelRowsPerPage" jsx
-                , Tuple "nextIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
-                , eventHandlerProp "onChangePage"
-                , eventHandlerProp "onChangeRowsPerPage"
-                , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectOpaqueProps")
-                ]
-        , generate:
-          [ "classes"
-          , "count"
-          , "page"
-          , "rowsPerPage"
-          , "rowsPerPageOptions"
-          ]
-        -- | Long story short `TablePaginationProps` is a union
-        -- | so we are not able to create an interface instance for it.
-        -- | Fortunately we are able to extract interesting props
-        -- | from the first part component of this union...
-        , instantiation:
-          Just
-            { strategy: TypeAlias
-            , extractProps:
-              \defaultInstance -> case unroll defaultInstance of
-                (Instantiation.Union [ Mu.In (Instantiation.Object fqn props), _ ]) -> pure { fqn, props }
-                otherwise ->
-                  throwError
-                    [ "Expecting an union as a representation for TablePaginationOpaqueProps" ]
-            }
-        }
-      , tsc: { strictNullChecks: false }
-      }
-
-    tableRow =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_tr" ]
-        , name: "TableRow"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            , "hover"
-            , "selected"
-            ]
-          }
-        }
-
-    -- | TODO: IconComponent
-    tableSortLabel =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
-            , Type.constructor "React.Basic.DOM.Props_button"
-            ]
-        , name: "TableSortLabel"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "IconComponent" foreignType
-                  ]
-          , generate:
-            [ "classes"
-            , "active"
-            , "direction"
-            , "hideSortIcon"
-            ]
-          }
-        }
-
-    tabs =
-      simpleComponent
-        { inherits: Nothing
-        , name: "Tabs"
-        , propsType:
-          { base: Map.fromFoldable
-            [ children
-            , Tuple "action" foreignType
-            , eventHandlerProp "onChange"
-            , Tuple "ScrollButtonComponent" foreignType
-            , Tuple "TabIndicatorProps" foreignType
-            , Tuple "value" foreignType
-            ]
-          , generate:
-            [ "centered"
-            , "classes"
-            , "indicatorColor"
-            , "orientation"
-            , "scrollButtons"
-            , "textColor"
-            , "variant"
-            , "width"
-            ]
-          }
-        }
-
-    textareaAutosize =
-      simpleComponent
-        { inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_textarea" ]
-        , name: "TextareaAutosize"
-        , propsType:
-          { base: emptyBase
-          , generate:
-            [ "rows"
+            , "id"
+            , "margin"
+            , "multiline"
+            , "name"
+            , "placeholder"
+            , "required"
+            , "rows"
             , "rowsMax"
+            , "select"
+            , "type"
+            , "variant"
             ]
-          }
-        }
-
-    textField :: Component
-    textField =
-      { extraDeclarations: []
-      , inherits: Just $ MUI.rList
-          [ Type.constructor "MUI.Core.FormControl.FormControlPropsRow"
-          , divProps
-          ]
-      , modulePath: Name "TextField"
-      , propsType:
-        { base:
-            Map.fromFoldable
-                [ children
-                , Tuple "defaultValue" foreignType
-                , Tuple "endAdornment" jsx
-                , Tuple "helperText" jsx
-                , Tuple "InputLabelProps" (Type.constructor "MUI.Core.InputLabel.InputLabelOpaqueProps")
-                , Tuple "inputProps" foreignType
-                , Tuple "inputRef" foreignType
-                , Tuple "FormHelperTextProps" (Type.constructor "MUI.Core.FormHelperText.FormHelperTextOpaqueProps")
-                , Tuple "label" jsx
-                , eventHandlerProp "onChange"
-                , eventHandlerProp "onBlur"
-                , eventHandlerProp "onFocus"
-                , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectOpaqueProps")
-                , Tuple "value" foreignType
-                ]
-        , generate:
-          [ "autoComplete"
-          , "autoFocus"
-          , "color"
-          , "disabled"
-          , "error"
-          , "fullWidth"
-          , "helperText"
-          , "id"
-          , "label"
-          , "margin"
-          , "multiline"
-          , "name"
-          , "placeholder"
-          , "required"
-          , "rows"
-          , "rowsMax"
-          , "select"
-          , "type"
-          ]
-        , instantiation:
-          Just
+        , instantiation: Just
             { strategy: TypeAlias
-            , extractProps:
-              \defaultInstance -> case unroll defaultInstance of
+            , extractProps: \defaultInstance -> case unroll defaultInstance of
                 ( Instantiation.Union
                     [ Mu.In (Instantiation.Object fqn1 props1)
-                  , Mu.In (Instantiation.Object fqn2 props2)
-                  , Mu.In (Instantiation.Object fqn3 props3)
-                  ]
-                ) ->
-                  throwError
-                    [ "Not sure how to tackle this three props types: " <> fqn1 <> ", " <> fqn2 <> "," <> fqn3 ]
+                    , Mu.In (Instantiation.Object fqn2 props2)
+                    , Mu.In (Instantiation.Object fqn3 props3)
+                    ]
+                ) -> case unionMember of
+                  1 → pure { fqn: fqn1, props: props1 }
+                  2 → pure { fqn: fqn2, props: props2 }
+                  otherwise → pure { fqn: fqn3, props: props3 }
+                --  throwError
+                --    [ "Not sure how to tackle this three props types: " <> fqn1 <> ", " <> fqn2 <> "," <> fqn3 ]
                 (Instantiation.Union _) ->
                   throwError
                     [ "Expecting a two member union as a representation for TextField" ]
-                otherwise ->
+                i ->
                   throwError
-                    [ "Expecting an union as a representation for TextField" ]
+                    [ "Expecting an union as a representation for TextField got: " <> unsafeStringify i ]
             }
         }
-      , tsc: { strictNullChecks: false }
+      , root: MUIComponent formControl
       }
 
-    -- | It seems that toggle button is still in `material-ui-lab`
-    toggleButton =
-      simpleComponent
-        { inherits: Just $ MUI.rList
-            [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
-            , Type.constructor "React.Basic.DOM.Props_button"
-            ]
-        , name: "ToggleButton"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  , Tuple "value" foreignType
-                  ]
-          , generate:
-            [ "classes"
-            , "disabled"
-            , "disableFocusRipple"
-            , "disableRipple"
-            , "selected"
-            ]
-          }
-        }
+    ---- | It seems that toggle button is still in `material-ui-lab`
+    --toggleButton =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList
+    --        [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
+    --        , Type.constructor "MUI.DOM.Generated.Props_button"
+    --        ]
+    --    , name: "ToggleButton"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              , Tuple "value" foreignType
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "disabled"
+    --        , "disableFocusRipple"
+    --        , "disableRipple"
+    --        , "selected"
+    --        ]
+    --      }
+    --    }
 
-    toolbar =
-      simpleComponent
-        { inherits: Just $ MUI.rList [ divProps ]
-        , name: "Toolbar"
-        , propsType:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            , "disableGutters"
-            , "variant"
-            ]
-          }
-        }
+    --toolbar =
+    --  simpleComponent
+    --    { inherits: Just $ MUI.rList [ divProps ]
+    --    , name: "Toolbar"
+    --    , propsRow:
+    --      { base:
+    --          Map.fromFoldable
+    --              [ children
+    --              ]
+    --      , generate:
+    --        [ "classes"
+    --        , "disableGutters"
+    --        , "variant"
+    --        ]
+    --      }
+    --    }
 
-    touchRipple =
-      { extraDeclarations: []
-      , inherits: Just $ MUI.rList' [ "React.Basic.DOM.Props_span" ]
-      -- , name: touchRippleType.name
-      , modulePath: touchRippleType.path
-      , propsType:
-        { base: emptyBase
-        , generate: [ "center", "classes" ]
-        , instantiation: Nothing
-        }
-      , tsc: { strictNullChecks: false }
-      }
+    --touchRipple =
+    --  { extraDeclarations: []
+    --  , inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_span" ]
+    --  -- , name: touchRippleType.name
+    --  , modulePath: touchRippleType.path
+    --  , propsRow:
+    --    { base: emptyBase
+    --    , generate: [ "center", "classes" ]
+    --    , instantiation: Nothing
+    --    }
+    --  , tsc: { strictNullChecks: false }
+    --  }
 
-    -- | TODO: needs to extend HTMLElement
-    typography =
-      simpleComponent
-        { inherits: Nothing
-        , name: "Typography"
-        , propsType:
-          { base: Map.fromFoldable [ children ]
-          , generate:
-            [ "classes"
-            , "align"
-            , "color"
-            , "display"
-            , "gutterBottom"
-            , "noWrap"
-            , "paragraph"
-            , "variant"
-            , "variantMapping"
-            ]
-          }
-        }
+    ---- | TODO: needs to extend HTMLElement
+    --typography =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "Typography"
+    --    , propsRow:
+    --      { base: Map.fromFoldable [ children ]
+    --      , generate:
+    --        [ "classes"
+    --        , "align"
+    --        , "color"
+    --        , "display"
+    --        , "gutterBottom"
+    --        , "noWrap"
+    --        , "paragraph"
+    --        , "variant"
+    --        , "variantMapping"
+    --        ]
+    --      }
+    --    }
 
-    -- | TODO: needs to extend Transition
-    zoom =
-      simpleComponent
-        { inherits: Nothing
-        , name: "Zoom"
-        , propsType:
-          { base: emptyBase
-          , generate: [ "in", "timeout" ]
-          }
-        }
+    ---- | TODO: needs to extend Transition
+    --zoom =
+    --  simpleComponent
+    --    { inherits: Nothing
+    --    , name: "Zoom"
+    --    , propsRow:
+    --      { base: emptyBase
+    --      , generate: [ "in", "timeout" ]
+    --      }
+    --    }
   in
-    [ appBar
-    , avatar
-    , backdrop
-    , badge
-    , bottomNavigation
-    , bottomNavigationAction
-    , box
-    , breadcrumbs
-    , buttonBase
-    , buttonGroup
-    , button
-    , card
-    , cardActionArea
-    , cardActions
-    , cardContent
-    , cardHeader
-    , cardMedia
-    , circularProgress
-    , clickAwayListener
-    , checkbox
-    , chip
-    , collapse
-    , container
-    , cssBaseline
-    , dialog
-    , dialogActions
-    , dialogContent
-    , dialogTitle
-    , divider
-    , drawer
-    , expansionPanel
-    , expansionPanelActions
-    , expansionPanelDetails
-    , expansionPanelSummary
-    , fab
-    , fade
+    [
+    -- appBar
+    -- , avatar
+    -- , backdrop
+    badge
+    -- , bottomNavigation
+    -- , bottomNavigationAction
+    -- , box
+    -- , breadcrumbs
+    -- , buttonBase
+    -- , buttonGroup
+    -- , button
+    -- , card
+    -- , cardActionArea
+    -- , cardActions
+    -- , cardContent
+    -- , cardHeader
+    -- , cardMedia
+    -- , circularProgress
+    -- , clickAwayListener
+    -- , checkbox
+    -- , chip
+    -- , collapse
+    -- , container
+    -- , cssBaseline
+    -- , dialog
+    -- , dialogActions
+    -- , dialogContent
+    -- , dialogTitle
+    -- , divider
+    -- , drawer
+    -- , expansionPanel
+    -- , expansionPanelActions
+    -- , expansionPanelDetails
+    -- , expansionPanelSummary
+    -- , fab
+    -- , fade
     , formControl
     , formControlLabel
     , formGroup
     , formHelperText
     , formLabel
-    , grid
-    , gridList
-    , gridListTile
-    , gridListTileBar
-    , grow
-    , hidden
-    , icon
-    , iconButton
+    -- , grid
+    -- , gridList
+    -- , gridListTile
+    -- , gridListTileBar
+    -- , grow
+    -- , hidden
+    -- , icon
+    -- , iconButton
     , input
-    , inputAdornment
+    -- , inputAdornment
     , inputBase
     , inputLabel
-    , outlineInput
-    , linearProgress
-    , link
-    , list
-    , listItem
-    , listItemAvatar
-    , listItemIcon
-    , listItemSecondaryAction
-    , listItemText
-    , listSubheader
-    , menu
-    , menuItem
-    , modal
-    , nativeSelect
-    , noSsr
-    , paper
-    , popover
-    , popper
-    , portal
-    , radio
-    , radioGroup
-    , rootRef
-    , select
-    , slide
-    , slider
-    , snackbar
-    , snackbarContent
-    , step
-    , stepButton
-    , stepConnector
-    , stepContent
-    , stepIcon
-    , stepLabel
-    , stepper
-    , svgIcon
-    , swipeableDrawer
-    , switch
-    , tab
-    , table
-    , tableBody
-    , tableCell
-    , tableFooter
-    , tableHead
-    , tablePagination
-    , tableRow
-    , tableSortLabel
-    , tabs
-    , textareaAutosize
-    -- , textField
-    -- , toggleButton
-    , toolbar
-    , touchRipple
-    , typography
-    , zoom
+    -- , outlineInput
+    -- , linearProgress
+    -- , link
+    -- , list
+    -- , listItem
+    -- , listItemAvatar
+    -- , listItemIcon
+    -- , listItemSecondaryAction
+    -- , listItemText
+    -- , listSubheader
+    -- , menu
+    -- , menuItem
+    -- , modal
+    -- , nativeSelect
+    -- , noSsr
+    -- , paper
+    -- , popover
+    -- , popper
+    -- , portal
+    -- , radio
+    -- , radioGroup
+    -- , rootRef
+    -- , select
+    -- , slide
+    -- , slider
+    -- , snackbar
+    -- , snackbarContent
+    -- , step
+    -- , stepButton
+    -- , stepConnector
+    -- , stepContent
+    -- , stepIcon
+    -- , stepLabel
+    -- , stepper
+    -- , svgIcon
+    -- , swipeableDrawer
+    -- , switch
+    -- , tab
+    -- , table
+    -- , tableBody
+    -- , tableCell
+    -- , tableFooter
+    -- , tableHead
+    -- , tablePagination
+    -- , tableRow
+    -- , tableSortLabel
+    -- , tabs
+    -- , textareaAutosize
+    , (textField "StandardTextField" 1)
+    , (textField "FilledTextField" 2)
+    , (textField "OutlinedTextField" 3)
+    -- -- , toggleButton
+    -- , toolbar
+    -- , touchRipple
+    -- , typography
+    -- , zoom
     ]
 
 -- | XXX: Can we cleanup this last traverse?
@@ -2601,7 +2598,7 @@ main = do
       , ModuleName "Unsafe.Reference" /\ Nothing
       , ModuleName "MUI.Core" /\ Nothing
       , ModuleName "React.Basic" /\ Nothing
-      , ModuleName "React.Basic.DOM" /\ Just "DOM"
+      , ModuleName "MUI.DOM.Generated" /\ Just "DOM"
       ]
 
     -- | Should we introduce multimodule handling logic back?
@@ -2634,7 +2631,10 @@ main = do
               Nothing -> do
                 writeComponentModules "./src" component code
             Left err -> do
-              log $ "\n" <> (psImportPath $ component.modulePath) <> " component codegen errors: " <> intercalate "\n" err
+              log $ "\n"
+                <> (psImportPath $ component.modulePath.output)
+                <> " component codegen errors: "
+                <> intercalate "\n" err
 
     writeIconModules dir icon code =
       launchAff_

@@ -339,7 +339,7 @@ exprSProxy label =
     name = "_" <> label
   in
     { var: Expr.ident' name
-    , value: forAllValueBinding {} name (SListProxy ∷ _ SNil) \{} ->
+    , value: forAllValueBinding (SListProxy ∷ _ SNil) name (SListProxy ∷ _ SNil) \{} ->
         { expr: Expr.identTyped' "SProxy" "Type.Prelude.SProxy"
         , signature: Just $ Type.app (Type.constructor "Type.Prelude.SProxy") [ roll $ TypeSymbol label ]
         , whereBindings: []

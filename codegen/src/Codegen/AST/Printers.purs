@@ -10,7 +10,7 @@ module Codegen.AST.Printers where
 import Prelude
 
 import Codegen.AST.Imports (ImportAlias, declarationImports, importsDeclarations)
-import Codegen.AST.Types (Associativity(..), Declaration(..), ExprF(..), Ident(..), Import(..), ImportDecl(..), Module(..), ModuleName(..), Precedence(..), QualifiedName, RowF(..), TypeF(..), TypeName(..), ValueBindingFields(..), reservedNames)
+import Codegen.AST.Types (Associativity(..), Declaration(..), ExprF(..), Ident(..), Import(..), ImportDecl(..), Kind(..), Module(..), ModuleName(..), Precedence(..), QualifiedName, RowF(..), TypeF(..), TypeName(..), TypeVarBinding(..), ValueBindingFields(..), reservedNames)
 import Control.Monad.Reader (ask)
 import Control.Monad.Reader.Class (class MonadReader)
 import Data.Array (concat)
@@ -119,7 +119,14 @@ printDeclaration (DeclInstance { head, body }) = do
 printDeclaration (DeclValue v) = lines <$> printValueBindingFields v
 printDeclaration (DeclType { typeName, "type": t, vars }) = do
   body <- cataM printType t <@> StandAlone
-  pure $ lines $ [ line [ "type", unwrap typeName, line $ (map unwrap) vars, "=" ] ] <> map indent body
+  pure $ lines $ [ line [ "type", unwrap typeName, line $ map printTypeVarBinding vars, "=" ] ] <> map indent body
+  where
+    printTypeVarBinding (TypeVarName (Ident n)) = n
+    printTypeVarBinding (TypeVarKinded { label: Ident l, "kind": k }) = "(" <> l  <> " :: " <> printKind k <> ")"
+
+printKind :: Kind -> String
+printKind KindRow = "# Type"
+printKind (KindName n) = n
 
 printValueBindingFields :: forall m. MonadReader ImportAlias m => ValueBindingFields -> m (Array String)
 printValueBindingFields (ValueBindingFields { value: { binders, name: Ident name, expr, whereBindings }, signature }) = do
@@ -249,15 +256,20 @@ printType = case _ of
     [] -> t StandAlone
     otherwise ->
       [ "forall" <> " " <> line (map unwrap vs) <> "." <> " " ] <> map indent (t StandAlone)
+  TypeKinded t k -> pure $ const $ [ line $ [ "(" ] <> t StandAlone <> [ " :: " <> printKind k <> ")" ]]
   TypeNumber -> pure $ const [ "Number" ]
   TypeOpt t -> pure $ case _ of
     InApplication -> [ "(" <> s <> ")" ]
     otherwise -> [ s ]
     where
-      s = "Opt (" <> line (t StandAlone) <> ")"
+      -- | We are dropping support for optionals because of:
+      -- | https://discourse.purescript.org/t/rowlist-iteration-seems-to-be-relatively-slow/1492/4
+      -- s = "Opt (" <> line (t StandAlone) <> ")"
+      s = line (t StandAlone)
   TypeRecord r -> pure $ const $ [ "{ " ] <> printRow r <> [ " }" ]
   TypeRow r@(Row { labels, tail })  -> pure $ const $ case length labels, tail of
     0, Nothing -> [ "()" ]
+    0, Just t -> t StandAlone
     _, _ -> [ "( " ] <> printRow r <> [ " )" ]
   TypeString -> pure $ const [ "String" ]
   (TypeSymbol s) -> pure $ const [ show s ]

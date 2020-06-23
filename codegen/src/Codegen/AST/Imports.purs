@@ -61,6 +61,7 @@ typeImportsAlgebra = case _ of
     ci = fromMaybe mempty $ qualifiedClassNameImport className
   TypeConstructor qn -> qualifiedTypeNameImport' qn
   TypeForall _ t -> t
+  TypeKinded t _ -> t
   TypeNumber -> mempty
   TypeOpt t -> t
   TypeRow r -> rowImports r

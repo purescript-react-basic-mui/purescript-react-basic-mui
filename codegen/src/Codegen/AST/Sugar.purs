@@ -4,27 +4,24 @@ import Prelude
 
 import Codegen.AST.Imports (ImportAlias)
 import Codegen.AST.Printers (PrintingContext(..), line, printQualifiedName, printType)
-import Codegen.AST.Types (ClassName, Declaration(..), Expr, ExprF(..), Ident(..), ModuleName(..), QualifiedName, Type, TypeF(..), TypeName(..), ValueBindingFields(..))
+import Codegen.AST.Types (ClassName, Declaration(..), Expr, ExprF(..), Ident(..), ModuleName(..), QualifiedName, Type, TypeF(..), TypeName(..), TypeVarBinding, ValueBindingFields(..))
 import Control.Monad.Reader (class MonadReader)
 import Data.Array (fromFoldable, unsnoc) as Array
 import Data.Foldable (foldMap)
 import Data.Functor.Mu (roll)
-import Data.List (List(..)) as List
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 import Data.String (Pattern(..), joinWith, split) as String
 import Data.String.Extra (camelCase)
 import Data.Traversable (for)
-import Heterogeneous.Folding (class HFoldl, hfoldl)
 import Matryoshka (cataM)
 import Prim.Row (class Cons, class Lacks) as Row
-import Prim.RowList (class RowToList)
 import Record.Builder (Builder) as Record
 import Record.Builder (build, insert) as Record.Builder
-import Record.Extra (class MapRecord, type (:::), SNil, mapRecord, kind SList)
+import Record.Extra (type (:::), SNil, kind SList)
 import Type.Prelude (class IsSymbol, SProxy(..), reflectSymbol)
 
-declType :: TypeName -> Array Ident -> Type -> { declaration :: Declaration, constructor :: Type }
+declType :: TypeName -> Array TypeVarBinding -> Type -> { declaration :: Declaration, constructor :: Type }
 declType typeName vars body =
   let
     declaration =
@@ -99,6 +96,24 @@ local name = { moduleName: Nothing, name }
 
 data SListProxy (l :: SList) = SListProxy
 
+class ForallRow (l :: SList) (r :: # Type) (r' :: # Type) | l -> r r' where
+  forallRow :: SListProxy l -> { binders :: List Ident, builder :: Record.Builder { | r } { | r' }}
+
+instance forallRowNil :: ForallRow SNil () () where
+  forallRow _ = { binders: Nil, builder: identity }
+
+instance forallRowCons :: (ForallRow t tr_ tr, IsSymbol h, Row.Lacks h tr, Row.Cons h Type tr r) => ForallRow (h ::: t) tr_ r where
+  forallRow _ =
+    let
+      _h = (SProxy :: SProxy h)
+      h = reflectSymbol _h
+      { binders, builder } = forallRow (SListProxy :: SListProxy t)
+    in
+      { binders: Ident h : binders
+      , builder: Record.Builder.insert _h
+          (roll $ TypeVar $ ident h) <<< builder
+      }
+
 class BindersRow (l :: SList) (r :: # Type) (r' :: # Type) | l -> r r' where
   bindersRow :: SListProxy l -> { binders :: List Ident, builder :: Record.Builder { | r } { | r' }}
 
@@ -135,47 +150,37 @@ instance bindersRowCons :: (BindersRow t tr_ tr, IsSymbol h, Row.Lacks h tr, Row
 -- | forall required given. Prim.Row.Union given required FinalRow => Record given -> ResultType
 -- |
 forAllValueBinding ::
-  forall bindersList bindersRow idents il names nl vars.
-  BindersRow bindersList () bindersRow =>
-  HFoldl (List Ident -> Ident -> List Ident) (List Ident) (Record idents) (List Ident) =>
-  RowToList names nl =>
-  RowToList idents il =>
-  MapRecord nl names String Ident () idents =>
-  MapRecord il idents Ident Type () vars =>
-  Record names ->
+  forall bindersList varsRow typeBindersList typeVarsRow.
+  BindersRow bindersList () varsRow =>
+  ForallRow typeBindersList () typeVarsRow =>
+  SListProxy typeBindersList ->
   String ->
   SListProxy bindersList ->
-  ({ typeVars :: Record vars, bindersVars :: { | bindersRow } }
+  ({ typeVars :: { | typeVarsRow }, vars :: { | varsRow } }
     -> { signature :: Maybe Type, expr :: Expr, whereBindings :: Array ValueBindingFields }) ->
   ValueBindingFields
-forAllValueBinding typeParams name bindersList cont =
-  -- | It is horrible but this don't want to work so I've copied
-  -- | the whole `forAllWith` below :-(
-  -- forAllValueBinding [] names cont
+forAllValueBinding typeBinders name binders cont =
   let
-    varsRecord = mapRecord Ident typeParams
-
-    toList = hfoldl (flip List.Cons :: List Ident -> Ident -> List Ident) (List.Nil :: List Ident)
-
-    typeVars = mapRecord (roll <<< TypeVar) varsRecord
-
-    typeIdents = Array.fromFoldable (toList varsRecord)
-
-    { binders, bindersVars } =
+    typeVars =
       let
-        bb = bindersRow bindersList
+        tb = forallRow typeBinders
+      in
+        { binders: Array.fromFoldable tb.binders
+        , bindersVars: Record.Builder.build tb.builder {}
+        }
+    vars =
+      let
+        bb = bindersRow binders
       in
         { binders: Array.fromFoldable bb.binders
         , bindersVars: Record.Builder.build bb.builder {}
         }
-
-    vb = cont { typeVars, bindersVars }
-
+    vb = cont { typeVars: typeVars.bindersVars, vars: vars.bindersVars }
   in ValueBindingFields
-    { signature: (roll <<< TypeForall typeIdents <$> vb.signature)
+    { signature: (roll <<< TypeForall typeVars.binders <$> vb.signature)
     , value:
       { name: Ident name
-      , binders: binders
+      , binders: vars.binders
       , expr: vb.expr
       , whereBindings: vb.whereBindings
       }

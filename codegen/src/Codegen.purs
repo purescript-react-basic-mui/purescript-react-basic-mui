@@ -43,10 +43,10 @@ jsModuleFile (Path str next) = Directory str $ jsModuleFile next
 jsModuleFile (Name name) = File $ name <> ".js"
 
 componentPSFile :: Component -> File
-componentPSFile = psModuleFile <<< Model.componentFullPath
+componentPSFile = psModuleFile <<< Model.componentFullPath <<< _.modulePath.output
 
 componentJSFile :: Component -> File
-componentJSFile = jsModuleFile <<< Model.componentFullPath
+componentJSFile = jsModuleFile <<< Model.componentFullPath <<< _.modulePath.output
 
 iconPSFile :: Icon -> File
 iconPSFile = psModuleFile <<< Model.iconFullPath
@@ -66,7 +66,7 @@ genComponentJS c@{ modulePath } =
     -- We should this naming convention from codegen module
     <> "_Unsafe" <> Model.componentName c
     <> " = require(\"@material-ui/core/"
-    <> (jsPath modulePath)
+    <> (jsPath modulePath.input)
     <> "\").default;"
   where
   jsPath (Path str next) = (String.toLower str) <> "/" <> (jsPath next)

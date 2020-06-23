@@ -35,13 +35,9 @@ newtype ModuleName
   = ModuleName String
 
 derive instance newtypeModuleName :: Newtype ModuleName _
-
 derive instance genericModuleName :: Generic ModuleName _
-
 derive instance eqModuleName :: Eq ModuleName
-
 derive instance ordModuleName :: Ord ModuleName
-
 instance showModuleName :: Show ModuleName where
   show = genericShow
 
@@ -54,13 +50,9 @@ newtype TypeName
   = TypeName String
 
 derive instance newtypeTypeName :: Newtype TypeName _
-
 derive instance genericTypeName :: Generic TypeName _
-
 derive instance eqTypeName :: Eq TypeName
-
 derive instance ordTypeName :: Ord TypeName
-
 instance showTypeName :: Show TypeName where
   show = genericShow
 
@@ -83,12 +75,21 @@ data Precedence
   | Nine
 
 derive instance eqPrecedence :: Eq Precedence
-
 derive instance ordPrecedence :: Ord Precedence
 
 data Associativity
   = AssocLeft
   | AssocRight
+
+-- | We don't need KindArr at the moment
+data Kind
+  = KindName String
+  | KindRow
+derive instance genericKind :: Generic Kind _
+derive instance eqKind :: Eq Kind
+derive instance ordKind :: Ord Kind
+instance showKind :: Show Kind where
+  show = genericShow
 
 data TypeF ref
   = TypeApp ref (Array ref)
@@ -98,6 +99,7 @@ data TypeF ref
   | TypeConstructor QualifiedTypeName
   | TypeConstrained (Constraint ref) ref
   | TypeForall (Array Ident) ref
+  | TypeKinded ref Kind
   | TypeNumber
   -- | TypeOperator String Associativity Precedence
   -- | `Opt` handles union of `Undefined |+| ref`.
@@ -118,7 +120,6 @@ type Type
   = Mu TypeF
 
 derive instance genericPropType :: Generic (TypeF ref) _
-
 instance showPropType :: Show ref => Show (TypeF ref) where
   show p = genericShow p
 
@@ -151,6 +152,10 @@ instance eq1TypeF :: Eq1 TypeF where
       && eq t1 t2
   eq1 (TypeForall v1 t1) _ = false
   eq1 _ (TypeForall v1 t1) = false
+  eq1 (TypeKinded t1 k1) (TypeKinded t2 k2) =
+    eq t1 t2 && eq k1 k2
+  eq1 (TypeKinded v1 t1) _ = false
+  eq1 _ (TypeKinded v1 t1) = false
   eq1 TypeNumber TypeNumber = true
   eq1 TypeNumber _ = false
   eq1 _ TypeNumber = false
@@ -195,6 +200,9 @@ instance ord1TypeF :: Ord1 TypeF where
   compare1 (TypeForall v1 t1) (TypeForall v2 t2) = compare v1 v2 <> compare t1 t2
   compare1 (TypeForall _ _) _ = GT
   compare1 _ (TypeForall _ _) = GT
+  compare1 (TypeKinded t1 k1) (TypeKinded t2 k2) = compare t1 t2 <> compare k1 k2
+  compare1 (TypeKinded _ _) _ = GT
+  compare1 _ (TypeKinded _ _) = GT
   compare1 TypeNumber TypeNumber = EQ
   compare1 TypeNumber _ = GT
   compare1 _ TypeNumber = GT
@@ -224,11 +232,12 @@ instance foldableTypeF :: Foldable TypeF where
   foldMap _ TypeBoolean = mempty
   foldMap f (TypeConstrained { className, params } t) = foldMap f params <> f t
   foldMap _ (TypeConstructor _) = mempty
-  foldMap f (TypeRecord r) = foldMap f r
-  foldMap f (TypeRow r) = foldMap f r
+  foldMap f (TypeForall _ t) = f t
+  foldMap f (TypeKinded t _) = f t
   foldMap _ TypeNumber = mempty
   foldMap f (TypeOpt ref) = f ref
-  foldMap f (TypeForall _ t) = f t
+  foldMap f (TypeRecord r) = foldMap f r
+  foldMap f (TypeRow r) = foldMap f r
   foldMap _ TypeString = mempty
   foldMap _ (TypeSymbol _) = mempty
   foldMap _ (TypeVar _) = mempty
@@ -243,6 +252,7 @@ instance traversableTypeF :: Traversable TypeF where
   sequence (TypeConstrained { className, params } t) = TypeConstrained <<< { className, params: _ } <$> sequence params <*> t
   sequence (TypeConstructor t) = pure $ TypeConstructor t
   sequence (TypeForall v t) = TypeForall v <$> t
+  sequence (TypeKinded t k) = flip TypeKinded k <$> t
   sequence TypeNumber = pure $ TypeNumber
   sequence (TypeOpt ref) = TypeOpt <$> ref
   sequence (TypeRecord ts) = TypeRecord <$> sequence ts
@@ -265,15 +275,12 @@ newtype RowF ref
   }
 
 derive instance genericRowType :: Generic (RowF ref) _
-
 derive instance newtypeRowF :: Newtype (RowF ref) _
+derive instance functorRowF :: Functor RowF
+derive instance eqRow :: Eq ref => Eq (RowF ref)
 
 instance showRowType :: Show ref => Show (RowF ref) where
   show p = genericShow p
-
-derive instance functorRowF :: Functor RowF
-
-derive instance eqRow :: Eq ref => Eq (RowF ref)
 
 instance foldableRowF :: Foldable RowF where
   foldMap f (Row { labels, tail }) = foldMap f labels <> fromMaybe mempty (f <$> tail)
@@ -312,9 +319,7 @@ data UnionMember
   | UnionUndefined
 
 derive instance eqUnionMember :: Eq UnionMember
-
 derive instance ordUnionMember :: Ord UnionMember
-
 derive instance genericUnionMember :: Generic UnionMember _
 
 instance showUnionMember :: Show UnionMember where
@@ -323,13 +328,10 @@ instance showUnionMember :: Show UnionMember where
 type RowLabel
   = String
 
-newtype Ident
-  = Ident String
+newtype Ident = Ident String
 
 derive instance genericIdent :: Generic Ident _
-
 derive instance eqIdent :: Eq Ident
-
 derive instance ordIdent :: Ord Ident
 
 instance showIdent :: Show Ident where
@@ -400,6 +402,10 @@ newtype ValueBindingFields = ValueBindingFields
   }
 derive instance newtypeValueBindingFields :: Newtype ValueBindingFields _
 
+data TypeVarBinding
+  = TypeVarKinded { label ∷ Ident, kind ∷ Kind }
+  | TypeVarName Ident
+
 data Declaration
   = DeclInstance
     { head ::
@@ -411,7 +417,7 @@ data Declaration
     }
   | DeclForeignValue { ident :: Ident, type :: Type }
   | DeclForeignData { typeName :: TypeName } -- , "kind" :: Maybe KindName }
-  | DeclType { typeName :: TypeName, "type" :: Type, vars :: Array Ident }
+  | DeclType { typeName :: TypeName, "type" :: Type, vars :: Array TypeVarBinding }
   | DeclValue ValueBindingFields
 
 newtype ClassName
