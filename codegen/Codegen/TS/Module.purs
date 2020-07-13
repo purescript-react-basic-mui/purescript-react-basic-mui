@@ -49,7 +49,7 @@ import Codegen.AST.Types (TypeF(..), UnionMember(..), ValueBindingFields(..), re
 import Codegen.TS.Types (M)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (ExceptT, except, mapExceptT, withExceptT)
-import Control.Monad.Reader (class MonadReader)
+import Control.Monad.Reader (class MonadReader, ReaderT, asks)
 import Control.Monad.State (State, get, modify_, put)
 import Control.Monad.State.Trans (evalStateT)
 import Control.Monad.Trans.Class (lift)
@@ -64,10 +64,10 @@ import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Lens (view)
 import Data.Lens.Record (prop)
-import Data.List (List(..), singleton) as List
 import Data.List (List)
+import Data.List (singleton) as List
 import Data.Map (Map)
-import Data.Map (fromFoldable, lookup) as Map
+import Data.Map (fromFoldable, insert, lookup) as Map
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Newtype (unwrap)
 import Data.Set (member) as Set
@@ -138,13 +138,16 @@ instance showPossiblePropType :: Show PossibleType where
   show t = genericShow t
 
 type UnionTypes
-  = List Union
+  = Map TypeName Union
 
 type UnionTypeName
   = String
 
 type ComponentAlgebraM a
-  = ExceptT String (State UnionTypes) a
+  = ReaderT
+      { unionName ∷ String → Array UnionMember → Maybe TypeName }
+      (ExceptT String (State UnionTypes))
+      a
 
 -- | Try to build an union from provided cases. For example if we
 -- | have something like `8 | "a" | null` on the TypeScript side
@@ -208,15 +211,19 @@ union (Just l) props = do
               <> l
               <> ", "
               <> show p
+
+  unionName ← asks _.unionName
+  let
+    name = fromMaybe (typeName l) (unionName l props')
   -- | Currently building only local variants
   pure $ Right
     $ Union
-        { name: TypeName $ typeName l, moduleName: Nothing }
+        { name: name, moduleName: Nothing }
         props'
   where
   -- | TOD:
   -- | * Guard against scope naming collisions too
-  typeName label =
+  typeName label = TypeName $
     if label `Set.member` reservedNames then
       (pascalCase label) <> "_"
     else
@@ -242,7 +249,7 @@ union' label vps =
           -- |  the same structure
           when (isJust m)
             $ throwError "External variants not implemented yet"
-          modify_ (List.Cons v)
+          modify_ (Map.insert name v)
           pure $ roll $ TypeConstructor $ qn
 
 -- | Given a TypeScript type representation try to build an AST for it.
@@ -310,7 +317,8 @@ astAlgebra = case _ of
   numberLiteralConstructor :: Map Number UnionTypeName
   numberLiteralConstructor =
     Map.fromFoldable
-      [ Tuple 1.0 "one"
+      [ Tuple 0.0 "zero"
+      , Tuple 1.0 "one"
       , Tuple 2.0 "two"
       , Tuple 3.0 "three"
       , Tuple 4.0 "four"

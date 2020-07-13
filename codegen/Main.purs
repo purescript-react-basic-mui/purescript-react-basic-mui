@@ -4,7 +4,7 @@ import Prelude
 
 import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconPSFile, icons)
 import Codegen (component, icon, write) as Codegen
-import Codegen.AST (ModuleName(..))
+import Codegen.AST (ModuleName(..), TypeName(..))
 import Codegen.AST.Sugar.Type (constructor) as Type
 import Codegen.Model (Component, Icon, ModulePath(..), Root(..), arrayJSX, iconName, jsx, psImportPath, rbProps)
 import Codegen.Model (componentName) as Model
@@ -15,8 +15,8 @@ import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.Reader (runReader, runReaderT)
 import Control.Monad.Trans.Class (lift)
+import Data.Array (elem, null, sort) as Array
 import Data.Array (filter)
-import Data.Array (null, sort) as Array
 import Data.Either (Either(..))
 import Data.Foldable (for_, intercalate)
 import Data.Functor.Mu (Mu(..)) as Mu
@@ -68,7 +68,7 @@ components =
       , propsRow:
         { base
         , generate
-        , instantiation: Nothing
+        , ts: { instantiation: Nothing, unionName: \_ _ → Nothing }
         }
       , root
       }
@@ -222,7 +222,7 @@ components =
             , "focusVisibleClassName"
             , "type"
             ]
-          , instantiation: Nothing
+          , ts: { instantiation: Nothing, unionName: \_ _ → Nothing }
           }
         , root: rbProps.button
         }
@@ -828,31 +828,45 @@ components =
         , root: rbProps.label
         }
 
-    --grid =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList [ divProps ]
-    --    , name: "Grid"
-    --    , propsRow:
-    --      { base: Map.fromFoldable [ children ]
-    --      , generate:
-    --        [ "alignContent"
-    --        , "alignItems"
-    --        , "classes"
-    --        , "container"
-    --        , "direction"
-    --        , "item"
-    --        , "justify"
-    --        , "lg"
-    --        , "md"
-    --        , "sm"
-    --        , "spacing"
-    --        , "wrap"
-    --        , "xl"
-    --        , "xs"
-    --        , "zeroMinWidth"
-    --        ]
-    --      }
-    --    }
+    grid =
+        { extraDeclarations: []
+        , modulePath:
+            { input: Name "Grid"
+            , output: Name "Grid"
+            }
+        , propsRow:
+          { base: Map.fromFoldable [ children ]
+          , generate:
+            [ "alignContent"
+            , "alignItems"
+            , "classes"
+            , "container"
+            , "direction"
+            , "item"
+            , "justify"
+            , "lg"
+            , "md"
+            , "sm"
+            , "spacing"
+            , "wrap"
+            , "xl"
+            , "xs"
+            , "zeroMinWidth"
+            ]
+          , ts:
+              { instantiation: Nothing
+              , unionName: \property members → case property of
+                  _ | property `Array.elem` ["xs", "sm", "md" , "lg", "xl"] →
+                    Just $ TypeName "GridSize"
+                  "spacing" →
+                    Just $ TypeName "GridSpacing"
+                  "justify" →
+                    Just $ TypeName "GridJustification"
+                  otherwise → Nothing
+              }
+          }
+        , root: rbProps.div
+        }
 
     --gridList = simpleComponent
     --  { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_ul" ]
@@ -2208,26 +2222,29 @@ components =
             , "type"
             , "variant"
             ]
-        , instantiation: Just
-            { strategy: TypeAlias
-            , extractProps: \defaultInstance -> case unroll defaultInstance of
-                ( Instantiation.Union
-                    [ Mu.In (Instantiation.Object fqn1 props1)
-                    , Mu.In (Instantiation.Object fqn2 props2)
-                    , Mu.In (Instantiation.Object fqn3 props3)
-                    ]
-                ) -> case unionMember of
-                  1 → pure { fqn: fqn1, props: props1 }
-                  2 → pure { fqn: fqn2, props: props2 }
-                  otherwise → pure { fqn: fqn3, props: props3 }
-                --  throwError
-                --    [ "Not sure how to tackle this three props types: " <> fqn1 <> ", " <> fqn2 <> "," <> fqn3 ]
-                (Instantiation.Union _) ->
-                  throwError
-                    [ "Expecting a two member union as a representation for TextField" ]
-                i ->
-                  throwError
-                    [ "Expecting an union as a representation for TextField got: " <> unsafeStringify i ]
+        , ts:
+            { instantiation: Just
+                { strategy: TypeAlias
+                , extractProps: \defaultInstance -> case unroll defaultInstance of
+                    ( Instantiation.Union
+                        [ Mu.In (Instantiation.Object fqn1 props1)
+                        , Mu.In (Instantiation.Object fqn2 props2)
+                        , Mu.In (Instantiation.Object fqn3 props3)
+                        ]
+                    ) -> case unionMember of
+                      1 → pure { fqn: fqn1, props: props1 }
+                      2 → pure { fqn: fqn2, props: props2 }
+                      otherwise → pure { fqn: fqn3, props: props3 }
+                    --  throwError
+                    --    [ "Not sure how to tackle this three props types: " <> fqn1 <> ", " <> fqn2 <> "," <> fqn3 ]
+                    (Instantiation.Union _) ->
+                      throwError
+                        [ "Expecting a two member union as a representation for TextField" ]
+                    i ->
+                      throwError
+                        [ "Expecting an union as a representation for TextField got: " <> unsafeStringify i ]
+                }
+            , unionName: \_ _ → Nothing
             }
         }
       , root: MUIComponent formControl
@@ -2363,7 +2380,7 @@ components =
     , formGroup
     , formHelperText
     , formLabel
-    -- , grid
+    , grid
     -- , gridList
     -- , gridListTile
     -- , gridListTileBar

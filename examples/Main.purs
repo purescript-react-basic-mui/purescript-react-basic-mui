@@ -2,119 +2,99 @@ module Examples.Main where
 
 import Prelude
 
+import Data.Array (singleton) as Array
 import Data.Maybe (Maybe(..))
-import Data.Undefined.NoProblem (opt)
 import Effect (Effect)
-import Effect.Console (log)
 import Effect.Exception (throw)
-import Foreign (unsafeToForeign)
 import MUI.Core (jss)
-import MUI.Core.Badge (badge)
+import MUI.Core.AppBar (appBar)
+import MUI.Core.AppBar (position) as AppBar
+import MUI.Core.Badge (badgeWithStyles)
 import MUI.Core.Badge (color) as Badge
-import MUI.Core.FormControl (formControl)
+import MUI.Core.Button (buttonWithStyles)
+import MUI.Core.Button (color) as Button
+import MUI.Core.CssBaseline (cssBaseline)
+import MUI.Core.FormControl (formControlWithStyles)
 import MUI.Core.FormHelperText (formHelperText)
+import MUI.Core.Grid (grid)
+import MUI.Core.Grid (gridSize) as Grid
 import MUI.Core.Input (input)
 import MUI.Core.InputLabel (inputLabel)
-import MUI.Core.TextField (filled, outlined, standard) as TextField
-import Prim.RowList (Cons, Nil) as RL
-import Prim.RowList (class RowToList, kind RowList)
-import React.Basic (Component, JSX, StateUpdate(..), createComponent, fragment, make, runUpdate)
-import React.Basic.DOM (css, form, text) as DOM
+import MUI.Core.TextField (filledWithStyles, outlinedWithStyles, standardWithStyles) as TextField
+import MUI.Core.Toolbar (toolbar)
+import MUI.Core.Typography (typography)
+import MUI.Core.Typography (variant) as Typography
+import MUI.Icons.Menu (menu)
+import MUI.Icons.Types (iconWithStyles)
+import React.Basic (Component, JSX, createComponent, make)
+import React.Basic.DOM (css, div, form, text) as DOM
 import React.Basic.DOM (render)
-import React.Basic.DOM as R
-import React.Basic.DOM.Events (capture_)
-import Type.Prelude (RLProxy(..))
-import Type.Row (RProxy(..))
-import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.NonElementParentNode (getElementById)
 import Web.HTML (window)
 import Web.HTML.HTMLDocument (toNonElementParentNode)
 import Web.HTML.Window (document)
 
+type Props = {}
+
 component :: Component Props
 component = createComponent "Counter"
 
-type Props =
-  { label :: String
-  }
-
-data Action
-  = Increment
-
-
-
-actions :: Props -> JSX
-actions = make component { initialState, render }
+app :: JSX
+app = make component { initialState: {}, render } {}
   where
-    initialState = { counter: 0 }
-    update self = case _ of
-      Increment ->
-        UpdateAndSideEffects
-          (self.state { counter = self.state.counter + 1 })
-          \{ state } -> log $ "Count: " <> show state.counter
-
-    send = runUpdate update
-    -- let
-    --   styles = withStyleClasses \theme → {
-    --     root: jss {
-    --       '& > *': {
-    --         margin: theme.spacing(1),
-    --         width: '25ch',
-    --       }
-    --     }
-    --   }
-
-    --   withStyleClasses styles 
-
-    render self = DOM.form $ { style: DOM.css { "div": "margin: 20px" }, children: _ }
-      [ badge { badgeContent: DOM.text "4", children: [ DOM.text "TEST" ], color: Badge.color.primary }
-      , formControl $ { children: _ }
-          [ inputLabel
-            { htmlFor: "m-input"
-            , children: [ DOM.text "Email address" ]
-            }
-          , input { placeholder: "your email address" }
-          , formHelperText { id: "my-helper-text", children: [ DOM.text "We'll never share your email" ]}
+    textInputStyle theme = { root: jss { width: "80%", margin: theme.spacing 2.0 }}
+    render self = DOM.form $ { children: _ }
+      [ cssBaseline
+      , appBar $ { children: _, position: AppBar.position.static } <<< Array.singleton $
+          toolbar $ { children: _ }
+            [ iconWithStyles menu (\theme → { root: jss { marginRight: theme.spacing 2.0 }}) {}
+            , typography { children: [ DOM.text "News" ], variant: Typography.variant.h6 }
+            , buttonWithStyles
+                (\theme → { root: jss { marginRight: theme.spacing 2.0 }})
+                { children: [ DOM.text "Login" ]
+                , color: Button.color.inherit
+                }
+            ]
+      , DOM.div $ { style: DOM.css { "max-width": "960px", margin: "auto" }, children: _ }
+          [ badgeWithStyles
+              (\theme → { root: jss { margin: theme.spacing 10.0 }})
+              { badgeContent: DOM.text "4"
+              , children: [ DOM.text "TEST" ]
+              , color: Badge.color.primary
+              }
+          , grid $ { container: true, children: _ }
+            [ grid $ { item: true, children: _, xs: Grid.gridSize.six } <<< Array.singleton $
+                formControlWithStyles textInputStyle $ { children: _ }
+                  [ inputLabel
+                    { htmlFor: "m-input"
+                    , children: [ DOM.text "Email address" ]
+                    }
+                  , input { placeholder: "your email address" }
+                  , formHelperText { id: "my-helper-text", children: [ DOM.text "We'll never share your email" ]}
+                  ]
+            , grid $ { item: true, children: _, xs: Grid.gridSize.six } <<< Array.singleton $
+                TextField.outlinedWithStyles
+                  textInputStyle
+                  { error: true
+                  , label: inputLabel { children: [ DOM.text "Label" ]}
+                  , placeholder: "test"
+                  }
+            , grid $ { item: true, children: _, xs: Grid.gridSize.six } <<< Array.singleton $
+                TextField.standardWithStyles
+                  textInputStyle
+                  { error: false
+                  , label: inputLabel { children: [ DOM.text "Label" ]}
+                  , placeholder: "test"
+                  }
+            , grid $ { item: true, children: _, xs: Grid.gridSize.six } <<< Array.singleton $
+                TextField.filledWithStyles
+                  textInputStyle
+                  { error: true
+                  , label: inputLabel { children: [ DOM.text "Label" ]}
+                  , placeholder: "test"
+                  }
+            ]
           ]
-      , TextField.outlined
-          { error: true
-          , label: inputLabel { children: [ DOM.text "Label" ]}
-          , placeholder: "test"
-          }
-      , TextField.standard
-          { error: false
-          , label: inputLabel { children: [ DOM.text "Label" ]}
-          , placeholder: "test"
-          }
-      , TextField.filled
-          { error: true
-          , label: inputLabel { children: [ DOM.text "Label" ]}
-          , placeholder: "test"
-          }
-          -- <FormControl component="fieldset" className={classes.formControl}>
-          --   <FormLabel component="legend">Assign responsibility</FormLabel>
-          --   <FormGroup>
-          --     <FormControlLabel
-          --       control={<Checkbox checked={gilad} onChange={handleChange} name="gilad" />}
-          --       label="Gilad Gray"
-          --     />
-          --     <FormControlLabel
-          --       control={<Checkbox checked={jason} onChange={handleChange} name="jason" />}
-          --       label="Jason Killian"
-          --     />
-          --     <FormControlLabel
-          --       control={<Checkbox checked={antoine} onChange={handleChange} name="antoine" />}
-          --       label="Antoine Llorca"
-          --     />
-          --   </FormGroup>
-          --   <FormHelperText>Be careful</FormHelperText>
-          -- </FormControl>
-      --  MUI.appBar { children: [ DOM.text "TEST" ] }
-      --,  MUI.button { children: [ DOM.text "TEST" ] }
-      -- , R.button
-      --   { onClick: capture_ $ send self Increment
-      --   , children: [ R.text (self.props.label <> ": " <> show self.state.counter) ]
-      --   }
       ]
 
 
@@ -123,7 +103,5 @@ main = do
   container <- getElementById "container" =<< (map toNonElementParentNode $ document =<< window)
   case container of
     Nothing -> throw "Container element not found."
-    Just c  ->
-      let app = actions { label: "Increment" }
-       in render app c
+    Just c  -> render app c
 

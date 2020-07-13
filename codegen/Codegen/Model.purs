@@ -2,7 +2,7 @@ module Codegen.Model where
 
 import Prelude
 
-import Codegen.AST (Declaration, RowLabel, Type)
+import Codegen.AST (Declaration, RowLabel, Type, TypeName(..), UnionMember)
 import Codegen.AST.Sugar.Type (app, array, constructor, typeRow') as Type
 import Codegen.AST.Types (Fields) as AST.Types
 import Codegen.TS.Types (InstanceProps, InstantiationStrategy)
@@ -26,9 +26,12 @@ type PropsRow =
   { base :: AST.Types.Fields Type
   , generate :: Array RowLabel
   -- | An escape hatch for tweaking low level props extraction
-  , instantiation :: Maybe
-      { extractProps :: ReadDTS.Instantiation.Type -> Either (Array String) InstanceProps
-      , strategy :: InstantiationStrategy
+  , ts ∷
+      { instantiation :: Maybe
+        { extractProps :: ReadDTS.Instantiation.Type -> Either (Array String) InstanceProps
+        , strategy :: InstantiationStrategy
+        }
+      , unionName ∷ String → Array UnionMember → Maybe TypeName
       }
   }
 
