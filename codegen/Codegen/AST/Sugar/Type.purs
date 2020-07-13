@@ -111,12 +111,6 @@ forAll' n cont =
 name :: String -> QualifiedName TypeName
 name = name'
 
-optConstructor :: Type
-optConstructor = constructor "Data.Undefined.NoProblem.Opt"
-
-opt :: Type -> Type
-opt = app optConstructor <<< Array.singleton
-
 name' :: forall n. Newtype n String => String -> QualifiedName n
 name' n = qn n
   where

@@ -99,10 +99,17 @@ foldRoot = case _ of
         wrapInProps { componentName: cn, toConstructor, root: c.root }
 
 rbProps ::
-  { div :: Root, label :: Root, svg :: Root }
+  { button :: Root
+  , div :: Root
+  , label :: Root
+  , p :: Root
+  , svg :: Root
+  }
 rbProps =
-  { div: p "Props_div"
+  { button: p "Props_button"
+  , div: p "Props_div"
   , label: p "Props_label"
+  , p: p "Props_p"
   , svg: p "SVG.Props_svg"
   }
   where

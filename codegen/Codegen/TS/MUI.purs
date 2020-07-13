@@ -4,13 +4,13 @@ import Prelude
 
 import Codegen.AST (Declaration(..), Ident(..), ModuleName(..), TypeName(..))
 import Codegen.AST (Module(..), RowF(..), TypeName(..), Union(..), Type) as AST
-import Codegen.AST.Sugar (SListProxy(..), declForeignData', declForeignValue, declType, declValue, forAllValueBinding)
-import Codegen.AST.Sugar.Expr (app, ident') as Expr
+import Codegen.AST.Sugar (SListProxy(..), declForeignData', declForeignValue, declType, forAllValueBinding)
+import Codegen.AST.Sugar (local) as Sugar
+import Codegen.AST.Sugar.Expr (app, ident, ident') as Expr
 import Codegen.AST.Sugar.Type (app, arr, constructor, recordLiteral, row, string, typeRow, var) as Type
-import Codegen.AST.Sugar.Type (arr) as T
-import Codegen.AST.Sugar.Type (constrained, forAll, opt, recordLiteral)
-import Codegen.AST.Types (Kind(..), TypeF(..), TypeVarBinding(..))
-import Codegen.Model (Component, ComponentName, ModulePath, Props, PropsRow, Root(..), componentFullPath, foldRoot, jsImportPath, jsx, propsCombinedName, propsOptionalName, propsRequiredName, psImportPath, reactComponentApply)
+import Codegen.AST.Sugar.Type (constrained, forAll, recordLiteral)
+import Codegen.AST.Types (Kind(..), TypeF(..), TypeVarBinding(..), ValueBindingFields(..))
+import Codegen.Model (Component, ModulePath, Props, PropsRow, Root(..), ComponentName, componentFullPath, foldRoot, jsImportPath, jsx, propsCombinedName, propsOptionalName, propsRequiredName, psImportPath, reactComponentApply)
 import Codegen.Model (componentName, inputComponentName) as Model
 import Codegen.TS.Module (PossibleType(..), astAlgebra, buildAndInstantiateDeclarations, unionDeclarations) as TS.Module
 import Codegen.TS.Module (exprUnsafeCoerce, exprUnsafeCoerceApp)
@@ -28,14 +28,13 @@ import Data.List (List(..), fromFoldable, singleton) as List
 import Data.List (List, (:))
 import Data.Map (Map, filterKeys, filterWithKey, fromFoldable, keys, lookup, singleton, toUnfoldable) as Map
 import Data.Map.Internal (keys) as Map.Internal
-import Data.Maybe (Maybe(..), isJust, maybe)
+import Data.Maybe (Maybe(..), maybe)
 import Data.Set (member) as Set
 import Data.String (joinWith)
 import Data.String.Extra (camelCase)
 import Data.Traversable (for)
 import Data.Tuple (Tuple(..))
 import Data.Tuple (snd) as Tuple
-import Debug.Trace (traceM)
 import Matryoshka (cata, cataM)
 import ReadDTS.Instantiation (Property, Type, TypeF(..)) as ReadDTS.Instantiation
 import ReadDTS.Instantiation.Pretty (pprintTypeName)
@@ -108,9 +107,6 @@ componentProps component@{ modulePath } = do
                 InterfaceInheritance -> [ "export interface ", instanceTypeName, "extends", propsName <> " {};" ]
                 TypeAlias -> [ "export type ", instanceTypeName, "=", propsName <> ";" ]
         ]
-  x = do
-    traceM source
-    Nothing
 
 validateProps :: PropsRow -> InstanceProps -> M Unit
 validateProps { base, generate } { props } = do
@@ -161,7 +157,7 @@ componentAST component@{ extraDeclarations, root, modulePath, propsRow: expected
       let
 
         classesProp :: Map.Map String AST.Type
-        classesProp = maybe mempty (Map.singleton "classes" <<< opt <<< _.prop) classes
+        classesProp = maybe mempty (Map.singleton "classes" <<< recordLiteral <<< _.prop) classes
 
         propsDecls :: Props { constructor :: AST.Type, declaration :: Declaration }
         propsDecls =
@@ -237,12 +233,12 @@ componentAST component@{ extraDeclarations, root, modulePath, propsRow: expected
           <> List.singleton propsDecls.combined.declaration
           <> componentConstructorsAST
                  { component
+                 , jss: _.jss <$> classes
                  , props:
                     { combined: propsDecls.combined.constructor
                     , optional: propsDecls.optional.constructor
                     , required: propsDecls.required.constructor
                     }
-                 , hasStyles: isJust classes
                  }
       pure $ AST.Module
         $ { declarations
@@ -257,11 +253,11 @@ componentAST component@{ extraDeclarations, root, modulePath, propsRow: expected
 
 componentConstructorsAST ::
   { component :: Component
+  , jss :: Maybe AST.Type
   , props :: Props AST.Type
-  , hasStyles :: Boolean
   } ->
   List Declaration
-componentConstructorsAST { component, props } = constructors
+componentConstructorsAST { component, jss, props } = constructors
   where
   -- | Maybe this `Writer` here is a bit overkill ;-)
   constructors :: List Declaration
@@ -269,7 +265,7 @@ componentConstructorsAST { component, props } = constructors
     let
       nubConstraint input nubbed rest = constrained "MUI.Core.Nub'" [ input, nubbed ] rest
 
-      reactElemApp component = Expr.app (Expr.app (Expr.ident' "React.Basic.element") component)
+      reactElemApp c = Expr.app (Expr.app (Expr.ident' "React.Basic.element") c)
       componentName = Model.componentName component
 
       -- | `Coerce { | i } { | o } => t`
@@ -288,6 +284,26 @@ componentConstructorsAST { component, props } = constructors
       _UnsafeComponentDecl = declForeignValue _UnsafeComponentIdent $ forAll { c: "componentProps" } \{ c } ->
         reactComponentApply (recordLiteral (Type.app props.combined [ c ]))
 
+      _Theme = Type.constructor "MUI.Core.Styles.Theme"
+
+      -- | withStyles' :: (Theme -> Record jss) -> ReactComponent {   | BadgeReqPropsRow given  } -> ReactComponent {   | BadgeReqPropsRow given  }
+      -- | withStyles' = unsafeCoerce withStyles
+      withStyles jssVar given = forAllValueBinding
+        (SListProxy :: _ SNil)
+        ("withStyles'")
+        (SListProxy :: _ SNil)
+        \_ ->
+          { signature: Just $
+            Type.arr
+              (Type.arr _Theme (recordLiteral jssVar)) $
+              (Type.arr
+                (reactComponentApply (Type.recordLiteral (Type.app props.required [ given ])))
+                (reactComponentApply (Type.recordLiteral (Type.app props.required [ given ])))
+              )
+          , expr: exprUnsafeCoerceApp (Expr.ident' "MUI.Core.Styles.withStyles")
+          , whereBindings: []
+          }
+
       -- | For exmample:
       -- |
       -- | foreign import data Props :: Type
@@ -299,15 +315,8 @@ componentConstructorsAST { component, props } = constructors
         -- | to `Nub` required props
         -- |
         RBProps t ->
-          -- | For example:
-          -- |
-          -- | _Badge
-          -- |   :: forall given optionalGiven optionalMissing props required
-          -- |   . Nub' (BadgeProps Props_div) props
-          -- |   => Union given optionalMissing props
-          -- |   => ReactComponent { | BadgeRequiredProps given }
-          -- | _Badge = unsafeCoerce _UnsafeBadge
-          { _Component: DeclValue $ forAllValueBinding
+          let
+            _ComponentBinding@(ValueBindingFields { value: { name: _ComponentIdent }})  = forAllValueBinding
               (SListProxy :: _ ("given" ::: "optionalMissing" ::: "props" ::: SNil))
               ("_" <> componentName)
               (SListProxy :: _ SNil)
@@ -319,6 +328,17 @@ componentConstructorsAST { component, props } = constructors
                 , expr: exprUnsafeCoerceApp _UnsafeComponentDecl.var
                 , whereBindings: []
                 }
+            _ComponentVar = Expr.ident <<< Sugar.local $ _ComponentIdent
+          in
+          -- | For example:
+          -- |
+          -- | _Badge
+          -- |   :: forall given optionalGiven optionalMissing props required
+          -- |   . Nub' (BadgeProps Props_div) props
+          -- |   => Union given optionalMissing props
+          -- |   => ReactComponent { | BadgeRequiredProps given }
+          -- | _Badge = unsafeCoerce _UnsafeBadge
+          { _Component: DeclValue _ComponentBinding
           -- badge :: forall given optionalGiven optionalMissing props required
           --   . Nub' (BadgeProps Props_div)) props
           --   => Union given optionalMissing props
@@ -361,20 +381,58 @@ componentConstructorsAST { component, props } = constructors
                 , expr: exprUnsafeCoerce
                 , whereBindings: []
                 }
+          -- | badgeWithStyles::forall jss_ jss given optionalMissing props. 
+          -- |   Nub' (BadgePropsRow React.Basic.DOM.Props_div) props =>
+          -- |   Prim.Row.Union given optionalMissing props =>
+          -- |   Prim.Row.Union jss jss_ BadgeClassesJSS =>
+          -- |   (MUI.Core.Styles.Theme  ->  {   | jss  })  ->  {   | BadgeReqPropsRow given  }  ->  JSX
+          -- | badgeWithStyles style props = element (withStyles' style _Badge) props
+          -- |   where
+          -- |     withStyles' ::
+          -- |       (MUI.Core.Styles.Theme  ->  {   | jss  }) ->
+          -- |       ReactComponent {   | BadgeReqPropsRow given  } ->
+          -- |       ReactComponent {   | BadgeReqPropsRow given  }
+          -- |     withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
+          , constructorWithStyles: jss <#> \jssType -> DeclValue $ forAllValueBinding
+              (SListProxy :: _ ("jss_" ::: "jss" ::: "given" ::: "optionalMissing" ::: "props" ::: SNil))
+              (camelCase componentName <> "WithStyles")
+              (SListProxy :: _ ("style" ::: "props" ::: SNil))
+              \{ typeVars, vars } ->
+                let
+                  ws@(ValueBindingFields { value: { name: wsIdent }}) = withStyles typeVars.jss typeVars.given
+                in
+                  { signature: Just $
+                      nubConstraint (Type.app props.combined [ t ]) typeVars.props $
+                      unionConstraint typeVars.given typeVars.optionalMissing typeVars.props $
+                      unionConstraint typeVars.jss typeVars.jss_ jssType $
+                      Type.arr
+                        ( Type.arr
+                            (Type.constructor "MUI.Core.Styles.Theme")
+                            (Type.recordLiteral typeVars.jss)
+                        )
+                        ( Type.arr
+                          (Type.recordLiteral (Type.app props.required [ typeVars.given ]))
+                          jsx
+                        )
+                  -- | This ident could be taken from the above declaration
+                  , expr: reactElemApp
+                      (Expr.app (Expr.app (Expr.ident <<< Sugar.local $ wsIdent) vars.style) _ComponentVar)
+                      vars.props
+                  , whereBindings: [ ws ]
+                  }
           }
         MUIComponent c ->
           let
             rootProps = foldRoot { component, local: true }
-          in
-            -- _Button
-            --   :: forall given optionalGiven optionalMissing props required
-            --   . Nub (ButtonRequiredProps (ButtonBaseRequiredProps ())) required
-            --   => Union required optionalGiven given
-            --   => Nub (ButtonProps (ButtonBaseProps Props_div)) props
-            --   => Union given optionalMissing props
-            --   => ReactComponent { | given }
-            -- _Button = unsafeCoerce _UnsafeBadge
-            { _Component: DeclValue $ forAllValueBinding
+            -- | _Button
+            -- |   :: forall given optionalGiven optionalMissing props required
+            -- |   . Nub (ButtonRequiredProps (ButtonBaseRequiredProps ())) required
+            -- |   => Union required optionalGiven given
+            -- |   => Nub (ButtonProps (ButtonBaseProps Props_div)) props
+            -- |   => Union given optionalMissing props
+            -- |   => ReactComponent { | given }
+            -- | _Button = unsafeCoerce _UnsafeBadge
+            _ComponentBinding@(ValueBindingFields { value: { name: _ComponentIdent }})  = forAllValueBinding
                 (SListProxy :: _ ("given" ::: "optionalGiven" ::: "optionalMissing" ::: "props" ::: "required" ::: SNil))
                 ("_" <> componentName)
                 (SListProxy :: _ SNil)
@@ -388,6 +446,18 @@ componentConstructorsAST { component, props } = constructors
                   , expr: exprUnsafeCoerceApp _UnsafeComponentDecl.var
                   , whereBindings: []
                   }
+            _ComponentVar = Expr.ident <<< Sugar.local $ _ComponentIdent
+          in
+            { _Component: DeclValue _ComponentBinding
+            -- | For example:
+            -- |
+            -- | button::forall given optionalGiven optionalMissing props required. 
+            -- |   Nub' (ButtonReqPropsRow (MUI.Core.ButtonBase.ButtonBaseReqPropsRow ())) required =>
+            -- |   Prim.Row.Union required optionalGiven given =>
+            -- |   Nub' (ButtonPropsRow (MUI.Core.ButtonBase.ButtonBasePropsRow React.Basic.DOM.Props_button)) props =>
+            -- |   Prim.Row.Union given optionalMissing props =>
+            -- |   {   | given  }  ->  JSX
+            -- | button props = element _Button props
             , constructor: DeclValue $ forAllValueBinding
                 (SListProxy :: _ ("given" ::: "optionalGiven" ::: "optionalMissing" ::: "props" ::: "required" ::: SNil))
                 (camelCase componentName)
@@ -409,7 +479,7 @@ componentConstructorsAST { component, props } = constructors
             -- |   :: forall given optionalGiven optionalMissing props required
             -- |   . Nub' (BadgeProps Props_div)) props
             -- |   => Union given optionalMissing props
-            -- |   => { | BadgeRequiredProps given } -> Props
+            -- |   => { | BadgeRequiredProps given } -> OpaqueProps
             , props: DeclValue $ forAllValueBinding
                 (SListProxy :: _ ("given" ::: "optionalGiven" ::: "optionalMissing" ::: "props" ::: "required" ::: SNil))
                 (camelCase (componentName <> "Props"))
@@ -434,18 +504,136 @@ componentConstructorsAST { component, props } = constructors
                   , expr: exprUnsafeCoerce
                   , whereBindings: []
                   }
+          -- | buttonWithStyles::forall jss_ jss given optionalGiven optionalMissing props required. 
+          -- |   Nub' (ButtonReqPropsRow (MUI.Core.ButtonBase.ButtonBaseReqPropsRow ())) required =>
+          -- |   Prim.Row.Union required optionalGiven given =>
+          -- |   Nub' (ButtonPropsRow (MUI.Core.ButtonBase.ButtonBasePropsRow React.Basic.DOM.Props_button)) props =>
+          -- |   Prim.Row.Union given optionalMissing props =>
+          -- |   Prim.Row.Union jss jss_ ButtonClassesJSS =>
+          -- |   (MUI.Core.Styles.Theme  ->  {   | jss  })  ->  {   | ButtonReqPropsRow given  }  ->  JSX
+          -- | buttonWithStyles style props = element (withStyles' style _Button) props
+          -- |   where
+          -- |     withStyles' ::
+          -- |        (MUI.Core.Styles.Theme  ->  {   | jss  })  ->
+          -- |        ReactComponent {   | ButtonReqPropsRow given  } ->
+          -- |        ReactComponent {   | ButtonReqPropsRow given  }
+          -- |     withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
+          , constructorWithStyles: jss <#> \jssType -> DeclValue $ forAllValueBinding
+              (SListProxy :: _ ("jss_" ::: "jss" ::: "given" ::: "optionalGiven" ::: "optionalMissing" ::: "props" ::: "required" ::: SNil))
+              (camelCase componentName <> "WithStyles")
+              (SListProxy :: _ ("style" ::: "props" ::: SNil))
+              \{ typeVars, vars } ->
+                let
+                  ws@(ValueBindingFields { value: { name: wsIdent }}) = withStyles typeVars.jss typeVars.given
+                in
+                  { signature: Just $
+                      nubConstraint rootProps.required typeVars.required $
+                      unionConstraint typeVars.required typeVars.optionalGiven typeVars.given $
+                      nubConstraint rootProps.combined typeVars.props $
+                      unionConstraint typeVars.given typeVars.optionalMissing typeVars.props $
+                      unionConstraint typeVars.jss typeVars.jss_ jssType $
+                      Type.arr
+                        ( Type.arr
+                            (Type.constructor "MUI.Core.Styles.Theme")
+                            (Type.recordLiteral typeVars.jss)
+                        )
+                        ( Type.arr
+                          (Type.recordLiteral (Type.app props.required [ typeVars.given ]))
+                          jsx
+                        )
+                  -- | This ident could be taken from the above declaration
+                  , expr: reactElemApp
+                      (Expr.app (Expr.app (Expr.ident <<< Sugar.local $ wsIdent) vars.style) _ComponentVar)
+                      vars.props
+                  , whereBindings: [ ws ]
+                  }
+      -- -- | I'm using here new sugar for ValueBindings generation.
+      -- -- |
+      -- -- | Generates something like this:
+      -- -- |
+      -- -- | badgeRooted
+      -- -- |   :: forall componentProps props partialProps
+      -- -- |   . MergeProps (BadgePropsRow ()) componentProps props
+      -- -- |   => Row.Lacks "component" props
+      -- -- |   => Coerce { | partialProps } { | props }
+      -- -- |   => ReactComponent { | componentProps }
+      -- -- |   -> { | partialProps }
+      -- -- |   -> JSX
+      -- -- | badgeRooted component partialProps = element _SafeBadge props
+      -- -- |   where
+      -- -- |     _component :: SProxy "component"
+      -- -- |     _component = SProxy
+      -- -- |
+      -- -- |     props = Record.insert _component component (coerce partialProps)
+      -- -- |
+      -- -- |     _SafeBadge :: ReactComponent { component :: ReactComponent { | componentProps } | props }
+      -- -- |     _SafeBadge = unsafeCoerce _UnsafeBadge
+      -- -- |
+      -- | For example:
+      -- |
+      -- | button::forall given given_ optionalGiven optionalMissing props required. 
+      -- |   Row.Lacks "component" given_ =>
+      -- |   Row.Cons "component" componentProps
+      -- |   Nub' (ButtonReqPropsRow (MUI.Core.ButtonBase.ButtonBaseReqPropsRow ())) required =>
+      -- |   Prim.Row.Union required optionalGiven given =>
+      -- |   Nub' (ButtonPropsRow (MUI.Core.ButtonBase.ButtonBasePropsRow React.Basic.DOM.Props_button)) props =>
+      -- |   Prim.Row.Union given optionalMissing props =>
+      -- |   ReactComponent componentProps -> {   | given  }  ->  JSX
+      -- | button props = element _Button props
+      -- constructorRooted =
+      --   let
+      --     constructorRootedName = camelCase (componentName <> "Rooted")
+      --   in DeclValue $
+      --     forAllValueBinding
+      --       { cp: "componentProps", pp: "partialProps", p: "props" }
+      --       constructorRootedName
+      --       (SListProxy :: _ ("component" ::: "partialProps" ::: SNil))
+      --         \{ bindersVars, typeVars } ->
+      --           let
+      --             rootComponent = reactComponentApply (recordLiteral typeVars.cp)
+
+      --             signature = Just $
+      --               mergeConstraint typeVars.p $
+      --               coerceConstraint typeVars.pp typeVars.p $
+      --               rowLacksConstraint (Type.symbol "component") typeVars.p $
+      --               Type.arr
+      --                 (reactComponentApply (recordLiteral typeVars.cp)) $
+      --                 Type.arr
+      --                   (Type.recordLiteral typeVars.pp)
+      --                   jsx
+
+      --             safeComponentName = "_Safe" <> componentName
+      --             safeComponent = forAllValueBinding {} (safeComponentName) (SListProxy :: _ SNil) \x ->
+      --               { signature: Just $ reactComponentApply (recordLiteral' (Map.singleton "component" rootComponent) typeVars.p)
+      --               , expr: exprUnsafeCoerceApp (Expr.ident $ local unsafeComponentIdent)
+      --               , whereBindings: []
+      --               }
+
+      --             sProxy = exprSProxy "component"
+
+      --             props = forAllValueBinding {} "props" (SListProxy :: _ SNil) \_ ->
+      --               { expr:
+      --                   let
+      --                     p = coerceAppExpr bindersVars.partialProps
+      --                   in
+      --                     Expr.app (Expr.app (Expr.app (Expr.ident' "Record.insert") sProxy.var) bindersVars.component) p
+      --               , signature: Nothing
+      --               , whereBindings: []
+      --               }
+
+      --             expr = reactElemApp (Expr.ident' safeComponentName) (Expr.ident' "props")
+      --           in
+      --             { signature, whereBindings: [ sProxy.value, props, safeComponent ], expr }
             }
 
     _UnsafeComponentDecl.declaration
       : decls._Component
       : decls.constructor
-      : _Props.declaration
-      : decls.props
-      : List.Nil
-
-
-      -- 
-
+      : maybe identity List.Cons decls.constructorWithStyles
+        ( _Props.declaration
+        : decls.props
+        : List.Nil
+        )
 
       -- -- | For example:
       -- -- |
@@ -497,72 +685,6 @@ componentConstructorsAST { component, props } = constructors
       --       in
       --         mergeConstraint p (coerceConstraint pp p fun)
 
-      -- -- | I'm using here new sugar for ValueBindings generation.
-      -- -- |
-      -- -- | Generates something like this:
-      -- -- |
-      -- -- | badgeRooted
-      -- -- |   :: forall componentProps props partialProps
-      -- -- |   . MergeProps (BadgePropsRow ()) componentProps props
-      -- -- |   => Row.Lacks "component" props
-      -- -- |   => Coerce { | partialProps } { | props }
-      -- -- |   => ReactComponent { | componentProps }
-      -- -- |   -> { | partialProps }
-      -- -- |   -> JSX
-      -- -- | badgeRooted component partialProps = element _SafeBadge props
-      -- -- |   where
-      -- -- |     _component :: SProxy "component"
-      -- -- |     _component = SProxy
-      -- -- |
-      -- -- |     props = Record.insert _component component (coerce partialProps)
-      -- -- |
-      -- -- |     _SafeBadge :: ReactComponent { component :: ReactComponent { | componentProps } | props }
-      -- -- |     _SafeBadge = unsafeCoerce _UnsafeBadge
-      -- -- |
-      -- constructorRooted =
-      --   let
-      --     constructorRootedName = camelCase (componentName <> "Rooted")
-      --   in DeclValue $
-      --     forAllValueBinding
-      --       { cp: "componentProps", pp: "partialProps", p: "props" }
-      --       constructorRootedName
-      --       (SListProxy :: _ ("component" ::: "partialProps" ::: SNil))
-      --         \{ bindersVars, typeVars } ->
-      --           let
-      --             rootComponent = reactComponentApply (recordLiteral typeVars.cp)
-
-      --             signature = Just $
-      --               mergeConstraint typeVars.p $
-      --               coerceConstraint typeVars.pp typeVars.p $
-      --               rowLacksConstraint (Type.symbol "component") typeVars.p $
-      --               Type.arr
-      --                 (reactComponentApply (recordLiteral typeVars.cp)) $
-      --                 Type.arr
-      --                   (Type.recordLiteral typeVars.pp)
-      --                   jsx
-
-      --             safeComponentName = "_Safe" <> componentName
-      --             safeComponent = forAllValueBinding {} (safeComponentName) (SListProxy :: _ SNil) \x ->
-      --               { signature: Just $ reactComponentApply (recordLiteral' (Map.singleton "component" rootComponent) typeVars.p)
-      --               , expr: exprUnsafeCoerceApp (Expr.ident $ local unsafeComponentIdent)
-      --               , whereBindings: []
-      --               }
-
-      --             sProxy = exprSProxy "component"
-
-      --             props = forAllValueBinding {} "props" (SListProxy :: _ SNil) \_ ->
-      --               { expr:
-      --                   let
-      --                     p = coerceAppExpr bindersVars.partialProps
-      --                   in
-      --                     Expr.app (Expr.app (Expr.app (Expr.ident' "Record.insert") sProxy.var) bindersVars.component) p
-      --               , signature: Nothing
-      --               , whereBindings: []
-      --               }
-
-      --             expr = reactElemApp (Expr.ident' safeComponentName) (Expr.ident' "props")
-      --           in
-      --             { signature, whereBindings: [ sProxy.value, props, safeComponent ], expr }
 
       -- -- | Building two declarations related to opaque `*Props` type.
       -- -- | For example:
@@ -599,7 +721,14 @@ componentConstructorsAST { component, props } = constructors
 -- | does not translate directly to any expected PS
 -- | construct because it contains `any` types.
 -- |
-classesPropAST :: ComponentName -> Maybe (ReadDTS.Instantiation.Property ReadDTS.Instantiation.Type) -> M { declarations :: List Declaration, prop :: AST.Type }
+classesPropAST
+  :: ComponentName
+  -> Maybe (ReadDTS.Instantiation.Property ReadDTS.Instantiation.Type)
+  -> M
+      { declarations :: List Declaration
+      , jss :: AST.Type
+      , prop :: AST.Type
+      }
 classesPropAST componentName = case _ of
   Just { "type": Mu.In (ReadDTS.Instantiation.Object _ classesProps) } -> do
     let
@@ -609,8 +738,7 @@ classesPropAST componentName = case _ of
 
       binderIdent = Ident "a"
 
-      opt = Type.constructor "Data.Undefined.NoProblem.Opt"
-      var = Type.app opt [ roll (TypeVar binderIdent) ]
+      var = roll (TypeVar binderIdent)
 
       -- Construct row type which looks like this:
       -- `type ClassKeyOptions a = ( root :: a, colorPrimary :: a)`
@@ -628,7 +756,11 @@ classesPropAST componentName = case _ of
           [ TypeVarName binderIdent ]
           classesGenericRow
 
-      undefinedMonoCoerce = Expr.ident' "Data.Undefined.NoProblem.Mono.coerce"
+      undefinedClosedCoerce = Expr.ident' "Data.Undefined.NoProblem.Closed.coerce"
+
+      coerceConstraint given expected rest =
+          constrained "Data.Undefined.NoProblem.Closed.Coerce" [ given, expected] rest
+
 
       jss = Type.constructor "MUI.Core.JSS"
 
@@ -636,52 +768,23 @@ classesPropAST componentName = case _ of
         declType
           (TypeName $ componentName <> "ClassesKey")
           []
-          (recordLiteral (Type.app classesGenericRowType.constructor [ Type.string ]))
-
-      classesKeyValue =
-        let
-          ident = Ident $ componentName' <> "ClassesKey"
-
-          signature =
-            forAll { g: "given" }
-              $ \{ g } ->
-                  let
-                    fun = T.arr (recordLiteral g) classesKeyType.constructor
-                  in
-                    constrained "Data.Undefined.NoProblem.Mono.Coerce" [ recordLiteral g, classesKeyType.constructor ] fun
-        in
-          declValue ident [] undefinedMonoCoerce (Just signature) []
+          (Type.app classesGenericRowType.constructor [ Type.string ])
 
       classesJSSType =
         declType
           (TypeName $ componentName <> "ClassesJSS")
           []
-          (recordLiteral (Type.app classesGenericRowType.constructor [ jss ]))
+          (Type.app classesGenericRowType.constructor [ jss ])
 
-      classesJSSValue =
-        let
-          ident = Ident $ componentName' <> "ClassesJSS"
-
-          signature =
-            forAll { g: "given" }
-              $ \{ g } ->
-                  let
-                    fun = T.arr (recordLiteral g) classesJSSType.constructor
-                  in
-                    constrained "Data.Undefined.NoProblem.Mono.Coerce" [ recordLiteral g, classesJSSType.constructor ] fun
-        in
-          declValue ident [] undefinedMonoCoerce (Just signature) []
     let
       declarations :: List _
       declarations =
         Array.toUnfoldable
           [ classesGenericRowType.declaration
           , classesKeyType.declaration
-          , classesKeyValue.declaration
           , classesJSSType.declaration
-          , classesJSSValue.declaration
           ]
-    pure { declarations, prop: classesKeyType.constructor }
+    pure { declarations, prop: classesKeyType.constructor, jss: classesJSSType.constructor }
   c ->
     throwError $ Array.singleton
       $ line

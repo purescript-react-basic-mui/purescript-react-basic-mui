@@ -1,14 +1,12 @@
-module Main where
+module Codegen.Main where
 
 import Prelude
 
 import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconPSFile, icons)
 import Codegen (component, icon, write) as Codegen
-import Codegen.AST (ModuleName(..), TypeName(..))
-import Codegen.AST.Sugar (declType)
-import Codegen.AST.Sugar.Type (app, constructor) as Type
-import Codegen.AST.Sugar.Type (string)
-import Codegen.Model (Component, Icon, ModulePath(..), Root(..), arrayJSX, iconName, jsx, psImportPath, rbProps, reactComponentApply)
+import Codegen.AST (ModuleName(..))
+import Codegen.AST.Sugar.Type (constructor) as Type
+import Codegen.Model (Component, Icon, ModulePath(..), Root(..), arrayJSX, iconName, jsx, psImportPath, rbProps)
 import Codegen.Model (componentName) as Model
 import Codegen.TS.MUI (componentProps) as TS.MUI
 import Codegen.TS.Types (InstantiationStrategy(..))
@@ -80,18 +78,15 @@ components =
       , name: "TouchRipple"
       }
 
-    -- appBar =
-    --   simpleComponent
-    --     { inherits: Just $ MUI.rList
-    --         [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
-    --         , divProps
-    --         ]
-    --     , name: "AppBar"
-    --     , propsRow:
-    --       { base:  Map.fromFoldable [ children ]
-    --       , generate: [ "classes", "color", "position" ]
-    --       }
-    --     }
+    appBar =
+      simpleComponent
+        { name: "AppBar"
+        , propsRow:
+          { base:  Map.fromFoldable [ children ]
+          , generate: [ "classes", "color", "position" ]
+          }
+        , root: MUIComponent paper
+        }
 
     -- avatar =
     --   simpleComponent
@@ -189,32 +184,71 @@ components =
     --      , generate: [ "classes", "itemsAfterCollapse", "itemsBeforeCollapse", "maxItems" ]
     --      }
     --    }
+    buttonBase =
+      -- let
+      --   buttonBaseActions = declType (TypeName "ButtonBaseActions") [] foreignType
+      --   buttonBaseTypeProps = declType (TypeName "ButtonBaseTypeProp") [] foreignType
+      -- in
+        { extraDeclarations: []
+          -- [ buttonBaseActions.declaration
+          -- , buttonBaseTypeProps.declaration
+          -- ]
+        , modulePath:
+          { input: Name "ButtonBase"
+          , output: Name "ButtonBase"
+          }
+        , propsRow:
+          { base:  Map.fromFoldable
+              [ Tuple "action" foreignType
+              , Tuple "buttonRef" foreignType
+              , eventHandlerProp "onFocusVisible"
+              -- | I'm not sure hot to handle this kind of props parameter
+              -- | in the current architecture.
+              -- , Tuple "TouchRippleProps" $ Type.recordLiteral $ Type.app
+              --     ( roll $ TypeConstructor
+              --         { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
+              --         , name: TypeName $ (propsRowTypeName touchRippleType.name)
+              --         }
+              --     )
+              --     (Array.fromFoldable touchRipple.inherits)
+              ]
+          , generate:
+            [ "centerRipple"
+            , "classes"
+            , "color"
+            , "disabled"
+            , "disableRipple"
+            , "focusRipple"
+            , "focusVisibleClassName"
+            , "type"
+            ]
+          , instantiation: Nothing
+          }
+        , root: rbProps.button
+        }
 
-    --button =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList'
-    --        [ "MUI.Core.ButtonBase.ButtonBasePropsRow"
-    --        , "MUI.DOM.Generated.Props_button"
-    --        ]
-    --    , name: "Button"
-    --    , propsRow:
-    --      { base: Map.fromFoldable
-    --          [ Tuple "endIcon" jsx
-    --          , Tuple "startIcon" jsx
-    --          ]
-    --      , generate:
-    --        [ "classes"
-    --        , "color"
-    --        , "disabled"
-    --        , "disableFocusRipple"
-    --        , "disableRipple"
-    --        , "fullWidth"
-    --        , "href"
-    --        , "size"
-    --        , "variant"
-    --        ]
-    --      }
-    --    }
+    button =
+      simpleComponent
+        { name: "Button"
+        , propsRow:
+          { base: Map.fromFoldable
+              [ Tuple "endIcon" jsx
+              , Tuple "startIcon" jsx
+              ]
+          , generate:
+            [ "classes"
+            , "color"
+            , "disabled"
+            , "disableFocusRipple"
+            , "disableRipple"
+            , "fullWidth"
+            , "href"
+            , "size"
+            , "variant"
+            ]
+          }
+        , root: MUIComponent buttonBase
+        }
 
     --buttonGroup =
     --  simpleComponent
@@ -235,47 +269,6 @@ components =
     --        , "variant"
     --        ]
     --      }
-    --    }
-
-    --buttonBase =
-    --  let
-    --    buttonBaseActions = declType (TypeName "ButtonBaseActions") [] foreignType
-    --    buttonBaseTypeProps = declType (TypeName "ButtonBaseTypeProp") [] foreignType
-    --  in
-    --    { extraDeclarations:
-    --      [ buttonBaseActions.declaration
-    --      , buttonBaseTypeProps.declaration
-    --      ]
-    --    , inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_button" ]
-    --    , modulePath: Name "ButtonBase"
-    --    , propsRow:
-    --      { base:  Map.fromFoldable
-    --          [ Tuple "action" foreignType
-    --          , Tuple "buttonRef" foreignType
-    --          , eventHandlerProp "onFocusVisible"
-    --          -- | I'm not sure hot to handle this kind of props parameter
-    --          -- | in the current architecture.
-    --          -- , Tuple "TouchRippleProps" $ Type.recordLiteral $ Type.app
-    --          --     ( roll $ TypeConstructor
-    --          --         { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
-    --          --         , name: TypeName $ (propsRowTypeName touchRippleType.name)
-    --          --         }
-    --          --     )
-    --          --     (Array.fromFoldable touchRipple.inherits)
-    --          ]
-    --      , generate:
-    --        [ "centerRipple"
-    --        , "classes"
-    --        , "color"
-    --        , "disabled"
-    --        , "disableRipple"
-    --        , "focusRipple"
-    --        , "focusVisibleClassName"
-    --        , "type"
-    --        ]
-    --      , instantiation: Nothing
-    --      }
-    --    , tsc: { strictNullChecks: false }
     --    }
 
     ---- | TODO: make value a type variable
@@ -945,24 +938,22 @@ components =
     --      }
     --    }
 
-    --iconButton =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList
-    --        [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow", divProps ]
-    --    , name: "IconButton"
-    --    , propsRow:
-    --      { base: Map.fromFoldable [ children ]
-    --      , generate:
-    --        [ "classes"
-    --        , "color"
-    --        , "disabled"
-    --        , "disableFocusRipple"
-    --        , "disableRipple"
-    --        , "edge"
-    --        , "size"
-    --        ]
-    --      }
-    --    }
+    iconButton = simpleComponent
+      { name: "IconButton"
+      , propsRow:
+        { base: Map.fromFoldable [ children ]
+        , generate:
+          [ "classes"
+          , "color"
+          , "disabled"
+          , "disableFocusRipple"
+          , "disableRipple"
+          , "edge"
+          , "size"
+          ]
+        }
+      , root: MUIComponent buttonBase
+      }
 
     input =
       simpleComponent
@@ -1437,19 +1428,19 @@ components =
     --      }
     --    }
 
-    --paper =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList [ divProps ]
-    --    , name: "Paper"
-    --    , propsRow:
-    --      { base:  Map.fromFoldable $ [ children ]
-    --      , generate:
-    --        [ "classes"
-    --        , "elevation"
-    --        , "square"
-    --        ]
-    --      }
-    --    }
+    paper =
+      simpleComponent
+        { name: "Paper"
+        , propsRow:
+          { base:  Map.fromFoldable $ [ children ]
+          , generate:
+            [ "classes"
+            , "elevation"
+            , "square"
+            ]
+          }
+        , root: rbProps.div
+        }
 
     ---- | TransitionComponent, TransitionProps, transformOrigin
     --popover =
@@ -1861,26 +1852,25 @@ components =
     --      }
     --    }
 
-    svgIcon =
-      simpleComponent
-        { root: rbProps.svg
-        , name: "SvgIcon"
-        , propsRow:
-          { base:
-              Map.fromFoldable
-                  [ children
-                  ]
-          , generate:
-            [ "classes"
-            , "color"
-            , "fontSize"
-            , "htmlColor"
-            , "shapeRendering"
-            , "titleAccess"
-            , "viewBox"
-            ]
-          }
+    svgIcon = simpleComponent
+      { name: "SvgIcon"
+      , propsRow:
+        { base:
+            Map.fromFoldable
+                [ children
+                ]
+        , generate:
+          [ "classes"
+          , "color"
+          , "fontSize"
+          , "htmlColor"
+          , "shapeRendering"
+          , "titleAccess"
+          , "viewBox"
+          ]
         }
+      , root: rbProps.svg
+      }
 
     --swipeableDrawer =
     --  simpleComponent
@@ -2267,22 +2257,22 @@ components =
     --      }
     --    }
 
-    --toolbar =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList [ divProps ]
-    --    , name: "Toolbar"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        , "disableGutters"
-    --        , "variant"
-    --        ]
-    --      }
-    --    }
+    toolbar =
+      simpleComponent
+        { name: "Toolbar"
+        , propsRow:
+          { base:
+              Map.fromFoldable
+                  [ children
+                  ]
+          , generate:
+            [ "classes"
+            , "disableGutters"
+            , "variant"
+            ]
+          }
+        , root: rbProps.div
+        }
 
     --touchRipple =
     --  { extraDeclarations: []
@@ -2297,26 +2287,29 @@ components =
     --  , tsc: { strictNullChecks: false }
     --  }
 
-    ---- | TODO: needs to extend HTMLElement
-    --typography =
-    --  simpleComponent
-    --    { inherits: Nothing
-    --    , name: "Typography"
-    --    , propsRow:
-    --      { base: Map.fromFoldable [ children ]
-    --      , generate:
-    --        [ "classes"
-    --        , "align"
-    --        , "color"
-    --        , "display"
-    --        , "gutterBottom"
-    --        , "noWrap"
-    --        , "paragraph"
-    --        , "variant"
-    --        , "variantMapping"
-    --        ]
-    --      }
-    --    }
+    -- | Fortunatelly Props_p and Props_h*
+    -- | have the same set of properties
+    -- | so we can just use one of them as
+    -- | a root.
+    typography =
+      simpleComponent
+        { name: "Typography"
+        , propsRow:
+          { base: Map.fromFoldable [ children ]
+          , generate:
+            [ "classes"
+            , "align"
+            , "color"
+            , "display"
+            , "gutterBottom"
+            , "noWrap"
+            , "paragraph"
+            , "variant"
+            , "variantMapping"
+            ]
+          }
+        , root: rbProps.p
+        }
 
     ---- | TODO: needs to extend Transition
     --zoom =
@@ -2329,18 +2322,17 @@ components =
     --      }
     --    }
   in
-    [
-    -- appBar
+    [ appBar
     -- , avatar
     -- , backdrop
-    badge
+    , badge
     -- , bottomNavigation
     -- , bottomNavigationAction
     -- , box
     -- , breadcrumbs
-    -- , buttonBase
+    , buttonBase
     -- , buttonGroup
-    -- , button
+    , button
     -- , card
     -- , cardActionArea
     -- , cardActions
@@ -2378,7 +2370,7 @@ components =
     -- , grow
     -- , hidden
     -- , icon
-    -- , iconButton
+    , iconButton
     , input
     -- , inputAdornment
     , inputBase
@@ -2398,7 +2390,7 @@ components =
     -- , modal
     -- , nativeSelect
     -- , noSsr
-    -- , paper
+    , paper
     -- , popover
     -- , popper
     -- , portal
@@ -2417,7 +2409,7 @@ components =
     -- , stepIcon
     -- , stepLabel
     -- , stepper
-    -- , svgIcon
+    , svgIcon
     -- , swipeableDrawer
     -- , switch
     -- , tab
@@ -2435,9 +2427,9 @@ components =
     , (textField "FilledTextField" 2)
     , (textField "OutlinedTextField" 3)
     -- -- , toggleButton
-    -- , toolbar
+    , toolbar
     -- , touchRipple
-    -- , typography
+    , typography
     -- , zoom
     ]
 
@@ -2592,9 +2584,7 @@ main = do
   let
     -- | Currently we use global import aliasing setup which works quite well.
     importAliases = Map.fromFoldable $
-      [ ModuleName "Data.Undefined.NoProblem" /\ Nothing
-      , ModuleName "Data.Undefined.NoProblem.Mono" /\ Nothing
-      , ModuleName "Unsafe.Coerce" /\ Nothing
+      [ ModuleName "Unsafe.Coerce" /\ Nothing
       , ModuleName "Unsafe.Reference" /\ Nothing
       , ModuleName "MUI.Core" /\ Nothing
       , ModuleName "React.Basic" /\ Nothing
