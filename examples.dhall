@@ -21,7 +21,6 @@ You can edit this file as you like.
     , "record-extra"
     , "strings-extra"
     , "debug"
-    , "undefined-is-not-a-problem"
     ]
     # (./lib.dhall).dependencies
 , packages =
