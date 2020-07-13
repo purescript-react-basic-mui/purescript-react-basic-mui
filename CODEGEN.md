@@ -1,8 +1,84 @@
 # Codegen
 
-This project is used to generate code for `purescript-react-basic-mui` components and icons. In `Main.purs` modlue there is `components` function which contains a list of declarations which togheter with typescript declarations (from `@material-ui/types` npm package) are base for our codegen process.
+In the [./codegen/Main.purs] module there is a `components` function which contains a list of declarations which together with typescript declarations (from _node_modules/@material-ui/types_ npm package) are base for our codegen process.
 
-Please take into account that some code comments are still out of date and that we are still finishing this major release.
+Please take into account that some internal docs are still out of date and that we are still finishing this major release.
+
+<!-- 
+
+TODO: Rewrite needed
+
+## Overview
+
+So let's take a look at a example component specification from the [./src/Main.purs]:
+
+```purescript
+
+    backdrop =
+      simpleComponent
+        { optionalPropsInherits:
+          Just
+            $ Type.app
+                (Type.constructor "MUI.Core.Fade.FadePropsOptions")
+                [ divProps ]
+        , requiredPropsInherits: Nothing
+        , name: "Backdrop"
+        , propsType:
+          { optionalBase:
+            basePropsRow []
+              $ Map.fromFoldable
+                  [ Tuple "children" arrayJSX
+                  , Tuple "style" (Type.constructor "React.Basic.DOM.CSS")
+                  ]
+          , requiredBase: emptyBase
+          , generate: [ "classes", "invisible", "open", "transitionDuration" ]
+          }
+        }
+
+```
+This value drives codegen for an `Backdrop` component. The value for a field `name` is important as it should identify `mui` module which we are going to process.
+
+Usually our main concern is to define specific `propsType` value. We have three fields there: `generated` for automatic codegen and `optionalBase` and `requiredBase`. The last two can be used when automatic codegen fails for a given type. This allows us to specify typing for a given property by hand.
+In the example above you can find that we specify types for `children` and `style` properties. We use there `arrayJSX` value because values which represent common types in our binding are already predefined in many cases.
+
+
+## Troubleshouting
+
+### Resolve missing prop during codegen
+
+During codegen you can encounter this kind of message:
+
+```
+Badge component codegen errors: Properties listed in base row but not found in component props: ["component"]
+```
+
+And it is often the case that in the documentation of a given component this prop is listed but it is not really handled by typescript types.
+To verify if on TS level this prop is present you can create this kind of simple module:
+
+```typescript
+import { BadgeProps } from "@material-ui/core/Badge";
+
+// Provide a typ for props and try to create a value
+let tp : BadgeProps = { component: 'span' }
+
+```
+
+If compiler fails with something like around `component` property:
+```
+Type '{ component: string; }' is not assignable (...)
+(...) Object literal may only specify known properties, and 'component' does not exist in type (...)
+```
+
+we can be sure that a given property is really missing from the mui types definition. I've included `./test/missing.ts` which lists all current inconsistencies.
+
+I'm vim user but to be honest the easiest way to debug such errors for me was to install VisualStudioCode and point at the above module with it `code ./test/missing.ts`.
+
+### Update material-ui
+
+```
+$ npm  install @material-ui/types@latest @material-ui/core@latest @material-ui/icons@latest
+```
+
 
 ## CLI usage
 
@@ -47,3 +123,4 @@ Quick component rebuild cycle can be based on `-c` option for codegen. We can ou
 ```
 $ .spago/run.js codegen -c Badge --stdout
 ```
+-->

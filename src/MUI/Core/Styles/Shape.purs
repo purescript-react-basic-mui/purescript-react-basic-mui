@@ -2,7 +2,8 @@ module MUI.Core.Styles.Shape where
 
 import Unsafe.Coerce (unsafeCoerce)
 
-type Shape = { borderRadius :: Number }
+type Shape
+  = { borderRadius :: Number }
 
 foreign import data ShapeOptions :: Type
 

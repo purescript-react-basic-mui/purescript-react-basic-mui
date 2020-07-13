@@ -13,23 +13,23 @@ foreign import data OverridesPartial :: Type
 
 foreign import data ComponentsPropsPartial :: Type
 
-type Theme =
-  { shape :: Shape
-  , breakpoints :: Breakpoints
-  , direction :: Direction
-  , mixins :: Mixins
-  , overrides :: OverridesPartial
-  , palette :: Palette
-  , props :: ComponentsPropsPartial
-  , shadows :: Array String
-  , spacing :: Number -> Number
-  , transitions :: Transitions
-  , typography :: Typography
-  , zIndex :: ZIndex
-  }
+type Theme
+  = { shape :: Shape
+    , breakpoints :: Breakpoints
+    , direction :: Direction
+    , mixins :: Mixins
+    , overrides :: OverridesPartial
+    , palette :: Palette
+    , props :: ComponentsPropsPartial
+    , shadows :: Array String
+    , spacing :: Number -> Number
+    , transitions :: Transitions
+    , typography :: Typography
+    , zIndex :: ZIndex
+    }
 
 foreign import data Direction :: Type
+
 -- data Direction = LTR | RTL
 direction :: { ltr :: Direction, rtl ∷ Direction }
 direction = { ltr: unsafeCoerce "ltr", rtl: unsafeCoerce "rtl" }
-

@@ -27,5 +27,5 @@ You can edit this file as you like.
 , packages =
     ./packages.dhall
 , sources =
-    [ "src/**/*.purs", "codegen/src/**/*.purs", "example/src/**/*.purs", "test/**/*.purs" ]
+    [ "src/**/*.purs", "examples/**/*.purs" ]
 }

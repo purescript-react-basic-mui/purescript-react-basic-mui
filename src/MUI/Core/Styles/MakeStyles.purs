@@ -3,7 +3,6 @@ module MUI.Core.Styles.MakeStyles where
 import Prelude
 import Type.Row
 import Type.RowList
-
 import Foreign.Object (Object)
 import MUI.Core (JSS)
 import MUI.Core.Styles.CreateMuiTheme (Theme)
@@ -13,27 +12,22 @@ foreign import data UseStyles :: Type -> Type
 
 foreign import makeStyles :: forall input output. MapRecordValuesToString input output => (Theme -> Record input) -> Hook UseStyles (Record output)
 
-class MapRecordValuesToString
-  (input_row :: # Type)
-  (output_row :: # Type)
+class MapRecordValuesToString (input_row :: #Type) (output_row :: #Type)
 
-instance mapRecordValuesToString
-  :: ( RowToList input_row input_rowList
-     , MapRecordValuesToStringImpl input_rowList output_rowList
-     , ListToRow output_rowList output_row
-     )
-  => MapRecordValuesToString input_row output_row
+instance mapRecordValuesToString ::
+  ( RowToList input_row input_rowList
+  , MapRecordValuesToStringImpl input_rowList output_rowList
+  , ListToRow output_rowList output_row
+  ) =>
+  MapRecordValuesToString input_row output_row
 
-class MapRecordValuesToStringImpl
-  (input_rowList :: RowList)
-  (output_rowList :: RowList)
-  | input_rowList -> output_rowList
+class MapRecordValuesToStringImpl (input_rowList :: RowList) (output_rowList :: RowList) | input_rowList -> output_rowList
 
 instance mapRecordValuesToStringImplNil ::
   MapRecordValuesToStringImpl Nil Nil
 
 instance mapRecordValuesToStringImplCons ::
-  (MapRecordValuesToStringImpl input_tail output_tail)
-  => MapRecordValuesToStringImpl
-  (Cons input_symbol input_fieldType input_tail)
-  (Cons input_symbol String output_tail)
+  (MapRecordValuesToStringImpl input_tail output_tail) =>
+  MapRecordValuesToStringImpl
+    (Cons input_symbol input_fieldType input_tail)
+    (Cons input_symbol String output_tail)
