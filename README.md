@@ -9,12 +9,14 @@ You can find currently tested and mirgrated components in the [_./src/MUI/Core_]
 
 ### Please help us with component testing
 
-If you want to help push development of the next release forward please take a look into [_./codegen/Main.purs_](./codegen/Main.purs) and try to migrate any of the unused and predefined component stub there. When you are done with codegen please add a new component to the [_./examples/Main.purs`_](./examples/Main.purs) and test it by running: `$ webpack-dev-server --watch` and using web browser.
+If you want to help push development of the next release forward please take a look into [_./codegen/Main.purs_](./codegen/Main.purs) and try to migrate any of the unused and predefined component stub there. When you are done with codegen please add a new component to the [_./examples/Main.purs_](./examples/Main.purs) and test it by running: `$ webpack-dev-server --watch` and using web browser.
 In the case of any trouble please contact us through issue tracker or directly on the PS slack channel.
 
-## Project structure and workflow
+## Project structure
 
 We use "flat monorepo" (no subprojects) approach to simplify usual _codegen change -> codegen run -> test component render_ cycle. You can find three _*.dhall_ files and three source directories (_./codegen_, _./src_, _./examples_) [here](./).
+
+## Workflow
 
 To compile and run codegen and generate a single component you can use:
 
