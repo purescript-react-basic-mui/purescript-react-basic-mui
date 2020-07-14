@@ -7,7 +7,7 @@ foreign import data ServerStyleSheets ∷ Type
 
 newtype JSXRender = JSXRender String
 
-newtype JSSRender = CSSRender String
+newtype JSSRender = JSSRender String
 
 foreign import serverStyleSheets ∷ Effect ServerStyleSheets
 
