@@ -265,7 +265,6 @@ componentConstructorsAST ::
   List Declaration
 componentConstructorsAST { component, jss, props } = constructors
   where
-  -- | Maybe this `Writer` here is a bit overkill ;-)
   constructors :: List Declaration
   constructors = do
     let
@@ -291,24 +290,6 @@ componentConstructorsAST { component, jss, props } = constructors
         reactComponentApply (recordLiteral (Type.app props.combined [ c ]))
 
       _Theme = Type.constructor "MUI.Core.Styles.Theme"
-
-      -- | withStyles' :: (Theme -> Record jss) -> ReactComponent {   | given  } -> ReactComponent {   | given  }
-      -- | withStyles' = unsafeCoerce withStyles
-      withStyles jssVar given = forAllValueBinding
-        (SListProxy :: _ SNil)
-        ("withStyles'")
-        (SListProxy :: _ SNil)
-        \_ ->
-          { signature: Just $
-            Type.arr
-              (Type.arr _Theme (recordLiteral jssVar)) $
-              (Type.arr
-                (reactComponentApply (Type.recordLiteral given))
-                (reactComponentApply (Type.recordLiteral given))
-              )
-          , expr: exprUnsafeCoerceApp (Expr.ident' "MUI.Core.Styles.withStyles")
-          , whereBindings: []
-          }
 
       -- | For exmample:
       -- |
@@ -367,8 +348,6 @@ componentConstructorsAST { component, jss, props } = constructors
                 , expr: reactElemApp (Expr.ident' $ "_" <> componentName) vars.props
                 , whereBindings: []
                 }
-          -- | For example:
-          -- |
           , props: DeclValue $ forAllValueBinding
               (SListProxy :: _ ("given" ::: "optionalGiven" ::: "optionalMissing" ::: "props" ::: "required" ::: SNil))
               (camelCase (componentName <> "Props"))
@@ -382,14 +361,6 @@ componentConstructorsAST { component, jss, props } = constructors
                     Type.arr
                       (Type.recordLiteral (Type.app props.required [ typeVars.given ]))
                       _Props.constructor
-                -- | TODO
-                --   Just $
-                --     nubConstraint [ props.combined, t ] typeVars.props $
-                --     unionConstraint typeVars.given typeVars.optionalMissing typeVars.props $
-                --     Type.arr
-                --       (Type.recordLiteral (Type.app props.required [ typeVars.given ]))
-                --       _Props.constructor
-                -- | This ident could be taken from the above declaration
                 , expr: exprUnsafeCoerce
                 , whereBindings: []
                 }
@@ -413,7 +384,25 @@ componentConstructorsAST { component, jss, props } = constructors
             (SListProxy :: _ ("style" ::: "props" ::: SNil))
             \{ typeVars, vars } ->
               let
-                ws@(ValueBindingFields { value: { name: wsIdent }}) = withStyles typeVars.jss typeVars.given
+                -- | withStyles' :: (Theme -> Record jss) -> ReactComponent { | given } -> ReactComponent { | given }
+                -- | withStyles' = unsafeCoerce withStyles
+                withStyles = forAllValueBinding
+                  (SListProxy :: _ SNil)
+                  ("withStyles'")
+                  (SListProxy :: _ SNil)
+                  \_ ->
+                    { signature: Just $
+                      Type.arr
+                        (Type.arr _Theme (recordLiteral typeVars.jss)) $
+                        (Type.arr
+                          (reactComponentApply (Type.recordLiteral typeVars.given))
+                          (reactComponentApply (Type.recordLiteral typeVars.given))
+                        )
+                    , expr: exprUnsafeCoerceApp (Expr.ident' "MUI.Core.Styles.withStyles")
+                    , whereBindings: []
+                    }
+
+                ws@(ValueBindingFields { value: { name: wsIdent }}) = withStyles
               in
                 { signature: Just $
                     nubConstraint rootProps.required typeVars.required $

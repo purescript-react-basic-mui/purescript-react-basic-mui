@@ -9,6 +9,7 @@ You can edit this file as you like.
     , "debug"
     , "effect"
     , "filterable"
+    , "freet"
     , "generics-rep"
     , "heterogeneous"
     , "moldy"
@@ -19,6 +20,9 @@ You can edit this file as you like.
     , "psci-support"
     , "read-dts"
     , "record-extra"
+    , "react-basic"
+    , "simple-json"
+    , "sized-vectors"
     , "strings-extra"
     , "debug"
     ]
@@ -26,5 +30,5 @@ You can edit this file as you like.
 , packages =
     ./packages.dhall
 , sources =
-    [ "src/**/*.purs", "examples/**/*.purs" ]
+    [ "./codegen/**/*.purs" ]
 }

@@ -33,7 +33,7 @@ $ ./bin/codegen.sh
 To compile just the code from the library (./src):
 
 ```purescript
-$ spago build --config lib.dhall
+$ spago build --config spago.dhall
 ```
 
 To run test app please use:
