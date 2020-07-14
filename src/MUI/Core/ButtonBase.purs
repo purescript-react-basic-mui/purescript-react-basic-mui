@@ -60,34 +60,42 @@ type ButtonBasePropsRow (r :: #Type)
 foreign import _UnsafeButtonBase :: forall componentProps. ReactComponent { | ButtonBasePropsRow componentProps }
 
 _ButtonBase ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (ButtonBaseReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (ButtonBasePropsRow React.Basic.DOM.Props_button) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | ButtonBaseReqPropsRow given }
+  ReactComponent { | given }
 _ButtonBase = unsafeCoerce _UnsafeButtonBase
 
 buttonBase ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (ButtonBaseReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (ButtonBasePropsRow React.Basic.DOM.Props_button) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | ButtonBaseReqPropsRow given } -> JSX
+  { | given } -> JSX
 buttonBase props = element _ButtonBase props
 
 buttonBaseWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (ButtonBaseReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (ButtonBasePropsRow React.Basic.DOM.Props_button) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ ButtonBaseClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | ButtonBaseReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 buttonBaseWithStyles style props = element (withStyles' style _ButtonBase) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | ButtonBaseReqPropsRow given } -> ReactComponent { | ButtonBaseReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data ButtonBaseProps :: Type
 
 buttonBaseProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (ButtonBaseReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (ButtonBasePropsRow React.Basic.DOM.Props_button) props =>
   Prim.Row.Union given optionalMissing props =>
   { | ButtonBaseReqPropsRow given } -> ButtonBaseProps

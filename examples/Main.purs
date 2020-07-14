@@ -30,7 +30,7 @@ import MUI.Core.Typography (variant) as Typography
 import MUI.Icons.Menu (menu)
 import MUI.Icons.Types (iconWithStyles)
 import React.Basic (Component, JSX, createComponent, make)
-import React.Basic.DOM (css, div, div_, form, text) as DOM
+import React.Basic.DOM (css, div, form, text) as DOM
 import React.Basic.DOM (render)
 import Web.DOM.NonElementParentNode (getElementById)
 import Web.HTML (window)
@@ -49,7 +49,7 @@ app :: JSX
 app = make component { initialState: {}, render } {}
   where
     textInputStyle theme = { root: jss { width: "80%", margin: theme.spacing 2.0 }}
-    render self = DOM.div_
+    render self = DOM.div $ { children: _ }
       [ cssBaseline
       , appBar $ { children: _, position: AppBar.position.static } <<< Array.singleton $
           toolbar $ { children: _ }
@@ -61,7 +61,7 @@ app = make component { initialState: {}, render } {}
                 , color: Button.color.inherit
                 }
             ]
-      , DOM.div $ { style: DOM.css { "max-width": "960px", margin: "auto" }, children: _ }
+      , DOM.div $ { style: DOM.css { maxWidth: "960px", margin: "auto" }, children: _ }
           [ DOM.form $ { children: _ } $
             [ grid $ { container: true, children: _ }
               [ gridItem $
@@ -97,7 +97,7 @@ app = make component { initialState: {}, render } {}
               ]
           ]
           , dividerWithStyles
-              (\theme → { root: jss { marginTop: theme.spacing(4.0), marginBottom: theme.spacing 4.0 }})
+              (\theme → { root: jss { marginTop: theme.spacing 4.0, marginBottom: theme.spacing 4.0 }})
               { variant: Dividier.variant.middle }
           , grid $ { container: true, children: _ }
             [ gridItem $

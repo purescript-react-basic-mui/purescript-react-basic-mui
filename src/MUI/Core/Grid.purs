@@ -208,34 +208,42 @@ type GridPropsRow (r :: #Type)
 foreign import _UnsafeGrid :: forall componentProps. ReactComponent { | GridPropsRow componentProps }
 
 _Grid ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (GridReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (GridPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | GridReqPropsRow given }
+  ReactComponent { | given }
 _Grid = unsafeCoerce _UnsafeGrid
 
 grid ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (GridReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (GridPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | GridReqPropsRow given } -> JSX
+  { | given } -> JSX
 grid props = element _Grid props
 
 gridWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (GridReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (GridPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ GridClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | GridReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 gridWithStyles style props = element (withStyles' style _Grid) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | GridReqPropsRow given } -> ReactComponent { | GridReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data GridProps :: Type
 
 gridProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (GridReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (GridPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | GridReqPropsRow given } -> GridProps

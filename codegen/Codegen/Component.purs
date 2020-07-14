@@ -1,4 +1,4 @@
-module Codegen.Model where
+module Codegen.Component where
 
 import Prelude
 
@@ -122,6 +122,9 @@ rbProps =
 
 
 -- | Drives generation of a given MUI component.
+-- | TODO: annotate this type with finall props etc.
+-- | so we can use this info to simplify child
+-- | component codegen (checking overlap between props etc.).
 type Component =
   { extraDeclarations :: Array Declaration
   -- | `ModulePath` value relative to `@material-ui/core/`

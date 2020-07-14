@@ -66,34 +66,42 @@ type DividerPropsRow (r :: #Type)
 foreign import _UnsafeDivider :: forall componentProps. ReactComponent { | DividerPropsRow componentProps }
 
 _Divider ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (DividerReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (DividerPropsRow React.Basic.DOM.Props_hr) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | DividerReqPropsRow given }
+  ReactComponent { | given }
 _Divider = unsafeCoerce _UnsafeDivider
 
 divider ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (DividerReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (DividerPropsRow React.Basic.DOM.Props_hr) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | DividerReqPropsRow given } -> JSX
+  { | given } -> JSX
 divider props = element _Divider props
 
 dividerWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (DividerReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (DividerPropsRow React.Basic.DOM.Props_hr) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ DividerClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | DividerReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 dividerWithStyles style props = element (withStyles' style _Divider) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | DividerReqPropsRow given } -> ReactComponent { | DividerReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data DividerProps :: Type
 
 dividerProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (DividerReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (DividerPropsRow React.Basic.DOM.Props_hr) props =>
   Prim.Row.Union given optionalMissing props =>
   { | DividerReqPropsRow given } -> DividerProps

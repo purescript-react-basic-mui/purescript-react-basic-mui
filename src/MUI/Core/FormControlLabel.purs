@@ -63,34 +63,42 @@ type FormControlLabelPropsRow (r :: #Type)
 foreign import _UnsafeFormControlLabel :: forall componentProps. ReactComponent { | FormControlLabelPropsRow componentProps }
 
 _FormControlLabel ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormControlLabelReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormControlLabelPropsRow React.Basic.DOM.Props_label) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | FormControlLabelReqPropsRow given }
+  ReactComponent { | given }
 _FormControlLabel = unsafeCoerce _UnsafeFormControlLabel
 
 formControlLabel ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormControlLabelReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormControlLabelPropsRow React.Basic.DOM.Props_label) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | FormControlLabelReqPropsRow given } -> JSX
+  { | given } -> JSX
 formControlLabel props = element _FormControlLabel props
 
 formControlLabelWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (FormControlLabelReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormControlLabelPropsRow React.Basic.DOM.Props_label) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ FormControlLabelClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | FormControlLabelReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 formControlLabelWithStyles style props = element (withStyles' style _FormControlLabel) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | FormControlLabelReqPropsRow given } -> ReactComponent { | FormControlLabelReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data FormControlLabelProps :: Type
 
 formControlLabelProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormControlLabelReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormControlLabelPropsRow React.Basic.DOM.Props_label) props =>
   Prim.Row.Union given optionalMissing props =>
   { | FormControlLabelReqPropsRow given } -> FormControlLabelProps

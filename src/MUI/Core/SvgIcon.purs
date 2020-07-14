@@ -77,34 +77,42 @@ type SvgIconPropsRow (r :: #Type)
 foreign import _UnsafeSvgIcon :: forall componentProps. ReactComponent { | SvgIconPropsRow componentProps }
 
 _SvgIcon ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (SvgIconReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (SvgIconPropsRow React.Basic.DOM.SVG.Props_svg) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | SvgIconReqPropsRow given }
+  ReactComponent { | given }
 _SvgIcon = unsafeCoerce _UnsafeSvgIcon
 
 svgIcon ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (SvgIconReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (SvgIconPropsRow React.Basic.DOM.SVG.Props_svg) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | SvgIconReqPropsRow given } -> JSX
+  { | given } -> JSX
 svgIcon props = element _SvgIcon props
 
 svgIconWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (SvgIconReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (SvgIconPropsRow React.Basic.DOM.SVG.Props_svg) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ SvgIconClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | SvgIconReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 svgIconWithStyles style props = element (withStyles' style _SvgIcon) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | SvgIconReqPropsRow given } -> ReactComponent { | SvgIconReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data SvgIconProps :: Type
 
 svgIconProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (SvgIconReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (SvgIconPropsRow React.Basic.DOM.SVG.Props_svg) props =>
   Prim.Row.Union given optionalMissing props =>
   { | SvgIconReqPropsRow given } -> SvgIconProps

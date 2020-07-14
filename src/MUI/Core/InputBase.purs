@@ -115,34 +115,42 @@ type InputBasePropsRow (r :: #Type)
 foreign import _UnsafeInputBase :: forall componentProps. ReactComponent { | InputBasePropsRow componentProps }
 
 _InputBase ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (InputBaseReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (InputBasePropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | InputBaseReqPropsRow given }
+  ReactComponent { | given }
 _InputBase = unsafeCoerce _UnsafeInputBase
 
 inputBase ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (InputBaseReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (InputBasePropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | InputBaseReqPropsRow given } -> JSX
+  { | given } -> JSX
 inputBase props = element _InputBase props
 
 inputBaseWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (InputBaseReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (InputBasePropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ InputBaseClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | InputBaseReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 inputBaseWithStyles style props = element (withStyles' style _InputBase) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | InputBaseReqPropsRow given } -> ReactComponent { | InputBaseReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data InputBaseProps :: Type
 
 inputBaseProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (InputBaseReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (InputBasePropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | InputBaseReqPropsRow given } -> InputBaseProps

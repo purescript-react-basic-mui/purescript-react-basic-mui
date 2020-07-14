@@ -51,34 +51,42 @@ type ToolbarPropsRow (r :: #Type)
 foreign import _UnsafeToolbar :: forall componentProps. ReactComponent { | ToolbarPropsRow componentProps }
 
 _Toolbar ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (ToolbarReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (ToolbarPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | ToolbarReqPropsRow given }
+  ReactComponent { | given }
 _Toolbar = unsafeCoerce _UnsafeToolbar
 
 toolbar ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (ToolbarReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (ToolbarPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | ToolbarReqPropsRow given } -> JSX
+  { | given } -> JSX
 toolbar props = element _Toolbar props
 
 toolbarWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (ToolbarReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (ToolbarPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ ToolbarClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | ToolbarReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 toolbarWithStyles style props = element (withStyles' style _Toolbar) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | ToolbarReqPropsRow given } -> ReactComponent { | ToolbarReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data ToolbarProps :: Type
 
 toolbarProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (ToolbarReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (ToolbarPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | ToolbarReqPropsRow given } -> ToolbarProps

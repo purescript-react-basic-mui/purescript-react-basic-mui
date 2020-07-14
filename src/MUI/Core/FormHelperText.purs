@@ -71,34 +71,42 @@ type FormHelperTextPropsRow (r :: #Type)
 foreign import _UnsafeFormHelperText :: forall componentProps. ReactComponent { | FormHelperTextPropsRow componentProps }
 
 _FormHelperText ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormHelperTextReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormHelperTextPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | FormHelperTextReqPropsRow given }
+  ReactComponent { | given }
 _FormHelperText = unsafeCoerce _UnsafeFormHelperText
 
 formHelperText ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormHelperTextReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormHelperTextPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | FormHelperTextReqPropsRow given } -> JSX
+  { | given } -> JSX
 formHelperText props = element _FormHelperText props
 
 formHelperTextWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (FormHelperTextReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormHelperTextPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ FormHelperTextClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | FormHelperTextReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 formHelperTextWithStyles style props = element (withStyles' style _FormHelperText) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | FormHelperTextReqPropsRow given } -> ReactComponent { | FormHelperTextReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data FormHelperTextProps :: Type
 
 formHelperTextProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormHelperTextReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormHelperTextPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | FormHelperTextReqPropsRow given } -> FormHelperTextProps

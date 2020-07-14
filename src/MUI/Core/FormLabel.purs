@@ -59,34 +59,42 @@ type FormLabelPropsRow (r :: #Type)
 foreign import _UnsafeFormLabel :: forall componentProps. ReactComponent { | FormLabelPropsRow componentProps }
 
 _FormLabel ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormLabelReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormLabelPropsRow React.Basic.DOM.Props_label) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | FormLabelReqPropsRow given }
+  ReactComponent { | given }
 _FormLabel = unsafeCoerce _UnsafeFormLabel
 
 formLabel ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormLabelReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormLabelPropsRow React.Basic.DOM.Props_label) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | FormLabelReqPropsRow given } -> JSX
+  { | given } -> JSX
 formLabel props = element _FormLabel props
 
 formLabelWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (FormLabelReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormLabelPropsRow React.Basic.DOM.Props_label) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ FormLabelClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | FormLabelReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 formLabelWithStyles style props = element (withStyles' style _FormLabel) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | FormLabelReqPropsRow given } -> ReactComponent { | FormLabelReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data FormLabelProps :: Type
 
 formLabelProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormLabelReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormLabelPropsRow React.Basic.DOM.Props_label) props =>
   Prim.Row.Union given optionalMissing props =>
   { | FormLabelReqPropsRow given } -> FormLabelProps

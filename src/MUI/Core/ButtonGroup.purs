@@ -114,34 +114,42 @@ type ButtonGroupPropsRow (r :: #Type)
 foreign import _UnsafeButtonGroup :: forall componentProps. ReactComponent { | ButtonGroupPropsRow componentProps }
 
 _ButtonGroup ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (ButtonGroupReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (ButtonGroupPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | ButtonGroupReqPropsRow given }
+  ReactComponent { | given }
 _ButtonGroup = unsafeCoerce _UnsafeButtonGroup
 
 buttonGroup ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (ButtonGroupReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (ButtonGroupPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | ButtonGroupReqPropsRow given } -> JSX
+  { | given } -> JSX
 buttonGroup props = element _ButtonGroup props
 
 buttonGroupWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (ButtonGroupReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (ButtonGroupPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ ButtonGroupClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | ButtonGroupReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 buttonGroupWithStyles style props = element (withStyles' style _ButtonGroup) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | ButtonGroupReqPropsRow given } -> ReactComponent { | ButtonGroupReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data ButtonGroupProps :: Type
 
 buttonGroupProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (ButtonGroupReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (ButtonGroupPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | ButtonGroupReqPropsRow given } -> ButtonGroupProps

@@ -62,34 +62,42 @@ type PaperPropsRow (r :: #Type)
 foreign import _UnsafePaper :: forall componentProps. ReactComponent { | PaperPropsRow componentProps }
 
 _Paper ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (PaperReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (PaperPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | PaperReqPropsRow given }
+  ReactComponent { | given }
 _Paper = unsafeCoerce _UnsafePaper
 
 paper ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (PaperReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (PaperPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | PaperReqPropsRow given } -> JSX
+  { | given } -> JSX
 paper props = element _Paper props
 
 paperWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (PaperReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (PaperPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ PaperClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | PaperReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 paperWithStyles style props = element (withStyles' style _Paper) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | PaperReqPropsRow given } -> ReactComponent { | PaperReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data PaperProps :: Type
 
 paperProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (PaperReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (PaperPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | PaperReqPropsRow given } -> PaperProps

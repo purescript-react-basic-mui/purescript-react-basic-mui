@@ -101,34 +101,42 @@ type BadgePropsRow (r :: #Type)
 foreign import _UnsafeBadge :: forall componentProps. ReactComponent { | BadgePropsRow componentProps }
 
 _Badge ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (BadgeReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (BadgePropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | BadgeReqPropsRow given }
+  ReactComponent { | given }
 _Badge = unsafeCoerce _UnsafeBadge
 
 badge ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (BadgeReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (BadgePropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | BadgeReqPropsRow given } -> JSX
+  { | given } -> JSX
 badge props = element _Badge props
 
 badgeWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (BadgeReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (BadgePropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ BadgeClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | BadgeReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 badgeWithStyles style props = element (withStyles' style _Badge) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | BadgeReqPropsRow given } -> ReactComponent { | BadgeReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data BadgeProps :: Type
 
 badgeProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (BadgeReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (BadgePropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | BadgeReqPropsRow given } -> BadgeProps

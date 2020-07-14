@@ -6,8 +6,8 @@ import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconP
 import Codegen (component, icon, write) as Codegen
 import Codegen.AST (ModuleName(..), TypeName(..))
 import Codegen.AST.Sugar.Type (constructor) as Type
-import Codegen.Model (Component, Icon, ModulePath(..), Root(..), arrayJSX, iconName, jsx, psImportPath, rbProps)
-import Codegen.Model (componentName) as Model
+import Codegen.Component (Component, Icon, ModulePath(..), Root(..), arrayJSX, iconName, jsx, psImportPath, rbProps)
+import Codegen.Component (componentName) as Component
 import Codegen.TS.MUI (componentProps) as TS.MUI
 import Codegen.TS.Types (InstantiationStrategy(..))
 import Control.Alt ((<|>))
@@ -2482,7 +2482,7 @@ componentRead =
                 , intercalate ", " (map show <<< List.sort <<< Map.Internal.keys $ components') <> "."
                 ]
   where
-  step c = Tuple (Model.componentName c) c
+  step c = Tuple (Component.componentName c) c
 
   components' = Map.fromFoldable $ map step components
 

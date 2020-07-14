@@ -138,34 +138,42 @@ type TypographyPropsRow (r :: #Type)
 foreign import _UnsafeTypography :: forall componentProps. ReactComponent { | TypographyPropsRow componentProps }
 
 _Typography ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (TypographyReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (TypographyPropsRow React.Basic.DOM.Props_p) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | TypographyReqPropsRow given }
+  ReactComponent { | given }
 _Typography = unsafeCoerce _UnsafeTypography
 
 typography ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (TypographyReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (TypographyPropsRow React.Basic.DOM.Props_p) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | TypographyReqPropsRow given } -> JSX
+  { | given } -> JSX
 typography props = element _Typography props
 
 typographyWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (TypographyReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (TypographyPropsRow React.Basic.DOM.Props_p) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ TypographyClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | TypographyReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 typographyWithStyles style props = element (withStyles' style _Typography) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | TypographyReqPropsRow given } -> ReactComponent { | TypographyReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data TypographyProps :: Type
 
 typographyProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (TypographyReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (TypographyPropsRow React.Basic.DOM.Props_p) props =>
   Prim.Row.Union given optionalMissing props =>
   { | TypographyReqPropsRow given } -> TypographyProps

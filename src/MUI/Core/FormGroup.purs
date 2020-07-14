@@ -35,34 +35,42 @@ type FormGroupPropsRow (r :: #Type)
 foreign import _UnsafeFormGroup :: forall componentProps. ReactComponent { | FormGroupPropsRow componentProps }
 
 _FormGroup ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormGroupReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormGroupPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | FormGroupReqPropsRow given }
+  ReactComponent { | given }
 _FormGroup = unsafeCoerce _UnsafeFormGroup
 
 formGroup ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormGroupReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormGroupPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | FormGroupReqPropsRow given } -> JSX
+  { | given } -> JSX
 formGroup props = element _FormGroup props
 
 formGroupWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (FormGroupReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormGroupPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ FormGroupClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | FormGroupReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 formGroupWithStyles style props = element (withStyles' style _FormGroup) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | FormGroupReqPropsRow given } -> ReactComponent { | FormGroupReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data FormGroupProps :: Type
 
 formGroupProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormGroupReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormGroupPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | FormGroupReqPropsRow given } -> FormGroupProps

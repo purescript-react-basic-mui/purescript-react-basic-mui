@@ -81,34 +81,42 @@ type FormControlPropsRow (r :: #Type)
 foreign import _UnsafeFormControl :: forall componentProps. ReactComponent { | FormControlPropsRow componentProps }
 
 _FormControl ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormControlReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormControlPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  ReactComponent { | FormControlReqPropsRow given }
+  ReactComponent { | given }
 _FormControl = unsafeCoerce _UnsafeFormControl
 
 formControl ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormControlReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormControlPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | FormControlReqPropsRow given } -> JSX
+  { | given } -> JSX
 formControl props = element _FormControl props
 
 formControlWithStyles ::
-  forall jss_ jss given optionalMissing props.
+  forall jss_ jss given optionalGiven optionalMissing props required.
+  Nub' (FormControlReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormControlPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ FormControlClassesJSS =>
-  (MUI.Core.Styles.Theme -> { | jss }) -> { | FormControlReqPropsRow given } -> JSX
+  (MUI.Core.Styles.Theme -> { | jss }) -> { | given } -> JSX
 formControlWithStyles style props = element (withStyles' style _FormControl) props
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | FormControlReqPropsRow given } -> ReactComponent { | FormControlReqPropsRow given }
+  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent { | given } -> ReactComponent { | given }
   withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
 
 foreign import data FormControlProps :: Type
 
 formControlProps ::
-  forall given optionalMissing props.
+  forall given optionalGiven optionalMissing props required.
+  Nub' (FormControlReqPropsRow ()) required =>
+  Prim.Row.Union required optionalGiven given =>
   Nub' (FormControlPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | FormControlReqPropsRow given } -> FormControlProps
