@@ -10,10 +10,13 @@ import MUI.Core (jss)
 import MUI.Core.AppBar (appBar)
 import MUI.Core.AppBar (position) as AppBar
 import MUI.Core.Badge (badgeWithStyles)
-import MUI.Core.Badge (color) as Badge
+import MUI.Core.Badge (color, variant) as Badge
+import MUI.Core.Button (button, color) as Button
 import MUI.Core.Button (buttonWithStyles)
-import MUI.Core.Button (color) as Button
+import MUI.Core.ButtonGroup (buttonGroup, buttonGroupWithStyles, color, variant) as ButtonGroup
 import MUI.Core.CssBaseline (cssBaseline)
+import MUI.Core.Divider (divider, dividerWithStyles)
+import MUI.Core.Divider (variant) as Dividier
 import MUI.Core.FormControl (formControlWithStyles)
 import MUI.Core.FormHelperText (formHelperText)
 import MUI.Core.Grid (grid)
@@ -39,6 +42,8 @@ type Props = {}
 component :: Component Props
 component = createComponent "Counter"
 
+gridItem child = grid { item: true, children: [ child ], xs: Grid.gridSize.six }
+
 app :: JSX
 app = make component { initialState: {}, render } {}
   where
@@ -56,14 +61,8 @@ app = make component { initialState: {}, render } {}
                 }
             ]
       , DOM.div $ { style: DOM.css { "max-width": "960px", margin: "auto" }, children: _ }
-          [ badgeWithStyles
-              (\theme → { root: jss { margin: theme.spacing 10.0 }})
-              { badgeContent: DOM.text "4"
-              , children: [ DOM.text "TEST" ]
-              , color: Badge.color.primary
-              }
-          , grid $ { container: true, children: _ }
-            [ grid $ { item: true, children: _, xs: Grid.gridSize.six } <<< Array.singleton $
+          [ grid $ { container: true, children: _ }
+            [ gridItem $
                 formControlWithStyles textInputStyle $ { children: _ }
                   [ inputLabel
                     { htmlFor: "m-input"
@@ -72,27 +71,45 @@ app = make component { initialState: {}, render } {}
                   , input { placeholder: "your email address" }
                   , formHelperText { id: "my-helper-text", children: [ DOM.text "We'll never share your email" ]}
                   ]
-            , grid $ { item: true, children: _, xs: Grid.gridSize.six } <<< Array.singleton $
+            , gridItem $
                 TextField.outlinedWithStyles
                   textInputStyle
                   { error: true
                   , label: inputLabel { children: [ DOM.text "Label" ]}
                   , placeholder: "test"
                   }
-            , grid $ { item: true, children: _, xs: Grid.gridSize.six } <<< Array.singleton $
+            , gridItem $
                 TextField.standardWithStyles
                   textInputStyle
                   { error: false
                   , label: inputLabel { children: [ DOM.text "Label" ]}
                   , placeholder: "test"
                   }
-            , grid $ { item: true, children: _, xs: Grid.gridSize.six } <<< Array.singleton $
+            , gridItem $
                 TextField.filledWithStyles
                   textInputStyle
                   { error: true
                   , label: inputLabel { children: [ DOM.text "Label" ]}
                   , placeholder: "test"
                   }
+            ]
+          , dividerWithStyles
+              (\theme → { root: jss { marginTop: theme.spacing(4.0), marginBottom: theme.spacing 4.0 }})
+              { variant: Dividier.variant.middle }
+          , grid $ { container: true, children: _ }
+            [ gridItem $
+                ButtonGroup.buttonGroupWithStyles (\theme → { root: jss { margin: theme.spacing 2.0 }}) $
+                  { variant: ButtonGroup.variant.text, color: ButtonGroup.color.primary, children: _ }
+                  [ Button.button { children: [ DOM.text "One" ]}
+                  , Button.button { children: [ DOM.text "Two" ]}
+                  , Button.button { children: [ DOM.text "Three" ]}
+                  ]
+            , gridItem $ badgeWithStyles
+                (\theme → { root: jss { margin: theme.spacing 2.0 }})
+                { badgeContent: DOM.text "4"
+                , children: [ DOM.text "Badge experiment" ]
+                , color: Badge.color.secondary
+                }
             ]
           ]
       ]

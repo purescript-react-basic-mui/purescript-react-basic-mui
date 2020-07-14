@@ -250,26 +250,25 @@ components =
         , root: MUIComponent buttonBase
         }
 
-    --buttonGroup =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList [ divProps ]
-    --    , name: "ButtonGroup"
-    --    , propsRow:
-    --      { base:
-    --         Map.fromFoldable [ children ]
-    --      , generate:
-    --        [ "classes"
-    --        , "color"
-    --        , "disabled"
-    --        , "disableFocusRipple"
-    --        , "disableRipple"
-    --        , "fullWidth"
-    --        , "orientation"
-    --        , "size"
-    --        , "variant"
-    --        ]
-    --      }
-    --    }
+    buttonGroup = simpleComponent
+      { name: "ButtonGroup"
+      , propsRow:
+        { base:
+           Map.fromFoldable [ children ]
+        , generate:
+          [ "classes"
+          , "color"
+          , "disabled"
+          , "disableFocusRipple"
+          , "disableRipple"
+          , "fullWidth"
+          , "orientation"
+          , "size"
+          , "variant"
+          ]
+        }
+      , root: rbProps.div
+      }
 
     ---- | TODO: make value a type variable
     --bottomNavigationAction =
@@ -562,21 +561,21 @@ components =
     --    }
 
     ---- | TODO: add component
-    --divider =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_hr" ]
-    --    , name: "Divider"
-    --    , propsRow:
-    --      { base:  Map.fromFoldable []
-    --      , generate:
-    --        [ "absolute"
-    --        , "classes"
-    --        , "light"
-    --        , "orientation"
-    --        , "variant"
-    --        ]
-    --      }
-    --    }
+    divider =
+      simpleComponent
+        { name: "Divider"
+        , propsRow:
+          { base:  Map.fromFoldable []
+          , generate:
+            [ "absolute"
+            , "classes"
+            , "light"
+            , "orientation"
+            , "variant"
+            ]
+          }
+        , root: rbProps.hr
+        }
 
     --drawer =
     --  simpleComponent
@@ -2348,7 +2347,7 @@ components =
     -- , box
     -- , breadcrumbs
     , buttonBase
-    -- , buttonGroup
+    , buttonGroup
     , button
     -- , card
     -- , cardActionArea
@@ -2367,7 +2366,7 @@ components =
     -- , dialogActions
     -- , dialogContent
     -- , dialogTitle
-    -- , divider
+    , divider
     -- , drawer
     -- , expansionPanel
     -- , expansionPanelActions
