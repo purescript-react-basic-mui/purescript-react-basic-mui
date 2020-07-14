@@ -14,7 +14,7 @@ In the case of any trouble please contact us through issue tracker or directly o
 
 ## Project structure and workflow
 
-We use "flat monorepo" approach with to simplify usual _codegen change -> codegen run -> test component render_ cycle. You can find three _*.dhall_ files and three source directories (_./codegen_, _./src_, _./examples_) [here](./).
+We use "flat monorepo" (no subprojects) approach to simplify usual _codegen change -> codegen run -> test component render_ cycle. You can find three _*.dhall_ files and three source directories (_./codegen_, _./src_, _./examples_) [here](./).
 
 To compile and run codegen and generate a single component you can use:
 
@@ -22,13 +22,13 @@ To compile and run codegen and generate a single component you can use:
 $ spago run --node-args "codegen -c Button" --main Codegen.Main --config codegen.dhall
 ```
 
-If you want to regenerate all components you can run:
+If you want to regenerate all components (which you should do before any PR) you can run:
 
 ```purescript
 $ ./bin/codegen.sh
 ```
 
-To check library compilation you can run:
+To compile just the code from the library (./src):
 
 ```purescript
 $ spago build --config lib.dhall
@@ -40,5 +40,4 @@ To run test app please use:
 $ spago build --config examples.dhall
 $ webpack-dev-server
 ```
-
 
