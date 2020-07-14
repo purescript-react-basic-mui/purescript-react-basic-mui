@@ -2,7 +2,7 @@ module Codegen.Model where
 
 import Prelude
 
-import Codegen.AST (Declaration, RowLabel, Type, TypeName(..), UnionMember)
+import Codegen.AST (Declaration, RowLabel, Type, TypeName, UnionMember)
 import Codegen.AST.Sugar.Type (app, array, constructor, typeRow') as Type
 import Codegen.AST.Types (Fields) as AST.Types
 import Codegen.TS.Types (InstanceProps, InstantiationStrategy)
@@ -104,6 +104,7 @@ foldRoot = case _ of
 rbProps ::
   { button :: Root
   , div :: Root
+  , hr :: Root
   , label :: Root
   , p :: Root
   , svg :: Root
@@ -111,6 +112,7 @@ rbProps ::
 rbProps =
   { button: p "Props_button"
   , div: p "Props_div"
+  , hr: p "Props_hr"
   , label: p "Props_label"
   , p: p "Props_p"
   , svg: p "SVG.Props_svg"

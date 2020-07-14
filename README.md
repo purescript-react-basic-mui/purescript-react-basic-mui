@@ -24,7 +24,7 @@ To compile and run codegen and generate a single component you can use:
 $ spago run --node-args "codegen -c Button" --main Codegen.Main --config codegen.dhall
 ```
 
-If you want to regenerate all components (which you should do before any PR) you can run:
+If you want to regenerate all components (which you should do before any PR) you should run:
 
 ```purescript
 $ ./bin/codegen.sh
