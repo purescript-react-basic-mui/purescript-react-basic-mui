@@ -45,11 +45,9 @@ $ webpack-dev-server
 
 ## Icon codegen
 
-This library doesn't contain any ready to use icon modules because when we tested it in the past it caused a huge slowdown of the compilation compilation cycle and ide rebuilds. I'm not sure if this is still the case...
+This library doesn't contain any ready to use icon modules. When we tried to provide the whole icon set in the past it caused a huge slowdown of compilation time and problematic IDE rebuilds / startups. I'm not sure if this is still the case...
 
-To solve this situation we provide a handy simple command which generates icon module for you:
-
-You have to install JS dependencies:
+To solve this situation we provide a handy and simple command which generates icon module for you. You can use it directly from your project directory. The first step is installation of appropriate JS dependencies:
 
 ```
 $ npm install '@material-ui/core' '@material-ui/icons' 'react' 'react-dom' 'typescript' 'fs-extra'
