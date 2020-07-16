@@ -1,10 +1,6 @@
 module MUI.Core.Styles.MakeStyles where
 
-import Prelude
-import Type.Row
-import Type.RowList
-import Foreign.Object (Object)
-import MUI.Core (JSS)
+import Type.RowList (class ListToRow, class RowToList, Cons, Nil, kind RowList)
 import MUI.Core.Styles.CreateMuiTheme (Theme)
 import React.Basic.Hooks (Hook)
 

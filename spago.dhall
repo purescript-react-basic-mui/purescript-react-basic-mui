@@ -4,7 +4,7 @@
     "react-basic-mui"
 , dependencies =
     [ "debug"
-    , "homogeneous"
+    , "react-basic"
     , "react-basic-hooks"
     , "simple-json"
     , "spec"

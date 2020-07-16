@@ -15,21 +15,6 @@ let typelevel-eval =
   , repo = "https://github.com/natefaubion/purescript-typelevel-eval.git"
   , version = "master"
   }
-let homogeneous =
-  { dependencies =
-    [ "assert"
-    , "console"
-    , "effect"
-    , "foreign-object"
-    , "psci-support"
-    , "record-extra"
-    , "typelevel-eval"
-    , "variant"
-    ]
-  , repo = "https://github.com/paluh/purescript-homogeneous.git"
-  , version = "master"
-  }
-
 let additions =
       { matryoshka =
           { dependencies =
@@ -42,7 +27,6 @@ let additions =
           , repo = "https://github.com/slamdata/purescript-matryoshka.git"
           , version = "v0.4.0"
           }
-      , homogeneous = homogeneous
       , typelevel-eval = typelevel-eval
       , moldy =
           { dependencies = [ "foldable-traversable", "prelude", "strings" ]

@@ -43,3 +43,24 @@ $ spago build --config examples.dhall
 $ webpack-dev-server
 ```
 
+## Icon codegen
+
+This library doesn't contain any ready to use icon modules because when we tested it in the past it caused a huge slowdown of the compilation compilation cycle and ide rebuilds. I'm not sure if this is still the case...
+
+To solve this situation we provide a handy simple command which generates icon module for you:
+
+You have to install JS dependencies:
+
+```
+$ npm install '@material-ui/core' '@material-ui/icons' 'react' 'react-dom' 'typescript' 'fs-extra'
+```
+
+To generate `Menu` icon modules please use a command like the one below but with appropriate library `VERSION` number (in the path to _codegen.dhall_ and to sources dir):
+
+```
+$ spago run --path '.spago/react-basic-mui/VERSION/codegen/**/*.purs' --node-args "codegen -i Menu" --main Codegen.Main --config .spago/react-basic-mui/VERSION/codegen.dhall
+
+[info] Build succeeded.
+Writing: ./src/MUI/Icons/Menu.js
+Writing: ./src/MUI/Icons/Menu.purs
+```
