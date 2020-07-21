@@ -22,6 +22,8 @@ import MUI.Core.FormControl (formControlWithStyles)
 import MUI.Core.FormHelperText (formHelperText)
 import MUI.Core.Grid (grid)
 import MUI.Core.Grid (gridSize) as Grid
+import MUI.Core.Hidden (hidden)
+import MUI.Core.Hidden (implementation, only) as Hidden
 import MUI.Core.Input (input)
 import MUI.Core.InputLabel (inputLabel)
 import MUI.Core.Link (color, variant) as Link
@@ -64,6 +66,11 @@ app = make component { initialState: {}, render } {}
                 { children: [ DOM.text "Login" ]
                 , color: Button.color.inherit
                 }
+            , hidden
+              { implementation: Hidden.implementation.css
+              , children: [ DOM.text "Hidden on xs or lg" ]
+              , only: Hidden.only.only [ Hidden.only.xs, Hidden.only.lg ]
+              }
             ]
       , container $ { fixed: true, children: _ }
           [ DOM.form $ { children: _ } $

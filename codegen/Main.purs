@@ -914,28 +914,59 @@ components =
     --      }
     --    }
 
-    --hidden =
-    --  simpleComponent
-    --    { inherits: Nothing
-    --    , name: "Hidden"
-    --    , propsRow:
-    --      { base: Map.fromFoldable [ Tuple "only" foreignType ]
-    --      , generate:
-    --        [ "implementation"
-    --        , "initialWidth"
-    --        , "lgDown"
-    --        , "lgUp"
-    --        , "mdDown"
-    --        , "mdUp"
-    --        , "smDown"
-    --        , "smUp"
-    --        , "xlDown"
-    --        , "xlUp"
-    --        , "xsDown"
-    --        , "xsUp"
-    --        ]
-    --      }
-    --    }
+    -- | It seems that on the current master
+    -- | `HiddenCss` uses `div` as a root
+    -- | but `HiddenJs` returns just children:
+    -- |
+    -- | * https://github.com/mui-org/material-ui/blob/60d99a39836fb82f4da1477a717f642c216fb0b9/packages/material-ui/src/Hidden/HiddenCss.js#L77
+    -- |
+    -- | * https://github.com/mui-org/material-ui/blob/60d99a39836fb82f4da1477a717f642c216fb0b9/packages/material-ui/src/Hidden/HiddenJs.js#L51
+    -- |
+    -- | In other words root will be ignored when they
+    -- | are provided to the component.
+    hidden =
+        { extraDeclarations: []
+        , modulePath:
+          { input: Name "Hidden"
+          , output: Name "Hidden"
+          }
+        , propsRow:
+          { base: mempty -- Map.fromFoldable [ Tuple "only" foreignType ]
+          , generate:
+            [ "implementation"
+            , "initialWidth"
+            , "lgDown"
+            , "lgUp"
+            , "mdDown"
+            , "mdUp"
+            , "only"
+            , "smDown"
+            , "smUp"
+            , "xlDown"
+            , "xlUp"
+            , "xsDown"
+            , "xsUp"
+            ]
+          , ts:
+            { instantiation: Nothing
+            -- | We got somewhat unsafe but convenient
+            -- | API I think:
+            -- |
+            -- | only::{
+            -- |   lg :: Only,
+            -- |   md :: Only,
+            -- |   only :: Array  Only  ->  Only,
+            -- |   sm :: Only,
+            -- |   xl :: Only,
+            -- |   xs :: Only
+            -- |  }
+            , unionName: case _ of
+                "Anonymous" → const $ Just $ TypeName "Only"
+                otherwise → const $ Nothing
+            }
+          }
+        , root: rbProps.div
+        }
 
     --icon =
     --  simpleComponent
@@ -2383,7 +2414,7 @@ components =
     -- , gridListTile
     -- , gridListTileBar
     -- , grow
-    -- , hidden
+    , hidden
     -- , icon
     , iconButton
     , input

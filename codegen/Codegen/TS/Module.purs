@@ -145,7 +145,7 @@ type UnionTypeName
 
 type ComponentAlgebraM a
   = ReaderT
-      { unionName ∷ String → Array UnionMember → Maybe TypeName }
+      { unionName :: String -> Array UnionMember -> Maybe TypeName }
       (ExceptT String (State UnionTypes))
       a
 
@@ -212,7 +212,7 @@ union (Just l) props = do
               <> ", "
               <> show p
 
-  unionName ← asks _.unionName
+  unionName <- asks _.unionName
   let
     name = fromMaybe (typeName l) (unionName l props')
   -- | Currently building only local variants
@@ -242,15 +242,18 @@ union' label vps =
   union label vps
     >>= case _ of
         Left t -> pure $ t
-        Right v@(Union qn@{ name, moduleName: m } _) -> do
-          -- | TODO: Validate:
-          -- | * check if a given variant declaration is already defined
-          -- | * check if already defined variant with the same name has
-          -- |  the same structure
-          when (isJust m)
-            $ throwError "External variants not implemented yet"
-          modify_ (Map.insert name v)
-          pure $ roll $ TypeConstructor $ qn
+        Right u -> defineUnion u
+
+defineUnion :: Union -> ComponentAlgebraM Type
+defineUnion v@(Union qn@{ name, moduleName: m } _) = do
+    -- | TODO: Validate:
+    -- | * check if a given variant declaration is already defined
+    -- | * check if already defined variant with the same name has
+    -- |  the same structure
+    when (isJust m)
+      $ throwError "External variants not implemented yet"
+    modify_ (Map.insert name v)
+    pure $ roll $ TypeConstructor $ qn
 
 -- | Given a TypeScript type representation try to build an AST for it.
 -- |
@@ -341,13 +344,13 @@ exprUnsafeCoerceApp = Expr.app exprUnsafeCoerce
 exprUndefined :: Expr
 exprUndefined = Expr.ident' "Foreign.NullOrUndefined.undefined"
 
-exprSProxy :: String -> { value :: ValueBindingFields, var ∷ Expr }
+exprSProxy :: String -> { value :: ValueBindingFields, var :: Expr }
 exprSProxy label =
   let
     name = "_" <> label
   in
     { var: Expr.ident' name
-    , value: forAllValueBinding (SListProxy ∷ _ SNil) name (SListProxy ∷ _ SNil) \{} ->
+    , value: forAllValueBinding (SListProxy :: _ SNil) name (SListProxy :: _ SNil) \{} ->
         { expr: Expr.identTyped' "SProxy" "Type.Prelude.SProxy"
         , signature: Just $ Type.app (Type.constructor "Type.Prelude.SProxy") [ roll $ TypeSymbol label ]
         , whereBindings: []
