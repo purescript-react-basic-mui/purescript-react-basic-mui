@@ -469,18 +469,18 @@ components =
     --      }
     --    }
 
-    --container =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList [ divProps ]
-    --    , name: "Container"
-    --    , propsRow:
-    --      { base: emptyBase
-    --      , generate:
-    --        [ "fixed"
-    --        , "maxWidth"
-    --        ]
-    --      }
-    --    }
+    container = simpleComponent
+      { name: "Container"
+      , propsRow:
+        { base: mempty
+        , generate:
+          [ "disableGutters"
+          , "fixed"
+          , "maxWidth"
+          ]
+        }
+      , root: rbProps.div
+      }
 
     --cssBaseline =
     --  simpleComponent
@@ -1100,24 +1100,23 @@ components =
     --      }
     --    }
 
-    --link =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_a" ]
-    --    , name: "Link"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              , Tuple "TypographyClasses" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        , "color"
-    --        , "underline"
-    --        , "variant"
-    --        ]
-    --      }
-    --    }
+    link =
+      simpleComponent
+        { name: "Link"
+        , propsRow:
+          { base: Map.fromFoldable
+              [ children
+              -- , Tuple "TypographyClasses" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
+              ]
+          , generate:
+            [ "classes"
+            , "color"
+            , "underline"
+            , "variant"
+            ]
+          }
+        , root: rbProps.a
+        }
 
     --list =
     --  simpleComponent
@@ -2360,7 +2359,7 @@ components =
     -- , checkbox
     -- , chip
     -- , collapse
-    -- , container
+    , container
     -- , cssBaseline
     -- , dialog
     -- , dialogActions
@@ -2393,7 +2392,7 @@ components =
     , inputLabel
     -- , outlineInput
     -- , linearProgress
-    -- , link
+    , link
     -- , list
     -- , listItem
     -- , listItemAvatar

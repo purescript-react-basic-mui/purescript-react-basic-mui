@@ -26,12 +26,12 @@ type PropsRow =
   { base :: AST.Types.Fields Type
   , generate :: Array RowLabel
   -- | An escape hatch for tweaking low level props extraction
-  , ts ∷
+  , ts ::
       { instantiation :: Maybe
         { extractProps :: ReadDTS.Instantiation.Type -> Either (Array String) InstanceProps
         , strategy :: InstantiationStrategy
         }
-      , unionName ∷ String → Array UnionMember → Maybe TypeName
+      , unionName :: String -> Array UnionMember -> Maybe TypeName
       }
   }
 
@@ -102,7 +102,8 @@ foldRoot = case _ of
         wrapInProps { componentName: cn, toConstructor, root: c.root }
 
 rbProps ::
-  { button :: Root
+  { a :: Root
+  , button :: Root
   , div :: Root
   , hr :: Root
   , label :: Root
@@ -110,7 +111,8 @@ rbProps ::
   , svg :: Root
   }
 rbProps =
-  { button: p "Props_button"
+  { a: p "Props_a"
+  , button: p "Props_button"
   , div: p "Props_div"
   , hr: p "Props_hr"
   , label: p "Props_label"

@@ -14,6 +14,7 @@ import MUI.Core.Badge (color) as Badge
 import MUI.Core.Button (button, color) as Button
 import MUI.Core.Button (buttonWithStyles)
 import MUI.Core.ButtonGroup (buttonGroupWithStyles, color, variant) as ButtonGroup
+import MUI.Core.Container (container)
 import MUI.Core.CssBaseline (cssBaseline)
 import MUI.Core.Divider (dividerWithStyles)
 import MUI.Core.Divider (variant) as Dividier
@@ -23,6 +24,8 @@ import MUI.Core.Grid (grid)
 import MUI.Core.Grid (gridSize) as Grid
 import MUI.Core.Input (input)
 import MUI.Core.InputLabel (inputLabel)
+import MUI.Core.Link (color, variant) as Link
+import MUI.Core.Link (link)
 import MUI.Core.TextField (filledWithStyles, outlinedWithStyles, standardWithStyles) as TextField
 import MUI.Core.Toolbar (toolbar)
 import MUI.Core.Typography (typography)
@@ -30,7 +33,7 @@ import MUI.Core.Typography (variant) as Typography
 import MUI.Icons.Menu (menu)
 import MUI.Icons.Types (iconWithStyles)
 import React.Basic (Component, JSX, createComponent, make)
-import React.Basic.DOM (css, div, form, text) as DOM
+import React.Basic.DOM (a, css, div, form, span, text) as DOM
 import React.Basic.DOM (render)
 import Web.DOM.NonElementParentNode (getElementById)
 import Web.HTML (window)
@@ -54,14 +57,15 @@ app = make component { initialState: {}, render } {}
       , appBar $ { children: _, position: AppBar.position.static } <<< Array.singleton $
           toolbar $ { children: _ }
             [ iconWithStyles menu (\theme → { root: jss { marginRight: theme.spacing 2.0 }}) {}
-            , typography { children: [ DOM.text "News" ], variant: Typography.variant.h6 }
+            , typography $ { children: _, variant: Typography.variant.h6 } <<< Array.singleton $
+               link { children: [ DOM.text "LINK" ], href: "#TEST", color: Link.color.inherit }
             , buttonWithStyles
                 (\theme → { root: jss { marginRight: theme.spacing 2.0 }})
                 { children: [ DOM.text "Login" ]
                 , color: Button.color.inherit
                 }
             ]
-      , DOM.div $ { style: DOM.css { maxWidth: "960px", margin: "auto" }, children: _ }
+      , container $ { fixed: true, children: _ }
           [ DOM.form $ { children: _ } $
             [ grid $ { container: true, children: _ }
               [ gridItem $
@@ -77,6 +81,11 @@ app = make component { initialState: {}, render } {}
                   TextField.outlinedWithStyles
                     textInputStyle
                     { error: true
+                    , helperText: DOM.span $ { children: _ }
+                      [ DOM.text "A link inside a helper text: "
+                      , DOM.a { href: "https://example.com", children: [ DOM.text "example.com" ]}
+                      ]
+                      -- { dangerouslySetInnerHTML: { __html : "<a href=\"https://google.com\">UNSAFE</a>" }}
                     , label: inputLabel { children: [ DOM.text "Label" ]}
                     , placeholder: "test"
                     }
