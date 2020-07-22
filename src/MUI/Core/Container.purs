@@ -65,5 +65,5 @@ containerProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (ContainerPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | ContainerReqPropsRow given } -> ContainerProps
+  { | given } -> ContainerProps
 containerProps = unsafeCoerce

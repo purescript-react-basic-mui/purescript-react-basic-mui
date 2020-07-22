@@ -109,5 +109,5 @@ formHelperTextProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (FormHelperTextPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | FormHelperTextReqPropsRow given } -> FormHelperTextProps
+  { | given } -> FormHelperTextProps
 formHelperTextProps = unsafeCoerce

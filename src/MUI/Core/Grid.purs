@@ -246,5 +246,5 @@ gridProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (GridPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | GridReqPropsRow given } -> GridProps
+  { | given } -> GridProps
 gridProps = unsafeCoerce

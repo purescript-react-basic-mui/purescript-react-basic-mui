@@ -97,5 +97,5 @@ formLabelProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (FormLabelPropsRow React.Basic.DOM.Props_label) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | FormLabelReqPropsRow given } -> FormLabelProps
+  { | given } -> FormLabelProps
 formLabelProps = unsafeCoerce

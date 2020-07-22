@@ -139,5 +139,5 @@ badgeProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (BadgePropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | BadgeReqPropsRow given } -> BadgeProps
+  { | given } -> BadgeProps
 badgeProps = unsafeCoerce

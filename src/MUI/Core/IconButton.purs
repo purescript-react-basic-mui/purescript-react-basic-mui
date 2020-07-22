@@ -124,5 +124,5 @@ iconButtonProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (IconButtonPropsRow (MUI.Core.ButtonBase.ButtonBasePropsRow React.Basic.DOM.Props_button)) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | IconButtonReqPropsRow given } -> IconButtonProps
+  { | given } -> IconButtonProps
 iconButtonProps = unsafeCoerce

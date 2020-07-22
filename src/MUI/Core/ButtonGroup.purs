@@ -152,5 +152,5 @@ buttonGroupProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (ButtonGroupPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | ButtonGroupReqPropsRow given } -> ButtonGroupProps
+  { | given } -> ButtonGroupProps
 buttonGroupProps = unsafeCoerce

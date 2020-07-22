@@ -115,5 +115,5 @@ svgIconProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (SvgIconPropsRow React.Basic.DOM.SVG.Props_svg) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | SvgIconReqPropsRow given } -> SvgIconProps
+  { | given } -> SvgIconProps
 svgIconProps = unsafeCoerce

@@ -104,5 +104,5 @@ dividerProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (DividerPropsRow React.Basic.DOM.Props_hr) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | DividerReqPropsRow given } -> DividerProps
+  { | given } -> DividerProps
 dividerProps = unsafeCoerce

@@ -25,14 +25,13 @@ foreign import data Display ∷ Type
 display ∷ DisplayValue → Display
 display = unsafeCoerce
 
-type BreakPoints =
-  ( lg :: DisplayValue
-  , md :: DisplayValue
-  , sm :: DisplayValue
-  , xl :: DisplayValue
-  , xs :: DisplayValue
-  )
+type BreakPoints
+  = ( lg :: DisplayValue
+    , md :: DisplayValue
+    , sm :: DisplayValue
+    , xl :: DisplayValue
+    , xs :: DisplayValue
+    )
 
 hiding ∷ ∀ given missing. Row.Union given missing BreakPoints ⇒ { | given } → Display
 hiding = unsafeCoerce
-

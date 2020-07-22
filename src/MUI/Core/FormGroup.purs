@@ -73,5 +73,5 @@ formGroupProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (FormGroupPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | FormGroupReqPropsRow given } -> FormGroupProps
+  { | given } -> FormGroupProps
 formGroupProps = unsafeCoerce

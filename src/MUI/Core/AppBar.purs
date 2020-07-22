@@ -112,5 +112,5 @@ appBarProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (AppBarPropsRow (MUI.Core.Paper.PaperPropsRow React.Basic.DOM.Props_div)) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | AppBarReqPropsRow given } -> AppBarProps
+  { | given } -> AppBarProps
 appBarProps = unsafeCoerce

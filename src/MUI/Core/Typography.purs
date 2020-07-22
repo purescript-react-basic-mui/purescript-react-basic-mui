@@ -176,5 +176,5 @@ typographyProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (TypographyPropsRow React.Basic.DOM.Props_p) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | TypographyReqPropsRow given } -> TypographyProps
+  { | given } -> TypographyProps
 typographyProps = unsafeCoerce

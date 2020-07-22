@@ -34,7 +34,6 @@ foreign import data SpacingParam ∷ Type
 multiplier ∷ Number → SpacingParam
 multiplier = unsafeCoerce
 
-
 constant ∷ String → SpacingParam
 constant = unsafeCoerce
 
@@ -46,8 +45,8 @@ constant = unsafeCoerce
 spacing ∷ SpacingParam → SpacingParam → SpacingParam → SpacingParam → Theme → String
 spacing p1 p2 p3 p4 theme = runFn4 spacing' p1 p2 p3 p4
   where
-    spacing' ∷ Fn4 SpacingParam SpacingParam SpacingParam SpacingParam String
-    spacing' = unsafeCoerce theme.spacing
+  spacing' ∷ Fn4 SpacingParam SpacingParam SpacingParam SpacingParam String
+  spacing' = unsafeCoerce theme.spacing
 
 foreign import data Direction :: Type
 

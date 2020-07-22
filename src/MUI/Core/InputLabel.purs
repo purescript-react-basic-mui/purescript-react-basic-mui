@@ -127,5 +127,5 @@ inputLabelProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (InputLabelPropsRow (MUI.Core.FormLabel.FormLabelPropsRow React.Basic.DOM.Props_label)) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | InputLabelReqPropsRow given } -> InputLabelProps
+  { | given } -> InputLabelProps
 inputLabelProps = unsafeCoerce

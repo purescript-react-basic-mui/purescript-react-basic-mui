@@ -150,5 +150,5 @@ outlinedTextFieldProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (OutlinedTextFieldPropsRow (MUI.Core.FormControl.FormControlPropsRow React.Basic.DOM.Props_div)) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | OutlinedTextFieldReqPropsRow given } -> OutlinedTextFieldProps
+  { | given } -> OutlinedTextFieldProps
 outlinedTextFieldProps = unsafeCoerce

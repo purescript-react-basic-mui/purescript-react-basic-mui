@@ -89,5 +89,5 @@ toolbarProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (ToolbarPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | ToolbarReqPropsRow given } -> ToolbarProps
+  { | given } -> ToolbarProps
 toolbarProps = unsafeCoerce

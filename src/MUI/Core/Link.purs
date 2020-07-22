@@ -161,5 +161,5 @@ linkProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (LinkPropsRow React.Basic.DOM.Props_a) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | LinkReqPropsRow given } -> LinkProps
+  { | given } -> LinkProps
 linkProps = unsafeCoerce

@@ -150,5 +150,5 @@ inputProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (InputPropsRow (MUI.Core.InputBase.InputBasePropsRow React.Basic.DOM.Props_div)) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | InputReqPropsRow given } -> InputProps
+  { | given } -> InputProps
 inputProps = unsafeCoerce

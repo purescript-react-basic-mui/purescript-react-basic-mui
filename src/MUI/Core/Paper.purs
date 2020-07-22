@@ -100,5 +100,5 @@ paperProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (PaperPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | PaperReqPropsRow given } -> PaperProps
+  { | given } -> PaperProps
 paperProps = unsafeCoerce

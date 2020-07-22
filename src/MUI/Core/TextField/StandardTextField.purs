@@ -149,5 +149,5 @@ standardTextFieldProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (StandardTextFieldPropsRow (MUI.Core.FormControl.FormControlPropsRow React.Basic.DOM.Props_div)) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | StandardTextFieldReqPropsRow given } -> StandardTextFieldProps
+  { | given } -> StandardTextFieldProps
 standardTextFieldProps = unsafeCoerce

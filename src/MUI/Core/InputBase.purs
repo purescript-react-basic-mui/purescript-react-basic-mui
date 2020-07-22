@@ -153,5 +153,5 @@ inputBaseProps ::
   Prim.Row.Union required optionalGiven given =>
   Nub' (InputBasePropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
-  { | InputBaseReqPropsRow given } -> InputBaseProps
+  { | given } -> InputBaseProps
 inputBaseProps = unsafeCoerce
