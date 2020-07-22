@@ -57,6 +57,17 @@ components =
 
     transitionTimeout = Type.constructor "MUI.React.TransitionGroup.Timeout"
 
+    -- | TODO: handle all transition group props
+    -- | https://reactcommunity.org/react-transition-group/transition#Transition-props
+    transitionHandlers = map eventHandlerProp
+      [ "onEnter"
+      , "onEntered"
+      , "onEntering"
+      , "onExit"
+      , "onExited"
+      , "onExiting"
+      ]
+
     -- | It is nice to have parametrized `Row` by default
     -- | because it allows us
     -- basePropsRow props = props
@@ -592,33 +603,30 @@ components =
         , root: rbProps.hr
         }
 
-    --drawer =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList
-    --        [ Type.constructor "MUI.Core.Modal.ModalPropsRow"
-    --        , divProps
-    --        ]
-    --    , name: "Drawer"
-    --    , propsRow:
-    --      { base: Map.fromFoldable
-    --          ( [ children
-    --            , Tuple "ModalProps" (Type.constructor "MUI.Core.Modal.ModalOpaqueProps")
-    --            , eventHandlerProp "onClose"
-    --            , Tuple "PaperProps" (Type.constructor "MUI.Core.Modal.ModalOpaqueProps")
-    --            , Tuple "SlideProps" (Type.constructor "MUI.Core.Slide.SlideOpaqueProps")
-    --            ]
-    --              <> map eventHandlerProp [ "onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
-    --          )
-    --      , generate:
-    --        [ "anchor"
-    --        , "classes"
-    --        , "elevation"
-    --        , "open"
-    --        , "transitionDuration"
-    --        , "variant"
-    --        ]
-    --      }
-    --    }
+    drawer =
+      simpleComponent
+        { name: "Drawer"
+        , propsRow:
+          { base: Map.fromFoldable
+              ( [ children
+                , Tuple "ModalProps" (Type.constructor "MUI.Core.Modal.ModalProps")
+                , Tuple "PaperProps" (Type.constructor "MUI.Core.Paper.PaperProps")
+                -- , Tuple "SlideProps" (Type.constructor "MUI.Core.Slide.SlideOpaqueProps")
+                , Tuple "transitionDuration" transitionTimeout
+                ]
+              <> [ eventHandlerProp "onClose" ]
+              <> transitionHandlers
+              )
+          , generate:
+            [ "anchor"
+            , "classes"
+            , "elevation"
+            , "open"
+            , "variant"
+            ]
+          }
+        , root: rbProps.div
+        }
 
     ---- | TODO: TransitionComponent, TransitionProps
     --expansionPanel =
@@ -2414,7 +2422,7 @@ components =
     -- , dialogContent
     -- , dialogTitle
     , divider
-    -- , drawer
+    , drawer
     -- , expansionPanel
     -- , expansionPanelActions
     -- , expansionPanelDetails

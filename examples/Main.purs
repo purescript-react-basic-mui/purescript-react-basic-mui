@@ -3,27 +3,26 @@ module Examples.Main where
 import Prelude
 
 import Data.Array (singleton) as Array
-import Data.Function.Uncurried (runFn2, runFn4)
 import Data.Maybe (Maybe(..))
 import Data.Tuple.Nested ((/\))
-import Debug.Trace (traceM)
 import Effect (Effect)
 import Effect.Exception (throw)
-import Effect.Uncurried (runEffectFn2)
 import Foreign (unsafeToForeign)
 import MUI.Core (jss)
 import MUI.Core.AppBar (appBar)
 import MUI.Core.AppBar (position) as AppBar
-import MUI.Core.Backdrop (_Backdrop, _UnsafeBackdrop, backdropProps)
+import MUI.Core.Backdrop (_UnsafeBackdrop)
 import MUI.Core.Badge (badgeWithStyles)
 import MUI.Core.Badge (color) as Badge
+import MUI.Core.Button (button, buttonWithStyles)
 import MUI.Core.Button (button, color) as Button
-import MUI.Core.Button (buttonWithStyles)
 import MUI.Core.ButtonGroup (buttonGroupWithStyles, color, variant) as ButtonGroup
 import MUI.Core.Container (container)
 import MUI.Core.CssBaseline (cssBaseline)
 import MUI.Core.Divider (dividerWithStyles)
 import MUI.Core.Divider (variant) as Dividier
+import MUI.Core.Drawer (anchor) as Drawer
+import MUI.Core.Drawer (drawer)
 import MUI.Core.Fade (fade)
 import MUI.Core.FormControl (formControlWithStyles)
 import MUI.Core.FormHelperText (formHelperText)
@@ -33,11 +32,11 @@ import MUI.Core.Hidden (hidden)
 import MUI.Core.Hidden (implementation, only) as Hidden
 import MUI.Core.Input (input)
 import MUI.Core.InputLabel (inputLabel)
-import MUI.Core.Link (color, variant) as Link
+import MUI.Core.Link (color) as Link
 import MUI.Core.Link (link)
 import MUI.Core.Modal (modal)
-import MUI.Core.Styles.MakeStyles (UseStyles, makeStyles)
-import MUI.Core.Styles.Types (SpacingParam(..), multiplier, spacing)
+import MUI.Core.Styles.MakeStyles (makeStyles)
+import MUI.Core.Styles.Types (multiplier, spacing)
 import MUI.Core.TextField (filledWithStyles, outlinedWithStyles, standardWithStyles) as TextField
 import MUI.Core.Toolbar (toolbar)
 import MUI.Core.Typography (typography)
@@ -46,10 +45,10 @@ import MUI.Icons.Menu (menu)
 import MUI.Icons.Types (iconWithStyles)
 import MUI.React.TransitionGroup (single) as TransitionGroup
 import React.Basic (Component, JSX, ReactComponent, createComponent, element, make)
-import React.Basic.DOM (a, button, css, div, div_, form, h2, p, span, text) as DOM
+import React.Basic.DOM (a, button, div, div_, form, h2, p, span, text) as DOM
 import React.Basic.DOM (render)
 import React.Basic.Events (handler_)
-import React.Basic.Hooks (Render, useState)
+import React.Basic.Hooks (useState)
 import React.Basic.Hooks as React
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.NonElementParentNode (getElementById)
@@ -65,52 +64,97 @@ component = createComponent "Counter"
 gridItem :: JSX -> JSX
 gridItem child = grid { item: true, children: [ child ], xs: Grid.gridSize.six }
 
--- useStyles :: forall hooks. Render hooks (UseStyles hooks) { modal :: String }
-useStyles = makeStyles \theme →
-  { modal:
-    { display: "flex"
-    , alignItems: "center"
-    , justifyContent: "center"
-    }
-  , paper:
-    { backgroundColor: theme.palette.background.paper
-    , border: "2px solid #000"
-    --, boxShadow: theme.shadows[5]
-    , padding: spacing
-        (multiplier 2.0)
-        (multiplier 4.0)
-        (multiplier 3.0)
-        (multiplier 4.0)
-        theme
-    }
-  }
+-- | Based on: https://github.com/mui-org/material-ui/blob/master/docs/src/pages/components/drawers/TemporaryDrawer.js
+drawerList ∷ Effect (ReactComponent {})
+drawerList =
+  let
+    useStyles = makeStyles \theme →
+      { paper:
+        { backgroundColor: theme.palette.background.paper
+        , padding: spacing
+            (multiplier 2.0)
+            (multiplier 4.0)
+            (multiplier 3.0)
+            (multiplier 4.0)
+            theme
+        }
+      }
+  in
+    React.component "TemporaryDrawer" \_ → React.do
+      state /\ setState ← useState Nothing
+      classes ← useStyles
+      let
+        toggleDrawer a open =
+          -- | In the original example we have here also this check
+          -- if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+          --    return;
+          --  }
+          let
+            toggle Nothing = Just a
+            toggle s | s == Just a = Nothing
+            toggle s = s
+          in
+            setState toggle
+      pure $ DOM.div_ $ [ Drawer.anchor.left, Drawer.anchor.right,  Drawer.anchor.top,  Drawer.anchor.bottom ] <#> \anchor ->
+        DOM.div $ { key: unsafeCoerce anchor, children: _ }
+          [ button
+              { onClick: handler_ (toggleDrawer anchor true)
+              , children: [ DOM.text (unsafeCoerce anchor ) ]
+              }
+          , drawer
+            $ { anchor
+              , open: Just anchor == state
+              , onClose: handler_ (toggleDrawer anchor false)
+              , children: _
+              }
+            $ [ DOM.div { className: classes.paper, children: [ DOM.text (unsafeCoerce $ anchor) ]}]
+          ]
 
 -- | MUI example: https://github.com/mui-org/material-ui/blob/master/docs/src/pages/components/modal/TransitionsModal.js
--- transitionsModal ∷ Component {}
 transitionsModal :: Effect (ReactComponent {})
-transitionsModal = React.component "TransitionsModal" \_ → React.do
-  open /\ setOpen ← useState false
-  classes ← useStyles
+transitionsModal =
   let
-    handleOpen = handler_ $ setOpen (const true)
-    handleClose = handler_ $ setOpen (const false)
-  pure $ DOM.div_
-    [ DOM.button $
-      { children: [ DOM.text "Modal: react-transition-group" ]
-      , type: "button"
-      , onClick: handleOpen
-      }
-    , modal $
-        {"BackdropProps":
-            unsafeToForeign { transitionDuration: TransitionGroup.single 2000.0 }
-        , "BackdropComponent":
-            unsafeToForeign _UnsafeBackdrop
-        , children: _
-        , className: classes.modal
-        , closeAfterTransition: true
-        , open
-        , onClose: handleClose
+    useStyles = makeStyles \theme →
+      { modal:
+        { display: "flex"
+        , alignItems: "center"
+        , justifyContent: "center"
         }
+      , paper:
+        { backgroundColor: theme.palette.background.paper
+        , border: "2px solid #000"
+        --, boxShadow: theme.shadows[5]
+        , padding: spacing
+            (multiplier 2.0)
+            (multiplier 4.0)
+            (multiplier 3.0)
+            (multiplier 4.0)
+            theme
+        }
+      }
+  in React.component "TransitionsModal" \_ → React.do
+    open /\ setOpen ← useState false
+    classes ← useStyles
+    let
+      handleOpen = handler_ $ setOpen (const true)
+      handleClose = handler_ $ setOpen (const false)
+    pure $ DOM.div_
+      [ DOM.button $
+        { children: [ DOM.text "Modal: react-transition-group" ]
+        , type: "button"
+        , onClick: handleOpen
+        }
+      , modal
+        $ {"BackdropProps":
+              unsafeToForeign { transitionDuration: TransitionGroup.single 500.0 }
+          , "BackdropComponent":
+              unsafeToForeign _UnsafeBackdrop
+          , children: _
+          , className: classes.modal
+          , closeAfterTransition: true
+          , open
+          , onClose: handleClose
+          }
         $ fade
           $ { in: open
             , children: _
@@ -118,13 +162,15 @@ transitionsModal = React.component "TransitionsModal" \_ → React.do
             }
           $ DOM.div
             $ { className: classes.paper, children: _ }
-              [ DOM.h2 { id: "transition-modal-title", children: [ DOM.text "Transition modal" ]}
+            $ [ DOM.h2 { id: "transition-modal-title", children: [ DOM.text "Transition modal" ]}
               , DOM.p { id: "transition-modal-description", children: [ DOM.text "react-transition-group animates me" ]}
               ]
-    ]
+      ]
 
 type Components =
-  { transitionsModal ∷ ReactComponent {}}
+  { drawerList ∷ ReactComponent {}
+  , transitionsModal ∷ ReactComponent {}
+  }
 
 app :: Components → JSX
 app components = make component { initialState: {}, render } {}
@@ -173,6 +219,7 @@ app components = make component { initialState: {}, render } {}
                     , placeholder: "test"
                     }
               , gridItem $ element components.transitionsModal {}
+              , gridItem $ element components.drawerList {}
               , gridItem $
                   TextField.standardWithStyles
                     textInputStyle
@@ -214,7 +261,7 @@ app components = make component { initialState: {}, render } {}
 main :: Effect Unit
 main = do
   container <- getElementById "container" =<< (map toNonElementParentNode $ document =<< window)
-  components ← { transitionsModal:_ } <$> transitionsModal
+  components ← { drawerList: _, transitionsModal: _ } <$> drawerList <*> transitionsModal
   case container of
     Nothing -> throw "Container element not found."
     Just c  -> render (app components) c
