@@ -1,1 +1,2 @@
-exports.makeStyles = require("@material-ui/core/styles/makeStyles").default;
+exports.makeStylesImpl = require("@material-ui/core/styles/makeStyles").default;
+
