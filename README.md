@@ -14,7 +14,13 @@ In the case of any trouble please contact us through issue tracker or directly o
 
 ### What is still missing
 
+#### Handling `root` configuration
+
 We don't provide components constructors which allow you to change the `root` of it. What we mean by "the root" is represented by a `component` prop in the MUI. We plan to add this feature soon.
+
+#### Handling subcomponents with props
+
+There are many places in MUI where we need to pass subcomponent and its props as a part of main component props (like `BackdropProps` and `BackdropComponent` in the case of `Modal`). Currently we handle such scenarios through unsafe `Foreign` value.
 
 ## Codegen and testing workflow
 

@@ -6,6 +6,7 @@ import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconP
 import Codegen (component, icon, write) as Codegen
 import Codegen.AST (ModuleName(..), TypeName(..))
 import Codegen.AST.Sugar.Type (constructor) as Type
+import Codegen.AST.Types (TypeF(..))
 import Codegen.Component (Component, Icon, ModulePath(..), Root(..), arrayJSX, iconName, jsx, psImportPath, rbProps)
 import Codegen.Component (componentName) as Component
 import Codegen.TS.MUI (componentProps) as TS.MUI
@@ -20,7 +21,7 @@ import Data.Array (filter)
 import Data.Either (Either(..))
 import Data.Foldable (for_, intercalate)
 import Data.Functor.Mu (Mu(..)) as Mu
-import Data.Functor.Mu (unroll)
+import Data.Functor.Mu (roll, unroll)
 import Data.List (sort) as List
 import Data.Map (filterWithKey, fromFoldable, keys, lookup, toUnfoldable) as Map
 import Data.Map.Internal (keys) as Map.Internal
@@ -53,6 +54,8 @@ components =
     foreignType = Type.constructor "Foreign.Foreign"
 
     jss = Type.constructor "MUI.Core.JSS"
+
+    transitionTimeout = Type.constructor "MUI.React.TransitionGroup.Timeout"
 
     -- | It is nice to have parametrized `Row` by default
     -- | because it allows us
@@ -106,21 +109,18 @@ components =
     --       }
     --     }
 
-    -- backdrop =
-    --   simpleComponent
-    --     { inherits: Just $ MUI.rList
-    --         [ Type.constructor "MUI.Core.Fade.FadePropsRow"
-    --         , divProps
-    --         ]
-    --     , name: "Backdrop"
-    --     , propsRow:
-    --       { base: Map.fromFoldable
-    --           [ children
-    --           , Tuple "style" (Type.constructor "React.Basic.DOM.CSS")
-    --           ]
-    --       , generate: [ "classes", "invisible", "open", "transitionDuration" ]
-    --       }
-    --     }
+    backdrop = simpleComponent
+      { name: "Backdrop"
+      , propsRow:
+        { base: Map.fromFoldable
+            [ Tuple "ref" foreignType
+            , Tuple "children" arrayJSX
+            , Tuple "transitionDuration" transitionTimeout
+            ]
+        , generate: [ "classes", "invisible", "open" ]
+        }
+      , root: rbProps.div
+      }
 
     badge =
       simpleComponent
@@ -158,15 +158,30 @@ components =
     --      }
     --    }
 
-    --box =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList [ divProps ]
-    --    , name: "Box"
-    --    , propsRow:
-    --      { base:  Map.fromFoldable $ [ children, Tuple "css" jss ]
-    --      , generate: [ "clone" ]
-    --      }
-    --    }
+    box =
+      simpleComponent
+        { name: "Box"
+        , propsRow:
+          { base: Map.fromFoldable
+            [ children
+            , Tuple "border" foreignType
+            , Tuple "borderBottom" foreignType
+            , Tuple "borderColor" foreignType
+            , Tuple "borderLeft" foreignType
+            , Tuple "borderRadius" foreignType
+            , Tuple "borderRight" foreignType
+            , Tuple "borderTop" foreignType
+            , Tuple "component" (roll TypeString)
+            , Tuple
+                "display"
+                (Type.constructor "MUI.System.Display.Display")
+            ]
+          , generate:
+            [ "clone"
+            ]
+          }
+        , root: rbProps.div
+        }
 
     --breadcrumbs =
     --  simpleComponent
@@ -683,16 +698,19 @@ components =
     --    }
 
     ---- | TODO: TransitionComponent
-    --fade =
-    --  simpleComponent
-    --    { inherits: Nothing -- should inherit TransitionComponent
-    --    , name: "Fade"
-    --    , propsRow:
-    --      { base:  Map.fromFoldable [ Tuple "ref" foreignType ]
-    --      , generate:
-    --        [ {-- not sure what to do here, "theme" --}]
-    --      }
-    --    }
+    fade =
+      simpleComponent
+        { name: "Fade"
+        , propsRow:
+          { base:  Map.fromFoldable
+              [ Tuple "children" jsx
+              , Tuple "ref" foreignType
+              , Tuple "timeout" transitionTimeout
+              ]
+          , generate: [ "in" ]
+          }
+        , root: rbProps.div
+        }
 
     ---- | TODO: inputComponent, make value a type variable
     --filledInput =
@@ -916,11 +934,11 @@ components =
 
     -- | It seems that on the current master
     -- | `HiddenCss` uses `div` as a root
-    -- | but `HiddenJs` returns just children:
+    -- | but `HiddenJs` returns just children.
     -- |
-    -- | * https://github.com/mui-org/material-ui/blob/60d99a39836fb82f4da1477a717f642c216fb0b9/packages/material-ui/src/Hidden/HiddenCss.js#L77
+    -- | It seems that hidden could be also removed in the near future:
     -- |
-    -- | * https://github.com/mui-org/material-ui/blob/60d99a39836fb82f4da1477a717f642c216fb0b9/packages/material-ui/src/Hidden/HiddenJs.js#L51
+    -- | https://github.com/mui-org/material-ui/issues/19704
     -- |
     -- | In other words root will be ignored when they
     -- | are provided to the component.
@@ -1345,50 +1363,49 @@ components =
     --      }
     --    }
 
-    --modal =
-    --  let
-    --    handlers =
-    --      map eventHandlerProp
-    --        [ "onBackdropClick"
-    --        , "onClose"
-    --        , "onEscapeKeyDown"
-    --        , "onRendered"
-    --        ]
+    modal =
+      let
+        handlers = map eventHandlerProp
+          [ "onBackdropClick"
+          , "onClose"
+          , "onEscapeKeyDown"
+          , "onRendered"
+          ]
 
-    --    backdropOpaqueProps = Type.constructor "MUI.Core.Backdrop.BackdropOpaqueProps"
-
-    --    base =
-    --       Map.fromFoldable
-    --        $ [ children
-    --          , Tuple "BackdropComponent" (reactComponentApply backdropOpaqueProps)
-    --          , Tuple "BackdropProps" backdropOpaqueProps
-    --          -- , container
-    --          , Tuple
-    --              "manager"
-    --              (Type.constructor "MUI.Core.Modal.ModalManager.ModalManager")
-    --          ]
-    --        <> handlers
-    --  in
-    --    simpleComponent
-    --      { inherits: Nothing
-    --      , name: "Modal"
-    --      , propsRow:
-    --        { base: emptyBase
-    --        , generate:
-    --          [ "closeAfterTransition"
-    --          , "disableAutoFocus"
-    --          , "disableBackdropClick"
-    --          , "disableEnforceFocus"
-    --          , "disableEscapeKeyDown"
-    --          , "disablePortal"
-    --          , "disableRestoreFocus"
-    --          , "disableScrollLock"
-    --          , "hideBackdrop"
-    --          , "keepMounted"
-    --          , "open"
-    --          ]
-    --        }
-    --      }
+        -- | How to handle these kind of subprops nicely?
+        -- | backdropProps = Type.constructor "MUI.Core.Backdrop.BackdropProps"
+        base =
+           Map.fromFoldable
+            $ [ Tuple "children" jsx
+              , Tuple "BackdropComponent" foreignType -- (reactComponentApply backdropOpaqueProps)
+              , Tuple "BackdropProps" foreignType -- backdropProps
+              -- , container
+              -- , Tuple
+              --     "manager"
+              --     (Type.constructor "MUI.Core.Modal.ModalManager.ModalManager")
+              ]
+            <> handlers
+      in
+        simpleComponent
+          { name: "Modal"
+          , propsRow:
+            { base
+            , generate:
+              [ "closeAfterTransition"
+              , "disableAutoFocus"
+              , "disableBackdropClick"
+              , "disableEnforceFocus"
+              , "disableEscapeKeyDown"
+              , "disablePortal"
+              , "disableRestoreFocus"
+              , "disableScrollLock"
+              , "hideBackdrop"
+              , "keepMounted"
+              , "open"
+              ]
+            }
+          , root: rbProps.div
+          }
 
     ---- | TODO: value
     --nativeSelect =
@@ -2370,11 +2387,11 @@ components =
   in
     [ appBar
     -- , avatar
-    -- , backdrop
+    , backdrop
     , badge
     -- , bottomNavigation
     -- , bottomNavigationAction
-    -- , box
+    , box
     -- , breadcrumbs
     , buttonBase
     , buttonGroup
@@ -2403,7 +2420,7 @@ components =
     -- , expansionPanelDetails
     -- , expansionPanelSummary
     -- , fab
-    -- , fade
+    , fade
     , formControl
     , formControlLabel
     , formGroup
@@ -2433,7 +2450,7 @@ components =
     -- , listSubheader
     -- , menu
     -- , menuItem
-    -- , modal
+    , modal
     -- , nativeSelect
     -- , noSsr
     , paper
@@ -2635,6 +2652,7 @@ main = do
       , ModuleName "MUI.Core" /\ Nothing
       , ModuleName "React.Basic" /\ Nothing
       , ModuleName "MUI.DOM.Generated" /\ Just "DOM"
+      , ModuleName "MUI.System.Display" /\ Nothing
       ]
 
     -- | Should we introduce multimodule handling logic back?

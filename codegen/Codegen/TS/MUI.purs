@@ -359,7 +359,7 @@ componentConstructorsAST { component, jss, props } = constructors
                     nubConstraint rootProps.combined typeVars.props $
                     unionConstraint typeVars.given typeVars.optionalMissing typeVars.props $
                     Type.arr
-                      (Type.recordLiteral (Type.app props.required [ typeVars.given ]))
+                      (Type.recordLiteral typeVars.given)
                       _Props.constructor
                 , expr: exprUnsafeCoerce
                 , whereBindings: []
