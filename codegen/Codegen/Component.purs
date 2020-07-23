@@ -107,8 +107,10 @@ rbProps ::
   , div :: Root
   , hr :: Root
   , label :: Root
+  , li :: Root
   , p :: Root
   , svg :: Root
+  , ul :: Root
   }
 rbProps =
   { a: p "Props_a"
@@ -116,8 +118,10 @@ rbProps =
   , div: p "Props_div"
   , hr: p "Props_hr"
   , label: p "Props_label"
+  , li: p "Props_li"
   , p: p "Props_p"
   , svg: p "SVG.Props_svg"
+  , ul: p "Props_ul"
   }
   where
     p = RBProps <<< Type.constructor <<< append "React.Basic.DOM."

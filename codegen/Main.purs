@@ -1175,47 +1175,43 @@ components =
         , root: rbProps.a
         }
 
-    --list =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_ul" ]
-    --    , name: "List"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              , Tuple "subheader" jsx
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        , "dense"
-    --        , "disablePadding"
-    --        ]
-    --      }
-    --    }
+    list = simpleComponent
+      { name: "List"
+      , propsRow:
+        { base: Map.fromFoldable
+            [ children
+            -- component
+            , Tuple "subheader" jsx
+            ]
+        , generate:
+          [ "classes"
+          , "dense"
+          , "disablePadding"
+          ]
+        }
+      , root: rbProps.ul
+      }
 
-    ---- | TODO: add ContainerComponent and ContainerProps
-    --listItem =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_li" ]
-    --    , name: "ListItem"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              ]
-    --      , generate:
-    --        [ "alignItems"
-    --        , "autoFocus"
-    --        , "button"
-    --        , "classes"
-    --        , "dense"
-    --        , "disabled"
-    --        , "disableGutters"
-    --        , "divider"
-    --        , "selected"
-    --        ]
-    --      }
-    --    }
+    -- | TODO: add ContainerComponent and ContainerProps
+    listItem =
+      simpleComponent
+        { name: "ListItem"
+        , propsRow:
+          { base: Map.fromFoldable [ children ]
+          , generate:
+            [ "alignItems"
+            , "autoFocus"
+            , "button"
+            , "classes"
+            , "dense"
+            , "disabled"
+            , "disableGutters"
+            , "divider"
+            , "selected"
+            ]
+          }
+        , root: rbProps.li
+        }
 
     --listItemAvatar =
     --  simpleComponent
@@ -1232,20 +1228,15 @@ components =
     --      }
     --    }
 
-    --listItemIcon =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList [ divProps ]
-    --    , name: "ListItemIcon"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ -- children
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        ]
-    --      }
-    --    }
+    listItemIcon =
+      simpleComponent
+        { name: "ListItemIcon"
+        , propsRow:
+          { base: Map.fromFoldable [ children ]
+          , generate: [ "classes" ]
+          }
+        , root: rbProps.div
+        }
 
     --listItemSecondaryAction =
     --  simpleComponent
@@ -1262,25 +1253,23 @@ components =
     --      }
     --    }
 
-    --listItemText =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList [ divProps ]
-    --    , name: "ListItemText"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ Tuple "primary" jsx
-    --              , Tuple "primaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
-    --              , Tuple "secondary" jsx
-    --              , Tuple "secondaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        , "disableTypography"
-    --        , "inset"
-    --        ]
-    --      }
-    --    }
+    listItemText = simpleComponent
+      { name: "ListItemText"
+      , propsRow:
+        { base: Map.fromFoldable
+            [ Tuple "primary" jsx
+            , Tuple "primaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyProps")
+            , Tuple "secondary" jsx
+            , Tuple "secondaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyProps")
+            ]
+        , generate:
+          [ "classes"
+          , "disableTypography"
+          , "inset"
+          ]
+        }
+      , root: rbProps.div
+      }
 
     --listSubheader =
     --  simpleComponent
@@ -2449,12 +2438,12 @@ components =
     -- , outlineInput
     -- , linearProgress
     , link
-    -- , list
-    -- , listItem
+    , list
+    , listItem
     -- , listItemAvatar
-    -- , listItemIcon
+    , listItemIcon
     -- , listItemSecondaryAction
-    -- , listItemText
+    , listItemText
     -- , listSubheader
     -- , menu
     -- , menuItem
