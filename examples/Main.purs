@@ -228,13 +228,13 @@ app components = make component { initialState: {}, render } {}
                 }
             , hidden
               { implementation: Hidden.implementation.css
-              , children: [ DOM.text "`Hidden` on xs or md" ]
+              , children: [ DOM.text "`Hidden` visible on sm, lg, xl " ]
               , only: Hidden.only.only [ Hidden.only.xs, Hidden.only.md ]
               }
             , box $
               { children:
-                [ DOM.text "`Box` content hidden on sm and xs with justify-content: flex-end" ]
-              , display: hiding { sm: Only.none, md: Only.flex }
+                [ DOM.text "`Box` visible on md and larger justify-content: flex-end" ]
+              , display: hiding { xs: Only.none, sm: Only.none, md: Only.flex }
               , flexGrow: 1.0
               , justifyContent: JustifyContent.flexEnd
               }
