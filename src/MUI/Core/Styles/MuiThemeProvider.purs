@@ -1,7 +1,7 @@
 module MUI.Core.Styles.MuiThemeProvider where
 
 import Foreign (Foreign, unsafeToForeign)
-import MUI.Core.Styles.CreateMuiTheme (Theme)
+import MUI.Core.Styles.Types (Theme)
 import React.Basic (JSX)
 
 type ThemeProviderProps

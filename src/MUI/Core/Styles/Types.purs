@@ -8,6 +8,7 @@ import MUI.Core.Styles.CreateTypography (Typography)
 import MUI.Core.Styles.Shape (Shape)
 import MUI.Core.Styles.Transitions (Transitions)
 import MUI.Core.Styles.ZIndex (ZIndex)
+import MUI.System.Shadows (Shadows)
 import Unsafe.Coerce (unsafeCoerce)
 
 foreign import data OverridesPartial :: Type
@@ -22,7 +23,7 @@ type Theme
     , overrides :: OverridesPartial
     , palette :: Palette
     , props :: ComponentsPropsPartial
-    , shadows :: Array String
+    , shadows :: Shadows
     , spacing :: Number -> Number
     , transitions :: Transitions
     , typography :: Typography

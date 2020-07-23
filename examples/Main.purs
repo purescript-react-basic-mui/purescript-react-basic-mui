@@ -118,7 +118,7 @@ drawerList =
       classes <- useStyles
       let
         toggleDrawer a open =
-          -- | In the original example we have here also this check
+          -- In the original example we have here also this check
           -- if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
           --    return;
           --  }
@@ -140,7 +140,7 @@ drawerList =
               , onClose: handler_ (toggleDrawer anchor false)
               , children: _
               }
-            $ [ menuList classes anchor ] -- DOM.div { className: classes.paper, children: [ DOM.text (unsafeCoerce $ anchor) ]}]
+            $ [ menuList classes anchor ]
           ]
 
 -- | MUI example: https://github.com/mui-org/material-ui/blob/master/docs/src/pages/components/modal/TransitionsModal.js
@@ -156,7 +156,7 @@ transitionsModal =
       , paper:
         { backgroundColor: theme.palette.background.paper
         , border: "2px solid #000"
-        --, boxShadow: theme.shadows[5]
+        , boxShadow: theme.shadows."24"
         , padding: spacing
             (multiplier 2.0)
             (multiplier 4.0)
