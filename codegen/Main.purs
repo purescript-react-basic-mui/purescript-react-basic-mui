@@ -55,6 +55,18 @@ components =
 
     jss = Type.constructor "MUI.Core.JSS"
 
+    flexbox =
+      [ Tuple "alignContent" (Type.constructor "MUI.System.Flexbox.AlignContent")
+      , Tuple "alignItems" (Type.constructor "MUI.System.Flexbox.AlignItems")
+      , Tuple "alignSelf" (Type.constructor "MUI.System.Flexbox.AlignSelf")
+      , Tuple "flexDirection" (Type.constructor "MUI.System.Flexbox.FlexDirection")
+      , Tuple "flexGrow" (roll TypeNumber)
+      , Tuple "flexBasis" (roll TypeString)
+      , Tuple "flexShrink" (roll TypeNumber)
+      , Tuple "flexWrap" (Type.constructor "MUI.System.Flexbox.FlexWrap")
+      , Tuple "justifyContent" (Type.constructor "MUI.System.Flexbox.JustifyContent")
+      ]
+
     transitionTimeout = Type.constructor "MUI.React.TransitionGroup.Timeout"
 
     -- | TODO: handle all transition group props
@@ -174,19 +186,21 @@ components =
         { name: "Box"
         , propsRow:
           { base: Map.fromFoldable
-            [ children
-            , Tuple "border" foreignType
-            , Tuple "borderBottom" foreignType
-            , Tuple "borderColor" foreignType
-            , Tuple "borderLeft" foreignType
-            , Tuple "borderRadius" foreignType
-            , Tuple "borderRight" foreignType
-            , Tuple "borderTop" foreignType
-            , Tuple "component" (roll TypeString)
-            , Tuple
-                "display"
-                (Type.constructor "MUI.System.Display.Display")
-            ]
+            $ flexbox
+            <>
+              [ children
+              , Tuple "border" foreignType
+              , Tuple "borderBottom" foreignType
+              , Tuple "borderColor" foreignType
+              , Tuple "borderLeft" foreignType
+              , Tuple "borderRadius" foreignType
+              , Tuple "borderRight" foreignType
+              , Tuple "borderTop" foreignType
+              , Tuple "component" (roll TypeString)
+              , Tuple
+                  "display"
+                  (Type.constructor "MUI.System.Display.Display")
+              ]
           , generate:
             [ "clone"
             ]

@@ -3,7 +3,7 @@ module Codegen.AST.Sugar.Type where
 import Prelude
 
 import Codegen.AST.Types (Fields, Ident(..), ModuleName(..), QualifiedName, Row, RowF(..), RowLabel, Type, TypeF(..), TypeName)
-import Data.Array (fromFoldable, singleton) as Array
+import Data.Array (fromFoldable) as Array
 import Data.Array (unsnoc)
 import Data.Foldable (intercalate)
 import Data.Functor.Mu (roll)

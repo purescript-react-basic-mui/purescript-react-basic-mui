@@ -96,6 +96,7 @@ data TypeF ref
   | TypeArr ref ref
   | TypeArray ref
   | TypeBoolean
+  | TypeInt
   | TypeConstructor QualifiedTypeName
   | TypeConstrained (Constraint ref) ref
   | TypeForall (Array Ident) ref
@@ -152,6 +153,9 @@ instance eq1TypeF :: Eq1 TypeF where
       && eq t1 t2
   eq1 (TypeForall v1 t1) _ = false
   eq1 _ (TypeForall v1 t1) = false
+  eq1 TypeInt TypeInt = true
+  eq1 TypeInt _ = false
+  eq1 _ TypeInt = false
   eq1 (TypeKinded t1 k1) (TypeKinded t2 k2) =
     eq t1 t2 && eq k1 k2
   eq1 (TypeKinded v1 t1) _ = false
@@ -200,6 +204,9 @@ instance ord1TypeF :: Ord1 TypeF where
   compare1 (TypeForall v1 t1) (TypeForall v2 t2) = compare v1 v2 <> compare t1 t2
   compare1 (TypeForall _ _) _ = GT
   compare1 _ (TypeForall _ _) = GT
+  compare1 TypeInt TypeInt = EQ
+  compare1 TypeInt _ = GT
+  compare1 _ TypeInt = GT
   compare1 (TypeKinded t1 k1) (TypeKinded t2 k2) = compare t1 t2 <> compare k1 k2
   compare1 (TypeKinded _ _) _ = GT
   compare1 _ (TypeKinded _ _) = GT
@@ -233,6 +240,7 @@ instance foldableTypeF :: Foldable TypeF where
   foldMap f (TypeConstrained { className, params } t) = foldMap f params <> f t
   foldMap _ (TypeConstructor _) = mempty
   foldMap f (TypeForall _ t) = f t
+  foldMap _ TypeInt = mempty
   foldMap f (TypeKinded t _) = f t
   foldMap _ TypeNumber = mempty
   foldMap f (TypeOpt ref) = f ref
@@ -252,6 +260,7 @@ instance traversableTypeF :: Traversable TypeF where
   sequence (TypeConstrained { className, params } t) = TypeConstrained <<< { className, params: _ } <$> sequence params <*> t
   sequence (TypeConstructor t) = pure $ TypeConstructor t
   sequence (TypeForall v t) = TypeForall v <$> t
+  sequence TypeInt = pure $ TypeInt
   sequence (TypeKinded t k) = flip TypeKinded k <$> t
   sequence TypeNumber = pure $ TypeNumber
   sequence (TypeOpt ref) = TypeOpt <$> ref

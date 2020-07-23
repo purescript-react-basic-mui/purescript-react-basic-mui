@@ -15,8 +15,46 @@ let typelevel-eval =
   , repo = "https://github.com/natefaubion/purescript-typelevel-eval.git"
   , version = "master"
   }
+
+let literals =
+  { dependencies =
+    [ "assert"
+    , "effect"
+    , "console"
+    , "integers"
+    , "numbers"
+    , "partial"
+    , "psci-support"
+    , "unsafe-coerce"
+    , "typelevel-prelude"
+    ]
+  , repo = "https://github.com/jvliwanag/purescript-literals"
+  , version = "v0.1.1"
+  }
+
+let untagged-union =
+  { dependencies =
+    [ "assert"
+    , "console"
+    , "effect"
+    , "foreign"
+    , "foreign-object"
+    , "literals"
+    , "maybe"
+    , "newtype"
+    , "proxy"
+    , "psci-support"
+    , "tuples"
+    , "unsafe-coerce"
+    ]
+  , repo = "https://github.com/jvliwanag/purescript-untagged-union"
+  , version = "v0.1.0"
+  }
+
 let additions =
-      { matryoshka =
+      { literals = literals
+      , untagged-union = untagged-union
+      , matryoshka =
           { dependencies =
               [ "fixed-points"
               , "free"

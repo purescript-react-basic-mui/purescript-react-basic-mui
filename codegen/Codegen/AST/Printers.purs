@@ -256,6 +256,7 @@ printType = case _ of
     [] -> t StandAlone
     otherwise ->
       [ "forall" <> " " <> line (map unwrap vs) <> "." <> " " ] <> map indent (t StandAlone)
+  TypeInt -> pure $ const [ "Int" ]
   TypeKinded t k -> pure $ const $ [ line $ [ "(" ] <> t StandAlone <> [ " :: " <> printKind k <> ")" ]]
   TypeNumber -> pure $ const [ "Number" ]
   TypeOpt t -> pure $ case _ of

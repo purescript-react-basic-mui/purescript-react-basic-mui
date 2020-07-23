@@ -14,6 +14,7 @@ import MUI.Core.AppBar (position) as AppBar
 import MUI.Core.Backdrop (_UnsafeBackdrop)
 import MUI.Core.Badge (badgeWithStyles)
 import MUI.Core.Badge (color) as Badge
+import MUI.Core.Box (box)
 import MUI.Core.Button (button, buttonWithStyles)
 import MUI.Core.Button (button, color) as Button
 import MUI.Core.ButtonGroup (buttonGroupWithStyles, color, variant) as ButtonGroup
@@ -50,6 +51,9 @@ import MUI.Icons.Mail (mail)
 import MUI.Icons.Menu (menu)
 import MUI.Icons.Types (icon, iconWithStyles)
 import MUI.React.TransitionGroup (single) as TransitionGroup
+import MUI.System.Display (flex, none) as Only
+import MUI.System.Display (hiding)
+import MUI.System.Flexbox.JustifyContent (flexEnd) as JustifyContent
 import React.Basic (Component, JSX, ReactComponent, createComponent, element, make)
 import React.Basic.DOM (a, button, div, div_, form, h2, p, span, text) as DOM
 import React.Basic.DOM (render)
@@ -57,6 +61,7 @@ import React.Basic.Events (handler_)
 import React.Basic.Hooks (useState)
 import React.Basic.Hooks as React
 import Unsafe.Coerce (unsafeCoerce)
+import Untagged.Union (asOneOf)
 import Web.DOM.NonElementParentNode (getElementById)
 import Web.HTML (window)
 import Web.HTML.HTMLDocument (toNonElementParentNode)
@@ -223,8 +228,15 @@ app components = make component { initialState: {}, render } {}
                 }
             , hidden
               { implementation: Hidden.implementation.css
-              , children: [ DOM.text "Hidden on xs or md" ]
+              , children: [ DOM.text "`Hidden` on xs or md" ]
               , only: Hidden.only.only [ Hidden.only.xs, Hidden.only.md ]
+              }
+            , box $
+              { children:
+                [ DOM.text "`Box` content hidden on sm and xs with justify-content: flex-end" ]
+              , display: hiding { sm: Only.none, md: Only.flex }
+              , flexGrow: 1.0
+              , justifyContent: JustifyContent.flexEnd
               }
             ]
       , container $ { fixed: true, children: _ }
