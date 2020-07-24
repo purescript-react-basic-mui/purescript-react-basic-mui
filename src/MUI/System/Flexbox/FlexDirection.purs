@@ -15,4 +15,3 @@ column = unsafeCoerce "column"
 
 columnReverse ∷ FlexDirection
 columnReverse = unsafeCoerce "column-reverse"
-

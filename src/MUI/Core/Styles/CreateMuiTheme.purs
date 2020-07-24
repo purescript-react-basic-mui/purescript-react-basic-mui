@@ -1,7 +1,6 @@
 module MUI.Core.Styles.CreateMuiTheme where
 
 import Prelude
-
 import Foreign (Foreign, unsafeToForeign)
 import MUI.Core.Styles.CreateBreakpoints (BreakpointsOptions, Breakpoints)
 import MUI.Core.Styles.CreateMixins (MixinsOptions, Mixins)
