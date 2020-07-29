@@ -225,7 +225,7 @@ app components = make component { initialState: {}, render } {}
       [ cssBaseline
       , appBar $ { children: _, position: AppBar.position.static } <<< Array.singleton $
           toolbar $ { children: _ } $
-            [ iconWithStyles menu (\t -> { root: jss { marginRight: theme.spacing 2.0 }}) {}
+            [ iconWithStyles (\t -> { root: jss { marginRight: t.spacing 2.0 }}) menu {}
             , typography $ { children: _, variant: Typography.variant.h6 } <<< Array.singleton $
                link { children: [ DOM.text "LINK" ], href: "#TEST", color: Link.color.inherit }
             , buttonWithStyles

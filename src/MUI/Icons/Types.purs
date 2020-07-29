@@ -36,8 +36,8 @@ iconWithStyles ::
   Nub' (SvgIconPropsRow (SharedSVGProps Props_svg)) props =>
   Union given optionalMissing props =>
   Union jss jss_ SvgIconClassesJSS =>
-  Icon ->
   (Theme -> Record jss) ->
+  Icon ->
   Record given ->
   JSX
-iconWithStyles (Icon i) style = element (unsafeCoerce withStyles style i)
+iconWithStyles style (Icon i) = element (unsafeCoerce withStyles style i)
