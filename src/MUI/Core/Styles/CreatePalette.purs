@@ -67,7 +67,7 @@ type PalettePartial
     , text :: TypeTextOptions
     , divider :: String
     , action :: TypeActionOptions
-    , background :: TypeBackground
+    , background :: TypeBackgroundOptions
     , getContrastText :: String -> String
     )
 

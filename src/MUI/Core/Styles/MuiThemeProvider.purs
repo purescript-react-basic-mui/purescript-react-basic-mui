@@ -1,15 +1,13 @@
 module MUI.Core.Styles.MuiThemeProvider where
 
-import Foreign (Foreign, unsafeToForeign)
 import MUI.Core.Styles.Types (Theme)
-import React.Basic (JSX)
+import React.Basic (JSX, ReactComponent, element)
 
 type ThemeProviderProps
   = { children :: JSX
     , theme :: Theme
     }
 
-muiThemeProvider :: ThemeProviderProps -> JSX
-muiThemeProvider props = _MuiThemeProvider (unsafeToForeign props)
+foreign import _MuiThemeProvider :: ReactComponent ThemeProviderProps
 
-foreign import _MuiThemeProvider :: Foreign -> JSX
+muiThemeProvider = element _MuiThemeProvider

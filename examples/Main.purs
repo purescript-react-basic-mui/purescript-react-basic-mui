@@ -40,7 +40,11 @@ import MUI.Core.ListItem (listItem)
 import MUI.Core.ListItemIcon (listItemIcon)
 import MUI.Core.ListItemText (listItemText)
 import MUI.Core.Modal (modal)
+import MUI.Core.Styles (Theme)
+import MUI.Core.Styles.CreateMuiTheme (createMuiTheme)
+import MUI.Core.Styles.CreatePalette (paletteOptions, typeBackgroundOptions)
 import MUI.Core.Styles.MakeStyles (makeStyles)
+import MUI.Core.Styles.MuiThemeProvider (muiThemeProvider)
 import MUI.Core.Styles.Types (multiplier, spacing)
 import MUI.Core.TextField (filledWithStyles, outlinedWithStyles, standardWithStyles) as TextField
 import MUI.Core.Toolbar (toolbar)
@@ -54,20 +58,23 @@ import MUI.React.TransitionGroup (single) as TransitionGroup
 import MUI.System.Display (flex, none) as Only
 import MUI.System.Display (hiding)
 import MUI.System.Flexbox.JustifyContent (flexEnd) as JustifyContent
-import React.Basic (Component, JSX, ReactComponent, createComponent, element, make)
+import React.Basic (Component, JSX, ReactComponent, createComponent, element, fragment, make)
 import React.Basic.DOM (a, button, div, div_, form, h2, p, span, text) as DOM
 import React.Basic.DOM (render)
 import React.Basic.Events (handler_)
 import React.Basic.Hooks (useState)
 import React.Basic.Hooks as React
 import Unsafe.Coerce (unsafeCoerce)
-import Untagged.Union (asOneOf)
 import Web.DOM.NonElementParentNode (getElementById)
 import Web.HTML (window)
 import Web.HTML.HTMLDocument (toNonElementParentNode)
 import Web.HTML.Window (document)
 
 type Props = {}
+
+theme ∷ Theme
+theme = createMuiTheme
+  { palette: paletteOptions { type: "dark" }}
 
 component :: Component Props
 component = createComponent "Counter"
@@ -82,7 +89,7 @@ arr = Array.singleton
 drawerList :: Effect (ReactComponent {})
 drawerList =
   let
-    useStyles = makeStyles \theme ->
+    useStyles = makeStyles \t ->
       { paper:
           { backgroundColor: theme.palette.background.paper
           , padding: spacing
@@ -90,7 +97,7 @@ drawerList =
               (multiplier 4.0)
               (multiplier 3.0)
               (multiplier 4.0)
-              theme
+              t
           }
       , list: { width: 250 }
       , fullList: { width: "auto" }
@@ -152,14 +159,14 @@ drawerList =
 transitionsModal :: Effect (ReactComponent {})
 transitionsModal =
   let
-    useStyles = makeStyles \theme ->
+    useStyles = makeStyles \t ->
       { modal:
         { display: "flex"
         , alignItems: "center"
         , justifyContent: "center"
         }
       , paper:
-        { backgroundColor: theme.palette.background.paper
+        { backgroundColor: t.palette.background.paper
         , border: "2px solid #000"
         , boxShadow: theme.shadows."24"
         , padding: spacing
@@ -167,7 +174,7 @@ transitionsModal =
             (multiplier 4.0)
             (multiplier 3.0)
             (multiplier 4.0)
-            theme
+            t
         }
       }
   in React.component "TransitionsModal" \_ -> React.do
@@ -213,16 +220,16 @@ type Components =
 app :: Components -> JSX
 app components = make component { initialState: {}, render } {}
   where
-    textInputStyle theme = { root: jss { width: "80%", margin: theme.spacing 2.0 }}
-    render self = DOM.div $ { children: _ }
+    textInputStyle t = { root: jss { width: "80%", margin: theme.spacing 2.0 }}
+    render self = muiThemeProvider $ { theme, children: _ } $ fragment --DOM.div $ { children: _ }
       [ cssBaseline
       , appBar $ { children: _, position: AppBar.position.static } <<< Array.singleton $
           toolbar $ { children: _ } $
-            [ iconWithStyles menu (\theme -> { root: jss { marginRight: theme.spacing 2.0 }}) {}
+            [ iconWithStyles menu (\t -> { root: jss { marginRight: theme.spacing 2.0 }}) {}
             , typography $ { children: _, variant: Typography.variant.h6 } <<< Array.singleton $
                link { children: [ DOM.text "LINK" ], href: "#TEST", color: Link.color.inherit }
             , buttonWithStyles
-                (\theme -> { root: jss { marginRight: theme.spacing 2.0 }})
+                (\t -> { root: jss { marginRight: theme.spacing 2.0 }})
                 { children: [ DOM.text "Login" ]
                 , color: Button.color.inherit
                 }
@@ -282,18 +289,18 @@ app components = make component { initialState: {}, render } {}
               ]
           ]
           , dividerWithStyles
-              (\theme -> { root: jss { marginTop: theme.spacing 4.0, marginBottom: theme.spacing 4.0 }})
+              (\t -> { root: jss { marginTop: theme.spacing 4.0, marginBottom: theme.spacing 4.0 }})
               { variant: Dividier.variant.middle }
           , grid $ { container: true, children: _ }
             [ gridItem $
-                ButtonGroup.buttonGroupWithStyles (\theme -> { root: jss { margin: theme.spacing 2.0 }}) $
+                ButtonGroup.buttonGroupWithStyles (\t -> { root: jss { margin: theme.spacing 2.0 }}) $
                   { variant: ButtonGroup.variant.text, color: ButtonGroup.color.primary, children: _ }
                   [ Button.button { children: [ DOM.text "One" ]}
                   , Button.button { children: [ DOM.text "Two" ]}
                   , Button.button { children: [ DOM.text "Three" ]}
                   ]
             , gridItem $ badgeWithStyles
-                (\theme -> { root: jss { margin: theme.spacing 2.0 }})
+                (\t -> { root: jss { margin: theme.spacing 2.0 }})
                 { badgeContent: DOM.text "4"
                 , children: [ DOM.text "Badge example" ]
                 , color: Badge.color.secondary

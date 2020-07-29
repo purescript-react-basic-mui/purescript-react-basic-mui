@@ -120,6 +120,7 @@ type TypographyOptPropsRow (r :: #Type)
     , children :: Array JSX
     , classes :: { | TypographyClassesKey }
     , color :: Color
+    , component :: String
     , display :: Display
     , gutterBottom :: Boolean
     , noWrap :: Boolean

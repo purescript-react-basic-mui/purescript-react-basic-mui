@@ -57,8 +57,40 @@ $ spago build --config spago.dhall
 #### Icons
 
 This library doesn't contain any ready to use icon modules. When we tried to provide the whole icon set in the past it caused a huge slowdown of compilation time and problematic IDE rebuilds / startups (it is possible that this is not an issue anymore as the latest _purs_ releases included some performance/caching improvements).
+It is really easy to write icon bindings by hand or use simple command which generates icon module for you.
 
-To solve this situation we provide a handy and simple command which generates icon module for you. You can use it directly from your project directory. The first step is installation of appropriate JS dependencies:
+
+##### Usage
+
+When you have ready to use icon binding (let say `menu`) you can use it by calling `icon` or `iconWithStyles`:
+
+```purescript
+import MUI.Icons.Types (icon, iconWithStyles)
+
+jsx = icon menu {}
+
+jsx' = iconWithStyles (\theme → { root: jss { ... }}) menu
+```
+
+##### Anatomy
+
+It is easy to write icon bindings by hand. All we need is a import on the JS side:
+
+```javascript
+exports.mail = require('@material-ui/icons/Mail').default;
+```
+
+and an import on the PS side:
+
+```purescript
+import MUI.Icons.Types (Icon) as MUI.Icons.Types
+
+foreign import mail :: MUI.Icons.Types.Icon
+```
+
+##### Codegen
+
+You can use icon codegen command directly from your project directory. The first step is installation of appropriate JS dependencies:
 
 ```
 $ npm install '@material-ui/core' '@material-ui/icons' 'react' 'react-dom' 'typescript' 'fs-extra'

@@ -20,9 +20,12 @@ exports.collect = function(jsx) {
   };
 };
 
-exports.toString = function(sheets) {
+exports.renderStyleSheet = function(sheets) {
   return function() {
     return sheets.toString();
   };
 };
 
+exports.renderJSX = function(jsx) {
+  return reactDOM.renderToString(jsx);
+};
