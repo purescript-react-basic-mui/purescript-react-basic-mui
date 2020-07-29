@@ -9,7 +9,7 @@ import Codegen.AST.Sugar (local) as Sugar
 import Codegen.AST.Sugar.Expr (app, ident, ident') as Expr
 import Codegen.AST.Sugar.Type (app, arr, constructor, recordLiteral, row, string, typeRow, var) as Type
 import Codegen.AST.Sugar.Type (constrained, forAll, recordLiteral)
-import Codegen.AST.Types (Kind(..), TypeF(..), TypeVarBinding(..), ValueBindingFields(..))
+import Codegen.AST.Types (Kind(..), TypeF(..), TypeVarBinding(..), ValueBindingFields(..), Fields)
 import Codegen.Component (Component, ComponentName, ModulePath, Props, PropsRow, componentFullPath, foldRoot, jsImportPath, jsx, propsCombinedName, propsOptionalName, propsRequiredName, psImportPath, reactComponentApply)
 import Codegen.Component (componentName, inputComponentName) as Component
 import Codegen.TS.Module (PossibleType(..), astAlgebra, buildAndInstantiateDeclarations, unionDeclarations) as TS.Module
@@ -27,9 +27,9 @@ import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Functor.Mu (Mu(..), roll)
 import Data.List (List(..), fromFoldable, singleton) as List
 import Data.List (List, (:))
-import Data.Map (Map, filterKeys, filterWithKey, fromFoldable, keys, lookup, singleton, toUnfoldable) as Map
+import Data.Map (Map, filter, filterKeys, filterWithKey, fromFoldable, keys, lookup, singleton, toUnfoldable) as Map
 import Data.Map.Internal (keys) as Map.Internal
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..), isNothing, maybe)
 import Data.Set (member) as Set
 import Data.String (joinWith)
 import Data.String.Extra (camelCase)
@@ -119,11 +119,12 @@ validateProps { base, generate } { props } = do
     throwError $ [ "Properties listed for generation but not found in the component props:" <> show missingFromGenerate ]
 
   let
-    propsNamesFromBase :: Array String
-    propsNamesFromBase = Array.fromFoldable $ Map.keys base
+    -- | Some properties could be "forced"
+    checkedPropsNamesFromBase :: Array String
+    checkedPropsNamesFromBase = Array.fromFoldable $ Map.keys $ Map.filter (\{ force } → isNothing force) base
 
     missingFromBase :: Array String
-    missingFromBase = Array.filter (not <<< flip Set.member (Map.keys props)) propsNamesFromBase
+    missingFromBase = Array.filter (not <<< flip Set.member (Map.keys props)) checkedPropsNamesFromBase
 
   when (not <<< Array.null $ missingFromBase) do
     throwError $ [ "Properties listed in the base row but not found in the component props:" <> show missingFromBase ]
@@ -168,6 +169,12 @@ componentAST component@{ extraDeclarations, root, modulePath, propsRow: expected
         propsDecls :: Props { constructor :: AST.Type, declaration :: Declaration }
         propsDecls =
           let
+            generatedProps = partitionProps (isOpt <<< Tuple.snd) (Map.filterWithKey (\i t -> i `elem` generate) labels)
+              where
+                isOpt (In (TypeOpt ref)) = true
+                isOpt ref = false
+
+            partitionProps :: forall t. (Tuple String t -> Boolean) -> Fields t -> { optional :: Fields t, required :: Fields t}
             partitionProps isOpt ps =
               let
                 ({ yes, no } :: { yes :: List _, no :: List _ }) =
@@ -175,18 +182,15 @@ componentAST component@{ extraDeclarations, root, modulePath, propsRow: expected
               in
                 { optional: Map.fromFoldable yes, required: Map.fromFoldable no }
 
-            generatedProps = partitionProps (isOpt <<< Tuple.snd) (Map.filterWithKey (\i t -> i `elem` generate) labels)
-              where
-                isOpt (In (TypeOpt ref)) = true
-                isOpt ref = false
-
             -- | User doesn't provide optionality info.
             -- | We retrive it from the final type here.
-            baseProps = partitionProps step base
+            baseProps = { required: map _.type required, optional: map _.type optional }
               where
-              step (Tuple label t) = case Map.lookup label props of
-                Just { optional: o } -> o
-                otherwise -> false
+                step (Tuple label { force }) = case force, Map.lookup label props of
+                  Just { required: r }, _ -> not r
+                  _, Just { optional: o } -> o
+                  _, _ -> false
+                { required, optional } = partitionProps step base
 
             propsRequiredBody :: AST.Type
             propsRequiredBody = Type.typeRow $

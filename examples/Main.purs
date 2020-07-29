@@ -42,7 +42,7 @@ import MUI.Core.ListItemText (listItemText)
 import MUI.Core.Modal (modal)
 import MUI.Core.Styles (Theme)
 import MUI.Core.Styles.CreateMuiTheme (createMuiTheme)
-import MUI.Core.Styles.CreatePalette (paletteOptions, typeBackgroundOptions)
+import MUI.Core.Styles.CreatePalette (paletteOptions)
 import MUI.Core.Styles.MakeStyles (makeStyles)
 import MUI.Core.Styles.MuiThemeProvider (muiThemeProvider)
 import MUI.Core.Styles.Types (multiplier, spacing)
@@ -72,7 +72,7 @@ import Web.HTML.Window (document)
 
 type Props = {}
 
-theme ∷ Theme
+theme :: Theme
 theme = createMuiTheme
   { palette: paletteOptions { type: "dark" }}
 

@@ -5,9 +5,10 @@ import Prelude
 import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconPSFile, icons)
 import Codegen (component, icon, write) as Codegen
 import Codegen.AST (ModuleName(..), TypeName(..))
+import Codegen.AST (Type) as AST
 import Codegen.AST.Sugar.Type (constructor) as Type
 import Codegen.AST.Types (TypeF(..))
-import Codegen.Component (Component, Icon, ModulePath(..), Root(..), arrayJSX, iconName, jsx, psImportPath, rbProps)
+import Codegen.Component (Component, Icon, ModulePath(..), Root(..), FieldDetails, arrayJSX, iconName, jsx, psImportPath, rbProps)
 import Codegen.Component (componentName) as Component
 import Codegen.TS.MUI (componentProps) as TS.MUI
 import Codegen.TS.Types (InstantiationStrategy(..))
@@ -44,27 +45,33 @@ import Options.Applicative.Types (readerAsk)
 import ReadDTS.Instantiation (TypeF(..)) as Instantiation
 import ReadDTS.Instantiation.Pretty (pprintTypeName)
 
+checkedProp :: String -> AST.Type -> Tuple String { force :: Maybe FieldDetails, type :: AST.Type }
+checkedProp l t = Tuple l { force: Nothing, "type": t }
+
+forcedProp :: String -> AST.Type -> Boolean -> Tuple String { force :: Maybe FieldDetails, type :: AST.Type }
+forcedProp l t r = Tuple l { force: Just { required: r }, "type": t }
+
 components :: Array Component
 components =
   let
-    children = Tuple "children" arrayJSX
+    children = checkedProp "children" arrayJSX
 
-    eventHandlerProp name = Tuple name (Type.constructor "React.Basic.Events.EventHandler")
+    eventHandlerProp name = checkedProp name (Type.constructor "React.Basic.Events.EventHandler")
 
     foreignType = Type.constructor "Foreign.Foreign"
 
     jss = Type.constructor "MUI.Core.JSS"
 
     flexbox =
-      [ Tuple "alignContent" (Type.constructor "MUI.System.Flexbox.AlignContent")
-      , Tuple "alignItems" (Type.constructor "MUI.System.Flexbox.AlignItems")
-      , Tuple "alignSelf" (Type.constructor "MUI.System.Flexbox.AlignSelf")
-      , Tuple "flexDirection" (Type.constructor "MUI.System.Flexbox.FlexDirection")
-      , Tuple "flexGrow" (roll TypeNumber)
-      , Tuple "flexBasis" (roll TypeString)
-      , Tuple "flexShrink" (roll TypeNumber)
-      , Tuple "flexWrap" (Type.constructor "MUI.System.Flexbox.FlexWrap")
-      , Tuple "justifyContent" (Type.constructor "MUI.System.Flexbox.JustifyContent")
+      [ checkedProp "alignContent" (Type.constructor "MUI.System.Flexbox.AlignContent")
+      , checkedProp "alignItems" (Type.constructor "MUI.System.Flexbox.AlignItems")
+      , checkedProp "alignSelf" (Type.constructor "MUI.System.Flexbox.AlignSelf")
+      , checkedProp "flexDirection" (Type.constructor "MUI.System.Flexbox.FlexDirection")
+      , checkedProp "flexGrow" (roll TypeNumber)
+      , checkedProp "flexBasis" (roll TypeString)
+      , checkedProp "flexShrink" (roll TypeNumber)
+      , checkedProp "flexWrap" (Type.constructor "MUI.System.Flexbox.FlexWrap")
+      , checkedProp "justifyContent" (Type.constructor "MUI.System.Flexbox.JustifyContent")
       ]
 
     transitionTimeout = Type.constructor "MUI.React.TransitionGroup.Timeout"
@@ -94,7 +101,7 @@ components =
       , propsRow:
         { base
         , generate
-        , ts: { instantiation: Nothing, unionName: \_ _ → Nothing }
+        , ts: { instantiation: Nothing, unionName: \_ _ -> Nothing }
         }
       , root
       }
@@ -136,9 +143,9 @@ components =
       { name: "Backdrop"
       , propsRow:
         { base: Map.fromFoldable
-            [ Tuple "ref" foreignType
-            , Tuple "children" arrayJSX
-            , Tuple "transitionDuration" transitionTimeout
+            [ checkedProp "ref" foreignType
+            , checkedProp "children" arrayJSX
+            , checkedProp "transitionDuration" transitionTimeout
             ]
         , generate: [ "classes", "invisible", "open" ]
         }
@@ -151,7 +158,7 @@ components =
         , name: "Badge"
         , propsRow:
           { base: Map.fromFoldable
-              [ Tuple "badgeContent" jsx
+              [ checkedProp "badgeContent" jsx
               , children
               ]
           , generate:
@@ -189,15 +196,15 @@ components =
             $ flexbox
             <>
               [ children
-              , Tuple "border" foreignType
-              , Tuple "borderBottom" foreignType
-              , Tuple "borderColor" foreignType
-              , Tuple "borderLeft" foreignType
-              , Tuple "borderRadius" foreignType
-              , Tuple "borderRight" foreignType
-              , Tuple "borderTop" foreignType
-              , Tuple "component" (roll TypeString)
-              , Tuple
+              , checkedProp "border" foreignType
+              , checkedProp "borderBottom" foreignType
+              , checkedProp "borderColor" foreignType
+              , checkedProp "borderLeft" foreignType
+              , checkedProp "borderRadius" foreignType
+              , checkedProp "borderRight" foreignType
+              , checkedProp "borderTop" foreignType
+              , checkedProp "component" (roll TypeString)
+              , checkedProp
                   "display"
                   (Type.constructor "MUI.System.Display.Display")
               ]
@@ -218,8 +225,8 @@ components =
     --          $ [ children
     --            -- Not found on the TS side
     --            -- , component
-    --            , Tuple "separator" jsx
-    --            , Tuple "ref" foreignType
+    --            , checkedProp "separator" jsx
+    --            , checkedProp "ref" foreignType
     --            ]
     --      , generate: [ "classes", "itemsAfterCollapse", "itemsBeforeCollapse", "maxItems" ]
     --      }
@@ -239,12 +246,12 @@ components =
           }
         , propsRow:
           { base:  Map.fromFoldable
-              [ Tuple "action" foreignType
-              , Tuple "buttonRef" foreignType
+              [ checkedProp "action" foreignType
+              , checkedProp "buttonRef" foreignType
               , eventHandlerProp "onFocusVisible"
               -- | I'm not sure hot to handle this kind of props parameter
               -- | in the current architecture.
-              -- , Tuple "TouchRippleProps" $ Type.recordLiteral $ Type.app
+              -- , checkedProp "TouchRippleProps" $ Type.recordLiteral $ Type.app
               --     ( roll $ TypeConstructor
               --         { moduleName: Just $ ModuleName (psImportPath (componentFullPath touchRipple))
               --         , name: TypeName $ (propsRowTypeName touchRippleType.name)
@@ -262,7 +269,7 @@ components =
             , "focusVisibleClassName"
             , "type"
             ]
-          , ts: { instantiation: Nothing, unionName: \_ _ → Nothing }
+          , ts: { instantiation: Nothing, unionName: \_ _ -> Nothing }
           }
         , root: rbProps.button
         }
@@ -272,8 +279,8 @@ components =
         { name: "Button"
         , propsRow:
           { base: Map.fromFoldable
-              [ Tuple "endIcon" jsx
-              , Tuple "startIcon" jsx
+              [ checkedProp "endIcon" jsx
+              , checkedProp "startIcon" jsx
               ]
           , generate:
             [ "classes"
@@ -320,8 +327,8 @@ components =
     --    , name: "BottomNavigationAction"
     --    , propsRow:
     --      { base: Map.fromFoldable
-    --          [ Tuple "icon" jsx
-    --          , Tuple "label" jsx
+    --          [ checkedProp "icon" jsx
+    --          , checkedProp "label" jsx
     --          ]
     --      , generate:
     --        [ "classes"
@@ -383,13 +390,13 @@ components =
     --    , name: "CardHeader"
     --    , propsRow:
     --      { base:  Map.fromFoldable
-    --          [ Tuple "action" jsx
-    --          , Tuple "avatar" jsx
+    --          [ checkedProp "action" jsx
+    --          , checkedProp "avatar" jsx
     --          , children
-    --          , Tuple "subheader" jsx
-    --          , Tuple "subheaderTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyOpaqueProps")
-    --          , Tuple "title" jsx
-    --          , Tuple "titleTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyOpaqueProps")
+    --          , checkedProp "subheader" jsx
+    --          , checkedProp "subheaderTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyOpaqueProps")
+    --          , checkedProp "title" jsx
+    --          , checkedProp "titleTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyOpaqueProps")
     --          ]
     --      , generate: [ "classes", "disableTypography" ]
     --      }
@@ -415,12 +422,12 @@ components =
     --    , name: "Checkbox"
     --    , propsRow:
     --      { base: Map.fromFoldable
-    --          ( [ Tuple "checkedIcon" jsx
-    --            , Tuple "icon" jsx
-    --            , Tuple "indeterminateIcon" jsx
-    --            , Tuple "inputProps" foreignType
-    --            , Tuple "inputRef" foreignType
-    --            , Tuple "value" foreignType
+    --          ( [ checkedProp "checkedIcon" jsx
+    --            , checkedProp "icon" jsx
+    --            , checkedProp "indeterminateIcon" jsx
+    --            , checkedProp "inputProps" foreignType
+    --            , checkedProp "inputRef" foreignType
+    --            , checkedProp "value" foreignType
     --            ]
     --              <> (map eventHandlerProp [ "onChange" ])
     --          )
@@ -443,10 +450,10 @@ components =
     --    , name: "Chip"
     --    , propsRow:
     --      { base:  Map.fromFoldable
-    --        [ Tuple "avatar" jsx
-    --        , Tuple "deleteIcon" jsx
-    --        , Tuple "icon" jsx
-    --        , Tuple "label" jsx
+    --        [ checkedProp "avatar" jsx
+    --        , checkedProp "deleteIcon" jsx
+    --        , checkedProp "icon" jsx
+    --        , checkedProp "label" jsx
     --        , eventHandlerProp "onDelete"
     --        ]
     --      , generate:
@@ -482,7 +489,7 @@ components =
     --    onClickAway = eventHandlerProp "onClickAway"
 
     --    -- | Single jsx node is required
-    --    child = Tuple "children" jsx
+    --    child = checkedProp "children" jsx
 
     --    base =  Map.fromFoldable [ child, onClickAway ]
     --  in
@@ -623,10 +630,10 @@ components =
         , propsRow:
           { base: Map.fromFoldable
               ( [ children
-                , Tuple "ModalProps" (Type.constructor "MUI.Core.Modal.ModalProps")
-                , Tuple "PaperProps" (Type.constructor "MUI.Core.Paper.PaperProps")
-                -- , Tuple "SlideProps" (Type.constructor "MUI.Core.Slide.SlideOpaqueProps")
-                , Tuple "transitionDuration" transitionTimeout
+                , checkedProp "ModalProps" (Type.constructor "MUI.Core.Modal.ModalProps")
+                , checkedProp "PaperProps" (Type.constructor "MUI.Core.Paper.PaperProps")
+                -- , checkedProp "SlideProps" (Type.constructor "MUI.Core.Slide.SlideOpaqueProps")
+                , checkedProp "transitionDuration" transitionTimeout
                 ]
               <> [ eventHandlerProp "onClose" ]
               <> transitionHandlers
@@ -691,8 +698,8 @@ components =
     --    , propsRow:
     --      { base: Map.fromFoldable
     --          [ children
-    --          , Tuple "expandIcon" jsx
-    --          , Tuple "IconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
+    --          , checkedProp "expandIcon" jsx
+    --          , checkedProp "IconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
     --          ]
     --      , generate: [ "classes" ]
     --      }
@@ -725,9 +732,9 @@ components =
         { name: "Fade"
         , propsRow:
           { base:  Map.fromFoldable
-              [ Tuple "children" jsx
-              , Tuple "ref" foreignType
-              , Tuple "timeout" transitionTimeout
+              [ checkedProp "children" jsx
+              , checkedProp "ref" foreignType
+              , checkedProp "timeout" transitionTimeout
               ]
           , generate: [ "in" ]
           }
@@ -742,14 +749,14 @@ components =
     --    , propsRow:
     --      { base:  Map.fromFoldable
     --          [ children
-    --          , Tuple "endAdornment" jsx
-    --          , Tuple
+    --          , checkedProp "endAdornment" jsx
+    --          , checkedProp
     --              "inputProps"
     --              (Type.constructor "MUI.Core.InputBaseOpaqueProps")
-    --          , Tuple "inputRef" foreignType
+    --          , checkedProp "inputRef" foreignType
     --          , eventHandlerProp "onChange"
-    --          , Tuple "startAdornment" jsx
-    --          , Tuple "value" foreignType
+    --          , checkedProp "startAdornment" jsx
+    --          , checkedProp "value" foreignType
     --          ]
     --      , generate:
     --          [ "autoComplete"
@@ -801,10 +808,10 @@ components =
         { name: "FormControlLabel"
         , propsRow:
           { base: Map.fromFoldable
-              [ Tuple "control" jsx
-              , Tuple "label" jsx
+              [ checkedProp "control" jsx
+              , checkedProp "label" jsx
               , eventHandlerProp "onChange"
-              , Tuple "value" foreignType
+              , checkedProp "value" foreignType
               ]
           , generate:
             [ "checked"
@@ -894,14 +901,14 @@ components =
             ]
           , ts:
               { instantiation: Nothing
-              , unionName: \property members → case property of
-                  _ | property `Array.elem` ["xs", "sm", "md" , "lg", "xl"] →
+              , unionName: \property members -> case property of
+                  _ | property `Array.elem` ["xs", "sm", "md" , "lg", "xl"] ->
                     Just $ TypeName "GridSize"
-                  "spacing" →
+                  "spacing" ->
                     Just $ TypeName "GridSpacing"
-                  "justify" →
+                  "justify" ->
                     Just $ TypeName "GridJustification"
-                  otherwise → Nothing
+                  otherwise -> Nothing
               }
           }
         , root: rbProps.div
@@ -931,9 +938,9 @@ components =
     --    , name: "GridListTileBar"
     --    , propsRow:
     --      { base: Map.fromFoldable
-    --          [ Tuple "actionIcon" jsx
-    --          , Tuple "subtitle" jsx
-    --          , Tuple "title" jsx
+    --          [ checkedProp "actionIcon" jsx
+    --          , checkedProp "subtitle" jsx
+    --          , checkedProp "title" jsx
     --          ]
     --      , generate:
     --        [ "classes"
@@ -971,7 +978,7 @@ components =
           , output: Name "Hidden"
           }
         , propsRow:
-          { base: mempty -- Map.fromFoldable [ Tuple "only" foreignType ]
+          { base: mempty -- Map.fromFoldable [ checkedProp "only" foreignType ]
           , generate:
             [ "implementation"
             , "initialWidth"
@@ -1001,8 +1008,8 @@ components =
             -- |   xs :: Only
             -- |  }
             , unionName: case _ of
-                "Anonymous" → const $ Just $ TypeName "Only"
-                otherwise → const $ Nothing
+                "Anonymous" -> const $ Just $ TypeName "Only"
+                otherwise -> const $ Nothing
             }
           }
         , root: rbProps.div
@@ -1044,12 +1051,12 @@ components =
         { name: "Input"
         , propsRow:
           { base: Map.fromFoldable
-            [ Tuple "defaultValue" foreignType
-            , Tuple "endAdornment" jsx
-            , Tuple "inputProps" foreignType
-            , Tuple "inputRef" foreignType
-            , Tuple "startAdornment" jsx
-            , Tuple "value" foreignType
+            [ checkedProp "defaultValue" foreignType
+            , checkedProp "endAdornment" jsx
+            , checkedProp "inputProps" foreignType
+            , checkedProp "inputRef" foreignType
+            , checkedProp "startAdornment" jsx
+            , checkedProp "value" foreignType
             , eventHandlerProp "onChange"
             ]
           , generate:
@@ -1098,12 +1105,12 @@ components =
       { name: "InputBase"
       , propsRow:
         { base: Map.fromFoldable
-            [ Tuple "defaultValue" foreignType
-            , Tuple "endAdornment" jsx
-            , Tuple "inputProps" foreignType
-            , Tuple "inputRef" foreignType
-            , Tuple "startAdornment" jsx
-            , Tuple "value" foreignType
+            [ checkedProp "defaultValue" foreignType
+            , checkedProp "endAdornment" jsx
+            , checkedProp "inputProps" foreignType
+            , checkedProp "inputRef" foreignType
+            , checkedProp "startAdornment" jsx
+            , checkedProp "value" foreignType
             , eventHandlerProp "onChange"
             ]
         , generate:
@@ -1177,7 +1184,7 @@ components =
         , propsRow:
           { base: Map.fromFoldable
               [ children
-              -- , Tuple "TypographyClasses" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
+              -- , checkedProp "TypographyClasses" (Type.constructor "MUI.Core.Typography.TypographyClassesKey")
               ]
           , generate:
             [ "classes"
@@ -1195,7 +1202,7 @@ components =
         { base: Map.fromFoldable
             [ children
             -- component
-            , Tuple "subheader" jsx
+            , checkedProp "subheader" jsx
             ]
         , generate:
           [ "classes"
@@ -1271,10 +1278,10 @@ components =
       { name: "ListItemText"
       , propsRow:
         { base: Map.fromFoldable
-            [ Tuple "primary" jsx
-            , Tuple "primaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyProps")
-            , Tuple "secondary" jsx
-            , Tuple "secondaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyProps")
+            [ checkedProp "primary" jsx
+            , checkedProp "primaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyProps")
+            , checkedProp "secondary" jsx
+            , checkedProp "secondaryTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyProps")
             ]
         , generate:
           [ "classes"
@@ -1316,7 +1323,7 @@ components =
 
     --    domElement = Type.constructor "Web.DOM.Element"
 
-    --    anchorEl = Tuple "anchorEl" $ Type.app nullable [ domElement ]
+    --    anchorEl = checkedProp "anchorEl" $ Type.app nullable [ domElement ]
 
     --    base =  Map.fromFoldable $ [ anchorEl, children ] <> handlers
     --  in
@@ -1359,9 +1366,9 @@ components =
     --    , propsRow:
     --      { base:
     --          Map.fromFoldable
-    --              [ Tuple "backButton" jsx
-    --              , Tuple "LinearProgressProps" (Type.constructor "MUI.Core.LinearPropgress.LinearProgressOpaqueProps")
-    --              , Tuple "nextButton" jsx
+    --              [ checkedProp "backButton" jsx
+    --              , checkedProp "LinearProgressProps" (Type.constructor "MUI.Core.LinearPropgress.LinearProgressOpaqueProps")
+    --              , checkedProp "nextButton" jsx
     --              ]
     --      , generate:
     --        [ "activeStep"
@@ -1387,11 +1394,11 @@ components =
         -- | backdropProps = Type.constructor "MUI.Core.Backdrop.BackdropProps"
         base =
            Map.fromFoldable
-            $ [ Tuple "children" jsx
-              , Tuple "BackdropComponent" foreignType -- (reactComponentApply backdropOpaqueProps)
-              , Tuple "BackdropProps" foreignType -- backdropProps
+            $ [ checkedProp "children" jsx
+              , checkedProp "BackdropComponent" foreignType -- (reactComponentApply backdropOpaqueProps)
+              , checkedProp "BackdropProps" foreignType -- backdropProps
               -- , container
-              -- , Tuple
+              -- , checkedProp
               --     "manager"
               --     (Type.constructor "MUI.Core.Modal.ModalManager.ModalManager")
               ]
@@ -1428,11 +1435,11 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "IconComponent" jsx
-    --              , Tuple "input" jsx
-    --              , Tuple "inputProps" (Type.constructor "MUI.Core.Input.InputOpaqueProps")
+    --              , checkedProp "IconComponent" jsx
+    --              , checkedProp "input" jsx
+    --              , checkedProp "inputProps" (Type.constructor "MUI.Core.Input.InputOpaqueProps")
     --              , eventHandlerProp "onChange"
-    --              , Tuple "value" foreignType
+    --              , checkedProp "value" foreignType
     --              ]
     --      , generate:
     --        [ "classes"
@@ -1450,7 +1457,7 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "fallback" jsx
+    --              , checkedProp "fallback" jsx
     --              ]
     --      , generate:
     --        [ "defer"
@@ -1467,12 +1474,12 @@ components =
     --    , propsRow:
     --      { base:
     --          Map.fromFoldable
-    --              [ Tuple "defaultValue" foreignType
-    --              , Tuple "endAdornment" jsx
-    --              , Tuple "inputProps" foreignType
-    --              , Tuple "inputRef" foreignType
-    --              , Tuple "startAdornment" jsx
-    --              , Tuple "value" foreignType
+    --              [ checkedProp "defaultValue" foreignType
+    --              , checkedProp "endAdornment" jsx
+    --              , checkedProp "inputProps" foreignType
+    --              , checkedProp "inputRef" foreignType
+    --              , checkedProp "startAdornment" jsx
+    --              , checkedProp "value" foreignType
     --              , eventHandlerProp "onChange"
     --              ]
     --      , generate:
@@ -1522,18 +1529,18 @@ components =
     --    , propsRow:
     --      { base:
     --          Map.fromFoldable
-    --              [ Tuple "action" foreignType
-    --              , Tuple "anchorEl" foreignType
-    --              , Tuple "anchorPosition" foreignType
+    --              [ checkedProp "action" foreignType
+    --              , checkedProp "anchorEl" foreignType
+    --              , checkedProp "anchorPosition" foreignType
     --              , children
-    --              , Tuple "getContentAnchorEl" foreignType
+    --              , checkedProp "getContentAnchorEl" foreignType
     --              , eventHandlerProp "onChange"
     --              , eventHandlerProp "onEnter"
     --              , eventHandlerProp "onEntering"
     --              , eventHandlerProp "onExit"
     --              , eventHandlerProp "onExited"
     --              , eventHandlerProp "onExiting"
-    --              , Tuple "PaperProps" (Type.constructor "MUI.Core.Paper.PaperOpaqueProps")
+    --              , checkedProp "PaperProps" (Type.constructor "MUI.Core.Paper.PaperOpaqueProps")
     --              ]
     --      , generate:
     --        [ "anchorOrigin"
@@ -1555,11 +1562,11 @@ components =
     --    , propsRow:
     --      { base:
     --          Map.fromFoldable
-    --              [ Tuple "anchorEl" foreignType
+    --              [ checkedProp "anchorEl" foreignType
     --              , children
-    --              , Tuple "modifiers" foreignType
-    --              , Tuple "popperOptions" foreignType
-    --              , Tuple "popperRef" foreignType
+    --              , checkedProp "modifiers" foreignType
+    --              , checkedProp "popperOptions" foreignType
+    --              , checkedProp "popperRef" foreignType
     --              ]
     --      , generate:
     --        [ "disablePortal"
@@ -1578,7 +1585,7 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "container" foreignType
+    --              , checkedProp "container" foreignType
     --              , eventHandlerProp "onRendered"
     --              ]
     --      , generate: [ "disablePortal" ]
@@ -1594,12 +1601,12 @@ components =
     --    , propsRow:
     --      { base:
     --          Map.fromFoldable
-    --              [ Tuple "checkedIcon" jsx
-    --              , Tuple "icon" jsx
-    --              , Tuple "inputProps" foreignType
-    --              , Tuple "inputRef" foreignType
+    --              [ checkedProp "checkedIcon" jsx
+    --              , checkedProp "icon" jsx
+    --              , checkedProp "inputProps" foreignType
+    --              , checkedProp "inputRef" foreignType
     --              , eventHandlerProp "onChange"
-    --              , Tuple "value" foreignType
+    --              , checkedProp "value" foreignType
     --              ]
     --      , generate:
     --        [ "checked"
@@ -1624,9 +1631,9 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "defaultValue" foreignType
+    --              , checkedProp "defaultValue" foreignType
     --              , eventHandlerProp "onChange"
-    --              , Tuple "value" foreignType
+    --              , checkedProp "value" foreignType
     --              ]
     --      , generate:
     --        [ "name"
@@ -1641,7 +1648,7 @@ components =
     --    , propsRow:
     --      { base:
     --          Map.fromFoldable
-    --              [ Tuple "rootRef" foreignType
+    --              [ checkedProp "rootRef" foreignType
     --              ]
     --      , generate:
     --        []
@@ -1658,16 +1665,16 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "IconComponent" jsx
-    --              , Tuple "input" jsx
-    --              , Tuple "inputProps" (Type.constructor "MUI.Core.Input.InputOpaqueProps")
-    --              , Tuple "MenuProps" (Type.constructor "MUI.Core.Menu.MenuOpaqueProps")
+    --              , checkedProp "IconComponent" jsx
+    --              , checkedProp "input" jsx
+    --              , checkedProp "inputProps" (Type.constructor "MUI.Core.Input.InputOpaqueProps")
+    --              , checkedProp "MenuProps" (Type.constructor "MUI.Core.Menu.MenuOpaqueProps")
     --              , eventHandlerProp "onChange"
     --              , eventHandlerProp "onClose"
     --              , eventHandlerProp "onOpen"
-    --              , Tuple "renderValue" foreignType
-    --              , Tuple "SelectDisplayProps" foreignType
-    --              , Tuple "value" foreignType
+    --              , checkedProp "renderValue" foreignType
+    --              , checkedProp "SelectDisplayProps" foreignType
+    --              , checkedProp "value" foreignType
     --              ]
     --      , generate:
     --        [ "autoWidth"
@@ -1706,14 +1713,14 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "defaultValue" foreignType
-    --              , Tuple "getAriaLabel" foreignType
-    --              , Tuple "getAriaValueText" foreignType
+    --              , checkedProp "defaultValue" foreignType
+    --              , checkedProp "getAriaLabel" foreignType
+    --              , checkedProp "getAriaValueText" foreignType
     --              , eventHandlerProp "onChange"
     --              , eventHandlerProp "onChangeCommitted"
-    --              , Tuple "marks" foreignType
-    --              , Tuple "value" foreignType
-    --              , Tuple "valueLabelFormat" foreignType
+    --              , checkedProp "marks" foreignType
+    --              , checkedProp "value" foreignType
+    --              , checkedProp "valueLabelFormat" foreignType
     --              ]
     --      , generate:
     --        [ "aria-label"
@@ -1742,14 +1749,14 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "action" jsx
-    --              , Tuple "ClickAwayListenerProps" (Type.constructor "MUI.Core.ClickAwayListener.ClickAwayListenerOpaqueProps")
-    --              , Tuple "ContentProps" (Type.constructor "MUI.Core.SnackbarContent.SnackbarContentOpaqueProps")
+    --              , checkedProp "action" jsx
+    --              , checkedProp "ClickAwayListenerProps" (Type.constructor "MUI.Core.ClickAwayListener.ClickAwayListenerOpaqueProps")
+    --              , checkedProp "ContentProps" (Type.constructor "MUI.Core.SnackbarContent.SnackbarContentOpaqueProps")
 
     --              -- `key` is in the docs but not in the typedef
-    --              --, Tuple "key" foreignType
+    --              --, checkedProp "key" foreignType
 
-    --              , Tuple "message" jsx
+    --              , checkedProp "message" jsx
     --              , eventHandlerProp "onClose"
     --              , eventHandlerProp "onEnter"
     --              , eventHandlerProp "onEntered"
@@ -1778,8 +1785,8 @@ components =
     --    , propsRow:
     --      { base:
     --          Map.fromFoldable
-    --              [ Tuple "action" jsx
-    --              , Tuple "message" jsx
+    --              [ checkedProp "action" jsx
+    --              , checkedProp "message" jsx
     --              ]
     --      , generate:
     --        [ "classes"
@@ -1816,8 +1823,8 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "icon" foreignType
-    --              , Tuple "optional" jsx
+    --              , checkedProp "icon" foreignType
+    --              , checkedProp "optional" jsx
     --              ]
     --      , generate:
     --        [ "active"
@@ -1867,7 +1874,7 @@ components =
     --    , propsRow:
     --      { base:
     --            Map.fromFoldable
-    --                [ Tuple "icon" jsx
+    --                [ checkedProp "icon" jsx
     --                ]
     --      , generate:
     --        [ "active"
@@ -1887,10 +1894,10 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "icon" jsx
-    --              , Tuple "optional" jsx
-    --              , Tuple "StepIconComponent" foreignType
-    --              , Tuple "StepIconProps" (Type.constructor "MUI.Core.StepIcon.StepIconOpaqueProps")
+    --              , checkedProp "icon" jsx
+    --              , checkedProp "optional" jsx
+    --              , checkedProp "StepIconComponent" foreignType
+    --              , checkedProp "StepIconProps" (Type.constructor "MUI.Core.StepIcon.StepIconOpaqueProps")
     --              ]
     --      , generate:
     --        [ "classes"
@@ -1911,7 +1918,7 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "connector" jsx
+    --              , checkedProp "connector" jsx
     --              ]
     --      , generate:
     --        [ "activeStep"
@@ -1954,7 +1961,7 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "SwipeAreaProps" foreignType
+    --              , checkedProp "SwipeAreaProps" foreignType
     --              , eventHandlerProp "onClose"
     --              , eventHandlerProp "onOpen"
     --              ]
@@ -1980,12 +1987,12 @@ components =
     --    , propsRow:
     --      { base:
     --          Map.fromFoldable
-    --              [ Tuple "checkedIcon" jsx
-    --              , Tuple "icon" jsx
-    --              , Tuple "inputProps" foreignType
-    --              , Tuple "inputRef" foreignType
+    --              [ checkedProp "checkedIcon" jsx
+    --              , checkedProp "icon" jsx
+    --              , checkedProp "inputProps" foreignType
+    --              , checkedProp "inputRef" foreignType
     --              , eventHandlerProp "onChange"
-    --              , Tuple "value" foreignType
+    --              , checkedProp "value" foreignType
     --              ]
     --      , generate:
     --        [ "checked"
@@ -2013,9 +2020,9 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "icon" jsx
-    --              , Tuple "label" jsx
-    --              , Tuple "value" foreignType
+    --              , checkedProp "icon" jsx
+    --              , checkedProp "label" jsx
+    --              , checkedProp "value" foreignType
     --              ]
     --      , generate:
     --        [ "classes"
@@ -2125,13 +2132,13 @@ components =
     --    { base:
     --        Map.fromFoldable
     --            [ children
-    --            , Tuple "backIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
-    --            , Tuple "labelDisplayedRows" foreignType
-    --            , Tuple "labelRowsPerPage" jsx
-    --            , Tuple "nextIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
+    --            , checkedProp "backIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
+    --            , checkedProp "labelDisplayedRows" foreignType
+    --            , checkedProp "labelRowsPerPage" jsx
+    --            , checkedProp "nextIconButtonProps" (Type.constructor "MUI.Core.IconButton.IconButtonOpaqueProps")
     --            , eventHandlerProp "onChangePage"
     --            , eventHandlerProp "onChangeRowsPerPage"
-    --            , Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectOpaqueProps")
+    --            , checkedProp "SelectProps" (Type.constructor "MUI.Core.Select.SelectOpaqueProps")
     --            ]
     --    , generate:
     --      [ "classes"
@@ -2187,7 +2194,7 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "IconComponent" foreignType
+    --              , checkedProp "IconComponent" foreignType
     --              ]
     --      , generate:
     --        [ "classes"
@@ -2205,11 +2212,11 @@ components =
     --    , propsRow:
     --      { base: Map.fromFoldable
     --        [ children
-    --        , Tuple "action" foreignType
+    --        , checkedProp "action" foreignType
     --        , eventHandlerProp "onChange"
-    --        , Tuple "ScrollButtonComponent" foreignType
-    --        , Tuple "TabIndicatorProps" foreignType
-    --        , Tuple "value" foreignType
+    --        , checkedProp "ScrollButtonComponent" foreignType
+    --        , checkedProp "TabIndicatorProps" foreignType
+    --        , checkedProp "value" foreignType
     --        ]
     --      , generate:
     --        [ "centered"
@@ -2246,18 +2253,18 @@ components =
       , propsRow:
         { base: Map.fromFoldable
             [ children
-            , Tuple "defaultValue" foreignType
-            , Tuple "helperText" jsx
-            --, Tuple "InputLabelProps" (Type.constructor "MUI.Core.InputLabel.InputLabelOpaqueProps")
-            -- , Tuple "inputProps" foreignType
-            -- , Tuple "inputRef" foreignType
-            --, Tuple "FormHelperTextProps" (Type.constructor "MUI.Core.FormHelperText.FormHelperTextOpaqueProps")
-            , Tuple "label" jsx
+            , checkedProp "defaultValue" foreignType
+            , checkedProp "helperText" jsx
+            --, checkedProp "InputLabelProps" (Type.constructor "MUI.Core.InputLabel.InputLabelOpaqueProps")
+            -- , checkedProp "inputProps" foreignType
+            -- , checkedProp "inputRef" foreignType
+            --, checkedProp "FormHelperTextProps" (Type.constructor "MUI.Core.FormHelperText.FormHelperTextOpaqueProps")
+            , checkedProp "label" jsx
             , eventHandlerProp "onChange"
             , eventHandlerProp "onBlur"
             , eventHandlerProp "onFocus"
-            --, Tuple "SelectProps" (Type.constructor "MUI.Core.Select.SelectOpaqueProps")
-            , Tuple "value" foreignType
+            --, checkedProp "SelectProps" (Type.constructor "MUI.Core.Select.SelectOpaqueProps")
+            , checkedProp "value" foreignType
             ]
         , generate:
             [ "autoComplete"
@@ -2289,9 +2296,9 @@ components =
                         , Mu.In (Instantiation.Object fqn3 props3)
                         ]
                     ) -> case unionMember of
-                      1 → pure { fqn: fqn1, props: props1 }
-                      2 → pure { fqn: fqn2, props: props2 }
-                      otherwise → pure { fqn: fqn3, props: props3 }
+                      1 -> pure { fqn: fqn1, props: props1 }
+                      2 -> pure { fqn: fqn2, props: props2 }
+                      otherwise -> pure { fqn: fqn3, props: props3 }
                     --  throwError
                     --    [ "Not sure how to tackle this three props types: " <> fqn1 <> ", " <> fqn2 <> "," <> fqn3 ]
                     (Instantiation.Union _) ->
@@ -2301,7 +2308,7 @@ components =
                       throwError
                         [ "Expecting an union as a representation for TextField got: " <> unsafeStringify i ]
                 }
-            , unionName: \_ _ → Nothing
+            , unionName: \_ _ -> Nothing
             }
         }
       , root: MUIComponent formControl
@@ -2319,7 +2326,7 @@ components =
     --      { base:
     --          Map.fromFoldable
     --              [ children
-    --              , Tuple "value" foreignType
+    --              , checkedProp "value" foreignType
     --              ]
     --      , generate:
     --        [ "classes"
@@ -2369,7 +2376,10 @@ components =
       simpleComponent
         { name: "Typography"
         , propsRow:
-          { base: Map.fromFoldable [ children ]
+          { base: Map.fromFoldable
+            [ children
+            , forcedProp "component" (roll TypeString) false
+            ]
           , generate:
             [ "classes"
             , "align"
@@ -2508,7 +2518,7 @@ components =
     ]
 
 -- | XXX: Can we cleanup this last traverse?
-multiString :: ∀ a. Pattern -> ReadM a -> ReadM (Array a)
+multiString :: forall a. Pattern -> ReadM a -> ReadM (Array a)
 multiString splitPattern read = do
   s <- readerAsk
   elems <-
@@ -2540,9 +2550,9 @@ componentRead =
                 , intercalate ", " (map show <<< List.sort <<< Map.Internal.keys $ components') <> "."
                 ]
   where
-  step c = Tuple (Component.componentName c) c
+    step c = Tuple (Component.componentName c) c
 
-  components' = Map.fromFoldable $ map step components
+    components' = Map.fromFoldable $ map step components
 
 iconOption :: Parser Icon
 iconOption = option iconRead (long "icon" <> short 'i')
@@ -2565,7 +2575,7 @@ iconRead =
 
   icons' = Map.fromFoldable $ map step icons
 
-commaSeparatedComponentList :: { helpText :: String, long ∷ String, short ∷ Char } -> Parser (Array Component)
+commaSeparatedComponentList :: { helpText :: String, long :: String, short :: Char } -> Parser (Array Component)
 commaSeparatedComponentList { helpText, long: l, short: s } =
   option (multiString (Pattern ",") componentRead)
     ( long l
@@ -2682,7 +2692,7 @@ main = do
 
     codegenComponent component output =
       runReaderT (runExceptT (Codegen.component component)) importAliases
-        >>= \c → do
+        >>= \c -> do
           log $ "Generating module:" <> show component.modulePath
           case c of
             Right code -> case output of

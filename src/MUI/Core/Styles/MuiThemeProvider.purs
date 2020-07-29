@@ -10,4 +10,5 @@ type ThemeProviderProps
 
 foreign import _MuiThemeProvider :: ReactComponent ThemeProviderProps
 
+muiThemeProvider :: { children :: JSX, theme :: Theme } -> JSX
 muiThemeProvider = element _MuiThemeProvider
