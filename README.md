@@ -57,12 +57,14 @@ $ spago build --config spago.dhall
 #### Icons
 
 This library doesn't contain any ready to use icon modules. When we tried to provide the whole icon set in the past it caused a huge slowdown of compilation time and problematic IDE rebuilds / startups (it is possible that this is not an issue anymore as the latest _purs_ releases included some performance/caching improvements).
-It is really easy to write icon bindings by hand or use simple command which generates icon module for you.
 
+Please don't worry because it is really easy to write icon bindings by hand or use simple command which generates icon module for you.
+
+<!--
 
 ##### Usage
 
-When you have ready to use icon binding (let say `menu`) you can use it by calling `icon` or `iconWithStyles`:
+Let's start with usage. When you have ready to use icon binding (let say `menu`) you can use it by calling `icon` or `iconWithStyles`:
 
 ```purescript
 import MUI.Icons.Types (icon, iconWithStyles)
@@ -71,6 +73,7 @@ jsx = icon menu {}
 
 jsx' = iconWithStyles (\theme → { root: jss { ... }}) menu
 ```
+-->
 
 ##### Anatomy
 
