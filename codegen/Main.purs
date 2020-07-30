@@ -74,6 +74,16 @@ components =
       , checkedProp "justifyContent" (Type.constructor "MUI.System.Flexbox.JustifyContent")
       ]
 
+    sizing =
+      [ checkedProp "boxSizing" (Type.constructor "MUI.System.BoxSizing")
+      , checkedProp "height" (roll TypeString)
+      , checkedProp "maxHeight" (roll TypeString)
+      , checkedProp "minHeight" (roll TypeString)
+      , checkedProp "maxWidth" (roll TypeString)
+      , checkedProp "minWidth" (roll TypeString)
+      , checkedProp "width" (roll TypeString)
+      ]
+
     transitionTimeout = Type.constructor "MUI.React.TransitionGroup.Timeout"
 
     -- | TODO: handle all transition group props
@@ -194,6 +204,7 @@ components =
         , propsRow:
           { base: Map.fromFoldable
             $ flexbox
+            <> sizing
             <>
               [ children
               , checkedProp "border" foreignType

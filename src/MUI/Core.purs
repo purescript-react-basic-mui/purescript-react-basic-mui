@@ -47,12 +47,7 @@ instance monoidJSS :: Monoid JSS where
 newtype MediaQuery = MediaQuery String
 
 mediaQuery ∷ MediaQuery → JSS → JSS
-mediaQuery (MediaQuery mq) =
-  let
-    e = {}
-  in
-    \j → jss $ unsafeSet mq j e
-
+mediaQuery (MediaQuery mq) = let e = {} in \j → jss $ unsafeSet mq j e
 
 -- | We are not able to encode optional / required fields in a nice way
 -- | by using _oneof_ or _undefined-is-not-a-problem_
