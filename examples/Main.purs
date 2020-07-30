@@ -8,8 +8,8 @@ import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Exception (throw)
 import Foreign (unsafeToForeign)
-import MUI.Core (jss)
-import MUI.Core.AppBar (appBar)
+import MUI.Core (jss, mediaQuery)
+import MUI.Core.AppBar (appBarWithStyles)
 import MUI.Core.AppBar (position) as AppBar
 import MUI.Core.Backdrop (_UnsafeBackdrop)
 import MUI.Core.Badge (badgeWithStyles)
@@ -41,6 +41,7 @@ import MUI.Core.ListItemIcon (listItemIcon)
 import MUI.Core.ListItemText (listItemText)
 import MUI.Core.Modal (modal)
 import MUI.Core.Styles (Theme)
+import MUI.Core.Styles (md) as Styles
 import MUI.Core.Styles.CreateMuiTheme (createMuiTheme)
 import MUI.Core.Styles.CreatePalette (paletteOptions)
 import MUI.Core.Styles.MakeStyles (makeStyles)
@@ -221,9 +222,18 @@ app :: Components -> JSX
 app components = make component { initialState: {}, render } {}
   where
     textInputStyle t = { root: jss { width: "80%", margin: theme.spacing 2.0 }}
+
+    appBar' = appBarWithStyles (\t → { root: style t })
+      where
+        style t
+          = mediaQuery (t.breakpoints.down Styles.md)
+              (jss { backgroundColor: t.palette.primary.dark })
+          <> mediaQuery (t.breakpoints.up Styles.md)
+              (jss { backgroundColor: t.palette.secondary.dark })
+
     render self = muiThemeProvider $ { theme, children: _ } $ fragment --DOM.div $ { children: _ }
       [ cssBaseline
-      , appBar $ { children: _, position: AppBar.position.static } <<< Array.singleton $
+      , appBar' $ { children: _, position: AppBar.position.static } <<< Array.singleton $
           toolbar $ { children: _ } $
             [ iconWithStyles (\t -> { root: jss { marginRight: t.spacing 2.0 }}) menu {}
             , typography $ { children: _, variant: Typography.variant.h6 } <<< Array.singleton $

@@ -2,20 +2,20 @@ module MUI.Core.Styles.CreateMuiTheme where
 
 import Prelude
 import Foreign (Foreign, unsafeToForeign)
-import MUI.Core.Styles.CreateBreakpoints (BreakpointsOptions, Breakpoints)
-import MUI.Core.Styles.CreateMixins (MixinsOptions, Mixins)
-import MUI.Core.Styles.CreatePalette (PaletteOptions, Palette)
-import MUI.Core.Styles.CreateTypography (Typography, TypographyOptions)
-import MUI.Core.Styles.Shape (ShapeOptions, Shape)
-import MUI.Core.Styles.Transitions (TransitionsOptions, Transitions)
+import MUI.Core.Styles.CreateBreakpoints (Breakpoints)
+import MUI.Core.Styles.CreateMixins (MixinsOptions)
+import MUI.Core.Styles.CreatePalette (PaletteOptions)
+import MUI.Core.Styles.CreateTypography (TypographyOptions)
+import MUI.Core.Styles.Shape (ShapeOptions)
+import MUI.Core.Styles.Transitions (TransitionsOptions)
 import MUI.Core.Styles.Types (ComponentsPropsPartial, Direction, OverridesPartial, Theme)
-import MUI.Core.Styles.ZIndex (ZIndex, ZIndexOptions)
+import MUI.Core.Styles.ZIndex (ZIndexOptions)
 import MUI.System.Shadows (Shadows)
 import Prim.Row (class Union)
 
 type ThemePartial
   = ( shape :: ShapeOptions
-    , breakpoints :: BreakpointsOptions
+    , breakpoints :: Breakpoints
     , direction :: Direction
     , mixins :: MixinsOptions
     , overrides :: OverridesPartial

@@ -1,10 +1,12 @@
 module MUI.Core where
 
 import Prelude
+
 import Foreign (Foreign)
 import Foreign.Object (Object)
 import Foreign.Object as Object
 import Prim.Row (class Nub)
+import Record.Unsafe (unsafeSet)
 import Unsafe.Coerce (unsafeCoerce)
 
 type Color
@@ -41,11 +43,16 @@ instance semigroupJSS :: Semigroup JSS where
 instance monoidJSS :: Monoid JSS where
   mempty = jss {}
 
-foreign import kind RList
+-- | Just a string underneath
+newtype MediaQuery = MediaQuery String
 
-foreign import data RCons :: #Type -> RList -> RList
+mediaQuery ∷ MediaQuery → JSS → JSS
+mediaQuery (MediaQuery mq) =
+  let
+    e = {}
+  in
+    \j → jss $ unsafeSet mq j e
 
-foreign import data RNil :: RList
 
 -- | We are not able to encode optional / required fields in a nice way
 -- | by using _oneof_ or _undefined-is-not-a-problem_
@@ -85,8 +92,8 @@ foreign import data RNil :: RList
 -- | are for sure part of the expected row. `optionalGiven` are filled
 -- | by the compiler and not really exactly known and important to us in this formulation.
 -- |
--- | Now we can add optionals to the mix - we want them be possible part of the row
--- | and nothing more should go there so we sum app all the fields and state
+-- | Now we can add optionals to the mix - we want them to be possible part of the row
+-- | and nothing more should go there so we sum all the fields up and state
 -- | that the expected value should be a subset of all fields.
 -- |
 -- | ``` purescript
@@ -94,7 +101,6 @@ foreign import data RNil :: RList
 -- | => Union given optionalsMissing all
 -- | => { | given } -> ReactComponent all
 -- | ```
--- |
 class Nub' (i ∷ #Type) (o ∷ #Type) | i → o
 
 instance nub' ∷ (Nub i o) ⇒ Nub' i o
