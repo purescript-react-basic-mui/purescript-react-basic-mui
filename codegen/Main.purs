@@ -154,7 +154,7 @@ components =
       , propsRow:
         { base: Map.fromFoldable
             [ checkedProp "ref" foreignType
-            , checkedProp "children" arrayJSX
+            , children
             , checkedProp "transitionDuration" transitionTimeout
             ]
         , generate: [ "classes", "invisible", "open" ]
