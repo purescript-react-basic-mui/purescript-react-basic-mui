@@ -20,7 +20,7 @@ We don't provide components constructors which allow you to change the `root` of
 
 #### Handling subcomponents with props
 
-There are many places in MUI where we need to pass subcomponent and its props as a part of main component props (like `BackdropProps` and `BackdropComponent` in the case of `Modal`). Currently we handle such scenarios through unsafe `Foreign` value.
+There are many places in the MUI lib where we need to pass subcomponent and its props as a part of main component props (like `BackdropProps` and `BackdropComponent` in the case of `Modal`). Currently we handle such scenarios through unsafe `Foreign` value.
 
 #### Theming
 
@@ -30,7 +30,7 @@ Some pieces of theming are ready to use. Others needs to be implemented / migrat
 
 ### The project structure
 
-We use "flat monorepo" (no subprojects) approach to simplify usual _codegen change -> codegen run -> test component render_ cycle. You can find three _*.dhall_ files and three source directories (_./codegen_, _./src_, _./examples_) in the project.
+We use "flat monorepo" (no subprojects) approach to simplify usual _codegen change -> codegen run -> test component render_ cycle. You can find three _*.dhall_ projects files: _spago.dhall_, _examples.dhall_, _codegen.dhall_ and a common _packages.dhall_ file. There are three related source directories in the project: _./src_, _./examples_, _./codegen_.
 
 ### Codegen
 

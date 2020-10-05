@@ -4,5 +4,5 @@ module MUI.System
   )
   where
 
-import MUI.System.Flexbox as Flexbox
-import MUI.System.Sizing as Sizing
+import MUI.System.Flexbox (AlignContent, AlignItems, AlignSelf, FlexDirection, FlexWrap, JustifyContent) as Flexbox
+import MUI.System.Sizing (contentBox, borderBox, BoxSizing) as Sizing

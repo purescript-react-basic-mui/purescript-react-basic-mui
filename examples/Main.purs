@@ -130,27 +130,22 @@ drawerList =
       state /\ setState <- useState Nothing
       classes <- useStyles
       let
-        toggleDrawer a open =
           -- In the original example we have here also this check
           -- if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
           --    return;
           --  }
-          let
-            toggle Nothing = Just a
-            toggle s | s == Just a = Nothing
-            toggle s = s
-          in
-            setState toggle
+        openDrawer a = setState (const Just a)
+        closeDrawer = setState (const Nothing)
       pure $ DOM.div_ $ [ Drawer.anchor.left, Drawer.anchor.right,  Drawer.anchor.top,  Drawer.anchor.bottom ] <#> \anchor ->
         DOM.div $ { key: unsafeCoerce anchor, children: _ }
           [ button
-              { onClick: handler_ (toggleDrawer anchor true)
+              { onClick: handler_ (openDrawer anchor)
               , children: [ DOM.text (unsafeCoerce anchor ) ]
               }
           , drawer
             $ { anchor
               , open: Just anchor == state
-              , onClose: handler_ (toggleDrawer anchor false)
+              , onClose: handler_ closeDrawer
               , children: _
               }
             $ [ menuList classes anchor ]
