@@ -134,7 +134,7 @@ drawerList =
           -- if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
           --    return;
           --  }
-        openDrawer a = setState (const Just a)
+        openDrawer a = setState (const $ Just a)
         closeDrawer = setState (const Nothing)
       pure $ DOM.div_ $ [ Drawer.anchor.left, Drawer.anchor.right,  Drawer.anchor.top,  Drawer.anchor.bottom ] <#> \anchor ->
         DOM.div $ { key: unsafeCoerce anchor, children: _ }
