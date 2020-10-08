@@ -21,7 +21,7 @@ type ListClassesKey
 type ListClassesJSS
   = ListClassesGenericRow JSS
 
-type ListOptPropsRow (r :: #Type)
+type ListOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | ListClassesKey }
     , dense :: Boolean
@@ -30,10 +30,10 @@ type ListOptPropsRow (r :: #Type)
     | r
     )
 
-type ListReqPropsRow (r :: #Type)
+type ListReqPropsRow (r :: # Type)
   = r
 
-type ListPropsRow (r :: #Type)
+type ListPropsRow (r :: # Type)
   = ListOptPropsRow (ListReqPropsRow r)
 
 foreign import _UnsafeList :: forall componentProps. ReactComponent { | ListPropsRow componentProps }

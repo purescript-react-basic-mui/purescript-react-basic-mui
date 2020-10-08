@@ -79,7 +79,7 @@ type BadgeClassesKey
 type BadgeClassesJSS
   = BadgeClassesGenericRow JSS
 
-type BadgeOptPropsRow (r :: #Type)
+type BadgeOptPropsRow (r :: # Type)
   = ( anchorOrigin :: { horizontal :: Horizontal, vertical :: Vertical }
     , badgeContent :: JSX
     , children :: Array JSX
@@ -92,10 +92,10 @@ type BadgeOptPropsRow (r :: #Type)
     | r
     )
 
-type BadgeReqPropsRow (r :: #Type)
+type BadgeReqPropsRow (r :: # Type)
   = r
 
-type BadgePropsRow (r :: #Type)
+type BadgePropsRow (r :: # Type)
   = BadgeOptPropsRow (BadgeReqPropsRow r)
 
 foreign import _UnsafeBadge :: forall componentProps. ReactComponent { | BadgePropsRow componentProps }

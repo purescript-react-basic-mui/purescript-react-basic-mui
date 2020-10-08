@@ -179,7 +179,7 @@ type GridClassesKey
 type GridClassesJSS
   = GridClassesGenericRow JSS
 
-type GridOptPropsRow (r :: #Type)
+type GridOptPropsRow (r :: # Type)
   = ( alignContent :: AlignContent
     , alignItems :: AlignItems
     , children :: Array JSX
@@ -199,10 +199,10 @@ type GridOptPropsRow (r :: #Type)
     | r
     )
 
-type GridReqPropsRow (r :: #Type)
+type GridReqPropsRow (r :: # Type)
   = r
 
-type GridPropsRow (r :: #Type)
+type GridPropsRow (r :: # Type)
   = GridOptPropsRow (GridReqPropsRow r)
 
 foreign import _UnsafeGrid :: forall componentProps. ReactComponent { | GridPropsRow componentProps }

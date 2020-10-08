@@ -57,7 +57,7 @@ type AppBarClassesKey
 type AppBarClassesJSS
   = AppBarClassesGenericRow JSS
 
-type AppBarOptPropsRow (r :: #Type)
+type AppBarOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | AppBarClassesKey }
     , color :: Color
@@ -65,10 +65,10 @@ type AppBarOptPropsRow (r :: #Type)
     | r
     )
 
-type AppBarReqPropsRow (r :: #Type)
+type AppBarReqPropsRow (r :: # Type)
   = r
 
-type AppBarPropsRow (r :: #Type)
+type AppBarPropsRow (r :: # Type)
   = AppBarOptPropsRow (AppBarReqPropsRow r)
 
 foreign import _UnsafeAppBar :: forall componentProps. ReactComponent { | AppBarPropsRow componentProps }

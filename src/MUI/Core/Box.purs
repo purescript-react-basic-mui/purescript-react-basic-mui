@@ -11,7 +11,7 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 
-type BoxOptPropsRow (r :: #Type)
+type BoxOptPropsRow (r :: # Type)
   = ( alignContent :: MUI.System.Flexbox.AlignContent
     , alignItems :: MUI.System.Flexbox.AlignItems
     , alignSelf :: MUI.System.Flexbox.AlignSelf
@@ -42,10 +42,10 @@ type BoxOptPropsRow (r :: #Type)
     | r
     )
 
-type BoxReqPropsRow (r :: #Type)
+type BoxReqPropsRow (r :: # Type)
   = r
 
-type BoxPropsRow (r :: #Type)
+type BoxPropsRow (r :: # Type)
   = BoxOptPropsRow (BoxReqPropsRow r)
 
 foreign import _UnsafeBox :: forall componentProps. ReactComponent { | BoxPropsRow componentProps }

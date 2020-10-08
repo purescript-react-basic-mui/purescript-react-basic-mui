@@ -65,7 +65,7 @@ type InputLabelClassesKey
 type InputLabelClassesJSS
   = InputLabelClassesGenericRow JSS
 
-type InputLabelOptPropsRow (r :: #Type)
+type InputLabelOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | InputLabelClassesKey }
     , color :: Color
@@ -80,10 +80,10 @@ type InputLabelOptPropsRow (r :: #Type)
     | r
     )
 
-type InputLabelReqPropsRow (r :: #Type)
+type InputLabelReqPropsRow (r :: # Type)
   = r
 
-type InputLabelPropsRow (r :: #Type)
+type InputLabelPropsRow (r :: # Type)
   = InputLabelOptPropsRow (InputLabelReqPropsRow r)
 
 foreign import _UnsafeInputLabel :: forall componentProps. ReactComponent { | InputLabelPropsRow componentProps }

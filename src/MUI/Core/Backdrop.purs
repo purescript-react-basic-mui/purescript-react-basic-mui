@@ -21,7 +21,7 @@ type BackdropClassesKey
 type BackdropClassesJSS
   = BackdropClassesGenericRow JSS
 
-type BackdropOptPropsRow (r :: #Type)
+type BackdropOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | BackdropClassesKey }
     , invisible :: Boolean
@@ -30,12 +30,12 @@ type BackdropOptPropsRow (r :: #Type)
     | r
     )
 
-type BackdropReqPropsRow (r :: #Type)
+type BackdropReqPropsRow (r :: # Type)
   = ( open :: Boolean
     | r
     )
 
-type BackdropPropsRow (r :: #Type)
+type BackdropPropsRow (r :: # Type)
   = BackdropOptPropsRow (BackdropReqPropsRow r)
 
 foreign import _UnsafeBackdrop :: forall componentProps. ReactComponent { | BackdropPropsRow componentProps }

@@ -9,7 +9,7 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 
-type FadeOptPropsRow (r :: #Type)
+type FadeOptPropsRow (r :: # Type)
   = ( children :: JSX
     , "in" :: Boolean
     , ref :: Foreign.Foreign
@@ -17,10 +17,10 @@ type FadeOptPropsRow (r :: #Type)
     | r
     )
 
-type FadeReqPropsRow (r :: #Type)
+type FadeReqPropsRow (r :: # Type)
   = r
 
-type FadePropsRow (r :: #Type)
+type FadePropsRow (r :: # Type)
   = FadeOptPropsRow (FadeReqPropsRow r)
 
 foreign import _UnsafeFade :: forall componentProps. ReactComponent { | FadePropsRow componentProps }

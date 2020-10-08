@@ -34,7 +34,7 @@ type ToolbarClassesKey
 type ToolbarClassesJSS
   = ToolbarClassesGenericRow JSS
 
-type ToolbarOptPropsRow (r :: #Type)
+type ToolbarOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | ToolbarClassesKey }
     , disableGutters :: Boolean
@@ -42,10 +42,10 @@ type ToolbarOptPropsRow (r :: #Type)
     | r
     )
 
-type ToolbarReqPropsRow (r :: #Type)
+type ToolbarReqPropsRow (r :: # Type)
   = r
 
-type ToolbarPropsRow (r :: #Type)
+type ToolbarPropsRow (r :: # Type)
   = ToolbarOptPropsRow (ToolbarReqPropsRow r)
 
 foreign import _UnsafeToolbar :: forall componentProps. ReactComponent { | ToolbarPropsRow componentProps }

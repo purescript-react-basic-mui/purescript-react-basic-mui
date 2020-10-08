@@ -72,7 +72,7 @@ type StandardTextFieldClassesKey
 type StandardTextFieldClassesJSS
   = StandardTextFieldClassesGenericRow JSS
 
-type StandardTextFieldOptPropsRow (r :: #Type)
+type StandardTextFieldOptPropsRow (r :: # Type)
   = ( autoComplete :: String
     , autoFocus :: Boolean
     , children :: Array JSX
@@ -102,10 +102,10 @@ type StandardTextFieldOptPropsRow (r :: #Type)
     | r
     )
 
-type StandardTextFieldReqPropsRow (r :: #Type)
+type StandardTextFieldReqPropsRow (r :: # Type)
   = r
 
-type StandardTextFieldPropsRow (r :: #Type)
+type StandardTextFieldPropsRow (r :: # Type)
   = StandardTextFieldOptPropsRow (StandardTextFieldReqPropsRow r)
 
 foreign import _UnsafeStandardTextField :: forall componentProps. ReactComponent { | StandardTextFieldPropsRow componentProps }

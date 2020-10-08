@@ -48,7 +48,7 @@ type DividerClassesKey
 type DividerClassesJSS
   = DividerClassesGenericRow JSS
 
-type DividerOptPropsRow (r :: #Type)
+type DividerOptPropsRow (r :: # Type)
   = ( absolute :: Boolean
     , classes :: { | DividerClassesKey }
     , light :: Boolean
@@ -57,10 +57,10 @@ type DividerOptPropsRow (r :: #Type)
     | r
     )
 
-type DividerReqPropsRow (r :: #Type)
+type DividerReqPropsRow (r :: # Type)
   = r
 
-type DividerPropsRow (r :: #Type)
+type DividerPropsRow (r :: # Type)
   = DividerOptPropsRow (DividerReqPropsRow r)
 
 foreign import _UnsafeDivider :: forall componentProps. ReactComponent { | DividerPropsRow componentProps }

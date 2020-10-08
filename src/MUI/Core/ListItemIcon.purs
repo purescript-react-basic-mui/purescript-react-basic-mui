@@ -18,16 +18,16 @@ type ListItemIconClassesKey
 type ListItemIconClassesJSS
   = ListItemIconClassesGenericRow JSS
 
-type ListItemIconOptPropsRow (r :: #Type)
+type ListItemIconOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | ListItemIconClassesKey }
     | r
     )
 
-type ListItemIconReqPropsRow (r :: #Type)
+type ListItemIconReqPropsRow (r :: # Type)
   = r
 
-type ListItemIconPropsRow (r :: #Type)
+type ListItemIconPropsRow (r :: # Type)
   = ListItemIconOptPropsRow (ListItemIconReqPropsRow r)
 
 foreign import _UnsafeListItemIcon :: forall componentProps. ReactComponent { | ListItemIconPropsRow componentProps }

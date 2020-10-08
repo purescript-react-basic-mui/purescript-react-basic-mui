@@ -45,7 +45,7 @@ type PaperClassesKey
 type PaperClassesJSS
   = PaperClassesGenericRow JSS
 
-type PaperOptPropsRow (r :: #Type)
+type PaperOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | PaperClassesKey }
     , elevation :: Number
@@ -53,10 +53,10 @@ type PaperOptPropsRow (r :: #Type)
     | r
     )
 
-type PaperReqPropsRow (r :: #Type)
+type PaperReqPropsRow (r :: # Type)
   = r
 
-type PaperPropsRow (r :: #Type)
+type PaperPropsRow (r :: # Type)
   = PaperOptPropsRow (PaperReqPropsRow r)
 
 foreign import _UnsafePaper :: forall componentProps. ReactComponent { | PaperPropsRow componentProps }

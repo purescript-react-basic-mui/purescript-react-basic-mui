@@ -58,7 +58,7 @@ type FormControlClassesKey
 type FormControlClassesJSS
   = FormControlClassesGenericRow JSS
 
-type FormControlOptPropsRow (r :: #Type)
+type FormControlOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | FormControlClassesKey }
     , color :: Color
@@ -72,10 +72,10 @@ type FormControlOptPropsRow (r :: #Type)
     | r
     )
 
-type FormControlReqPropsRow (r :: #Type)
+type FormControlReqPropsRow (r :: # Type)
   = r
 
-type FormControlPropsRow (r :: #Type)
+type FormControlPropsRow (r :: # Type)
   = FormControlOptPropsRow (FormControlReqPropsRow r)
 
 foreign import _UnsafeFormControl :: forall componentProps. ReactComponent { | FormControlPropsRow componentProps }

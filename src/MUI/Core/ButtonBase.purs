@@ -36,7 +36,7 @@ type ButtonBaseClassesKey
 type ButtonBaseClassesJSS
   = ButtonBaseClassesGenericRow JSS
 
-type ButtonBaseOptPropsRow (r :: #Type)
+type ButtonBaseOptPropsRow (r :: # Type)
   = ( action :: Foreign.Foreign
     , buttonRef :: Foreign.Foreign
     , centerRipple :: Boolean
@@ -51,10 +51,10 @@ type ButtonBaseOptPropsRow (r :: #Type)
     | r
     )
 
-type ButtonBaseReqPropsRow (r :: #Type)
+type ButtonBaseReqPropsRow (r :: # Type)
   = r
 
-type ButtonBasePropsRow (r :: #Type)
+type ButtonBasePropsRow (r :: # Type)
   = ButtonBaseOptPropsRow (ButtonBaseReqPropsRow r)
 
 foreign import _UnsafeButtonBase :: forall componentProps. ReactComponent { | ButtonBasePropsRow componentProps }

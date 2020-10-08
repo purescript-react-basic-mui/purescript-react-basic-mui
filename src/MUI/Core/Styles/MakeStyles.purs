@@ -13,7 +13,7 @@ makeStyles f = makeStylesImpl f
 -- | Constrainted FFI functions won't be supported by purs soon.
 foreign import makeStylesImpl :: ∀ input output. (Theme -> Record input) -> Hook UseStyles (Record output)
 
-class MapRecordValuesToString (input :: #Type) (output :: #Type)
+class MapRecordValuesToString (input :: # Type) (output :: # Type)
 
 instance mapRecordValuesToString ::
   ( RowToList i il

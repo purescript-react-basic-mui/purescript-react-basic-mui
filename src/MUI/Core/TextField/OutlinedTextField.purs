@@ -72,7 +72,7 @@ type OutlinedTextFieldClassesKey
 type OutlinedTextFieldClassesJSS
   = OutlinedTextFieldClassesGenericRow JSS
 
-type OutlinedTextFieldOptPropsRow (r :: #Type)
+type OutlinedTextFieldOptPropsRow (r :: # Type)
   = ( autoComplete :: String
     , autoFocus :: Boolean
     , children :: Array JSX
@@ -101,12 +101,12 @@ type OutlinedTextFieldOptPropsRow (r :: #Type)
     | r
     )
 
-type OutlinedTextFieldReqPropsRow (r :: #Type)
+type OutlinedTextFieldReqPropsRow (r :: # Type)
   = ( variant :: Variant
     | r
     )
 
-type OutlinedTextFieldPropsRow (r :: #Type)
+type OutlinedTextFieldPropsRow (r :: # Type)
   = OutlinedTextFieldOptPropsRow (OutlinedTextFieldReqPropsRow r)
 
 foreign import _UnsafeOutlinedTextField :: forall componentProps. ReactComponent { | OutlinedTextFieldPropsRow componentProps }

@@ -24,7 +24,7 @@ type ListItemTextClassesKey
 type ListItemTextClassesJSS
   = ListItemTextClassesGenericRow JSS
 
-type ListItemTextOptPropsRow (r :: #Type)
+type ListItemTextOptPropsRow (r :: # Type)
   = ( classes :: { | ListItemTextClassesKey }
     , disableTypography :: Boolean
     , inset :: Boolean
@@ -35,10 +35,10 @@ type ListItemTextOptPropsRow (r :: #Type)
     | r
     )
 
-type ListItemTextReqPropsRow (r :: #Type)
+type ListItemTextReqPropsRow (r :: # Type)
   = r
 
-type ListItemTextPropsRow (r :: #Type)
+type ListItemTextPropsRow (r :: # Type)
   = ListItemTextOptPropsRow (ListItemTextReqPropsRow r)
 
 foreign import _UnsafeListItemText :: forall componentProps. ReactComponent { | ListItemTextPropsRow componentProps }

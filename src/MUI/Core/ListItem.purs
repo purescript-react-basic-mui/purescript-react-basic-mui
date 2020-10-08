@@ -41,7 +41,7 @@ type ListItemClassesKey
 type ListItemClassesJSS
   = ListItemClassesGenericRow JSS
 
-type ListItemOptPropsRow (r :: #Type)
+type ListItemOptPropsRow (r :: # Type)
   = ( alignItems :: AlignItems
     , autoFocus :: Boolean
     , button :: Boolean
@@ -55,10 +55,10 @@ type ListItemOptPropsRow (r :: #Type)
     | r
     )
 
-type ListItemReqPropsRow (r :: #Type)
+type ListItemReqPropsRow (r :: # Type)
   = r
 
-type ListItemPropsRow (r :: #Type)
+type ListItemPropsRow (r :: # Type)
   = ListItemOptPropsRow (ListItemReqPropsRow r)
 
 foreign import _UnsafeListItem :: forall componentProps. ReactComponent { | ListItemPropsRow componentProps }

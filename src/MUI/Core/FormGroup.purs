@@ -19,17 +19,17 @@ type FormGroupClassesKey
 type FormGroupClassesJSS
   = FormGroupClassesGenericRow JSS
 
-type FormGroupOptPropsRow (r :: #Type)
+type FormGroupOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | FormGroupClassesKey }
     , row :: Boolean
     | r
     )
 
-type FormGroupReqPropsRow (r :: #Type)
+type FormGroupReqPropsRow (r :: # Type)
   = r
 
-type FormGroupPropsRow (r :: #Type)
+type FormGroupPropsRow (r :: # Type)
   = FormGroupOptPropsRow (FormGroupReqPropsRow r)
 
 foreign import _UnsafeFormGroup :: forall componentProps. ReactComponent { | FormGroupPropsRow componentProps }

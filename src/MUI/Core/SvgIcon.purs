@@ -56,7 +56,7 @@ type SvgIconClassesKey
 type SvgIconClassesJSS
   = SvgIconClassesGenericRow JSS
 
-type SvgIconOptPropsRow (r :: #Type)
+type SvgIconOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | SvgIconClassesKey }
     , color :: Color
@@ -68,10 +68,10 @@ type SvgIconOptPropsRow (r :: #Type)
     | r
     )
 
-type SvgIconReqPropsRow (r :: #Type)
+type SvgIconReqPropsRow (r :: # Type)
   = r
 
-type SvgIconPropsRow (r :: #Type)
+type SvgIconPropsRow (r :: # Type)
   = SvgIconOptPropsRow (SvgIconReqPropsRow r)
 
 foreign import _UnsafeSvgIcon :: forall componentProps. ReactComponent { | SvgIconPropsRow componentProps }

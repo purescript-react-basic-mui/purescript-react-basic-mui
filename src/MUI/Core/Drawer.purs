@@ -60,7 +60,7 @@ type DrawerClassesKey
 type DrawerClassesJSS
   = DrawerClassesGenericRow JSS
 
-type DrawerOptPropsRow (r :: #Type)
+type DrawerOptPropsRow (r :: # Type)
   = ( "ModalProps" :: MUI.Core.Modal.ModalProps
     , "PaperProps" :: MUI.Core.Paper.PaperProps
     , anchor :: Anchor
@@ -80,10 +80,10 @@ type DrawerOptPropsRow (r :: #Type)
     | r
     )
 
-type DrawerReqPropsRow (r :: #Type)
+type DrawerReqPropsRow (r :: # Type)
   = r
 
-type DrawerPropsRow (r :: #Type)
+type DrawerPropsRow (r :: # Type)
   = DrawerOptPropsRow (DrawerReqPropsRow r)
 
 foreign import _UnsafeDrawer :: forall componentProps. ReactComponent { | DrawerPropsRow componentProps }

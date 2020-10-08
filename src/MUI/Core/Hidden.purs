@@ -46,7 +46,7 @@ instance eqInitialWidth :: Eq InitialWidth where
 instance eqImplementation :: Eq Implementation where
   eq = unsafeRefEq
 
-type HiddenOptPropsRow (r :: #Type)
+type HiddenOptPropsRow (r :: # Type)
   = ( implementation :: Implementation
     , initialWidth :: InitialWidth
     , lgDown :: Boolean
@@ -63,10 +63,10 @@ type HiddenOptPropsRow (r :: #Type)
     | r
     )
 
-type HiddenReqPropsRow (r :: #Type)
+type HiddenReqPropsRow (r :: # Type)
   = r
 
-type HiddenPropsRow (r :: #Type)
+type HiddenPropsRow (r :: # Type)
   = HiddenOptPropsRow (HiddenReqPropsRow r)
 
 foreign import _UnsafeHidden :: forall componentProps. ReactComponent { | HiddenPropsRow componentProps }

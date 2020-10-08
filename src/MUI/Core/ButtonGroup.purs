@@ -91,7 +91,7 @@ type ButtonGroupClassesKey
 type ButtonGroupClassesJSS
   = ButtonGroupClassesGenericRow JSS
 
-type ButtonGroupOptPropsRow (r :: #Type)
+type ButtonGroupOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | ButtonGroupClassesKey }
     , color :: Color
@@ -105,10 +105,10 @@ type ButtonGroupOptPropsRow (r :: #Type)
     | r
     )
 
-type ButtonGroupReqPropsRow (r :: #Type)
+type ButtonGroupReqPropsRow (r :: # Type)
   = r
 
-type ButtonGroupPropsRow (r :: #Type)
+type ButtonGroupPropsRow (r :: # Type)
   = ButtonGroupOptPropsRow (ButtonGroupReqPropsRow r)
 
 foreign import _UnsafeButtonGroup :: forall componentProps. ReactComponent { | ButtonGroupPropsRow componentProps }

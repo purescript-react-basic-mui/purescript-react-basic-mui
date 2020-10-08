@@ -9,7 +9,7 @@ import React.Basic.DOM (Props_div) as React.Basic.DOM
 import React.Basic.Events (EventHandler) as React.Basic.Events
 import Unsafe.Coerce (unsafeCoerce)
 
-type ModalOptPropsRow (r :: #Type)
+type ModalOptPropsRow (r :: # Type)
   = ( "BackdropComponent" :: Foreign.Foreign
     , "BackdropProps" :: Foreign.Foreign
     , closeAfterTransition :: Boolean
@@ -29,13 +29,13 @@ type ModalOptPropsRow (r :: #Type)
     | r
     )
 
-type ModalReqPropsRow (r :: #Type)
+type ModalReqPropsRow (r :: # Type)
   = ( children :: JSX
     , open :: Boolean
     | r
     )
 
-type ModalPropsRow (r :: #Type)
+type ModalPropsRow (r :: # Type)
   = ModalOptPropsRow (ModalReqPropsRow r)
 
 foreign import _UnsafeModal :: forall componentProps. ReactComponent { | ModalPropsRow componentProps }

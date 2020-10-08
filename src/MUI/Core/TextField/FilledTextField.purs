@@ -72,7 +72,7 @@ type FilledTextFieldClassesKey
 type FilledTextFieldClassesJSS
   = FilledTextFieldClassesGenericRow JSS
 
-type FilledTextFieldOptPropsRow (r :: #Type)
+type FilledTextFieldOptPropsRow (r :: # Type)
   = ( autoComplete :: String
     , autoFocus :: Boolean
     , children :: Array JSX
@@ -101,12 +101,12 @@ type FilledTextFieldOptPropsRow (r :: #Type)
     | r
     )
 
-type FilledTextFieldReqPropsRow (r :: #Type)
+type FilledTextFieldReqPropsRow (r :: # Type)
   = ( variant :: Variant
     | r
     )
 
-type FilledTextFieldPropsRow (r :: #Type)
+type FilledTextFieldPropsRow (r :: # Type)
   = FilledTextFieldOptPropsRow (FilledTextFieldReqPropsRow r)
 
 foreign import _UnsafeFilledTextField :: forall componentProps. ReactComponent { | FilledTextFieldPropsRow componentProps }

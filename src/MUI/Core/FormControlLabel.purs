@@ -40,7 +40,7 @@ type FormControlLabelClassesKey
 type FormControlLabelClassesJSS
   = FormControlLabelClassesGenericRow JSS
 
-type FormControlLabelOptPropsRow (r :: #Type)
+type FormControlLabelOptPropsRow (r :: # Type)
   = ( checked :: Boolean
     , classes :: { | FormControlLabelClassesKey }
     , disabled :: Boolean
@@ -51,13 +51,13 @@ type FormControlLabelOptPropsRow (r :: #Type)
     | r
     )
 
-type FormControlLabelReqPropsRow (r :: #Type)
+type FormControlLabelReqPropsRow (r :: # Type)
   = ( control :: JSX
     , label :: JSX
     | r
     )
 
-type FormControlLabelPropsRow (r :: #Type)
+type FormControlLabelPropsRow (r :: # Type)
   = FormControlLabelOptPropsRow (FormControlLabelReqPropsRow r)
 
 foreign import _UnsafeFormControlLabel :: forall componentProps. ReactComponent { | FormControlLabelPropsRow componentProps }

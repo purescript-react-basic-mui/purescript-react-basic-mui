@@ -74,7 +74,7 @@ type InputClassesKey
 type InputClassesJSS
   = InputClassesGenericRow JSS
 
-type InputOptPropsRow (r :: #Type)
+type InputOptPropsRow (r :: # Type)
   = ( autoComplete :: String
     , autoFocus :: Boolean
     , className :: String
@@ -103,10 +103,10 @@ type InputOptPropsRow (r :: #Type)
     | r
     )
 
-type InputReqPropsRow (r :: #Type)
+type InputReqPropsRow (r :: # Type)
   = r
 
-type InputPropsRow (r :: #Type)
+type InputPropsRow (r :: # Type)
   = InputOptPropsRow (InputReqPropsRow r)
 
 foreign import _UnsafeInput :: forall componentProps. ReactComponent { | InputPropsRow componentProps }

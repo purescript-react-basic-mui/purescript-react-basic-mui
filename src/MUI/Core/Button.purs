@@ -86,7 +86,7 @@ type ButtonClassesKey
 type ButtonClassesJSS
   = ButtonClassesGenericRow JSS
 
-type ButtonOptPropsRow (r :: #Type)
+type ButtonOptPropsRow (r :: # Type)
   = ( classes :: { | ButtonClassesKey }
     , color :: Color
     , disableFocusRipple :: Boolean
@@ -101,10 +101,10 @@ type ButtonOptPropsRow (r :: #Type)
     | r
     )
 
-type ButtonReqPropsRow (r :: #Type)
+type ButtonReqPropsRow (r :: # Type)
   = r
 
-type ButtonPropsRow (r :: #Type)
+type ButtonPropsRow (r :: # Type)
   = ButtonOptPropsRow (ButtonReqPropsRow r)
 
 foreign import _UnsafeButton :: forall componentProps. ReactComponent { | ButtonPropsRow componentProps }

@@ -105,7 +105,7 @@ type LinkClassesKey
 type LinkClassesJSS
   = LinkClassesGenericRow JSS
 
-type LinkOptPropsRow (r :: #Type)
+type LinkOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | LinkClassesKey }
     , color :: Color
@@ -114,10 +114,10 @@ type LinkOptPropsRow (r :: #Type)
     | r
     )
 
-type LinkReqPropsRow (r :: #Type)
+type LinkReqPropsRow (r :: # Type)
   = r
 
-type LinkPropsRow (r :: #Type)
+type LinkPropsRow (r :: # Type)
   = LinkOptPropsRow (LinkReqPropsRow r)
 
 foreign import _UnsafeLink :: forall componentProps. ReactComponent { | LinkPropsRow componentProps }

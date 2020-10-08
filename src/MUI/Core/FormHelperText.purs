@@ -49,7 +49,7 @@ type FormHelperTextClassesKey
 type FormHelperTextClassesJSS
   = FormHelperTextClassesGenericRow JSS
 
-type FormHelperTextOptPropsRow (r :: #Type)
+type FormHelperTextOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | FormHelperTextClassesKey }
     , disabled :: Boolean
@@ -62,10 +62,10 @@ type FormHelperTextOptPropsRow (r :: #Type)
     | r
     )
 
-type FormHelperTextReqPropsRow (r :: #Type)
+type FormHelperTextReqPropsRow (r :: # Type)
   = r
 
-type FormHelperTextPropsRow (r :: #Type)
+type FormHelperTextPropsRow (r :: # Type)
   = FormHelperTextOptPropsRow (FormHelperTextReqPropsRow r)
 
 foreign import _UnsafeFormHelperText :: forall componentProps. ReactComponent { | FormHelperTextPropsRow componentProps }

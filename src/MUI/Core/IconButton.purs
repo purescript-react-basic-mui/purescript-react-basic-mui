@@ -65,7 +65,7 @@ type IconButtonClassesKey
 type IconButtonClassesJSS
   = IconButtonClassesGenericRow JSS
 
-type IconButtonOptPropsRow (r :: #Type)
+type IconButtonOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | IconButtonClassesKey }
     , color :: Color
@@ -77,10 +77,10 @@ type IconButtonOptPropsRow (r :: #Type)
     | r
     )
 
-type IconButtonReqPropsRow (r :: #Type)
+type IconButtonReqPropsRow (r :: # Type)
   = r
 
-type IconButtonPropsRow (r :: #Type)
+type IconButtonPropsRow (r :: # Type)
   = IconButtonOptPropsRow (IconButtonReqPropsRow r)
 
 foreign import _UnsafeIconButton :: forall componentProps. ReactComponent { | IconButtonPropsRow componentProps }

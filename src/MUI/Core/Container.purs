@@ -24,17 +24,17 @@ maxWidth = { "false": unsafeCoerce false, lg: unsafeCoerce "lg", md: unsafeCoerc
 instance eqMaxWidth :: Eq MaxWidth where
   eq = unsafeRefEq
 
-type ContainerOptPropsRow (r :: #Type)
+type ContainerOptPropsRow (r :: # Type)
   = ( disableGutters :: Boolean
     , fixed :: Boolean
     , maxWidth :: MaxWidth
     | r
     )
 
-type ContainerReqPropsRow (r :: #Type)
+type ContainerReqPropsRow (r :: # Type)
   = r
 
-type ContainerPropsRow (r :: #Type)
+type ContainerPropsRow (r :: # Type)
   = ContainerOptPropsRow (ContainerReqPropsRow r)
 
 foreign import _UnsafeContainer :: forall componentProps. ReactComponent { | ContainerPropsRow componentProps }

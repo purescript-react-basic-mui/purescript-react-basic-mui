@@ -38,7 +38,7 @@ type FormLabelClassesKey
 type FormLabelClassesJSS
   = FormLabelClassesGenericRow JSS
 
-type FormLabelOptPropsRow (r :: #Type)
+type FormLabelOptPropsRow (r :: # Type)
   = ( children :: Array JSX
     , classes :: { | FormLabelClassesKey }
     , color :: Color
@@ -50,10 +50,10 @@ type FormLabelOptPropsRow (r :: #Type)
     | r
     )
 
-type FormLabelReqPropsRow (r :: #Type)
+type FormLabelReqPropsRow (r :: # Type)
   = r
 
-type FormLabelPropsRow (r :: #Type)
+type FormLabelPropsRow (r :: # Type)
   = FormLabelOptPropsRow (FormLabelReqPropsRow r)
 
 foreign import _UnsafeFormLabel :: forall componentProps. ReactComponent { | FormLabelPropsRow componentProps }

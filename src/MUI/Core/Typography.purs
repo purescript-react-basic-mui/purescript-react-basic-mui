@@ -115,7 +115,7 @@ type TypographyClassesKey
 type TypographyClassesJSS
   = TypographyClassesGenericRow JSS
 
-type TypographyOptPropsRow (r :: #Type)
+type TypographyOptPropsRow (r :: # Type)
   = ( align :: Align
     , children :: Array JSX
     , classes :: { | TypographyClassesKey }
@@ -130,10 +130,10 @@ type TypographyOptPropsRow (r :: #Type)
     | r
     )
 
-type TypographyReqPropsRow (r :: #Type)
+type TypographyReqPropsRow (r :: # Type)
   = r
 
-type TypographyPropsRow (r :: #Type)
+type TypographyPropsRow (r :: # Type)
   = TypographyOptPropsRow (TypographyReqPropsRow r)
 
 foreign import _UnsafeTypography :: forall componentProps. ReactComponent { | TypographyPropsRow componentProps }
