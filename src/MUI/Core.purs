@@ -1,7 +1,6 @@
 module MUI.Core where
 
 import Prelude
-
 import Foreign (Foreign)
 import Foreign.Object (Object)
 import Foreign.Object as Object
@@ -44,7 +43,8 @@ instance monoidJSS :: Monoid JSS where
   mempty = jss {}
 
 -- | Just a string underneath
-newtype MediaQuery = MediaQuery String
+newtype MediaQuery
+  = MediaQuery String
 
 mediaQuery ∷ MediaQuery → JSS → JSS
 mediaQuery (MediaQuery mq) = let e = {} in \j → jss $ unsafeSet mq j e

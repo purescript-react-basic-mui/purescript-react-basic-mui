@@ -1,7 +1,6 @@
 module MUI.Core.Styles.CreateBreakpoints where
 
 import Prelude
-
 import Data.Function.Uncurried (Fn2)
 import Foreign (Foreign, unsafeToForeign)
 import MUI.Core (MediaQuery)
@@ -45,7 +44,7 @@ xl = unsafeCoerce "xl"
 
 createBreakPoints ::
   forall options options_.
-  Union options options_ (values ∷ BreakpointValues) =>
+  Union options options_ ( values :: BreakpointValues ) =>
   Record options ->
   Breakpoints
 createBreakPoints = unsafeCreateBreakpoints <<< unsafeToForeign
