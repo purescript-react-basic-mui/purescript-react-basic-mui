@@ -544,69 +544,112 @@ components =
     --      , generate: []
     --      }
     --    }
-    --dialog =
-    --  let
-    --    -- | TODO:
-    --    -- | migration.
-    --    -- | * `PaperComponent`, `PaperProps`, `TransitionComponent`, `TransitionDuration`
-    --    handlers =
-    --      map eventHandlerProp
-    --        [ "onEnter"
-    --        , "onEntered"
-    --        , "onEntering"
-    --        , "onExit"
-    --        , "onExited"
-    --        , "onExiting"
-    --        ]
-    --    base =  Map.fromFoldable $ [ children ] <> handlers
-    --  in
-    --    simpleComponent
-    --      { inherits: Just $ MUI.rList
-    --        [ Type.constructor "MUI.Core.Modal.ModalPropsRow"
-    --        , divProps
-    --        ]
-    --      , name: "Dialog"
-    --      , propsRow:
-    --        { base: emptyBase
-    --        , generate:
-    --          [ "aria-describedby"
-    --          , "aria-labelledby"
-    --          , "classes"
-    --          , "fullScreen"
-    --          , "fullWidth"
-    --          , "maxWidth"
-    --          , "scroll"
-    --          , "transitionDuration"
-    --          ]
-    --        }
-    --      }
-    --dialogActions =
-    --  simpleComponent
-    --    { inherits: Nothing
-    --    , name: "DialogActions"
-    --    , propsRow:
-    --      { base:  Map.fromFoldable [ children ]
-    --      , generate: [ "classes", "disableSpacing" ]
-    --      }
-    --    }
-    --dialogContent =
-    --  simpleComponent
-    --    { inherits: Nothing
-    --    , name: "DialogContent"
-    --    , propsRow:
-    --      { base:  Map.fromFoldable [ children ]
-    --      , generate: [ "classes", "dividers" ]
-    --      }
-    --    }
-    --dialogTitle =
-    --  simpleComponent
-    --    { inherits: Nothing
-    --    , name: "DialogTitle"
-    --    , propsRow:
-    --      { base:  Map.fromFoldable [ children ]
-    --      , generate: [ "classes", "disableTypography" ]
-    --      }
-    --    }
+    dialog =
+      let
+        -- | TODO:
+        -- | migration.
+        -- | * `PaperComponent`, `PaperProps`, `TransitionComponent`, `TransitionDuration`
+        handlers =
+          map eventHandlerProp
+            [ "onBackdropClick"
+            , "onClose"
+            , "onEnter"
+            , "onEntered"
+            , "onEntering"
+            , "onEscapeKeyDown"
+            , "onExit"
+            , "onExited"
+            , "onExiting"
+            ]
+
+        base =
+          Map.fromFoldable
+            $ [ checkedProp "ref" foreignType
+              , children
+              , checkedProp "PaperComponent" foreignType
+              , checkedProp "PaperProps" (Type.constructor "MUI.Core.Paper.PaperProps")
+              , checkedProp "TransitionComponent" foreignType
+              , checkedProp "transitionDuration" transitionTimeout
+              , checkedProp "TransitionProps" foreignType
+              ]
+            <> handlers
+      in
+        simpleComponent
+          { name: "Dialog"
+          , propsRow:
+              { base
+              , generate:
+                  [ "aria-describedby"
+                  , "aria-labelledby"
+                  , "classes"
+                  , "disableBackdropClick"
+                  , "disableEscapeKeyDown"
+                  , "fullScreen"
+                  , "fullWidth"
+                  , "maxWidth"
+                  , "open"
+                  , "scroll"
+                  ]
+              }
+          , root: MUIComponent modal
+          }
+
+    dialogActions =
+      simpleComponent
+        { name: "DialogActions"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ children
+                  , checkedProp "ref" foreignType
+                  ]
+            , generate: [ "classes", "disableSpacing" ]
+            }
+        , root: rbProps.div
+        }
+
+    dialogContent =
+      simpleComponent
+        { name: "DialogContent"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ children
+                  , checkedProp "ref" foreignType
+                  ]
+            , generate: [ "classes", "dividers" ]
+            }
+        , root: rbProps.div
+        }
+
+    dialogContentText =
+      simpleComponent
+        { name: "DialogContentText"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ children
+                  , checkedProp "ref" foreignType
+                  ]
+            , generate: [ "classes" ]
+            }
+        , root: MUIComponent typography
+        }
+
+    dialogTitle =
+      simpleComponent
+        { name: "DialogTitle"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ children
+                  , checkedProp "ref" foreignType
+                  ]
+            , generate: [ "classes", "disableTypography" ]
+            }
+        , root: rbProps.div
+        }
+
     ---- | TODO: add component
     divider =
       simpleComponent
@@ -2386,10 +2429,11 @@ components =
     -- , collapse
     , container
     -- , cssBaseline
-    -- , dialog
-    -- , dialogActions
-    -- , dialogContent
-    -- , dialogTitle
+    , dialog
+    , dialogActions
+    , dialogContent
+    , dialogContentText
+    , dialogTitle
     , divider
     , drawer
     -- , expansionPanel
