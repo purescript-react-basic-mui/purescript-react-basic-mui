@@ -9,7 +9,8 @@ import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 
 type ListItemIconClassesGenericRow a
-  = ( root :: a
+  = ( alignItemsFlexStart :: a
+    , root :: a
     )
 
 type ListItemIconClassesKey
