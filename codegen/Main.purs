@@ -130,23 +130,28 @@ components =
         , root: MUIComponent paper
         }
 
-    -- avatar =
-    --   simpleComponent
-    --     { inherits: Nothing
-    --     , name: "Avatar"
-    --     , propsRow:
-    --       { base:  Map.fromFoldable []
-    --       , generate:
-    --         [ "alt"
-    --         , "classes"
-    --         -- not sure what to do here, "imgProps"
-    --         , "sizes"
-    --         , "src"
-    --         , "srcSet"
-    --         , "variant"
-    --         ]
-    --       }
-    --     }
+    avatar =
+      simpleComponent
+        { name: "Avatar"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "ref" foreignType
+                  , children
+                  , checkedProp "imgProps" foreignType
+                  ]
+            , generate:
+                [ "alt"
+                , "classes"
+                , "sizes"
+                , "src"
+                , "srcSet"
+                , "variant"
+                ]
+            }
+        , root: rbProps.div
+        }
+
     backdrop =
       simpleComponent
         { name: "Backdrop"
@@ -2358,7 +2363,7 @@ components =
   --    }
   in
     [ appBar
-    -- , avatar
+    , avatar
     , backdrop
     , badge
     -- , bottomNavigation
