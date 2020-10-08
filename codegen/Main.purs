@@ -231,22 +231,22 @@ components =
         , root: rbProps.div
         }
 
-    --breadcrumbs =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList [ divProps ]
-    --    , name: "Breadcrumbs"
-    --    , propsRow:
-    --      { base:
-    --         Map.fromFoldable
-    --          $ [ children
-    --            -- Not found on the TS side
-    --            -- , component
-    --            , checkedProp "separator" jsx
-    --            , checkedProp "ref" foreignType
-    --            ]
-    --      , generate: [ "classes", "itemsAfterCollapse", "itemsBeforeCollapse", "maxItems" ]
-    --      }
-    --    }
+    breadcrumbs =
+      simpleComponent
+        { name: "Breadcrumbs"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  $ [ children
+                    , checkedProp "ref" foreignType
+                    , forcedProp "component" foreignType false
+                    , checkedProp "separator" jsx
+                    ]
+            , generate: [ "classes", "expandText", "itemsAfterCollapse", "itemsBeforeCollapse", "maxItems" ]
+            }
+        , root: rbProps.nav
+        }
+
     buttonBase =
       -- let
       --   buttonBaseActions = declType (TypeName "ButtonBaseActions") [] foreignType
@@ -2412,7 +2412,7 @@ components =
     -- , bottomNavigation
     -- , bottomNavigationAction
     , box
-    -- , breadcrumbs
+    , breadcrumbs
     , buttonBase
     , buttonGroup
     , button
