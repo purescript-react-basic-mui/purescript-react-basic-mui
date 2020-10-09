@@ -1733,9 +1733,9 @@ components =
                   , checkedProp "defaultValue" foreignType
                   , checkedProp "IconComponent" jsx
                   , checkedProp "input" jsx
-                  , checkedProp "inputProps" (Type.constructor "MUI.Core.Input.InputOpaqueProps")
+                  , checkedProp "inputProps" foreignType
                   , checkedProp "label" jsx
-                  , checkedProp "MenuProps" (Type.constructor "MUI.Core.Menu.MenuOpaqueProps")
+                  , checkedProp "MenuProps" foreignType
                   , eventHandlerProp "onChange"
                   , eventHandlerProp "onClose"
                   , eventHandlerProp "onOpen"

@@ -4,9 +4,8 @@ module MUI.Core.Select where
 
 import Foreign (Foreign) as Foreign
 import MUI.Core (JSS, class Nub')
-import MUI.Core.Input (InputOpaqueProps, InputPropsRow, InputReqPropsRow) as MUI.Core.Input
+import MUI.Core.Input (InputPropsRow, InputReqPropsRow) as MUI.Core.Input
 import MUI.Core.InputBase (InputBasePropsRow, InputBaseReqPropsRow) as MUI.Core.InputBase
-import MUI.Core.Menu (MenuOpaqueProps) as MUI.Core.Menu
 import MUI.Core.Styles (Theme, withStyles) as MUI.Core.Styles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
@@ -51,7 +50,7 @@ type SelectClassesJSS  =
 type SelectOptPropsRow (r :: # Type) =
   ( 
     "IconComponent" :: JSX,
-    "MenuProps" :: MUI.Core.Menu.MenuOpaqueProps,
+    "MenuProps" :: Foreign.Foreign,
     "SelectDisplayProps" :: Foreign.Foreign,
     autoWidth :: Boolean,
     children :: Array  JSX,
@@ -60,7 +59,7 @@ type SelectOptPropsRow (r :: # Type) =
     displayEmpty :: Boolean,
     id :: String,
     input :: JSX,
-    inputProps :: MUI.Core.Input.InputOpaqueProps,
+    inputProps :: Foreign.Foreign,
     label :: JSX,
     labelId :: String,
     labelWidth :: Number,
