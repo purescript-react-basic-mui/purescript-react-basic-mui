@@ -1372,26 +1372,46 @@ components =
     --        ]
     --      }
     --    }
-    --menu =
-    --  let
-    --    -- | Still missing: anchorEl, onClose, MenuListProps, PopoverClasses, transitionDuration
-    --    handlers =
-    --      map eventHandlerProp
-    --        [ "onClose", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
-    --    -- | I'm not sure what is the difference between `React.Element` and `DOM.Element`
-    --    nullable = Type.constructor "Data.Nullable.Nullable"
-    --    domElement = Type.constructor "Web.DOM.Element"
-    --    anchorEl = checkedProp "anchorEl" $ Type.app nullable [ domElement ]
-    --    base =  Map.fromFoldable $ [ anchorEl, children ] <> handlers
-    --  in
-    --    simpleComponent
-    --      { inherits: Nothing -- | We should inherit from Popover here
-    --      , name: "Menu"
-    --      , propsRow:
-    --        { base: emptyBase
-    --        , generate: [ "autoFocus", "classes", "disableAutoFocusItem", "open", "transitionDuration", "variant" ]
-    --        }
-    --      }
+    menu =
+      let
+        -- | Still missing: anchorEl, onClose, MenuListProps, PopoverClasses, transitionDuration
+        -- | I'm not sure what is the difference between `React.Element` and `DOM.Element`
+        handlers =
+          map eventHandlerProp
+            [ "onClose"
+            , "onEnter"
+            , "onEntered"
+            , "onEntering"
+            , "onExit"
+            , "onExited"
+            , "onExiting"
+            ]
+      in
+        simpleComponent
+          { name: "Menu"
+          , propsRow:
+              { base:
+                  Map.fromFoldable
+                    $ [ checkedProp "ref" foreignType
+                      , children
+                      , checkedProp "anchorEl" foreignType
+                      , checkedProp "MenuListProps" foreignType
+                      , checkedProp "PopoverClasses" foreignType
+                      ]
+                    <> handlers
+              , generate:
+                  [ "autoFocus"
+                  , "classes"
+                  , "disableAutoFocusItem"
+                  , "open"
+                  , "transitionDuration"
+                  , "variant"
+                  ]
+              }
+          -- change to: MUIComponent popover
+          , root: rbProps.div
+          }
+
     menuItem =
       simpleComponent
         { name: "MenuItem"
@@ -2496,7 +2516,7 @@ components =
     -- , listItemSecondaryAction
     , listItemText
     -- , listSubheader
-    -- , menu
+    , menu
     , menuItem
     , modal
     -- , nativeSelect
