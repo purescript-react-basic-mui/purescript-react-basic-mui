@@ -428,33 +428,37 @@ components =
     --      , generate: [ "classes", "image", "src" ]
     --      }
     --    }
-    --checkbox =
-    --  simpleComponent
-    --    { inherits: Nothing -- should be IconButon
-    --    , name: "Checkbox"
-    --    , propsRow:
-    --      { base: Map.fromFoldable
-    --          ( [ checkedProp "checkedIcon" jsx
-    --            , checkedProp "icon" jsx
-    --            , checkedProp "indeterminateIcon" jsx
-    --            , checkedProp "inputProps" foreignType
-    --            , checkedProp "inputRef" foreignType
-    --            , checkedProp "value" foreignType
-    --            ]
-    --              <> (map eventHandlerProp [ "onChange" ])
-    --          )
-    --      , generate:
-    --        [ "checked"
-    --        , "classes"
-    --        , "color"
-    --        , "disabled"
-    --        , "disableRipple"
-    --        , "id"
-    --        , "indeterminate"
-    --        , "required"
-    --        ]
-    --      }
-    --    }
+    checkbox =
+      simpleComponent
+        { name: "Checkbox"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  ( [ checkedProp "ref" foreignType
+                    , checkedProp "checkedIcon" jsx
+                    , checkedProp "icon" jsx
+                    , checkedProp "indeterminateIcon" jsx
+                    , checkedProp "inputProps" foreignType
+                    , checkedProp "inputRef" foreignType
+                    , checkedProp "value" foreignType
+                    ]
+                      <> (map eventHandlerProp [ "onChange" ])
+                  )
+            , generate:
+                [ "checked"
+                , "classes"
+                , "color"
+                , "disabled"
+                , "disableRipple"
+                , "id"
+                , "indeterminate"
+                , "required"
+                , "size"
+                ]
+            }
+        , root: MUIComponent iconButton
+        }
+
     --chip =
     --  simpleComponent
     --    { inherits: Just $ MUI.rList [ divProps ]
@@ -2428,7 +2432,7 @@ components =
     -- , cardMedia
     , circularProgress
     -- , clickAwayListener
-    -- , checkbox
+    , checkbox
     -- , chip
     -- , collapse
     , container
