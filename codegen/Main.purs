@@ -609,7 +609,7 @@ components =
                   , "scroll"
                   ]
               }
-          , root: MUIComponent modal
+          , root: rbProps.div
           }
 
     dialogActions =

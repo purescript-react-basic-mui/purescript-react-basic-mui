@@ -4,7 +4,6 @@ module MUI.Core.Dialog where
 
 import Foreign (Foreign) as Foreign
 import MUI.Core (JSS, class Nub')
-import MUI.Core.Modal (ModalPropsRow, ModalReqPropsRow) as MUI.Core.Modal
 import MUI.Core.Paper (PaperProps) as MUI.Core.Paper
 import MUI.Core.Styles (Theme, withStyles) as MUI.Core.Styles
 import MUI.React.TransitionGroup (Timeout) as MUI.React.TransitionGroup
@@ -109,25 +108,25 @@ type DialogPropsRow (r :: # Type) =
 foreign import _UnsafeDialog :: forall componentProps.    ReactComponent {   | DialogPropsRow componentProps  }
 
 _Dialog::forall given optionalGiven optionalMissing props required. 
-  Nub' (DialogReqPropsRow (MUI.Core.Modal.ModalReqPropsRow ())) required =>
+  Nub' (DialogReqPropsRow ()) required =>
   Prim.Row.Union required optionalGiven given =>
-  Nub' (DialogPropsRow (MUI.Core.Modal.ModalPropsRow React.Basic.DOM.Props_div)) props =>
+  Nub' (DialogPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   ReactComponent {   | given  }
 _Dialog = unsafeCoerce _UnsafeDialog
 
 dialog::forall given optionalGiven optionalMissing props required. 
-  Nub' (DialogReqPropsRow (MUI.Core.Modal.ModalReqPropsRow ())) required =>
+  Nub' (DialogReqPropsRow ()) required =>
   Prim.Row.Union required optionalGiven given =>
-  Nub' (DialogPropsRow (MUI.Core.Modal.ModalPropsRow React.Basic.DOM.Props_div)) props =>
+  Nub' (DialogPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   {   | given  }  ->  JSX
 dialog props = element _Dialog props
 
 dialogWithStyles::forall jss_ jss given optionalGiven optionalMissing props required. 
-  Nub' (DialogReqPropsRow (MUI.Core.Modal.ModalReqPropsRow ())) required =>
+  Nub' (DialogReqPropsRow ()) required =>
   Prim.Row.Union required optionalGiven given =>
-  Nub' (DialogPropsRow (MUI.Core.Modal.ModalPropsRow React.Basic.DOM.Props_div)) props =>
+  Nub' (DialogPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   Prim.Row.Union jss jss_ DialogClassesJSS =>
   (MUI.Core.Styles.Theme  ->  {   | jss  })  ->  {   | given  }  ->  JSX
@@ -139,9 +138,9 @@ dialogWithStyles style props = element (withStyles' style _Dialog) props
 foreign import data DialogProps :: Type
 
 dialogProps::forall given optionalGiven optionalMissing props required. 
-  Nub' (DialogReqPropsRow (MUI.Core.Modal.ModalReqPropsRow ())) required =>
+  Nub' (DialogReqPropsRow ()) required =>
   Prim.Row.Union required optionalGiven given =>
-  Nub' (DialogPropsRow (MUI.Core.Modal.ModalPropsRow React.Basic.DOM.Props_div)) props =>
+  Nub' (DialogPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   {   | given  }  ->  DialogProps
 dialogProps = unsafeCoerce
