@@ -516,19 +516,29 @@ components =
     --        , generate: [ "mouseEvent", "touchEvent" ]
     --        }
     --      }
-    --collapse =
-    --  simpleComponent
-    --    { inherits: Nothing
-    --    , name: "Collapse"
-    --    , propsRow:
-    --      { base:  Map.fromFoldable [ children ]
-    --      , generate:
-    --        [ "collapsedHeight"
-    --        , "in"
-    --        , "timeout"
-    --        ]
-    --      }
-    --    }
+    collapse =
+      simpleComponent
+        { name: "Collapse"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ children
+                  , checkedProp "ref" foreignType
+                  , forcedProp "component" (roll TypeString) false
+                  ]
+            , generate:
+                [ "classes"
+                , "collapsedHeight"
+                , "disableStrictModeCompat"
+                , "in"
+                , "timeout"
+                ]
+            }
+        --   TODO: should be something like this once TransitionGroup stuff is defined:
+        -- , root: MUIComponent transition
+        , root: rbProps.div
+        }
+
     container =
       simpleComponent
         { name: "Container"
@@ -2434,7 +2444,7 @@ components =
     -- , clickAwayListener
     , checkbox
     -- , chip
-    -- , collapse
+    , collapse
     , container
     -- , cssBaseline
     , dialog
