@@ -1481,7 +1481,7 @@ components =
           }
 
     ---- | TODO: value
-    --nativeSelect =
+    --nativeSelect=
     --  simpleComponent
     --    { inherits: Just $ MUI.rList
     --        [ Type.constructor "MUI.Core.Input.InputPropsRow", divProps ]
@@ -1702,39 +1702,44 @@ components =
     --      }
     --    }
     ---- | TODO: value
-    --select =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList
-    --        [ Type.constructor "MUI.Core.Input.InputPropsRow", divProps ]
-    --    , name: "Select"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              , checkedProp "IconComponent" jsx
-    --              , checkedProp "input" jsx
-    --              , checkedProp "inputProps" (Type.constructor "MUI.Core.Input.InputOpaqueProps")
-    --              , checkedProp "MenuProps" (Type.constructor "MUI.Core.Menu.MenuOpaqueProps")
-    --              , eventHandlerProp "onChange"
-    --              , eventHandlerProp "onClose"
-    --              , eventHandlerProp "onOpen"
-    --              , checkedProp "renderValue" foreignType
-    --              , checkedProp "SelectDisplayProps" foreignType
-    --              , checkedProp "value" foreignType
-    --              ]
-    --      , generate:
-    --        [ "autoWidth"
-    --        , "classes"
-    --        , "displayEmpty"
-    --        , "labelWidth"
-    --        , "multiple"
-    --        , "native"
-    --        , "open"
-    --        , "renderValue"
-    --        , "variant"
-    --        ]
-    --      }
-    --    }
+    select =
+      simpleComponent
+        { name: "Select"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "ref" foreignType
+                  , children
+                  , checkedProp "defaultValue" foreignType
+                  , checkedProp "IconComponent" jsx
+                  , checkedProp "input" jsx
+                  , checkedProp "inputProps" (Type.constructor "MUI.Core.Input.InputOpaqueProps")
+                  , checkedProp "label" jsx
+                  , checkedProp "MenuProps" (Type.constructor "MUI.Core.Menu.MenuOpaqueProps")
+                  , eventHandlerProp "onChange"
+                  , eventHandlerProp "onClose"
+                  , eventHandlerProp "onOpen"
+                  , checkedProp "renderValue" foreignType
+                  , checkedProp "SelectDisplayProps" foreignType
+                  , checkedProp "value" foreignType
+                  ]
+            , generate:
+                [ "autoWidth"
+                , "classes"
+                , "displayEmpty"
+                , "id"
+                , "labelId"
+                , "labelWidth"
+                , "multiple"
+                , "native"
+                , "open"
+                , "renderValue"
+                , "variant"
+                ]
+            }
+        , root: MUIComponent input
+        }
+
     --slide =
     --  simpleComponent
     --    { inherits: Nothing
@@ -2503,7 +2508,7 @@ components =
     -- , radio
     -- , radioGroup
     -- , rootRef
-    -- , select
+    , select
     -- , slide
     -- , slider
     -- , snackbar
