@@ -1392,27 +1392,27 @@ components =
     --        , generate: [ "autoFocus", "classes", "disableAutoFocusItem", "open", "transitionDuration", "variant" ]
     --        }
     --      }
-    --menuItem =
-    --  let
-    --    base =
-    --        Map.fromFoldable
-    --            [ children
-    --            -- XXX: We are catching material ui documentation / type error here.
-    --            -- MenuItem doesn't contain `component` prop.
-    --            -- , component
-    --            ]
-    --  in
-    --    simpleComponent
-    --      { inherits: Just $ MUI.rList
-    --        [ Type.constructor "MUI.Core.ListItem.ListItemPropsRow"
-    --        , Type.constructor "MUI.DOM.Generated.Props_li"
-    --        ]
-    --      , name: "MenuItem"
-    --      , propsRow:
-    --        { base: emptyBase
-    --        , generate: [ "classes", "dense", "disableGutters" ]
-    --        }
-    --      }
+    menuItem =
+      simpleComponent
+        { name: "MenuItem"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ children
+                  , checkedProp "ref" foreignType
+                  , forcedProp "component" foreignType false
+                  , forcedProp "ListItemClasses" foreignType false
+                  ]
+            , generate:
+                [ "classes"
+                , "dense"
+                , "disabled"
+                , "disableGutters"
+                ]
+            }
+        , root: MUIComponent listItem
+        }
+
     --mobileStepper =
     --  simpleComponent
     --    { inherits: Just $ MUI.rList
@@ -2492,7 +2492,7 @@ components =
     , listItemText
     -- , listSubheader
     -- , menu
-    -- , menuItem
+    , menuItem
     , modal
     -- , nativeSelect
     -- , noSsr
