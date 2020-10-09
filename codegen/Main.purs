@@ -763,26 +763,30 @@ components =
     --      , generate: [ "classes" ]
     --      }
     --    }
-    --fab =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList'
-    --        [ "MUI.Core.ButtonBase.ButtonBasePropsRow"
-    --        , "MUI.DOM.Generated.Props_button"
-    --        ]
-    --    , name: "Fab"
-    --    , propsRow:
-    --      { base: emptyBase
-    --      , generate:
-    --        [ "classes"
-    --        , "color"
-    --        , "disabled"
-    --        , "disableFocusRipple"
-    --        , "href"
-    --        , "size"
-    --        , "variant"
-    --        ]
-    --      }
-    --    }
+    fab =
+      simpleComponent
+        { name: "Fab"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ children
+                  , checkedProp "ref" foreignType
+                  , forcedProp "component" foreignType false
+                  ]
+            , generate:
+                [ "classes"
+                , "color"
+                , "disabled"
+                , "disableFocusRipple"
+                , "disableRipple"
+                , "href"
+                , "size"
+                , "variant"
+                ]
+            }
+        , root: MUIComponent buttonBase
+        }
+
     ---- | TODO: TransitionComponent
     fade =
       simpleComponent
@@ -2458,7 +2462,7 @@ components =
     -- , expansionPanelActions
     -- , expansionPanelDetails
     -- , expansionPanelSummary
-    -- , fab
+    , fab
     , fade
     , formControl
     , formControlLabel
