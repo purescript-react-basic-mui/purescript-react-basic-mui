@@ -476,23 +476,27 @@ components =
     --        ]
     --      }
     --    }
-    --circularProgress =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList [ divProps ]
-    --    , name: "CircularProgress"
-    --    , propsRow:
-    --      { base:  Map.fromFoldable []
-    --      , generate:
-    --        [ "classes"
-    --        , "color"
-    --        , "disableShrink"
-    --        , "size"
-    --        , "thickness"
-    --        , "value"
-    --        , "variant"
-    --        ]
-    --      }
-    --    }
+    circularProgress =
+      simpleComponent
+        { name: "CircularProgress"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "ref" foreignType
+                  ]
+            , generate:
+                [ "classes"
+                , "color"
+                , "disableShrink"
+                , "size"
+                , "thickness"
+                , "value"
+                , "variant"
+                ]
+            }
+        , root: rbProps.div
+        }
+
     --clickAwayListener =
     --  let
     --    onClickAway = eventHandlerProp "onClickAway"
@@ -2422,7 +2426,7 @@ components =
     -- , cardContent
     -- , cardHeader
     -- , cardMedia
-    -- , circularProgress
+    , circularProgress
     -- , clickAwayListener
     -- , checkbox
     -- , chip
