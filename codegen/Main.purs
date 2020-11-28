@@ -1809,56 +1809,61 @@ components =
     --      }
     --    }
     ---- | TODO: TransitionComponent, TransitionProps
-    --snackbar =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList [ divProps ]
-    --    , name: "Snackbar"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              , checkedProp "action" jsx
-    --              , checkedProp "ClickAwayListenerProps" (Type.constructor "MUI.Core.ClickAwayListener.ClickAwayListenerOpaqueProps")
-    --              , checkedProp "ContentProps" (Type.constructor "MUI.Core.SnackbarContent.SnackbarContentOpaqueProps")
-    --              -- `key` is in the docs but not in the typedef
-    --              --, checkedProp "key" foreignType
-    --              , checkedProp "message" jsx
-    --              , eventHandlerProp "onClose"
-    --              , eventHandlerProp "onEnter"
-    --              , eventHandlerProp "onEntered"
-    --              , eventHandlerProp "onEntering"
-    --              , eventHandlerProp "onExit"
-    --              , eventHandlerProp "onExited"
-    --              , eventHandlerProp "onExiting"
-    --              ]
-    --      , generate:
-    --        [ "anchorOrigin"
-    --        , "autoHideDuration"
-    --        , "classes"
-    --        , "disableWindowBlurListener"
-    --        , "open"
-    --        , "resumeHideDuration"
-    --        , "transitionDuration"
-    --        ]
-    --      }
-    --    }
-    --snackbarContent =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList
-    --        [ Type.constructor "MUI.Core.Paper.PaperPropsRow", divProps ]
-    --    , name: "SnackbarContent"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ checkedProp "action" jsx
-    --              , checkedProp "message" jsx
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        , "role"
-    --        ]
-    --      }
-    --    }
+    snackbar =
+      simpleComponent
+        { name: "Snackbar"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "ref" foreignType
+                  , children
+                  , checkedProp "action" jsx
+                  , checkedProp "ClickAwayListenerProps" (Type.constructor "MUI.Core.ClickAwayListener.ClickAwayListenerOpaqueProps")
+                  , checkedProp "ContentProps" (Type.constructor "MUI.Core.SnackbarContent.SnackbarContentOpaqueProps")
+                  -- `key` is in the docs but not in the typedef
+                  , checkedProp "key" foreignType
+                  , checkedProp "message" jsx
+                  , eventHandlerProp "onClose"
+                  , eventHandlerProp "onEnter"
+                  , eventHandlerProp "onEntered"
+                  , eventHandlerProp "onEntering"
+                  , eventHandlerProp "onExit"
+                  , eventHandlerProp "onExited"
+                  , eventHandlerProp "onExiting"
+                  , checkedProp "TransitionComponent" foreignType
+                  , checkedProp "TransitionProps" foreignType
+                  ]
+            , generate:
+                [ "anchorOrigin"
+                , "autoHideDuration"
+                , "classes"
+                , "disableWindowBlurListener"
+                , "open"
+                , "resumeHideDuration"
+                , "transitionDuration"
+                ]
+            }
+        , root: rbProps.div
+        }
+
+    snackbarContent =
+      simpleComponent
+        { name: "SnackbarContent"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "ref" foreignType
+                  , checkedProp "action" jsx
+                  , checkedProp "message" jsx
+                  ]
+            , generate:
+                [ "classes"
+                , "role"
+                ]
+            }
+        , root: MUIComponent paper
+        }
+
     --step =
     --  simpleComponent
     --    { inherits: Just $ MUI.rList [ divProps ]
@@ -2091,85 +2096,148 @@ components =
     --        ]
     --      }
     --    }
-    --table =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_table" ]
-    --    , name: "Table"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        , "padding"
-    --        , "size"
-    --        , "stickyHeader"
-    --        ]
-    --      }
-    --    }
-    --tableBody =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_tbody" ]
-    --    , name: "TableBody"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        ]
-    --      }
-    --    }
-    --tableCell =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_td" ]
-    --    , name: "TableCell"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        , "padding"
-    --        , "scope"
-    --        , "size"
-    --        --, "scopeDirection"
-    --        , "variant"
-    --        ]
-    --      }
-    --    }
-    --tableFooter =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_tfoot" ]
-    --    , name: "TableFooter"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        ]
-    --      }
-    --    }
-    --tableHead =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_thead" ]
-    --    , name: "TableHead"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        ]
-    --      }
-    --    }
-    ---- | TODO: add TablePaginationActions
+    table =
+      simpleComponent
+        { name: "Table"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "ref" foreignType
+                  , children
+                  ]
+            , generate:
+                [ "classes"
+                , "padding"
+                , "size"
+                , "stickyHeader"
+                ]
+            }
+        , root: rbProps.div
+        }
+
+    tableBody =
+      simpleComponent
+        { name: "TableBody"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "ref" foreignType
+                  , children
+                  ]
+            , generate:
+                [ "classes"
+                ]
+            }
+        , root: rbProps.div
+        }
+
+    tableCell =
+      simpleComponent
+        { name: "TableCell"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "ref" foreignType
+                  , children
+                  ]
+            , generate:
+                [ "classes"
+                , "padding"
+                , "scope"
+                , "size"
+                , "sortDirection"
+                , "variant"
+                ]
+            }
+        , root: rbProps.div
+        }
+
+    tableContainer =
+      simpleComponent
+        { name: "TableContainer"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "ref" foreignType
+                  , children
+                  ]
+            , generate:
+                [ "classes"
+                ]
+            }
+        , root: rbProps.div
+        }
+
+    tableFooter =
+      simpleComponent
+        { name: "TableFooter"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "ref" foreignType
+                  , children
+                  ]
+            , generate:
+                [ "classes"
+                ]
+            }
+        , root: rbProps.div
+        }
+
+    tableHead =
+      simpleComponent
+        { name: "TableHead"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "ref" foreignType
+                  , children
+                  ]
+            , generate:
+                [ "classes"
+                ]
+            }
+        , root: rbProps.div
+        }
+
+    tableRow =
+      simpleComponent
+        { name: "TableRow"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "ref" foreignType
+                  , children
+                  ]
+            , generate:
+                [ "classes"
+                , "hover"
+                , "selected"
+                ]
+            }
+        , root: rbProps.div
+        }
+
+    tableSortLabel =
+      simpleComponent
+        { name: "TableSortLabel"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "ref" foreignType
+                  , checkedProp "IconComponent" foreignType
+                  , children
+                  ]
+            , generate:
+                [ "active"
+                , "classes"
+                , "direction"
+                , "hideSortIcon"
+                ]
+            }
+        , root: MUIComponent buttonBase
+        }
+
     --tablePagination :: Component
     --tablePagination =
     --  { extraDeclarations: []
@@ -2214,44 +2282,6 @@ components =
     --    }
     --  , tsc: { strictNullChecks: false }
     --  }
-    --tableRow =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_tr" ]
-    --    , name: "TableRow"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        , "hover"
-    --        , "selected"
-    --        ]
-    --      }
-    --    }
-    ---- | TODO: IconComponent
-    --tableSortLabel =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList
-    --        [ Type.constructor "MUI.Core.ButtonBase.ButtonBasePropsRow"
-    --        , Type.constructor "MUI.DOM.Generated.Props_button"
-    --        ]
-    --    , name: "TableSortLabel"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              , checkedProp "IconComponent" foreignType
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        , "active"
-    --        , "direction"
-    --        , "hideSortIcon"
-    --        ]
-    --      }
-    --    }
     --tabs =
     --  simpleComponent
     --    { inherits: Nothing
@@ -2531,8 +2561,8 @@ components =
     , select
     -- , slide
     -- , slider
-    -- , snackbar
-    -- , snackbarContent
+    , snackbar
+    , snackbarContent
     -- , step
     -- , stepButton
     -- , stepConnector
@@ -2544,14 +2574,14 @@ components =
     -- , swipeableDrawer
     -- , switch
     -- , tab
-    -- , table
-    -- , tableBody
-    -- , tableCell
-    -- , tableFooter
-    -- , tableHead
+    , table
+    , tableBody
+    , tableCell
+    , tableFooter
+    , tableHead
     -- , tablePagination
-    -- , tableRow
-    -- , tableSortLabel
+    , tableRow
+    , tableSortLabel
     -- , tabs
     -- , textareaAutosize
     , (textField "StandardTextField" 1)
