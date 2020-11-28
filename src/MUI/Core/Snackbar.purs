@@ -3,8 +3,6 @@ module MUI.Core.Snackbar where
 
 import Foreign (Foreign) as Foreign
 import MUI.Core (JSS, class Nub')
-import MUI.Core.ClickAwayListener (ClickAwayListenerOpaqueProps) as MUI.Core.ClickAwayListener
-import MUI.Core.SnackbarContent (SnackbarContentOpaqueProps) as MUI.Core.SnackbarContent
 import MUI.Core.Styles (Theme, withStyles) as MUI.Core.Styles
 import Prelude
 import Prim.Row (class Union) as Prim.Row
@@ -63,8 +61,8 @@ type SnackbarClassesJSS
   = SnackbarClassesGenericRow JSS
 
 type SnackbarOptPropsRow (r :: # Type)
-  = ( "ClickAwayListenerProps" :: MUI.Core.ClickAwayListener.ClickAwayListenerOpaqueProps
-    , "ContentProps" :: MUI.Core.SnackbarContent.SnackbarContentOpaqueProps
+  = ( "ClickAwayListenerProps" :: Foreign.Foreign
+    , "ContentProps" :: Foreign.Foreign
     , "TransitionComponent" :: Foreign.Foreign
     , "TransitionProps" :: Foreign.Foreign
     , action :: JSX

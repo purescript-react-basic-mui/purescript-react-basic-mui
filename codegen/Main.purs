@@ -1818,8 +1818,8 @@ components =
                   [ checkedProp "ref" foreignType
                   , children
                   , checkedProp "action" jsx
-                  , checkedProp "ClickAwayListenerProps" (Type.constructor "MUI.Core.ClickAwayListener.ClickAwayListenerOpaqueProps")
-                  , checkedProp "ContentProps" (Type.constructor "MUI.Core.SnackbarContent.SnackbarContentOpaqueProps")
+                  , checkedProp "ClickAwayListenerProps" foreignType
+                  , checkedProp "ContentProps" foreignType
                   -- `key` is in the docs but not in the typedef
                   , checkedProp "key" foreignType
                   , checkedProp "message" jsx
