@@ -4,13 +4,14 @@ import Prelude
 
 import Codegen.AST (Declaration(..), Ident(..), ModuleName(..), TypeName(..))
 import Codegen.AST (Module(..), RowF(..), TypeName(..), Union(..), Type) as AST
-import Codegen.AST.Sugar (SListProxy(..), declForeignData', declForeignValue, declType, forAllValueBinding)
-import Codegen.AST.Sugar (local) as Sugar
+import Codegen.AST.Sugar (SListProxy(..), declForeignData', declForeignValue, declType, forAllValueBinding, ident)
+import Codegen.AST.Sugar (ident, local) as Sugar
 import Codegen.AST.Sugar.Expr (app, ident, ident') as Expr
 import Codegen.AST.Sugar.Type (app, arr, constructor, recordLiteral, row, string, typeRow, var) as Type
 import Codegen.AST.Sugar.Type (constrained, forAll, recordLiteral)
+import Codegen.AST.Sugar.Type (name) as Sugar.Type
 import Codegen.AST.Types (Kind(..), TypeF(..), TypeVarBinding(..), ValueBindingFields(..), Fields)
-import Codegen.Component (Component, ComponentName, ModulePath, Props, PropsRow, componentFullPath, foldRoot, jsImportPath, jsx, propsCombinedName, propsOptionalName, propsRequiredName, psImportPath, reactComponentApply)
+import Codegen.Component (Component, ComponentName, ModulePath, Props, PropsRow, componentFullPath, effectApply, foldRoot, jsImportPath, jsx, propsCombinedName, propsOptionalName, propsRequiredName, psImportPath, reactComponentApply)
 import Codegen.Component (componentName, inputComponentName) as Component
 import Codegen.TS.Module (PossibleType(..), astAlgebra, buildAndInstantiateDeclarations, unionDeclarations) as TS.Module
 import Codegen.TS.Module (exprUnsafeCoerce, exprUnsafeCoerceApp)
@@ -44,7 +45,7 @@ import Record.Extra (type (:::), SNil)
 type TsImportPath = String
 
 tsImportPath :: ModulePath -> TsImportPath
-tsImportPath modulePath = "@material-ui/core/" <> (jsImportPath modulePath)
+tsImportPath modulePath = "@material-ui/" <> (jsImportPath modulePath)
 
 -- | Simple helper for polyomrphic row tail buildup.
 -- | A parameter ident + tail var type.
@@ -121,7 +122,7 @@ validateProps { base, generate } { props } = do
   let
     -- | Some properties could be "forced"
     checkedPropsNamesFromBase :: Array String
-    checkedPropsNamesFromBase = Array.fromFoldable $ Map.keys $ Map.filter (\{ force } → isNothing force) base
+    checkedPropsNamesFromBase = Array.fromFoldable $ Map.keys $ Map.filter (\{ force } -> isNothing force) base
 
     missingFromBase :: Array String
     missingFromBase = Array.filter (not <<< flip Set.member (Map.keys props)) checkedPropsNamesFromBase
@@ -275,6 +276,9 @@ componentConstructorsAST { component, jss, props } = constructors
       nubConstraint input nubbed rest = constrained "MUI.Core.Nub'" [ input, nubbed ] rest
 
       reactElemApp c = Expr.app (Expr.app (Expr.ident' "React.Basic.element") c)
+      functorMap = Expr.ident' "Prelude.map"
+      muiElem = Expr.ident' "MUI.React.Basic.element"
+      muiElemApp c = Expr.app (Expr.app muiElem c)
       componentName = Component.componentName component
 
       -- | `Coerce { | i } { | o } => t`
@@ -325,9 +329,42 @@ componentConstructorsAST { component, jss, props } = constructors
                 , expr: exprUnsafeCoerceApp _UnsafeComponentDecl.var
                 , whereBindings: []
                 }
+
+          _WrappedPropsName = camelCase ("props")
+          wrappedPropsBinding = forAllValueBinding
+              (SListProxy :: _ ("given" ::: "optionalGiven" ::: "optionalMissing" ::: "props" ::: "required" ::: SNil))
+              _WrappedPropsName
+              (SListProxy :: _ SNil)
+              \{ typeVars } ->
+                { signature: Just $
+                    nubConstraint rootProps.required typeVars.required $
+                    unionConstraint typeVars.required typeVars.optionalGiven typeVars.given $
+                    nubConstraint rootProps.combined typeVars.props $
+                    unionConstraint typeVars.given typeVars.optionalMissing typeVars.props $
+                    Type.arr
+                      (Type.recordLiteral typeVars.given)
+                      _Props.constructor
+                , expr: exprUnsafeCoerce
+                , whereBindings: []
+                }
+          -- | Component which is defined against wrapped props
+          -- | _Button'
+          -- |   :: ReactComponent ButtonProps
+          -- | _Button' = unsafeCoerce _UnsafeBadge
+          _ComponentForWrappedPropsBinding@(ValueBindingFields { value: { name: _ComponentForWrappedPropsIdent }})  = ValueBindingFields
+            { value:
+              { name: Sugar.ident $ "_" <> componentName <> "'"
+              , binders: []
+              , expr: exprUnsafeCoerceApp _UnsafeComponentDecl.var
+              , whereBindings: []
+              }
+            , signature: Just $ reactComponentApply _Props.constructor
+            }
+          _ComponentForWrappedPropsVar = Expr.ident <<< Sugar.local $ _ComponentForWrappedPropsIdent
           _ComponentVar = Expr.ident <<< Sugar.local $ _ComponentIdent
         in
           { _Component: DeclValue _ComponentBinding
+          , _ComponentForWrappedProps: DeclValue _ComponentForWrappedPropsBinding
           -- | For example:
           -- |
           -- | button::forall given optionalGiven optionalMissing props required. 
@@ -352,88 +389,95 @@ componentConstructorsAST { component, jss, props } = constructors
                 , expr: reactElemApp (Expr.ident' $ "_" <> componentName) vars.props
                 , whereBindings: []
                 }
-          , props: DeclValue $ forAllValueBinding
-              (SListProxy :: _ ("given" ::: "optionalGiven" ::: "optionalMissing" ::: "props" ::: "required" ::: SNil))
-              (camelCase (componentName <> "Props"))
-              (SListProxy :: _ SNil)
-              \{ typeVars } ->
-                { signature: Just $
-                    nubConstraint rootProps.required typeVars.required $
-                    unionConstraint typeVars.required typeVars.optionalGiven typeVars.given $
-                    nubConstraint rootProps.combined typeVars.props $
-                    unionConstraint typeVars.given typeVars.optionalMissing typeVars.props $
-                    Type.arr
-                      (Type.recordLiteral typeVars.given)
-                      _Props.constructor
-                , expr: exprUnsafeCoerce
-                , whereBindings: []
-                }
-        -- | buttonWithStyles::forall jss_ jss given optionalGiven optionalMissing props required. 
-        -- |   Nub' (ButtonReqPropsRow (MUI.Core.ButtonBase.ButtonBaseReqPropsRow ())) required =>
-        -- |   Prim.Row.Union required optionalGiven given =>
-        -- |   Nub' (ButtonPropsRow (MUI.Core.ButtonBase.ButtonBasePropsRow React.Basic.DOM.Props_button)) props =>
-        -- |   Prim.Row.Union given optionalMissing props =>
-        -- |   Prim.Row.Union jss jss_ ButtonClassesJSS =>
-        -- |   (MUI.Core.Styles.Theme  ->  {   | jss  })  ->  {   | given  }  ->  JSX
-        -- | buttonWithStyles style props = element (withStyles' style _Button) props
-        -- |   where
-        -- |     withStyles' ::
-        -- |        (MUI.Core.Styles.Theme  ->  {   | jss  })  ->
-        -- |        ReactComponent { | given  } ->
-        -- |        ReactComponent { | given  }
-        -- |     withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
-        , constructorWithStyles: jss <#> \jssType -> DeclValue $ forAllValueBinding
-            (SListProxy :: _ ("jss_" ::: "jss" ::: "given" ::: "optionalGiven" ::: "optionalMissing" ::: "props" ::: "required" ::: SNil))
+          , props: DeclValue wrappedPropsBinding
+          -- | For example:
+          -- |
+          -- | standardTextFieldWithStyles ::
+          -- |   forall jss jss_. Prim.Row.Union jss jss_ StandardTextFieldClassesJSS =>
+          -- |   (MUI.Core.Styles.Theme -> { | jss }) -> StandardTextFieldProps -> JSX
+          -- | standardTextFieldWithStyles style =
+          -- |   let
+          -- |     component = withStyles' style _StandardTextField'
+          -- |     withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent StandardTextFieldProps -> ReactComponent StandardTextFieldProps
+          -- |     withStyles' = unsafeCoerce MUI.Core.Styles.withStyles
+          -- |   in
+          -- |     \props -> (unsafeCoerce element) component props
+          , constructorWithStyles: jss <#> \jssType -> DeclValue $ forAllValueBinding
+            (SListProxy :: _ ("jss_" ::: "jss" ::: SNil))
             (camelCase componentName <> "WithStyles")
-            (SListProxy :: _ ("style" ::: "props" ::: SNil))
+            (SListProxy :: _ ("style" ::: SNil))
             \{ typeVars, vars } ->
               let
-                -- | withStyles' :: (Theme -> Record jss) -> ReactComponent { | given } -> ReactComponent { | given }
+                -- | withStyles' :: (Theme -> Record jss) -> ReactComponent ButtonProps -> ReactComponent ButtonProps
                 -- | withStyles' = unsafeCoerce withStyles
                 withStyles = forAllValueBinding
                   (SListProxy :: _ SNil)
                   ("withStyles'")
-                  (SListProxy :: _ SNil)
-                  \_ ->
+                  (SListProxy :: _ ("style" ::: SNil))
+                  \{ vars: vs } ->
                     { signature: Just $
                       Type.arr
                         (Type.arr _Theme (recordLiteral typeVars.jss)) $
                         (Type.arr
-                          (reactComponentApply (Type.recordLiteral typeVars.given))
-                          (reactComponentApply (Type.recordLiteral typeVars.given))
+                          (reactComponentApply _Props.constructor)
+                          (effectApply (reactComponentApply _Props.constructor))
                         )
-                    , expr: exprUnsafeCoerceApp (Expr.ident' "MUI.Core.Styles.withStyles")
+                    , expr: Expr.app
+                        (Expr.ident' "MUI.Core.Styles.withStyles")
+                        (exprUnsafeCoerceApp vs.style)
                     , whereBindings: []
                     }
 
                 ws@(ValueBindingFields { value: { name: wsIdent }}) = withStyles
+                wsVar = Expr.ident <<< Sugar.local $ wsIdent
+
+                -- | We want to build this component "up front"
+                -- | component = withStyles' style _Button'
+                styledComponent@(ValueBindingFields { value: { name: styledComponentIdent }}) = forAllValueBinding
+                  (SListProxy :: _ SNil)
+                  "styledComponent"
+                  (SListProxy :: _ SNil)
+                  \_ ->
+                    { expr: Expr.app (Expr.app wsVar vars.style) _ComponentForWrappedPropsVar
+                    , signature: Nothing
+                    , whereBindings: []
+                    }
+                styledComponentVar = Expr.ident <<< Sugar.local $ styledComponentIdent
+                render@(ValueBindingFields { value: { name: renderIdent }})  = forAllValueBinding
+                  (SListProxy :: _ SNil)
+                  "render"
+                  (SListProxy :: _ SNil)
+                  \{ vars } ->
+                    { expr:  Expr.app (Expr.app functorMap muiElem) styledComponentVar
+                    , signature: Nothing
+                    , whereBindings: []
+                    }
+                renderVar = Expr.ident <<< Sugar.local $ renderIdent
               in
                 { signature: Just $
-                    nubConstraint rootProps.required typeVars.required $
-                    unionConstraint typeVars.required typeVars.optionalGiven typeVars.given $
-                    nubConstraint rootProps.combined typeVars.props $
-                    unionConstraint typeVars.given typeVars.optionalMissing typeVars.props $
                     unionConstraint typeVars.jss typeVars.jss_ jssType $
                     Type.arr
                       ( Type.arr
                           (Type.constructor "MUI.Core.Styles.Theme")
                           (Type.recordLiteral typeVars.jss)
                       )
-                      ( Type.arr
-                        (Type.recordLiteral typeVars.given)
-                        jsx
+                      ( effectApply $ Type.arr
+                          _Props.constructor
+                          jsx
                       )
-                -- | This ident could be taken from the above declaration
-                , expr: reactElemApp
-                    (Expr.app (Expr.app (Expr.ident <<< Sugar.local $ wsIdent) vars.style) _ComponentVar)
-                    vars.props
-                , whereBindings: [ ws ]
+                , expr: renderVar
+                , whereBindings:
+                  [ ws
+                  , styledComponent
+                  , render
+                  ]
                 }
           }
 
     _UnsafeComponentDecl.declaration
       : decls._Component
       : decls.constructor
+      : decls._ComponentForWrappedProps
       : maybe identity List.Cons decls.constructorWithStyles
         ( _Props.declaration
         : decls.props

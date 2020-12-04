@@ -6,6 +6,7 @@ import Codegen (component, icon, write) as Codegen
 import Codegen.AST (ModuleName(..), TypeName(..))
 import Codegen.AST (Type) as AST
 import Codegen.AST.Sugar.Type (constructor) as Type
+import Codegen.AST.Sugar.Type (int, string)
 import Codegen.AST.Types (TypeF(..))
 import Codegen.Component (Component, Icon, ModulePath(..), Root(..), FieldDetails, arrayJSX, iconName, jsx, psImportPath, rbProps)
 import Codegen.Component (componentName) as Component
@@ -104,8 +105,8 @@ components =
     simpleComponent { name, propsRow: { base, generate }, root } =
       { extraDeclarations: []
       , modulePath:
-          { input: Name name
-          , output: Name name
+          { input: Path "core" (Name name)
+          , output: Path "Core" (Name name)
           }
       , propsRow:
           { base
@@ -116,7 +117,7 @@ components =
       }
 
     touchRippleType =
-      { path: (Path "ButtonBase" (Name "TouchRipple"))
+      { path: (Path "Core" (Path "ButtonBase" (Name "TouchRipple")))
       , name: "TouchRipple"
       }
 
@@ -125,7 +126,7 @@ components =
         { name: "AppBar"
         , propsRow:
             { base: Map.fromFoldable [ children ]
-            , generate: [ "classes", "color", "position" ]
+            , generate: [ "classes", "color", "elevation", "position" ]
             }
         , root: MUIComponent paper
         }
@@ -257,8 +258,8 @@ components =
       -- , buttonBaseTypeProps.declaration
       -- ]
       , modulePath:
-          { input: Name "ButtonBase"
-          , output: Name "ButtonBase"
+          { input: Path "core" (Name "ButtonBase")
+          , output: Path "Core" (Name "ButtonBase")
           }
       , propsRow:
           { base:
@@ -440,7 +441,7 @@ components =
                     , checkedProp "indeterminateIcon" jsx
                     , checkedProp "inputProps" foreignType
                     , checkedProp "inputRef" foreignType
-                    , checkedProp "value" foreignType
+                    , checkedProp "value" string
                     ]
                       <> (map eventHandlerProp [ "onChange" ])
                   )
@@ -873,7 +874,7 @@ components =
                   [ checkedProp "control" jsx
                   , checkedProp "label" jsx
                   , eventHandlerProp "onChange"
-                  , checkedProp "value" foreignType
+                  , checkedProp "value" string
                   ]
             , generate:
                 [ "checked"
@@ -939,8 +940,8 @@ components =
     grid =
       { extraDeclarations: []
       , modulePath:
-          { input: Name "Grid"
-          , output: Name "Grid"
+          { input: Path "core" $ Name "Grid"
+          , output: Path "Core" $ Name "Grid"
           }
       , propsRow:
           { base: Map.fromFoldable [ children ]
@@ -975,22 +976,26 @@ components =
       , root: rbProps.div
       }
 
-    --gridList = simpleComponent
-    --  { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_ul" ]
-    --  , name: "GridList"
-    --  , propsRow:
-    --    { base: Map.fromFoldable [ children ]
-    --    , generate: [ "cellHeight", "classes", "cols", "spacing" ]
-    --    }
-    --  }
-    --gridListTile = simpleComponent
-    --  { inherits: Just $ MUI.rList' [ "MUI.DOM.Generated.Props_li" ]
-    --  , name: "GridListTile"
-    --  , propsRow:
-    --    { base: Map.fromFoldable [ children ]
-    --    , generate: [ "classes", "cols", "rows" ]
-    --    }
-    --  }
+    gridList =
+      simpleComponent
+        { name: "GridList"
+        , propsRow:
+            { base: Map.fromFoldable [ children ]
+            , generate: [ "cellHeight", "classes", "cols", "spacing" ]
+            }
+        , root: rbProps.ul
+        }
+
+    gridListTile =
+      simpleComponent
+        { name: "GridListTile"
+        , propsRow:
+            { base: Map.fromFoldable [ children ]
+            , generate: [ "classes", "cols", "rows" ]
+            }
+        , root: rbProps.ul
+        }
+
     --gridListTileBar =
     --  simpleComponent
     --    { inherits: Nothing
@@ -1009,15 +1014,16 @@ components =
     --      }
     --    }
     ---- | TODO: update when Transition is figured out
-    --grow =
-    --  simpleComponent
-    --    { inherits: Nothing
-    --    , name: "Grow"
-    --    , propsRow:
-    --      { base: emptyBase
-    --      , generate: [ "in" , "timeout" ]
-    --      }
-    --    }
+    grow =
+      simpleComponent
+        { root: rbProps.div
+        , name: "Grow"
+        , propsRow:
+            { base: mempty
+            , generate: [ "in", "timeout" ]
+            }
+        }
+
     -- | It seems that on the current master
     -- | `HiddenCss` uses `div` as a root
     -- | but `HiddenJs` returns just children.
@@ -1031,8 +1037,8 @@ components =
     hidden =
       { extraDeclarations: []
       , modulePath:
-          { input: Name "Hidden"
-          , output: Name "Hidden"
+          { input: Path "core" $ Name "Hidden"
+          , output: Path "Core" $ Name "Hidden"
           }
       , propsRow:
           { base: mempty -- Map.fromFoldable [ checkedProp "only" foreignType ]
@@ -1578,6 +1584,80 @@ components =
     --        ]
     --      }
     --    }
+    -- grid =
+    --   { extraDeclarations: []
+    --   , modulePath:
+    --       { input: Name "Grid"
+    --       , output: Name "Grid"
+    --       }
+    --   , propsRow:
+    --       { base: Map.fromFoldable [ children ]
+    --       , generate:
+    --           [ "alignContent"
+    --           , "alignItems"
+    --           , "classes"
+    --           , "container"
+    --           , "direction"
+    --           , "item"
+    --           , "justify"
+    --           , "lg"
+    --           , "md"
+    --           , "sm"
+    --           , "spacing"
+    --           , "wrap"
+    --           , "xl"
+    --           , "xs"
+    --           , "zeroMinWidth"
+    --           ]
+    --       , ts:
+    --           { instantiation: Nothing
+    --           , unionName:
+    --               \property members -> case property of
+    --                 _
+    --                   | property `Array.elem` [ "xs", "sm", "md", "lg", "xl" ] -> Just $ TypeName "GridSize"
+    --                 "spacing" -> Just $ TypeName "GridSpacing"
+    --                 "justify" -> Just $ TypeName "GridJustification"
+    --                 otherwise -> Nothing
+    --           }
+    --       }
+    --   , root: rbProps.div
+    --   }
+    pagination =
+      { extraDeclarations: []
+      , modulePath:
+          { input: Path "lab" $ Name "Pagination"
+          , output: Path "Lab" $ Name "Pagination"
+          }
+      , propsRow:
+          { base:
+              Map.fromFoldable
+                $ [ checkedProp "count" int
+                  , eventHandlerProp "onChange"
+                  , forcedProp "boundryCount" int false
+                  , checkedProp "siblingCount" int
+                  ]
+          , generate:
+              [ "classes"
+              , "color"
+              , "defaultPage"
+              , "disabled"
+              -- | TODO: move to base
+              -- | function(type: string, page: number, selected: bool) => string
+              -- | , "getItemAraiaLabel"
+              , "hideNextButton"
+              , "hidePrevButton"
+              , "page"
+              , "shape"
+              , "showFirstButton"
+              , "showLastButton"
+              , "size"
+              , "variant"
+              ]
+          , ts: { instantiation: Nothing, unionName: \_ _ -> Nothing }
+          }
+      , root: rbProps.div
+      }
+
     paper =
       simpleComponent
         { name: "Paper"
@@ -1741,7 +1821,7 @@ components =
                   , eventHandlerProp "onOpen"
                   , checkedProp "renderValue" foreignType
                   , checkedProp "SelectDisplayProps" foreignType
-                  , checkedProp "value" foreignType
+                  , checkedProp "value" string
                   ]
             , generate:
                 [ "autoWidth"
@@ -2322,8 +2402,8 @@ components =
     textField textFieldType unionMember =
       { extraDeclarations: []
       , modulePath:
-          { input: Name "TextField"
-          , output: Path "TextField" (Name textFieldType)
+          { input: Path "core" $ Name "TextField"
+          , output: Path "Core" $ Path "TextField" (Name textFieldType)
           }
       , propsRow:
           { base:
@@ -2340,7 +2420,7 @@ components =
                 , eventHandlerProp "onBlur"
                 , eventHandlerProp "onFocus"
                 --, checkedProp "SelectProps" (Type.constructor "MUI.Core.Select.SelectOpaqueProps")
-                , checkedProp "value" foreignType
+                , checkedProp "value" string
                 ]
           , generate:
               [ "autoComplete"
@@ -2525,10 +2605,10 @@ components =
     , formHelperText
     , formLabel
     , grid
-    -- , gridList
-    -- , gridListTile
+    , gridList
+    , gridListTile
     -- , gridListTileBar
-    -- , grow
+    , grow
     , hidden
     -- , icon
     , iconButton
@@ -2551,6 +2631,7 @@ components =
     , modal
     -- , nativeSelect
     -- , noSsr
+    , pagination
     , paper
     -- , popover
     -- , popper

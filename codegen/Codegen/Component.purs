@@ -138,7 +138,7 @@ rbProps =
 -- | component codegen (checking overlap between props etc.).
 type Component =
   { extraDeclarations :: Array Declaration
-  -- | `ModulePath` value relative to `@material-ui/core/`
+  -- | `input` - a `ModulePath` value relative to `@material-ui/`
   , modulePath ::
     { input :: ModulePath
     , output :: ModulePath
@@ -158,7 +158,7 @@ inputComponentName = pathName <<< _.modulePath.input
 -- | I'm not sure why we have this distinction and operate on a subpath
 -- | in component specification... This should be probably cleaned up.
 componentFullPath :: ModulePath -> ModulePath
-componentFullPath modulePath = Path "MUI" (Path "Core" modulePath)
+componentFullPath modulePath = Path "MUI" modulePath
 
 type IconName = String
 
@@ -222,6 +222,9 @@ arrayJSX = Type.array $ jsx
 
 reactComponentApply :: Type -> Type
 reactComponentApply t = Type.app (Type.constructor "React.Basic.ReactComponent") [ t ]
+
+effectApply :: Type -> Type
+effectApply t = Type.app (Type.constructor "Effect.Effect") [ t ]
 
 nativeElementProps :: Type
 nativeElementProps = Type.constructor "MUI.Core.NativeElementProps"

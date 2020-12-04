@@ -148,6 +148,9 @@ recordApply v =
 row :: Map RowLabel Type -> Maybe Type -> Row
 row labels tail = Row { labels, tail }
 
+int :: Type
+int = roll TypeInt
+
 string :: Type
 string = roll TypeString
 
