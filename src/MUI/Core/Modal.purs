@@ -56,15 +56,18 @@ modal ::
   Nub' (ModalPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
-modal props = element _Modal props
+modal ps = element _Modal ps
+
+_Modal' :: ReactComponent ModalProps
+_Modal' = unsafeCoerce _UnsafeModal
 
 foreign import data ModalProps :: Type
 
-modalProps ::
+props ::
   forall given optionalGiven optionalMissing props required.
   Nub' (ModalReqPropsRow ()) required =>
   Prim.Row.Union required optionalGiven given =>
   Nub' (ModalPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> ModalProps
-modalProps = unsafeCoerce
+props = unsafeCoerce

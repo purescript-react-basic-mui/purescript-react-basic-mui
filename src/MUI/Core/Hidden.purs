@@ -87,15 +87,18 @@ hidden ::
   Nub' (HiddenPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
-hidden props = element _Hidden props
+hidden ps = element _Hidden ps
+
+_Hidden' :: ReactComponent HiddenProps
+_Hidden' = unsafeCoerce _UnsafeHidden
 
 foreign import data HiddenProps :: Type
 
-hiddenProps ::
+props ::
   forall given optionalGiven optionalMissing props required.
   Nub' (HiddenReqPropsRow ()) required =>
   Prim.Row.Union required optionalGiven given =>
   Nub' (HiddenPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> HiddenProps
-hiddenProps = unsafeCoerce
+props = unsafeCoerce

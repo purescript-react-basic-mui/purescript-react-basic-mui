@@ -114,7 +114,7 @@ pagination ::
   Nub' (PaginationPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
-pagination props = element _Pagination props
+pagination ps = element _Pagination ps
 
 _Pagination' :: ReactComponent PaginationProps
 _Pagination' = unsafeCoerce _UnsafePagination
@@ -125,10 +125,10 @@ paginationWithStyles ::
   (MUI.Core.Styles.Theme -> { | jss }) -> Effect.Effect (PaginationProps -> JSX)
 paginationWithStyles style = render
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent PaginationProps -> Effect.Effect (ReactComponent PaginationProps)
-  withStyles' style = MUI.Core.Styles.withStyles (unsafeCoerce style)
+  withStyles' :: ReactComponent PaginationProps -> Effect.Effect (ReactComponent PaginationProps)
+  withStyles' = MUI.Core.Styles.withStyles (unsafeCoerce style)
 
-  styledComponent = withStyles' style _Pagination'
+  styledComponent = withStyles' _Pagination'
 
   render = map MUI.React.Basic.element styledComponent
 

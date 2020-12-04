@@ -47,7 +47,7 @@ grow ::
   Nub' (GrowPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
-grow props = element _Grow props
+grow ps = element _Grow ps
 
 _Grow' :: ReactComponent GrowProps
 _Grow' = unsafeCoerce _UnsafeGrow

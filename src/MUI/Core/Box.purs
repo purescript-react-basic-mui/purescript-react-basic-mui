@@ -66,15 +66,18 @@ box ::
   Nub' (BoxPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
-box props = element _Box props
+box ps = element _Box ps
+
+_Box' :: ReactComponent BoxProps
+_Box' = unsafeCoerce _UnsafeBox
 
 foreign import data BoxProps :: Type
 
-boxProps ::
+props ::
   forall given optionalGiven optionalMissing props required.
   Nub' (BoxReqPropsRow ()) required =>
   Prim.Row.Union required optionalGiven given =>
   Nub' (BoxPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> BoxProps
-boxProps = unsafeCoerce
+props = unsafeCoerce

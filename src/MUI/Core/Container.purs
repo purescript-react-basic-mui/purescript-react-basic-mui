@@ -55,15 +55,18 @@ container ::
   Nub' (ContainerPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
-container props = element _Container props
+container ps = element _Container ps
+
+_Container' :: ReactComponent ContainerProps
+_Container' = unsafeCoerce _UnsafeContainer
 
 foreign import data ContainerProps :: Type
 
-containerProps ::
+props ::
   forall given optionalGiven optionalMissing props required.
   Nub' (ContainerReqPropsRow ()) required =>
   Prim.Row.Union required optionalGiven given =>
   Nub' (ContainerPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> ContainerProps
-containerProps = unsafeCoerce
+props = unsafeCoerce

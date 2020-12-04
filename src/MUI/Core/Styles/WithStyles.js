@@ -1,3 +1,3 @@
-exports.withStyles = require("@material-ui/core/styles/withStyles").default;
+exports.withStylesImpl = require("@material-ui/core/styles/withStyles").default;
 
 

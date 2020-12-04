@@ -56,7 +56,7 @@ gridListTile ::
   Nub' (GridListTilePropsRow React.Basic.DOM.Props_ul) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
-gridListTile props = element _GridListTile props
+gridListTile ps = element _GridListTile ps
 
 _GridListTile' :: ReactComponent GridListTileProps
 _GridListTile' = unsafeCoerce _UnsafeGridListTile
@@ -67,10 +67,10 @@ gridListTileWithStyles ::
   (MUI.Core.Styles.Theme -> { | jss }) -> Effect.Effect (GridListTileProps -> JSX)
 gridListTileWithStyles style = render
   where
-  withStyles' :: (MUI.Core.Styles.Theme -> { | jss }) -> ReactComponent GridListTileProps -> Effect.Effect (ReactComponent GridListTileProps)
-  withStyles' style = MUI.Core.Styles.withStyles (unsafeCoerce style)
+  withStyles' :: ReactComponent GridListTileProps -> Effect.Effect (ReactComponent GridListTileProps)
+  withStyles' = MUI.Core.Styles.withStyles (unsafeCoerce style)
 
-  styledComponent = withStyles' style _GridListTile'
+  styledComponent = withStyles' _GridListTile'
 
   render = map MUI.React.Basic.element styledComponent
 
