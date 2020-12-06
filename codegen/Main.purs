@@ -6,7 +6,7 @@ import Codegen (component, icon, write) as Codegen
 import Codegen.AST (ModuleName(..), TypeName(..))
 import Codegen.AST (Type) as AST
 import Codegen.AST.Sugar.Type (constructor) as Type
-import Codegen.AST.Sugar.Type (int, string)
+import Codegen.AST.Sugar.Type (int, number, string)
 import Codegen.AST.Types (TypeF(..))
 import Codegen.Component (Component, Icon, ModulePath(..), Root(..), FieldDetails, arrayJSX, iconName, jsx, psImportPath, rbProps)
 import Codegen.Component (componentName) as Component
@@ -56,6 +56,8 @@ components =
   let
     children = checkedProp "children" arrayJSX
 
+    forcedChildren = forcedProp "children" arrayJSX true
+
     eventHandlerProp name = checkedProp name (Type.constructor "React.Basic.Events.EventHandler")
 
     foreignType = Type.constructor "Foreign.Foreign"
@@ -67,21 +69,11 @@ components =
       , checkedProp "alignItems" (Type.constructor "MUI.System.Flexbox.AlignItems")
       , checkedProp "alignSelf" (Type.constructor "MUI.System.Flexbox.AlignSelf")
       , checkedProp "flexDirection" (Type.constructor "MUI.System.Flexbox.FlexDirection")
-      , checkedProp "flexGrow" (roll TypeNumber)
-      , checkedProp "flexBasis" (roll TypeString)
-      , checkedProp "flexShrink" (roll TypeNumber)
+      , checkedProp "flexGrow" number
+      , checkedProp "flexBasis" string
+      , checkedProp "flexShrink" number
       , checkedProp "flexWrap" (Type.constructor "MUI.System.Flexbox.FlexWrap")
       , checkedProp "justifyContent" (Type.constructor "MUI.System.Flexbox.JustifyContent")
-      ]
-
-    sizing =
-      [ checkedProp "boxSizing" (Type.constructor "MUI.System.BoxSizing")
-      , checkedProp "height" (roll TypeString)
-      , checkedProp "maxHeight" (roll TypeString)
-      , checkedProp "minHeight" (roll TypeString)
-      , checkedProp "maxWidth" (roll TypeString)
-      , checkedProp "minWidth" (roll TypeString)
-      , checkedProp "width" (roll TypeString)
       ]
 
     transitionTimeout = Type.constructor "MUI.React.TransitionGroup.Timeout"
@@ -205,32 +197,79 @@ components =
     --      }
     --    }
     box =
-      simpleComponent
-        { name: "Box"
-        , propsRow:
-            { base:
-                Map.fromFoldable
-                  $ flexbox
-                  <> sizing
-                  <> [ children
-                    , checkedProp "border" foreignType
-                    , checkedProp "borderBottom" foreignType
-                    , checkedProp "borderColor" foreignType
-                    , checkedProp "borderLeft" foreignType
-                    , checkedProp "borderRadius" foreignType
-                    , checkedProp "borderRight" foreignType
-                    , checkedProp "borderTop" foreignType
-                    , checkedProp "component" (roll TypeString)
-                    , checkedProp
-                        "display"
-                        (Type.constructor "MUI.System.Display.Display")
-                    ]
-            , generate:
-                [ "clone"
-                ]
-            }
-        , root: rbProps.div
-        }
+      let
+        sizing =
+          [ checkedProp "boxSizing" (Type.constructor "MUI.System.BoxSizing")
+          , checkedProp "height" string
+          , checkedProp "maxHeight" string
+          , checkedProp "minHeight" string
+          , checkedProp "maxWidth" string
+          , checkedProp "minWidth" string
+          , checkedProp "width" string
+          ]
+
+        -- | This is based on `const spacing: SimpleStyleFunction<...>` from
+        -- | node_modules/@material-ui/system/index.d.ts
+        -- |
+        -- | It seems that this typescript type is only used by Box
+        spacing =
+          [ checkedProp "m" int
+          , checkedProp "mt" int
+          , checkedProp "mb" int
+          , checkedProp "ml" int
+          , checkedProp "mr" int
+          , checkedProp "mx" int
+          , checkedProp "my" int
+          , checkedProp "p" int
+          , checkedProp "pt" int
+          , checkedProp "pb" int
+          , checkedProp "pl" int
+          , checkedProp "pr" int
+          , checkedProp "px" int
+          , checkedProp "py" int
+          , checkedProp "margin" int
+          , checkedProp "marginTop" int
+          , checkedProp "marginRight" int
+          , checkedProp "marginBottom" int
+          , checkedProp "marginLeft" int
+          , checkedProp "marginX" int
+          , checkedProp "marginY" int
+          , checkedProp "padding" int
+          , checkedProp "paddingTop" int
+          , checkedProp "paddingRight" int
+          , checkedProp "paddingBottom" int
+          , checkedProp "paddingLeft" int
+          , checkedProp "paddingX" int
+          , checkedProp "paddingY" int
+          ]
+      in
+        simpleComponent
+          { name: "Box"
+          , propsRow:
+              { base:
+                  Map.fromFoldable
+                    $ flexbox
+                    <> sizing
+                    <> spacing
+                    <> [ children
+                      , checkedProp "border" foreignType
+                      , checkedProp "borderBottom" foreignType
+                      , checkedProp "borderColor" foreignType
+                      , checkedProp "borderLeft" foreignType
+                      , checkedProp "borderRadius" foreignType
+                      , checkedProp "borderRight" foreignType
+                      , checkedProp "borderTop" foreignType
+                      , checkedProp "component" (roll TypeString)
+                      , checkedProp
+                          "display"
+                          (Type.constructor "MUI.System.Display.Display")
+                      ]
+              , generate:
+                  [ "clone"
+                  ]
+              }
+          , root: rbProps.div
+          }
 
     breadcrumbs =
       simpleComponent
@@ -546,7 +585,8 @@ components =
         , propsRow:
             { base: mempty
             , generate:
-                [ "disableGutters"
+                [ "classes"
+                , "disableGutters"
                 , "fixed"
                 , "maxWidth"
                 ]
@@ -1041,7 +1081,10 @@ components =
           , output: Path "Core" $ Name "Hidden"
           }
       , propsRow:
-          { base: mempty -- Map.fromFoldable [ checkedProp "only" foreignType ]
+          { base:
+              Map.fromFoldable
+                -- | It seems that there is a bug in Hidden typing
+                [ forcedChildren ]
           , generate:
               [ "implementation"
               , "initialWidth"
