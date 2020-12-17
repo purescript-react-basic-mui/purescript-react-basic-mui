@@ -1,6 +1,7 @@
 module Codegen.TS.MUI where
 
 import Prelude
+
 import Codegen.AST (Declaration(..), Ident(..), ModuleName(..), TypeName(..))
 import Codegen.AST (Module(..), RowF(..), TypeName(..), Union(..), Type) as AST
 import Codegen.AST.Sugar (SListProxy(..), declForeignData', declForeignValue, declType, forAllValueBinding)
@@ -326,7 +327,7 @@ componentConstructorsAST { component, jss, props } = constructors
           -- |   => Union given optionalMissing props
           -- |   => ReactComponent { | given }
           -- | _Button = unsafeCoerce _UnsafeBadge
-          _ComponentBinding@(ValueBindingFields { value: { name: _ComponentIdent } }) =
+          _ComponentBinding@(ValueBindingFields { value: { name: _ComponentIdent }}) =
             forAllValueBinding
               (SListProxy :: _ ("given" ::: "optionalGiven" ::: "optionalMissing" ::: "props" ::: "required" ::: SNil))
               ("_" <> componentName)
@@ -410,6 +411,24 @@ componentConstructorsAST { component, jss, props } = constructors
                     , whereBindings: []
                     }
           , props: DeclValue wrappedPropsBinding
+
+          -- | Constraint free constructor for example
+          -- |
+          -- | button' ∷ ButtonProps → JSX
+          -- | button' ps = MUI.React.Basic.element _Button' ps
+          , constructorFromProps:
+              DeclValue
+                $ forAllValueBinding
+                    (SListProxy ∷ _ SNil)
+                    (camelCase componentName <> "'")
+                    (SListProxy :: _ SNil) \{ typeVars, vars } ->
+                      { signature:
+                          Just
+                            $ Type.arr _Props.constructor jsx
+                      -- | This ident could be taken from the above declaration
+                      , expr: Expr.app muiElem _ComponentForWrappedPropsVar
+                      , whereBindings: []
+                      }
           -- | For example:
           -- |
           -- | standardTextFieldWithStyles ::
@@ -505,6 +524,7 @@ componentConstructorsAST { component, jss, props } = constructors
     _UnsafeComponentDecl.declaration
       : decls._Component
       : decls.constructor
+      : decls.constructorFromProps
       : decls._ComponentForWrappedProps
       : maybe identity List.Cons decls.constructorWithStyles
           ( _Props.declaration

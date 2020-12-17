@@ -5,10 +5,10 @@ import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconP
 import Codegen (component, icon, write) as Codegen
 import Codegen.AST (ModuleName(..), TypeName(..))
 import Codegen.AST (Type) as AST
+import Codegen.AST.Sugar.Type (boolean, int, number, string)
 import Codegen.AST.Sugar.Type (constructor) as Type
-import Codegen.AST.Sugar.Type (int, number, string)
 import Codegen.AST.Types (TypeF(..))
-import Codegen.Component (Component, Icon, ModulePath(..), Root(..), FieldDetails, arrayJSX, iconName, jsx, psImportPath, rbProps)
+import Codegen.Component (Component, FieldDetails, Icon, ModulePath(..), Root(..), arrayJSX, iconName, jsx, psImportPath, rbProps)
 import Codegen.Component (componentName) as Component
 import Codegen.TS.MUI (componentProps) as TS.MUI
 import Codegen.TS.Types (InstantiationStrategy(..))
@@ -54,6 +54,11 @@ forcedProp l t r = Tuple l { force: Just { required: r }, "type": t }
 components :: Array Component
 components =
   let
+    aria =
+      [ "aria-haspopup"
+      , "aria-controls"
+      ]
+
     children = checkedProp "children" arrayJSX
 
     forcedChildren = forcedProp "children" arrayJSX true
@@ -102,7 +107,7 @@ components =
           }
       , propsRow:
           { base
-          , generate
+          , generate: generate <> aria
           , ts: { instantiation: Nothing, unionName: \_ _ -> Nothing }
           }
       , root
@@ -396,18 +401,16 @@ components =
     --        ]
     --      }
     --    }
-    --card =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList
-    --        [ Type.constructor "MUI.Core.Paper.PaperPropsRow"
-    --        , divProps
-    --        ]
-    --    , name: "Card"
-    --    , propsRow:
-    --      { base:  Map.fromFoldable [ children ]
-    --      , generate: [ "classes", "raised" ]
-    --      }
-    --    }
+    card =
+      simpleComponent
+        { name: "Card"
+        , propsRow:
+            { base: Map.fromFoldable [ children ]
+            , generate: [ "classes", "raised" ]
+            }
+        , root: MUIComponent paper
+        }
+
     --cardActionArea =
     --  simpleComponent
     --    { inherits: Just $ MUI.rList'
@@ -420,15 +423,16 @@ components =
     --      , generate: [ "classes" ]
     --      }
     --    }
-    --cardActions =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList [ divProps ]
-    --    , name: "CardActions"
-    --    , propsRow:
-    --      { base:  Map.fromFoldable [ children ]
-    --      , generate: [ "classes", "disableSpacing" ]
-    --      }
-    --    }
+    cardActions =
+      simpleComponent
+        { name: "CardActions"
+        , propsRow:
+            { base: Map.fromFoldable [ children ]
+            , generate: [ "classes", "disableSpacing" ]
+            }
+        , root: rbProps.div
+        }
+
     --cardContent =
     --  simpleComponent
     --    { inherits: Just $ MUI.rList [ divProps ]
@@ -438,23 +442,25 @@ components =
     --      , generate: [ "classes" ]
     --      }
     --    }
-    --cardHeader =
-    --  simpleComponent
-    --    { inherits: Just $ MUI.rList [ divProps ]
-    --    , name: "CardHeader"
-    --    , propsRow:
-    --      { base:  Map.fromFoldable
-    --          [ checkedProp "action" jsx
-    --          , checkedProp "avatar" jsx
-    --          , children
-    --          , checkedProp "subheader" jsx
-    --          , checkedProp "subheaderTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyOpaqueProps")
-    --          , checkedProp "title" jsx
-    --          , checkedProp "titleTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyOpaqueProps")
-    --          ]
-    --      , generate: [ "classes", "disableTypography" ]
-    --      }
-    --    }
+    cardHeader =
+      simpleComponent
+        { name: "CardHeader"
+        , propsRow:
+            { base:
+                Map.fromFoldable
+                  [ checkedProp "action" jsx
+                  , checkedProp "avatar" jsx
+                  , children
+                  , checkedProp "subheader" jsx
+                  , checkedProp "subheaderTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyProps")
+                  , checkedProp "title" jsx
+                  , checkedProp "titleTypographyProps" (Type.constructor "MUI.Core.Typography.TypographyProps")
+                  ]
+            , generate: [ "classes", "disableTypography" ]
+            }
+        , root: rbProps.div
+        }
+
     --cardMedia =
     --  simpleComponent
     --    { inherits: Just $ MUI.rList [ divProps ]
@@ -1141,14 +1147,15 @@ components =
         , propsRow:
             { base: Map.fromFoldable [ children ]
             , generate:
-                [ "classes"
-                , "color"
-                , "disabled"
-                , "disableFocusRipple"
-                , "disableRipple"
-                , "edge"
-                , "size"
-                ]
+                aria
+                  <> [ "classes"
+                    , "color"
+                    , "disabled"
+                    , "disableFocusRipple"
+                    , "disableRipple"
+                    , "edge"
+                    , "size"
+                    ]
             }
         , root: MUIComponent buttonBase
         }
@@ -1345,20 +1352,16 @@ components =
         , root: rbProps.li
         }
 
-    --listItemAvatar =
-    --  simpleComponent
-    --    { inherits: Nothing
-    --    , name: "ListItemAvatar"
-    --    , propsRow:
-    --      { base:
-    --          Map.fromFoldable
-    --              [ children
-    --              ]
-    --      , generate:
-    --        [ "classes"
-    --        ]
-    --      }
-    --    }
+    listItemAvatar =
+      simpleComponent
+        { name: "ListItemAvatar"
+        , propsRow:
+            { base: Map.fromFoldable [ children ]
+            , generate: [ "classes" ]
+            }
+        , root: rbProps.div
+        }
+
     listItemIcon =
       simpleComponent
         { name: "ListItemIcon"
@@ -2616,11 +2619,11 @@ components =
     , buttonBase
     , buttonGroup
     , button
-    -- , card
+    , card
     -- , cardActionArea
-    -- , cardActions
+    , cardActions
     -- , cardContent
-    -- , cardHeader
+    , cardHeader
     -- , cardMedia
     , circularProgress
     -- , clickAwayListener
@@ -2664,7 +2667,7 @@ components =
     , link
     , list
     , listItem
-    -- , listItemAvatar
+    , listItemAvatar
     , listItemIcon
     -- , listItemSecondaryAction
     , listItemText
