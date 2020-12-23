@@ -12,6 +12,19 @@ import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
 foreign import data Margin :: Type
 
 margin ::
@@ -34,6 +47,9 @@ instance eqVariant :: Eq Variant where
 instance eqMargin :: Eq Margin where
   eq = unsafeRefEq
 
+instance eqAriaHaspopup :: Eq AriaHaspopup where
+  eq = unsafeRefEq
+
 type FormHelperTextClassesGenericRow a
   = ( contained :: a
     , disabled :: a
@@ -52,7 +68,9 @@ type FormHelperTextClassesJSS
   = FormHelperTextClassesGenericRow JSS
 
 type FormHelperTextOptPropsRow (r :: # Type)
-  = ( children :: Array JSX
+  = ( "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
+    , children :: Array JSX
     , classes :: { | FormHelperTextClassesKey }
     , disabled :: Boolean
     , error :: Boolean
@@ -89,6 +107,9 @@ formHelperText ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 formHelperText ps = element _FormHelperText ps
+
+formHelperText' :: FormHelperTextProps -> JSX
+formHelperText' = MUI.React.Basic.element _FormHelperText'
 
 _FormHelperText' :: ReactComponent FormHelperTextProps
 _FormHelperText' = unsafeCoerce _UnsafeFormHelperText

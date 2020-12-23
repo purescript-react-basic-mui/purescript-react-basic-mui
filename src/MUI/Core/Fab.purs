@@ -14,6 +14,19 @@ import React.Basic.DOM (Props_button) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
 foreign import data Color :: Type
 
 color ::
@@ -50,6 +63,9 @@ instance eqSize :: Eq Size where
 instance eqColor :: Eq Color where
   eq = unsafeRefEq
 
+instance eqAriaHaspopup :: Eq AriaHaspopup where
+  eq = unsafeRefEq
+
 type FabClassesGenericRow a
   = ( colorInherit :: a
     , disabled :: a
@@ -70,7 +86,9 @@ type FabClassesJSS
   = FabClassesGenericRow JSS
 
 type FabOptPropsRow (r :: # Type)
-  = ( children :: Array JSX
+  = ( "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
+    , children :: Array JSX
     , classes :: { | FabClassesKey }
     , color :: Color
     , component :: Foreign.Foreign
@@ -109,6 +127,9 @@ fab ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 fab ps = element _Fab ps
+
+fab' :: FabProps -> JSX
+fab' = MUI.React.Basic.element _Fab'
 
 _Fab' :: ReactComponent FabProps
 _Fab' = unsafeCoerce _UnsafeFab

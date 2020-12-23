@@ -131,6 +131,9 @@ outlinedTextField ::
   { | given } -> JSX
 outlinedTextField ps = element _OutlinedTextField ps
 
+outlinedTextField' :: OutlinedTextFieldProps -> JSX
+outlinedTextField' = MUI.React.Basic.element _OutlinedTextField'
+
 _OutlinedTextField' :: ReactComponent OutlinedTextFieldProps
 _OutlinedTextField' = unsafeCoerce _UnsafeOutlinedTextField
 

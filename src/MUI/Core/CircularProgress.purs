@@ -13,6 +13,19 @@ import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
 foreign import data Color :: Type
 
 color ::
@@ -45,6 +58,9 @@ instance eqVariant :: Eq Variant where
 instance eqColor :: Eq Color where
   eq = unsafeRefEq
 
+instance eqAriaHaspopup :: Eq AriaHaspopup where
+  eq = unsafeRefEq
+
 type CircularProgressClassesGenericRow a
   = ( circle :: a
     , circleDisableShrink :: a
@@ -65,7 +81,9 @@ type CircularProgressClassesJSS
   = CircularProgressClassesGenericRow JSS
 
 type CircularProgressOptPropsRow (r :: # Type)
-  = ( classes :: { | CircularProgressClassesKey }
+  = ( "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
+    , classes :: { | CircularProgressClassesKey }
     , color :: Color
     , disableShrink :: Boolean
     , ref :: Foreign.Foreign
@@ -101,6 +119,9 @@ circularProgress ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 circularProgress ps = element _CircularProgress ps
+
+circularProgress' :: CircularProgressProps -> JSX
+circularProgress' = MUI.React.Basic.element _CircularProgress'
 
 _CircularProgress' :: ReactComponent CircularProgressProps
 _CircularProgress' = unsafeCoerce _UnsafeCircularProgress

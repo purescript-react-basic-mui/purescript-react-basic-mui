@@ -130,6 +130,9 @@ standardTextField ::
   { | given } -> JSX
 standardTextField ps = element _StandardTextField ps
 
+standardTextField' :: StandardTextFieldProps -> JSX
+standardTextField' = MUI.React.Basic.element _StandardTextField'
+
 _StandardTextField' :: ReactComponent StandardTextFieldProps
 _StandardTextField' = unsafeCoerce _UnsafeStandardTextField
 

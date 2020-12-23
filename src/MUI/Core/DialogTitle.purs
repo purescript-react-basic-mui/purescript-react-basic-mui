@@ -11,6 +11,23 @@ import Prim.Row (class Union) as Prim.Row
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
+import Unsafe.Reference (unsafeRefEq)
+
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
+instance eqAriaHaspopup :: Eq AriaHaspopup where
+  eq = unsafeRefEq
 
 type DialogTitleClassesGenericRow a
   = ( root :: a
@@ -23,7 +40,9 @@ type DialogTitleClassesJSS
   = DialogTitleClassesGenericRow JSS
 
 type DialogTitleOptPropsRow (r :: # Type)
-  = ( children :: Array JSX
+  = ( "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
+    , children :: Array JSX
     , classes :: { | DialogTitleClassesKey }
     , disableTypography :: Boolean
     , ref :: Foreign.Foreign
@@ -55,6 +74,9 @@ dialogTitle ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 dialogTitle ps = element _DialogTitle ps
+
+dialogTitle' :: DialogTitleProps -> JSX
+dialogTitle' = MUI.React.Basic.element _DialogTitle'
 
 _DialogTitle' :: ReactComponent DialogTitleProps
 _DialogTitle' = unsafeCoerce _UnsafeDialogTitle

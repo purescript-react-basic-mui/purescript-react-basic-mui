@@ -14,6 +14,19 @@ import React.Basic.Events (EventHandler) as React.Basic.Events
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
 foreign import data TransitionDuration :: Type
 
 transitionDuration ::
@@ -35,6 +48,9 @@ variant = { menu: unsafeCoerce "menu", selectedMenu: unsafeCoerce "selectedMenu"
 instance eqVariant :: Eq Variant where
   eq = unsafeRefEq
 
+instance eqAriaHaspopup :: Eq AriaHaspopup where
+  eq = unsafeRefEq
+
 type MenuClassesGenericRow a
   = ( list :: a
     , paper :: a
@@ -50,6 +66,8 @@ type MenuOptPropsRow (r :: # Type)
   = ( "MenuListProps" :: Foreign.Foreign
     , "PopoverClasses" :: Foreign.Foreign
     , anchorEl :: Foreign.Foreign
+    , "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
     , autoFocus :: Boolean
     , children :: Array JSX
     , classes :: { | MenuClassesKey }
@@ -94,6 +112,9 @@ menu ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 menu ps = element _Menu ps
+
+menu' :: MenuProps -> JSX
+menu' = MUI.React.Basic.element _Menu'
 
 _Menu' :: ReactComponent MenuProps
 _Menu' = unsafeCoerce _UnsafeMenu

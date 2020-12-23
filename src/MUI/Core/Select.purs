@@ -16,6 +16,19 @@ import React.Basic.Events (EventHandler) as React.Basic.Events
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
 foreign import data Variant :: Type
 
 variant ::
@@ -26,6 +39,9 @@ variant ::
 variant = { filled: unsafeCoerce "filled", outlined: unsafeCoerce "outlined", standard: unsafeCoerce "standard" }
 
 instance eqVariant :: Eq Variant where
+  eq = unsafeRefEq
+
+instance eqAriaHaspopup :: Eq AriaHaspopup where
   eq = unsafeRefEq
 
 type SelectClassesGenericRow a
@@ -51,6 +67,8 @@ type SelectOptPropsRow (r :: # Type)
   = ( "IconComponent" :: JSX
     , "MenuProps" :: Foreign.Foreign
     , "SelectDisplayProps" :: Foreign.Foreign
+    , "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
     , autoWidth :: Boolean
     , children :: Array JSX
     , classes :: { | SelectClassesKey }
@@ -100,6 +118,9 @@ select ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 select ps = element _Select ps
+
+select' :: SelectProps -> JSX
+select' = MUI.React.Basic.element _Select'
 
 _Select' :: ReactComponent SelectProps
 _Select' = unsafeCoerce _UnsafeSelect

@@ -79,6 +79,9 @@ buttonBase ::
   { | given } -> JSX
 buttonBase ps = element _ButtonBase ps
 
+buttonBase' :: ButtonBaseProps -> JSX
+buttonBase' = MUI.React.Basic.element _ButtonBase'
+
 _ButtonBase' :: ReactComponent ButtonBaseProps
 _ButtonBase' = unsafeCoerce _UnsafeButtonBase
 

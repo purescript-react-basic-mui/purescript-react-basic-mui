@@ -12,6 +12,19 @@ import React.Basic.DOM (Props_hr) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
 foreign import data Orientation :: Type
 
 orientation ::
@@ -35,6 +48,9 @@ instance eqVariant :: Eq Variant where
 instance eqOrientation :: Eq Orientation where
   eq = unsafeRefEq
 
+instance eqAriaHaspopup :: Eq AriaHaspopup where
+  eq = unsafeRefEq
+
 type DividerClassesGenericRow a
   = ( absolute :: a
     , inset :: a
@@ -52,6 +68,8 @@ type DividerClassesJSS
 
 type DividerOptPropsRow (r :: # Type)
   = ( absolute :: Boolean
+    , "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
     , classes :: { | DividerClassesKey }
     , light :: Boolean
     , orientation :: Orientation
@@ -84,6 +102,9 @@ divider ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 divider ps = element _Divider ps
+
+divider' :: DividerProps -> JSX
+divider' = MUI.React.Basic.element _Divider'
 
 _Divider' :: ReactComponent DividerProps
 _Divider' = unsafeCoerce _UnsafeDivider

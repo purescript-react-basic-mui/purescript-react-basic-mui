@@ -14,6 +14,19 @@ import React.Basic.Events (EventHandler) as React.Basic.Events
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
 foreign import data Horizontal :: Type
 
 horizontal ::
@@ -46,6 +59,9 @@ instance eqVertical :: Eq Vertical where
 instance eqHorizontal :: Eq Horizontal where
   eq = unsafeRefEq
 
+instance eqAriaHaspopup :: Eq AriaHaspopup where
+  eq = unsafeRefEq
+
 type SnackbarClassesGenericRow a
   = ( anchorOriginBottomCenter :: a
     , anchorOriginBottomLeft :: a
@@ -69,6 +85,8 @@ type SnackbarOptPropsRow (r :: # Type)
     , "TransitionProps" :: Foreign.Foreign
     , action :: JSX
     , anchorOrigin :: { horizontal :: Horizontal, vertical :: Vertical }
+    , "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
     , autoHideDuration :: Number
     , children :: Array JSX
     , classes :: { | SnackbarClassesKey }
@@ -114,6 +132,9 @@ snackbar ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 snackbar ps = element _Snackbar ps
+
+snackbar' :: SnackbarProps -> JSX
+snackbar' = MUI.React.Basic.element _Snackbar'
 
 _Snackbar' :: ReactComponent SnackbarProps
 _Snackbar' = unsafeCoerce _UnsafeSnackbar

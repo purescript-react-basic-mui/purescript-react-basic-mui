@@ -12,6 +12,23 @@ import Prim.Row (class Union) as Prim.Row
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_p) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
+import Unsafe.Reference (unsafeRefEq)
+
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
+instance eqAriaHaspopup :: Eq AriaHaspopup where
+  eq = unsafeRefEq
 
 type DialogContentTextClassesGenericRow a
   = ( root :: a
@@ -24,7 +41,9 @@ type DialogContentTextClassesJSS
   = DialogContentTextClassesGenericRow JSS
 
 type DialogContentTextOptPropsRow (r :: # Type)
-  = ( children :: Array JSX
+  = ( "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
+    , children :: Array JSX
     , classes :: { | DialogContentTextClassesKey }
     , ref :: Foreign.Foreign
     | r
@@ -55,6 +74,9 @@ dialogContentText ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 dialogContentText ps = element _DialogContentText ps
+
+dialogContentText' :: DialogContentTextProps -> JSX
+dialogContentText' = MUI.React.Basic.element _DialogContentText'
 
 _DialogContentText' :: ReactComponent DialogContentTextProps
 _DialogContentText' = unsafeCoerce _UnsafeDialogContentText

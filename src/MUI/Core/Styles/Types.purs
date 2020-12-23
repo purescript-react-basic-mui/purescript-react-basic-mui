@@ -15,7 +15,6 @@ foreign import data OverridesPartial :: Type
 
 foreign import data ComponentsPropsPartial :: Type
 
-
 -- | TODO:
 -- | we should handle this (@material-ui/core/styles/createSpacing.d.ts)
 -- | type value as an output value from `spacing`:
@@ -31,7 +30,6 @@ foreign import data ComponentsPropsPartial :: Type
 -- |     left: SpacingArgument
 -- |   ): string;
 -- | }
-
 type Theme
   = { shape :: Shape
     , breakpoints :: Breakpoints

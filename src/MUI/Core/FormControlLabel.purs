@@ -13,6 +13,19 @@ import React.Basic.Events (EventHandler) as React.Basic.Events
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
 foreign import data LabelPlacement :: Type
 
 labelPlacement ::
@@ -24,6 +37,9 @@ labelPlacement ::
 labelPlacement = { bottom: unsafeCoerce "bottom", end: unsafeCoerce "end", start: unsafeCoerce "start", top: unsafeCoerce "top" }
 
 instance eqLabelPlacement :: Eq LabelPlacement where
+  eq = unsafeRefEq
+
+instance eqAriaHaspopup :: Eq AriaHaspopup where
   eq = unsafeRefEq
 
 type FormControlLabelClassesGenericRow a
@@ -42,7 +58,9 @@ type FormControlLabelClassesJSS
   = FormControlLabelClassesGenericRow JSS
 
 type FormControlLabelOptPropsRow (r :: # Type)
-  = ( checked :: Boolean
+  = ( "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
+    , checked :: Boolean
     , classes :: { | FormControlLabelClassesKey }
     , disabled :: Boolean
     , labelPlacement :: LabelPlacement
@@ -80,6 +98,9 @@ formControlLabel ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 formControlLabel ps = element _FormControlLabel ps
+
+formControlLabel' :: FormControlLabelProps -> JSX
+formControlLabel' = MUI.React.Basic.element _FormControlLabel'
 
 _FormControlLabel' :: ReactComponent FormControlLabelProps
 _FormControlLabel' = unsafeCoerce _UnsafeFormControlLabel

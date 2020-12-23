@@ -227,6 +227,9 @@ grid ::
   { | given } -> JSX
 grid ps = element _Grid ps
 
+grid' :: GridProps -> JSX
+grid' = MUI.React.Basic.element _Grid'
+
 _Grid' :: ReactComponent GridProps
 _Grid' = unsafeCoerce _UnsafeGrid
 

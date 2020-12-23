@@ -13,6 +13,19 @@ import React.Basic.DOM (Props_button) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
 foreign import data Color :: Type
 
 color ::
@@ -49,6 +62,9 @@ instance eqEdge :: Eq Edge where
 instance eqColor :: Eq Color where
   eq = unsafeRefEq
 
+instance eqAriaHaspopup :: Eq AriaHaspopup where
+  eq = unsafeRefEq
+
 type IconButtonClassesGenericRow a
   = ( colorInherit :: a
     , colorPrimary :: a
@@ -68,7 +84,9 @@ type IconButtonClassesJSS
   = IconButtonClassesGenericRow JSS
 
 type IconButtonOptPropsRow (r :: # Type)
-  = ( children :: Array JSX
+  = ( "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
+    , children :: Array JSX
     , classes :: { | IconButtonClassesKey }
     , color :: Color
     , disableFocusRipple :: Boolean
@@ -104,6 +122,9 @@ iconButton ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 iconButton ps = element _IconButton ps
+
+iconButton' :: IconButtonProps -> JSX
+iconButton' = MUI.React.Basic.element _IconButton'
 
 _IconButton' :: ReactComponent IconButtonProps
 _IconButton' = unsafeCoerce _UnsafeIconButton

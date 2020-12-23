@@ -12,6 +12,19 @@ import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
 foreign import data Color :: Type
 
 color ::
@@ -60,6 +73,9 @@ instance eqOrientation :: Eq Orientation where
 instance eqColor :: Eq Color where
   eq = unsafeRefEq
 
+instance eqAriaHaspopup :: Eq AriaHaspopup where
+  eq = unsafeRefEq
+
 type ButtonGroupClassesGenericRow a
   = ( contained :: a
     , disableElevation :: a
@@ -94,7 +110,9 @@ type ButtonGroupClassesJSS
   = ButtonGroupClassesGenericRow JSS
 
 type ButtonGroupOptPropsRow (r :: # Type)
-  = ( children :: Array JSX
+  = ( "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
+    , children :: Array JSX
     , classes :: { | ButtonGroupClassesKey }
     , color :: Color
     , disableFocusRipple :: Boolean
@@ -132,6 +150,9 @@ buttonGroup ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 buttonGroup ps = element _ButtonGroup ps
+
+buttonGroup' :: ButtonGroupProps -> JSX
+buttonGroup' = MUI.React.Basic.element _ButtonGroup'
 
 _ButtonGroup' :: ReactComponent ButtonGroupProps
 _ButtonGroup' = unsafeCoerce _UnsafeButtonGroup

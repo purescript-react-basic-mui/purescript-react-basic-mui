@@ -12,6 +12,19 @@ import React.Basic.DOM.SVG (Props_svg) as React.Basic.DOM.SVG
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
 foreign import data Color :: Type
 
 color ::
@@ -40,6 +53,9 @@ instance eqFontSize :: Eq FontSize where
 instance eqColor :: Eq Color where
   eq = unsafeRefEq
 
+instance eqAriaHaspopup :: Eq AriaHaspopup where
+  eq = unsafeRefEq
+
 type SvgIconClassesGenericRow a
   = ( colorAction :: a
     , colorDisabled :: a
@@ -59,7 +75,9 @@ type SvgIconClassesJSS
   = SvgIconClassesGenericRow JSS
 
 type SvgIconOptPropsRow (r :: # Type)
-  = ( children :: Array JSX
+  = ( "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
+    , children :: Array JSX
     , classes :: { | SvgIconClassesKey }
     , color :: Color
     , fontSize :: FontSize
@@ -95,6 +113,9 @@ svgIcon ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 svgIcon ps = element _SvgIcon ps
+
+svgIcon' :: SvgIconProps -> JSX
+svgIcon' = MUI.React.Basic.element _SvgIcon'
 
 _SvgIcon' :: ReactComponent SvgIconProps
 _SvgIcon' = unsafeCoerce _UnsafeSvgIcon

@@ -131,6 +131,9 @@ filledTextField ::
   { | given } -> JSX
 filledTextField ps = element _FilledTextField ps
 
+filledTextField' :: FilledTextFieldProps -> JSX
+filledTextField' = MUI.React.Basic.element _FilledTextField'
+
 _FilledTextField' :: ReactComponent FilledTextFieldProps
 _FilledTextField' = unsafeCoerce _UnsafeFilledTextField
 

@@ -10,6 +10,23 @@ import Prim.Row (class Union) as Prim.Row
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
+import Unsafe.Reference (unsafeRefEq)
+
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
+instance eqAriaHaspopup :: Eq AriaHaspopup where
+  eq = unsafeRefEq
 
 type PaperClassesGenericRow a
   = ( elevation0 :: a
@@ -49,7 +66,9 @@ type PaperClassesJSS
   = PaperClassesGenericRow JSS
 
 type PaperOptPropsRow (r :: # Type)
-  = ( children :: Array JSX
+  = ( "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
+    , children :: Array JSX
     , classes :: { | PaperClassesKey }
     , elevation :: Number
     , square :: Boolean
@@ -81,6 +100,9 @@ paper ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 paper ps = element _Paper ps
+
+paper' :: PaperProps -> JSX
+paper' = MUI.React.Basic.element _Paper'
 
 _Paper' :: ReactComponent PaperProps
 _Paper' = unsafeCoerce _UnsafePaper

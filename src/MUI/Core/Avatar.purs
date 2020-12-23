@@ -13,6 +13,19 @@ import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
 foreign import data Variant :: Type
 
 variant ::
@@ -23,6 +36,9 @@ variant ::
 variant = { circle: unsafeCoerce "circle", rounded: unsafeCoerce "rounded", square: unsafeCoerce "square" }
 
 instance eqVariant :: Eq Variant where
+  eq = unsafeRefEq
+
+instance eqAriaHaspopup :: Eq AriaHaspopup where
   eq = unsafeRefEq
 
 type AvatarClassesGenericRow a
@@ -43,6 +59,8 @@ type AvatarClassesJSS
 
 type AvatarOptPropsRow (r :: # Type)
   = ( alt :: String
+    , "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
     , children :: Array JSX
     , classes :: { | AvatarClassesKey }
     , imgProps :: Foreign.Foreign
@@ -79,6 +97,9 @@ avatar ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 avatar ps = element _Avatar ps
+
+avatar' :: AvatarProps -> JSX
+avatar' = MUI.React.Basic.element _Avatar'
 
 _Avatar' :: ReactComponent AvatarProps
 _Avatar' = unsafeCoerce _UnsafeAvatar

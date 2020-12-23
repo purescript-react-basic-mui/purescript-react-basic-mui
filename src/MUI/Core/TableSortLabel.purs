@@ -14,6 +14,19 @@ import React.Basic.DOM (Props_button) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
 foreign import data Direction :: Type
 
 direction ::
@@ -23,6 +36,9 @@ direction ::
 direction = { asc: unsafeCoerce "asc", desc: unsafeCoerce "desc" }
 
 instance eqDirection :: Eq Direction where
+  eq = unsafeRefEq
+
+instance eqAriaHaspopup :: Eq AriaHaspopup where
   eq = unsafeRefEq
 
 type TableSortLabelClassesGenericRow a
@@ -42,6 +58,8 @@ type TableSortLabelClassesJSS
 type TableSortLabelOptPropsRow (r :: # Type)
   = ( "IconComponent" :: Foreign.Foreign
     , active :: Boolean
+    , "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
     , children :: Array JSX
     , classes :: { | TableSortLabelClassesKey }
     , direction :: Direction
@@ -75,6 +93,9 @@ tableSortLabel ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 tableSortLabel ps = element _TableSortLabel ps
+
+tableSortLabel' :: TableSortLabelProps -> JSX
+tableSortLabel' = MUI.React.Basic.element _TableSortLabel'
 
 _TableSortLabel' :: ReactComponent TableSortLabelProps
 _TableSortLabel' = unsafeCoerce _UnsafeTableSortLabel

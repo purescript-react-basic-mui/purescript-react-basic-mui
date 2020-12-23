@@ -116,6 +116,9 @@ pagination ::
   { | given } -> JSX
 pagination ps = element _Pagination ps
 
+pagination' :: PaginationProps -> JSX
+pagination' = MUI.React.Basic.element _Pagination'
+
 _Pagination' :: ReactComponent PaginationProps
 _Pagination' = unsafeCoerce _UnsafePagination
 
