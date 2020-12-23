@@ -108,6 +108,9 @@ forAll' n cont =
   in
     roll (TypeForall [ ident ] (cont v))
 
+int :: Type
+int = roll TypeInt
+
 name :: String -> QualifiedName TypeName
 name = name'
 

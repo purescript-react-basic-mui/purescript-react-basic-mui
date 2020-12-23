@@ -2,6 +2,7 @@
 module MUI.Core.Hidden where
 
 import MUI.Core (class Nub')
+import MUI.React.Basic (element) as MUI.React.Basic
 import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (JSX, ReactComponent, element)
@@ -64,7 +65,9 @@ type HiddenOptPropsRow (r :: # Type)
     )
 
 type HiddenReqPropsRow (r :: # Type)
-  = r
+  = ( children :: Array JSX
+    | r
+    )
 
 type HiddenPropsRow (r :: # Type)
   = HiddenOptPropsRow (HiddenReqPropsRow r)
@@ -87,15 +90,21 @@ hidden ::
   Nub' (HiddenPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
-hidden props = element _Hidden props
+hidden ps = element _Hidden ps
+
+hidden' :: HiddenProps -> JSX
+hidden' = MUI.React.Basic.element _Hidden'
+
+_Hidden' :: ReactComponent HiddenProps
+_Hidden' = unsafeCoerce _UnsafeHidden
 
 foreign import data HiddenProps :: Type
 
-hiddenProps ::
+props ::
   forall given optionalGiven optionalMissing props required.
   Nub' (HiddenReqPropsRow ()) required =>
   Prim.Row.Union required optionalGiven given =>
   Nub' (HiddenPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> HiddenProps
-hiddenProps = unsafeCoerce
+props = unsafeCoerce

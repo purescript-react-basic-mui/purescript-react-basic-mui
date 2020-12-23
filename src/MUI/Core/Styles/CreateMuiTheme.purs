@@ -13,6 +13,9 @@ import MUI.Core.Styles.ZIndex (ZIndexOptions)
 import MUI.System.Shadows (Shadows)
 import Prim.Row (class Union)
 
+-- | TODO: We should use this type as a value for `spacing` (`@material-ui/core/styles/createSpacing.d.ts`):
+-- |
+-- | export type SpacingOptions = number | ((factor: number) => string | number) | number[];
 type ThemePartial
   = ( shape :: ShapeOptions
     , breakpoints :: Breakpoints

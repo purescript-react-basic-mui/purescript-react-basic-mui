@@ -96,7 +96,7 @@ mediaQuery (MediaQuery mq) = let e = {} in \j → jss $ unsafeSet mq j e
 -- | => Union given optionalsMissing all
 -- | => { | given } -> ReactComponent all
 -- | ```
-class Nub' (i ∷ # Type) (o ∷ # Type) | i → o
+class Nub i o <= Nub' (i ∷ # Type) (o ∷ # Type) | i → o
 
 instance nub' ∷ (Nub i o) ⇒ Nub' i o
 

@@ -3,18 +3,39 @@ module MUI.Core.Box where
 
 import Foreign (Foreign) as Foreign
 import MUI.Core (class Nub')
+import MUI.React.Basic (element) as MUI.React.Basic
 import MUI.System (BoxSizing) as MUI.System
 import MUI.System.Display (Display)
 import MUI.System.Flexbox (AlignContent, AlignItems, AlignSelf, FlexDirection, FlexWrap, JustifyContent) as MUI.System.Flexbox
+import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
+import Unsafe.Reference (unsafeRefEq)
+
+foreign import data AriaHaspopup :: Type
+
+ariaHaspopup ::
+  { dialog :: AriaHaspopup
+  , "false" :: AriaHaspopup
+  , grid :: AriaHaspopup
+  , listbox :: AriaHaspopup
+  , menu :: AriaHaspopup
+  , tree :: AriaHaspopup
+  , "true" :: AriaHaspopup
+  }
+ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
+
+instance eqAriaHaspopup :: Eq AriaHaspopup where
+  eq = unsafeRefEq
 
 type BoxOptPropsRow (r :: # Type)
   = ( alignContent :: MUI.System.Flexbox.AlignContent
     , alignItems :: MUI.System.Flexbox.AlignItems
     , alignSelf :: MUI.System.Flexbox.AlignSelf
+    , "aria-controls" :: String
+    , "aria-haspopup" :: AriaHaspopup
     , border :: Foreign.Foreign
     , borderBottom :: Foreign.Foreign
     , borderColor :: Foreign.Foreign
@@ -34,10 +55,38 @@ type BoxOptPropsRow (r :: # Type)
     , flexWrap :: MUI.System.Flexbox.FlexWrap
     , height :: String
     , justifyContent :: MUI.System.Flexbox.JustifyContent
+    , m :: Int
+    , margin :: Int
+    , marginBottom :: Int
+    , marginLeft :: Int
+    , marginRight :: Int
+    , marginTop :: Int
+    , marginX :: Int
+    , marginY :: Int
     , maxHeight :: String
     , maxWidth :: String
+    , mb :: Int
     , minHeight :: String
     , minWidth :: String
+    , ml :: Int
+    , mr :: Int
+    , mt :: Int
+    , mx :: Int
+    , my :: Int
+    , p :: Int
+    , padding :: Int
+    , paddingBottom :: Int
+    , paddingLeft :: Int
+    , paddingRight :: Int
+    , paddingTop :: Int
+    , paddingX :: Int
+    , paddingY :: Int
+    , pb :: Int
+    , pl :: Int
+    , pr :: Int
+    , pt :: Int
+    , px :: Int
+    , py :: Int
     , width :: String
     | r
     )
@@ -66,15 +115,21 @@ box ::
   Nub' (BoxPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
-box props = element _Box props
+box ps = element _Box ps
+
+box' :: BoxProps -> JSX
+box' = MUI.React.Basic.element _Box'
+
+_Box' :: ReactComponent BoxProps
+_Box' = unsafeCoerce _UnsafeBox
 
 foreign import data BoxProps :: Type
 
-boxProps ::
+props ::
   forall given optionalGiven optionalMissing props required.
   Nub' (BoxReqPropsRow ()) required =>
   Prim.Row.Union required optionalGiven given =>
   Nub' (BoxPropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> BoxProps
-boxProps = unsafeCoerce
+props = unsafeCoerce

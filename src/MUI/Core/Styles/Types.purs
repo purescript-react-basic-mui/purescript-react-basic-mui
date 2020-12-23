@@ -15,6 +15,21 @@ foreign import data OverridesPartial :: Type
 
 foreign import data ComponentsPropsPartial :: Type
 
+-- | TODO:
+-- | we should handle this (@material-ui/core/styles/createSpacing.d.ts)
+-- | type value as an output value from `spacing`:
+-- | export interface Spacing {
+-- |   (): number;
+-- |   (value: number): number;
+-- |   (topBottom: SpacingArgument, rightLeft: SpacingArgument): string;
+-- |   (top: SpacingArgument, rightLeft: SpacingArgument, bottom: SpacingArgument): string;
+-- |   (
+-- |     top: SpacingArgument,
+-- |     right: SpacingArgument,
+-- |     bottom: SpacingArgument,
+-- |     left: SpacingArgument
+-- |   ): string;
+-- | }
 type Theme
   = { shape :: Shape
     , breakpoints :: Breakpoints
@@ -32,17 +47,14 @@ type Theme
 
 foreign import data SpacingParam ∷ Type
 
+-- | padding: theme.spacing(1, 2, 3, 1), // '8px 16px 24px 8px'
+-- | margin: theme.spacing(1, 'auto'), // '8px auto'
 multiplier ∷ Number → SpacingParam
 multiplier = unsafeCoerce
 
 constant ∷ String → SpacingParam
 constant = unsafeCoerce
 
--- | Spacing is dynamicaly typed.
--- | We handle these cases with additional helper.
--- |
--- | padding: theme.spacing(1, 2, 3, 1), // '8px 16px 24px 8px'
--- | margin: theme.spacing(1, 'auto'), // '8px auto'
 spacing ∷ SpacingParam → SpacingParam → SpacingParam → SpacingParam → Theme → String
 spacing p1 p2 p3 p4 theme = runFn4 spacing' p1 p2 p3 p4
   where

@@ -41,15 +41,18 @@ fade ::
   Nub' (FadePropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
-fade props = element _Fade props
+fade ps = element _Fade ps
+
+_Fade' :: ReactComponent FadeProps
+_Fade' = unsafeCoerce _UnsafeFade
 
 foreign import data FadeProps :: Type
 
-fadeProps ::
+props ::
   forall given optionalGiven optionalMissing props required.
   Nub' (FadeReqPropsRow ()) required =>
   Prim.Row.Union required optionalGiven given =>
   Nub' (FadePropsRow React.Basic.DOM.Props_div) props =>
   Prim.Row.Union given optionalMissing props =>
   { | given } -> FadeProps
-fadeProps = unsafeCoerce
+props = unsafeCoerce

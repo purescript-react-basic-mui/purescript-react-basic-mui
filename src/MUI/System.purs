@@ -1,3 +1,6 @@
+-- | Not yet systematic attempt to bind all types from:
+-- | @material-ui/system/index.d.ts
+-- |
 module MUI.System
   ( module Flexbox
   , module Sizing

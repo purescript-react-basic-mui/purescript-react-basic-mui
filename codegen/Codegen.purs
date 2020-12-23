@@ -65,7 +65,7 @@ genComponentJS c@{ modulePath } =
     <> "exports."
     -- We should this naming convention from codegen module
     <> "_Unsafe" <> Component.componentName c
-    <> " = require(\"@material-ui/core/"
+    <> " = require(\"@material-ui/"
     <> (jsPath modulePath.input)
     <> "\").default;"
   where
