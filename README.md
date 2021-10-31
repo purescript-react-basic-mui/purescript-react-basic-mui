@@ -34,7 +34,7 @@ We use "flat monorepo" (no subprojects) approach to simplify usual _codegen chan
 
 ### Codegen
 
-We use purty as a finall part of the codegen process (its run by the _./bin/codegen.sh_ script). Currenlty used version of _purty_ is _6.2.0_. If you want to bump purty version please... contact us :-)
+We use purty as a finall part of the codegen process (its run by the _./bin/codegen.sh_ script). Currently used version of _purty_ is _6.2.0_. If you want to bump purty version please... contact us :-)
 
 After introducing changes to component spec or after a new component addition please run a full _bin/codegen.sh_ before doing a commit. Please try to keep changes consistent so they modify or add only to a single component or a group of related components (like table, tablebody, tablecell etc.).
 
