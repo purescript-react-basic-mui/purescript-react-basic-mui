@@ -10,7 +10,6 @@ You can edit this file as you like.
     , "effect"
     , "filterable"
     , "freet"
-    , "generics-rep"
     , "heterogeneous"
     , "moldy"
     , "node-fs-aff"
@@ -24,6 +23,7 @@ You can edit this file as you like.
     , "simple-json"
     , "sized-vectors"
     , "strings-extra"
+    , "strings"
     , "debug"
     ]
     # (./spago.dhall).dependencies

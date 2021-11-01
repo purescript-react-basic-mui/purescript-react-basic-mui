@@ -55,13 +55,13 @@ import Control.Monad.State.Trans (evalStateT)
 import Control.Monad.Trans.Class (lift)
 import Data.Array (catMaybes)
 import Data.Array (singleton) as Array
-import Data.Char.Unicode (toLower) as Unicode
+import Data.CodePoint.Unicode (toLower) as Unicode
 import Data.Either (Either(..))
 import Data.Foldable (all, foldMap)
 import Data.Functor.Mu (roll, unroll)
 import Data.FunctorWithIndex (mapWithIndex)
 import Data.Generic.Rep (class Generic)
-import Data.Generic.Rep.Show (genericShow)
+import Data.Show.Generic (genericShow)
 import Data.Lens (view)
 import Data.Lens.Record (prop)
 import Data.List (List)
@@ -409,12 +409,12 @@ unionDeclarations typeName@(TypeName name) members = do
   where
   downfirst :: String -> String
   downfirst =
-    Data.String.CodeUnits.uncons
+    Data.String.CodePoints.uncons
       >>> foldMap \{ head, tail } ->
-          Data.String.CodeUnits.singleton (Unicode.toLower head) <> tail
+          Data.String.CodePoints.singleton (Unicode.toLower head) <> tail
 
   toUnicodeLower :: String -> String
-  toUnicodeLower = Data.String.CodeUnits.toCharArray >>> map Unicode.toLower >>> Data.String.CodeUnits.fromCharArray
+  toUnicodeLower = Data.String.CodePoint.toCodePointArray >>> map Unicode.toLower >>> Data.String.CodePoint.fromCodePointArray
 
   type_ = roll $ TypeConstructor { name: typeName, moduleName: Nothing }
 

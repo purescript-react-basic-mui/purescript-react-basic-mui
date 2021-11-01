@@ -5,7 +5,7 @@ import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Map (lookup) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..))
-import Debug.Trace (class DebugWarning, traceM)
+import Debug (class DebugWarning, traceM)
 import Matryoshka (cata)
 import ReadDTS.Instantiation (Type, TypeF(..)) as ReadDTS.Instantiation
 import ReadDTS.Instantiation.Pretty (pprint) as ReadDTS.Instantiation.Pretty

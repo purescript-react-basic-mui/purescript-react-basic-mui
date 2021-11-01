@@ -9,7 +9,6 @@ You can edit this file as you like.
     , "debug"
     , "effect"
     , "filterable"
-    , "generics-rep"
     , "heterogeneous"
     , "moldy"
     , "node-fs-aff"

@@ -7,9 +7,10 @@ import Codegen.AST.Sugar.Type (app, array, constructor, typeRow') as Type
 import Codegen.AST.Types (Fields) as AST.Types
 import Codegen.TS.Types (InstanceProps, InstantiationStrategy)
 import Data.Either (Either)
+import Data.Map as M
 import Data.Foldable (intercalate)
 import Data.Generic.Rep (class Generic)
-import Data.Generic.Rep.Show (genericShow)
+import Data.Show.Generic (genericShow)
 import Data.Maybe (Maybe(..))
 import Data.Moldy (class Moldable, Moldy(..), moldMap, moldlDefault, moldrDefault)
 import ReadDTS.Instantiation (Type) as ReadDTS.Instantiation
@@ -95,7 +96,7 @@ foldRoot = case _ of
         }
 
     go (RBProps t) =
-      { combined: t, optional: t, required: Type.typeRow' mempty Nothing }
+      { combined: t, optional: t, required: Type.typeRow' M.empty Nothing }
     go (MUIComponent c) =
       let
         cn = componentName c

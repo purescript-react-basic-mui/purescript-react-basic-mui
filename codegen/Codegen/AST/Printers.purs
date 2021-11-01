@@ -15,22 +15,22 @@ import Control.Monad.Reader (ask)
 import Control.Monad.Reader.Class (class MonadReader)
 import Data.Array (concat)
 import Data.Array (cons, fromFoldable, null, singleton, uncons, unsnoc) as Array
-import Data.Char.Unicode (isUpper)
-import Data.Either (Either(..), fromRight)
+import Data.CodePoint.Unicode (isUpper)
+import Data.Either (Either(..), hush)
 import Data.Filterable (partitionMap)
 import Data.Foldable (foldMap, intercalate, length)
 import Data.FoldableWithIndex (foldMapWithIndex)
 import Data.List (intercalate, singleton) as List
 import Data.Map (fromFoldableWith, lookup, toUnfoldable) as Map
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe, fromJust)
 import Data.Monoid (guard)
 import Data.Newtype (class Newtype, unwrap)
 import Data.Set (member) as Set
 import Data.String (joinWith)
-import Data.String.CodeUnits (uncons) as Data.String.CodeUnits
+import Data.String.CodePoints (uncons) as Data.String.CodePoints
 import Data.String.Regex (Regex, regex)
 import Data.String.Regex (test) as Regex
-import Data.String.Regex.Flags (noFlags) as Regex.Flags
+import Data.String.Regex.Flags as Regex.Flags
 import Data.Traversable (for, traverse)
 import Data.Tuple (Tuple(..))
 import Matryoshka (AlgebraM, cataM)
@@ -221,7 +221,7 @@ data PrintingContext
   | InArr
 
 printRowLabel :: String -> String
-printRowLabel l = case Data.String.CodeUnits.uncons l of
+printRowLabel l = case Data.String.CodePoints.uncons l of
   Just { head } ->
     if isUpper head || l `Set.member` reservedNames || not (Regex.test alphanumRegex l) then
       show l
@@ -230,7 +230,7 @@ printRowLabel l = case Data.String.CodeUnits.uncons l of
   Nothing -> l
   where
   alphanumRegex :: Regex
-  alphanumRegex = unsafePartial $ fromRight $ regex "^[A-Za-z0-9_]*$" Regex.Flags.noFlags
+  alphanumRegex = unsafePartial $ fromJust $ hush $ regex "^[A-Za-z0-9_]*$" Regex.Flags.noFlags
 
 printType :: forall m. MonadReader ImportAlias m => AlgebraM m TypeF (PrintingContext -> Array String)
 printType = case _ of
