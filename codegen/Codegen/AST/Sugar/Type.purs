@@ -10,6 +10,7 @@ import Data.Functor.Mu (roll)
 import Data.List (List(..)) as List
 import Data.List (List)
 import Data.Map (Map)
+import Data.Map as M
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, wrap)
 import Data.String (Pattern(..), split)
@@ -136,7 +137,7 @@ record :: Row -> Type
 record = roll <<< TypeRecord
 
 recordLiteral :: Type -> Type
-recordLiteral tail = record $ Row { labels: mempty, tail: Just tail }
+recordLiteral tail = record $ Row { labels: M.empty, tail: Just tail }
 
 recordLiteral' :: Fields Type -> Type -> Type
 recordLiteral' fields tail = record $ Row { labels: fields, tail: Just tail }

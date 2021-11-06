@@ -11,9 +11,10 @@ import Data.Eq (class Eq1)
 import Data.Foldable (class Foldable, all, foldMap, foldlDefault, foldrDefault)
 import Data.Functor.Mu (Mu)
 import Data.Generic.Rep (class Generic)
-import Data.Generic.Rep.Show (genericShow)
+import Data.Show.Generic (genericShow)
 import Data.List (List)
 import Data.Map (Map)
+import Data.Map as Map
 import Data.Map (unionWith) as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (class Newtype)
@@ -305,8 +306,14 @@ instance traversableRowF :: Traversable RowF where
 type Row
   = RowF Type
 
+-- type Type
+--   = Mu TypeF
+
+-- type Expr
+--   = Mu ExprF
+
 emptyRow :: Row
-emptyRow = Row { labels: mempty, tail: Nothing }
+emptyRow = Row { labels: Map.empty, tail: Nothing }
 
 data Union
   = Union QualifiedTypeName (Array UnionMember)
@@ -486,7 +493,7 @@ instance semigroupImports :: Semigroup Imports where
   append (Imports i1) (Imports i2) = Imports $ Map.unionWith Set.union i1 i2
 
 instance monoidImports :: Monoid Imports where
-  mempty = Imports mempty
+  mempty = Imports Map.empty
 
 reservedNames :: Set String
 reservedNames =
