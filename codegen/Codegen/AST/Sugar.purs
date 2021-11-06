@@ -1,10 +1,9 @@
 module Codegen.AST.Sugar where
 
 import Prelude
-
 import Codegen.AST.Imports (ImportAlias)
 import Codegen.AST.Printers (PrintingContext(..), line, printQualifiedName, printType)
-import Codegen.AST.Types (ClassName, Declaration(..), Expr, ExprF(..), Ident(..), ModuleName(..), QualifiedName, Type, TypeF(..), TypeName(..), TypeVarBinding, ValueBindingFields(..))
+import Codegen.AST.Types (ClassName, Declaration(..), Expr, ExprF(..), Ident(..), ModuleName(..), QualifiedName, Typ, TypeF(..), TypeName(..), TypeVarBinding, ValueBindingFields(..))
 import Control.Monad.Reader (class MonadReader)
 import Data.Array (fromFoldable, unsnoc) as Array
 import Data.Foldable (foldMap)
@@ -18,10 +17,10 @@ import Matryoshka (cataM)
 import Prim.Row (class Cons, class Lacks) as Row
 import Record.Builder (Builder) as Record
 import Record.Builder (build, insert) as Record.Builder
-import Record.Extra (type (:::), SNil, kind SList)
+import Record.Extra (type (:::), SNil, SList)
 import Type.Prelude (class IsSymbol, SProxy(..), reflectSymbol)
 
-declType :: TypeName -> Array TypeVarBinding -> Type -> { declaration :: Declaration, constructor :: Type }
+declType :: TypeName -> Array TypeVarBinding -> Typ -> { declaration :: Declaration, constructor :: Typ }
 declType typeName vars body =
   let
     declaration =
@@ -32,7 +31,7 @@ declType typeName vars body =
   in
     { declaration, constructor }
 
-declForeignData :: TypeName -> { declaration :: Declaration, constructor :: Type }
+declForeignData :: TypeName -> { declaration :: Declaration, constructor :: Typ }
 declForeignData typeName =
   let
     declaration = DeclForeignData { typeName }
@@ -41,46 +40,51 @@ declForeignData typeName =
   in
     { declaration, constructor }
 
-declForeignData' :: String -> { declaration :: Declaration, constructor :: Type }
+declForeignData' :: String -> { declaration :: Declaration, constructor :: Typ }
 declForeignData' = declForeignData <<< TypeName
 
-valueBindingFields :: Ident -> Array Ident -> Expr -> Maybe Type -> Array ValueBindingFields -> ValueBindingFields
-valueBindingFields name binders expr signature whereBindings = ValueBindingFields
-  { value: { binders, expr, name, whereBindings }, signature }
+valueBindingFields :: Ident -> Array Ident -> Expr -> Maybe Typ -> Array ValueBindingFields -> ValueBindingFields
+valueBindingFields name binders expr signature whereBindings =
+  ValueBindingFields
+    { value: { binders, expr, name, whereBindings }, signature }
 
-declValue :: Ident -> Array Ident -> Expr -> Maybe Type -> Array ValueBindingFields -> { declaration :: Declaration, var :: Expr }
+declValue :: Ident -> Array Ident -> Expr -> Maybe Typ -> Array ValueBindingFields -> { declaration :: Declaration, var :: Expr }
 declValue name binders expr signature whereBindings =
   let
     declaration = DeclValue (valueBindingFields name binders expr signature whereBindings)
 
-    var = roll $ ExprIdent { typeName: Nothing, qualifiedName: { name, moduleName: Nothing }}
+    var = roll $ ExprIdent { typeName: Nothing, qualifiedName: { name, moduleName: Nothing } }
   in
     { declaration, var }
 
-declForeignValue :: Ident -> Type -> { declaration :: Declaration, var :: Expr }
+declForeignValue :: Ident -> Typ -> { declaration :: Declaration, var :: Expr }
 declForeignValue i t =
   let
     declaration = DeclForeignValue { ident: i, "type": t }
 
-    var = roll $ ExprIdent
-      { typeName: Nothing, qualifiedName: { name: i, moduleName: Nothing }}
+    var =
+      roll
+        $ ExprIdent
+            { typeName: Nothing, qualifiedName: { name: i, moduleName: Nothing } }
   in
     { declaration, var }
 
-declInstance :: forall m. MonadReader ImportAlias m => QualifiedName ClassName -> Array Type -> Array ValueBindingFields -> m Declaration
+declInstance :: forall m. MonadReader ImportAlias m => QualifiedName ClassName -> Array Typ -> Array ValueBindingFields -> m Declaration
 declInstance className types body = do
-  types' <- for types \t ->
-    cataM printType t <@> StandAlone
+  types' <-
+    for types \t ->
+      cataM printType t <@> StandAlone
   cn <- printQualifiedName className
-  pure $ DeclInstance
-    { head:
-      { className
-      , name:
-        Ident $ camelCase $ cn <> foldMap line types'
-      , types
-      }
-    , body
-    }
+  pure
+    $ DeclInstance
+        { head:
+            { className
+            , name:
+                Ident $ camelCase $ cn <> foldMap line types'
+            , types
+            }
+        , body
+        }
 
 ident :: String -> Ident
 ident = Ident
@@ -94,28 +98,33 @@ qualifiedIdent s = case Array.unsnoc (String.split (String.Pattern ".") s) of
 local :: forall a. a -> QualifiedName a
 local name = { moduleName: Nothing, name }
 
-data SListProxy (l :: SList) = SListProxy
+data SListProxy (l :: SList)
+  = SListProxy
 
-class ForallRow (l :: SList) (r :: # Type) (r' :: # Type) | l -> r r' where
-  forallRow :: SListProxy l -> { binders :: List Ident, builder :: Record.Builder { | r } { | r' }}
+class ForallRow (l :: SList) r r' | l -> r r' where
+  forallRow :: SListProxy l -> { binders :: List Ident, builder :: Record.Builder { | r } { | r' } }
 
 instance forallRowNil :: ForallRow SNil () () where
   forallRow _ = { binders: Nil, builder: identity }
 
-instance forallRowCons :: (ForallRow t tr_ tr, IsSymbol h, Row.Lacks h tr, Row.Cons h Type tr r) => ForallRow (h ::: t) tr_ r where
+instance forallRowCons :: (ForallRow t tr_ tr, IsSymbol h, Row.Lacks h tr, Row.Cons h Typ tr r) => ForallRow (h ::: t) tr_ r where
   forallRow _ =
     let
       _h = (SProxy :: SProxy h)
+
       h = reflectSymbol _h
+
       { binders, builder } = forallRow (SListProxy :: SListProxy t)
     in
       { binders: Ident h : binders
-      , builder: Record.Builder.insert _h
-          (roll $ TypeVar $ ident h) <<< builder
+      , builder:
+          Record.Builder.insert _h
+            (roll $ TypeVar $ ident h)
+            <<< builder
       }
 
 class BindersRow (l :: SList) (r :: # Type) (r' :: # Type) | l -> r r' where
-  bindersRow :: SListProxy l -> { binders :: List Ident, builder :: Record.Builder { | r } { | r' }}
+  bindersRow :: SListProxy l -> { binders :: List Ident, builder :: Record.Builder { | r } { | r' } }
 
 instance bindersRowNil :: BindersRow SNil () () where
   bindersRow _ = { binders: Nil, builder: identity }
@@ -124,14 +133,17 @@ instance bindersRowCons :: (BindersRow t tr_ tr, IsSymbol h, Row.Lacks h tr, Row
   bindersRow _ =
     let
       _h = (SProxy :: SProxy h)
+
       h = reflectSymbol _h
+
       { binders, builder } = bindersRow (SListProxy :: SListProxy t)
     in
       { binders: Ident h : binders
-      , builder: Record.Builder.insert _h
-          (roll $ ExprIdent $ { typeName: Nothing, qualifiedName: qualifiedIdent h}) <<< builder
+      , builder:
+          Record.Builder.insert _h
+            (roll $ ExprIdent $ { typeName: Nothing, qualifiedName: qualifiedIdent h })
+            <<< builder
       }
-
 
 -- | Turns given record of strings into a record of type variables
 -- | which are passed to type building function.
@@ -156,8 +168,9 @@ forAllValueBinding ::
   SListProxy typeBindersList ->
   String ->
   SListProxy bindersList ->
-  ({ typeVars :: { | typeVarsRow }, vars :: { | varsRow } }
-    -> { signature :: Maybe Type, expr :: Expr, whereBindings :: Array ValueBindingFields }) ->
+  ( { typeVars :: { | typeVarsRow }, vars :: { | varsRow } } ->
+    { signature :: Maybe Typ, expr :: Expr, whereBindings :: Array ValueBindingFields }
+  ) ->
   ValueBindingFields
 forAllValueBinding typeBinders name binders cont =
   let
@@ -168,6 +181,7 @@ forAllValueBinding typeBinders name binders cont =
         { binders: Array.fromFoldable tb.binders
         , bindersVars: Record.Builder.build tb.builder {}
         }
+
     vars =
       let
         bb = bindersRow binders
@@ -175,13 +189,15 @@ forAllValueBinding typeBinders name binders cont =
         { binders: Array.fromFoldable bb.binders
         , bindersVars: Record.Builder.build bb.builder {}
         }
+
     vb = cont { typeVars: typeVars.bindersVars, vars: vars.bindersVars }
-  in ValueBindingFields
-    { signature: (roll <<< TypeForall typeVars.binders <$> vb.signature)
-    , value:
-      { name: Ident name
-      , binders: vars.binders
-      , expr: vb.expr
-      , whereBindings: vb.whereBindings
+  in
+    ValueBindingFields
+      { signature: (roll <<< TypeForall typeVars.binders <$> vb.signature)
+      , value:
+          { name: Ident name
+          , binders: vars.binders
+          , expr: vb.expr
+          , whereBindings: vb.whereBindings
+          }
       }
-    }

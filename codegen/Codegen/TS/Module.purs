@@ -39,7 +39,7 @@ module Codegen.TS.Module where
 import Prelude
 
 import Codegen.AST (Declaration(..)) as AST
-import Codegen.AST (Expr, ExprF(..), Ident(..), RowF(..), RowLabel, Type, TypeName(..), Union(..))
+import Codegen.AST (Expr, ExprF(..), Ident(..), RowF(..), RowLabel, Typ, TypeName(..), Union(..))
 import Codegen.AST.Imports (ImportAlias)
 import Codegen.AST.Sugar (SListProxy(..), declInstance, forAllValueBinding, valueBindingFields)
 import Codegen.AST.Sugar.Expr (app, boolean, ident', identTyped', number, string) as Expr
@@ -55,13 +55,12 @@ import Control.Monad.State.Trans (evalStateT)
 import Control.Monad.Trans.Class (lift)
 import Data.Array (catMaybes)
 import Data.Array (singleton) as Array
-import Data.CodePoint.Unicode (toLower) as Unicode
+import Data.CodePoint.Unicode (toLowerSimple) as Unicode
 import Data.Either (Either(..))
 import Data.Foldable (all, foldMap)
 import Data.Functor.Mu (roll, unroll)
 import Data.FunctorWithIndex (mapWithIndex)
 import Data.Generic.Rep (class Generic)
-import Data.Show.Generic (genericShow)
 import Data.Lens (view)
 import Data.Lens.Record (prop)
 import Data.List (List)
@@ -71,9 +70,10 @@ import Data.Map (fromFoldable, insert, lookup) as Map
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Newtype (unwrap)
 import Data.Set (member) as Set
+import Data.Show.Generic (genericShow)
 import Data.String (Pattern(..))
 import Data.String (contains) as String
-import Data.String.CodeUnits (fromCharArray, singleton, toCharArray, uncons) as Data.String.CodeUnits
+import Data.String.CodePoints (singleton, uncons) as Data.String.CodePoints
 import Data.String.Extra (pascalCase)
 import Data.Traversable (for, sequence)
 import Data.Tuple (Tuple(..))
@@ -128,7 +128,7 @@ buildAndInstantiateDeclarations file = do
 -- | fold so they can be used "one level up" when we finally accumulate them into
 -- | a single `AST.Union`.
 data PossibleType
-  = ProperType Type
+  = ProperType Typ
   | UnionMember UnionMember
   | PossibleUnion (Array PossibleType)
 
@@ -165,7 +165,7 @@ type ComponentAlgebraM a
 union ::
   Maybe RowLabel ->
   Array PossibleType ->
-  ComponentAlgebraM (Either Type Union)
+  ComponentAlgebraM (Either Typ Union)
 union (Just l) props = do
   -- | XXX: This flow can be a bit broken when we consider
   -- |      `strictNullChecks: true` because we are going to
@@ -196,7 +196,7 @@ union (Just l) props = do
                 let
                   n = case t' of
                     TypeRecord _ -> "record"
-                    otherwise -> l
+                    _ -> l
 
                   n' =
                     if idx > 0 then
@@ -237,14 +237,14 @@ union Nothing props = union (Just "Anonymous") props
 union' ::
   Maybe RowLabel ->
   Array PossibleType ->
-  ComponentAlgebraM Type
+  ComponentAlgebraM Typ
 union' label vps =
   union label vps
     >>= case _ of
         Left t -> pure $ t
         Right u -> defineUnion u
 
-defineUnion :: Union -> ComponentAlgebraM Type
+defineUnion :: Union -> ComponentAlgebraM Typ
 defineUnion v@(Union qn@{ name, moduleName: m } _) = do
     -- | TODO: Validate:
     -- | * check if a given variant declaration is already defined
@@ -411,10 +411,7 @@ unionDeclarations typeName@(TypeName name) members = do
   downfirst =
     Data.String.CodePoints.uncons
       >>> foldMap \{ head, tail } ->
-          Data.String.CodePoints.singleton (Unicode.toLower head) <> tail
-
-  toUnicodeLower :: String -> String
-  toUnicodeLower = Data.String.CodePoint.toCodePointArray >>> map Unicode.toLower >>> Data.String.CodePoint.fromCodePointArray
+          Data.String.CodePoints.singleton (Unicode.toLowerSimple head) <> tail
 
   type_ = roll $ TypeConstructor { name: typeName, moduleName: Nothing }
 

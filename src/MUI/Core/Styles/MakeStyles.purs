@@ -2,7 +2,7 @@ module MUI.Core.Styles.MakeStyles where
 
 import MUI.Core.Styles.Types (Theme)
 import React.Basic.Hooks (Hook)
-import Type.RowList (class ListToRow, class RowToList, Cons, Nil, kind RowList)
+import Type.RowList (class ListToRow, class RowToList, Cons, Nil, RowList)
 
 foreign import data UseStyles :: Type -> Type
 
@@ -13,7 +13,7 @@ makeStyles f = makeStylesImpl f
 -- | Constrainted FFI functions won't be supported by purs soon.
 foreign import makeStylesImpl :: ∀ input output. (Theme -> Record input) -> Hook UseStyles (Record output)
 
-class MapRecordValuesToString (input :: # Type) (output :: # Type)
+class MapRecordValuesToString (input :: Row Type) (output :: Row Type)
 
 instance mapRecordValuesToString ::
   ( RowToList i il
@@ -22,7 +22,7 @@ instance mapRecordValuesToString ::
   ) =>
   MapRecordValuesToString i o
 
-class MapRecordValuesToStringImpl (il :: RowList) (ol :: RowList) | il -> ol
+class MapRecordValuesToStringImpl (il :: RowList Type) (ol :: RowList Type) | il -> ol
 
 instance mapRecordValuesToStringImplNil ::
   MapRecordValuesToStringImpl Nil Nil

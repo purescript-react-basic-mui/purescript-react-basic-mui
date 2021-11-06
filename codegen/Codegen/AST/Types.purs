@@ -118,9 +118,6 @@ data TypeF ref
 --   sequence (TypeRecord (Row ts)) = TypeRecord <<< Row <<< { tail: ts.tail, labels: _ } <$> for ts.labels \{ "type": t, optional } ->
 --       { optional, type: _ } <$> t
 
-type Type
-  = Mu TypeF
-
 derive instance genericPropType :: Generic (TypeF ref) _
 instance showPropType :: Show ref => Show (TypeF ref) where
   show p = genericShow p
@@ -304,13 +301,11 @@ instance traversableRowF :: Traversable RowF where
 -- | I hope that this assymetry between `Row` and `Type`
 -- | simplifies structure of most our algebras.
 type Row
-  = RowF Type
+  = RowF Typ
 
--- type Type
---   = Mu TypeF
+type Typ = Mu TypeF
 
--- type Expr
---   = Mu ExprF
+type Expr = Mu ExprF
 
 emptyRow :: Row
 emptyRow = Row { labels: Map.empty, tail: Nothing }
@@ -331,7 +326,7 @@ data UnionMember
   | UnionStringName String String
   | UnionNull
   | UnionNumber String Number
-  | UnionConstructor String Type
+  | UnionConstructor String Typ
   | UnionUndefined
 
 derive instance eqUnionMember :: Eq UnionMember
@@ -392,9 +387,6 @@ instance traversableExprF :: Traversable ExprF where
   sequence (ExprString s) = pure (ExprString s)
   traverse = traverseDefault
 
-type Expr
-  = Mu ExprF
-
 -- | Original CST type name doesn't contain a signature.
 -- | Also the rest of the structure is radically simplified
 -- | here to cover only current codegen cases:
@@ -414,7 +406,7 @@ newtype ValueBindingFields = ValueBindingFields
     , expr :: Expr
     , whereBindings :: Array ValueBindingFields
     }
-  , signature :: Maybe Type
+  , signature :: Maybe Typ
   }
 derive instance newtypeValueBindingFields :: Newtype ValueBindingFields _
 
@@ -427,13 +419,13 @@ data Declaration
     { head ::
       { name :: Ident
       , className :: QualifiedName ClassName
-      , types :: Array Type
+      , types :: Array Typ
       }
     , body :: Array ValueBindingFields
     }
-  | DeclForeignValue { ident :: Ident, type :: Type }
+  | DeclForeignValue { ident :: Ident, type :: Typ }
   | DeclForeignData { typeName :: TypeName } -- , "kind" :: Maybe KindName }
-  | DeclType { typeName :: TypeName, "type" :: Type, vars :: Array TypeVarBinding }
+  | DeclType { typeName :: TypeName, "type" :: Typ, vars :: Array TypeVarBinding }
   | DeclValue ValueBindingFields
 
 newtype ClassName

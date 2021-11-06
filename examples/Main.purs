@@ -66,12 +66,12 @@ import MUI.React.TransitionGroup (single) as TransitionGroup
 import MUI.System.Display (flex, none) as Only
 import MUI.System.Display (hiding)
 import MUI.System.Flexbox.JustifyContent (flexEnd) as JustifyContent
-import React.Basic (Component, JSX, ReactComponent, createComponent, element, fragment, make)
+import React.Basic.Classic (Component, JSX, ReactComponent, createComponent, element, fragment, make)
 import React.Basic.DOM (a, button, div, div_, form, h2, p, span, text) as DOM
 import React.Basic.DOM (render)
 import React.Basic.Events (handler_)
 import React.Basic.Hooks (useState)
-import React.Basic.Hooks as React
+import React.Basic.Hooks as React.Hooks
 import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.NonElementParentNode (getElementById)
 import Web.HTML (window)
@@ -96,7 +96,7 @@ arr :: forall a. a -> Array a
 arr = Array.singleton
 
 -- | Based on: https://github.com/mui-org/material-ui/blob/master/docs/src/pages/components/drawers/TemporaryDrawer.js
-drawerList :: Effect (ReactComponent {})
+drawerList :: React.Hooks.Component {}
 drawerList =
   let
     useStyles =
@@ -146,7 +146,7 @@ drawerList =
                         ]
           )
   in
-    React.component "TemporaryDrawer" \_ -> React.do
+    React.Hooks.component "TemporaryDrawer" \_ -> React.Hooks.do
       state /\ setState <- useState Nothing
       classes <- useStyles
       let
@@ -175,7 +175,7 @@ drawerList =
                   ]
 
 -- | MUI example: https://github.com/mui-org/material-ui/blob/master/docs/src/pages/components/modal/TransitionsModal.js
-transitionsModal :: Effect (ReactComponent {})
+transitionsModal :: React.Hooks.Component {}
 transitionsModal =
   let
     useStyles =
@@ -199,7 +199,7 @@ transitionsModal =
             }
         }
   in
-    React.component "TransitionsModal" \_ -> React.do
+    React.Hooks.component "TransitionsModal" \_ -> React.Hooks.do
       open /\ setOpen <- useState false
       classes <- useStyles
       let
@@ -237,8 +237,8 @@ transitionsModal =
             ]
 
 type Components
-  = { drawerList :: ReactComponent {}
-    , transitionsModal :: ReactComponent {}
+  = { drawerList :: {} → JSX
+    , transitionsModal :: {} → JSX
     }
 
 -- | XXX:
@@ -331,8 +331,8 @@ app components = make component { initialState: {}, render } {}
                                       , label: inputLabel { children: [ DOM.text "Label" ] }
                                       , placeholder: "test"
                                       }
-                                , gridItem $ element components.transitionsModal {}
-                                , gridItem $ element components.drawerList {}
+                                , gridItem $ components.transitionsModal {}
+                                , gridItem $ components.drawerList {}
                                 , gridItem $ spacedStandardTextField
                                     $ StandardTextField.props
                                         { error: false

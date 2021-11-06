@@ -13,9 +13,8 @@ let upstream =
 let typelevel-eval =
       { dependencies =
         [ "leibniz", "typelevel-prelude", "tuples", "prelude", "unsafe-coerce" ]
-    --   , repo = "https://github.com/natefaubion/purescript-typelevel-eval.git"
-      , repo = "https://github.com/intronic/purescript-typelevel-eval.git"
-      , version = "master"
+      , repo = "https://github.com/mikesol/purescript-typelevel-eval.git"
+      , version = "mikesol"
       }
 
 let additions =
@@ -60,9 +59,8 @@ let additions =
           , "psci-support"
           , "variant"
           ]
-        -- , repo = "https://github.com/purescript-codegen/purescript-read-dts.git"
-        , repo = "https://github.com/intronic/purescript-read-dts.git" -- upgraded purs
-        , version = "master"
+        , repo = "https://github.com/purescript-codegen/purescript-read-dts.git"
+        , version = "c07a42d3b6875604939348b9336e438eb0521d00"
         }
       -- , strings-extra =
       --   { dependencies =

@@ -3,7 +3,7 @@ module Codegen.TS.MUI where
 import Prelude
 
 import Codegen.AST (Declaration(..), Ident(..), ModuleName(..), TypeName(..))
-import Codegen.AST (Module(..), RowF(..), TypeName(..), Union(..), Type) as AST
+import Codegen.AST (Module(..), RowF(..), TypeName(..), Union(..), Typ) as AST
 import Codegen.AST.Sugar (SListProxy(..), declForeignData', declForeignValue, declType, forAllValueBinding)
 import Codegen.AST.Sugar (ident, local) as Sugar
 import Codegen.AST.Sugar.Expr (app, ident, ident') as Expr
@@ -15,6 +15,8 @@ import Codegen.Component (componentName, inputComponentName) as Component
 import Codegen.TS.Module (PossibleType(..), astAlgebra, buildAndInstantiateDeclarations, unionDeclarations) as TS.Module
 import Codegen.TS.Module (exprUnsafeCoerce, exprUnsafeCoerceApp)
 import Codegen.TS.Types (InstanceProps, InstantiationStrategy(..), M)
+import Control.Alt ((<|>))
+import Control.Alternative (empty)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (except, runExceptT)
 import Control.Monad.Reader (runReaderT)
@@ -27,7 +29,7 @@ import Data.Functor.Mu (Mu(..)) as Mu
 import Data.Functor.Mu (Mu(..), roll)
 import Data.List (List(..), fromFoldable, singleton) as List
 import Data.List (List, (:))
-import Data.Map (Map, filter, filterKeys, filterWithKey, fromFoldable, keys, lookup, singleton, toUnfoldable) as Map
+import Data.Map (Map, empty, filter, filterKeys, filterWithKey, fromFoldable, keys, lookup, singleton, toUnfoldable) as Map
 import Data.Map.Internal (keys) as Map.Internal
 import Data.Maybe (Maybe(..), isNothing, maybe)
 import Data.Set (member) as Set
@@ -146,7 +148,7 @@ componentAST component@{ extraDeclarations, root, modulePath, propsRow: expected
     objInstance :: Tuple (Either String TS.Module.PossibleType) (List AST.Union)
     objInstance =
       map List.fromFoldable
-        <<< flip runState mempty
+        <<< flip runState empty
         <<< runExceptT
         <<< flip runReaderT { unionName: ts.unionName }
         <<< cataM TS.Module.astAlgebra
@@ -162,10 +164,10 @@ componentAST component@{ extraDeclarations, root, modulePath, propsRow: expected
         else
           pure Nothing
       let
-        classesProp :: Map.Map String AST.Type
-        classesProp = maybe mempty (Map.singleton "classes" <<< recordLiteral <<< _.prop) classes
+        classesProp :: Map.Map String AST.Typ
+        classesProp = maybe empty (Map.singleton "classes" <<< recordLiteral <<< _.prop) classes
 
-        propsDecls :: Props { constructor :: AST.Type, declaration :: Declaration }
+        propsDecls :: Props { constructor :: AST.Typ, declaration :: Declaration }
         propsDecls =
           let
             generatedProps = partitionProps (isOpt <<< Tuple.snd) (Map.filterWithKey (\i t -> i `elem` generate) labels)
@@ -192,15 +194,15 @@ componentAST component@{ extraDeclarations, root, modulePath, propsRow: expected
 
               { required, optional } = partitionProps step base
 
-            propsRequiredBody :: AST.Type
+            propsRequiredBody :: AST.Typ
             propsRequiredBody =
               Type.typeRow
-                $ Type.row (generatedProps.required <> baseProps.required) (Just rowTail.var)
+                $ Type.row (generatedProps.required <|> baseProps.required) (Just rowTail.var)
 
-            propsOptionalBody :: AST.Type
+            propsOptionalBody :: AST.Typ
             propsOptionalBody =
               Type.typeRow
-                $ Type.row (classesProp <> generatedProps.optional <> baseProps.optional) (Just rowTail.var)
+                $ Type.row (classesProp <|> generatedProps.optional <|> baseProps.optional) (Just rowTail.var)
 
             optional =
               declType
@@ -267,8 +269,8 @@ componentAST component@{ extraDeclarations, root, modulePath, propsRow: expected
 
 componentConstructorsAST ::
   { component :: Component
-  , jss :: Maybe AST.Type
-  , props :: Props AST.Type
+  , jss :: Maybe AST.Typ
+  , props :: Props AST.Typ
   } ->
   List Declaration
 componentConstructorsAST { component, jss, props } = constructors
@@ -546,8 +548,8 @@ classesPropAST ::
   Maybe (ReadDTS.Instantiation.Property ReadDTS.Instantiation.Type) ->
   M
     { declarations :: List Declaration
-    , jss :: AST.Type
-    , prop :: AST.Type
+    , jss :: AST.Typ
+    , prop :: AST.Typ
     }
 classesPropAST componentName = case _ of
   Just { "type": Mu.In (ReadDTS.Instantiation.Object _ classesProps) } -> do

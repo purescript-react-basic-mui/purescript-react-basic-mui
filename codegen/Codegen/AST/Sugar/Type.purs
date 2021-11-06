@@ -2,7 +2,7 @@ module Codegen.AST.Sugar.Type where
 
 import Prelude
 
-import Codegen.AST.Types (Fields, Ident(..), ModuleName(..), QualifiedName, Row, RowF(..), RowLabel, Type, TypeF(..), TypeName)
+import Codegen.AST.Types (Fields, Ident(..), ModuleName(..), QualifiedName, Row, RowF(..), RowLabel, Typ, TypeF(..), TypeName)
 import Data.Array (fromFoldable) as Array
 import Data.Array (unsnoc)
 import Data.Foldable (intercalate)
@@ -18,22 +18,22 @@ import Heterogeneous.Folding (class HFoldl, hfoldl)
 import Prim.RowList (class RowToList)
 import Record.Extra (class MapRecord, mapRecord)
 
-app :: Type -> Array Type -> Type
+app :: Typ -> Array Typ -> Typ
 app n = roll <<< TypeApp n
 
-arr :: Type -> Type -> Type
+arr :: Typ -> Typ -> Typ
 arr f = roll <<< TypeArr f
 
-array :: Type -> Type
+array :: Typ -> Typ
 array = roll <<< TypeArray
 
-boolean :: Type
+boolean :: Typ
 boolean = roll TypeBoolean
 
-constructor :: String -> Type
+constructor :: String -> Typ
 constructor = roll <<< TypeConstructor <<< name
 
-constrained :: String -> Array Type -> Type -> Type
+constrained :: String -> Array Typ -> Typ -> Typ
 constrained s params = roll <<< TypeConstrained { className: name' s, params }
 
 -- -- | Turns given record of strings into a record of type variables
@@ -50,7 +50,7 @@ constrained s params = roll <<< TypeConstrained { className: name' s, params }
 -- -- | ```
 -- -- | Gives us:
 -- -- |
--- -- | forall required given. Prim.Row.Union given required FinalRow => Record given -> ResultType
+-- -- | forall required given. Prim.Row.Union given required FinalRow => Record given -> ResultTyp
 -- -- |
 forAll ::
   forall idents il names nl vars.
@@ -58,10 +58,10 @@ forAll ::
   RowToList names nl =>
   RowToList idents il =>
   MapRecord nl names String Ident () idents =>
-  MapRecord il idents Ident Type () vars =>
+  MapRecord il idents Ident Typ () vars =>
   Record names ->
-  (Record vars -> Type) ->
-  Type
+  (Record vars -> Typ) ->
+  Typ
 forAll names cont =
   -- | It is horrible but this don't want to work so I've copied
   -- | the whole `forAllWith` below :-(
@@ -83,11 +83,11 @@ forAllWith ::
   RowToList names nl =>
   RowToList idents il =>
   MapRecord nl names String Ident () idents =>
-  MapRecord il idents Ident Type () vars =>
+  MapRecord il idents Ident Typ () vars =>
   Array Ident ->
   Record names ->
-  (Record vars -> Type) ->
-  Type
+  (Record vars -> Typ) ->
+  Typ
 forAllWith extraIdents names cont =
   let
     varsRecord = mapRecord Ident names
@@ -100,7 +100,7 @@ forAllWith extraIdents names cont =
   in
     roll (TypeForall idents' (cont varsRecord'))
 
-forAll' :: String -> (Type -> Type) -> Type
+forAll' :: String -> (Typ -> Typ) -> Typ
 forAll' n cont =
   let
     ident = Ident n
@@ -109,7 +109,7 @@ forAll' n cont =
   in
     roll (TypeForall [ ident ] (cont v))
 
-int :: Type
+int :: Typ
 int = roll TypeInt
 
 name :: String -> QualifiedName TypeName
@@ -130,39 +130,39 @@ name' n = qn n
             }
           Nothing -> { name: wrap n, moduleName: Nothing }
 
-number :: Type
+number :: Typ
 number = roll TypeNumber
 
-record :: Row -> Type
+record :: Row -> Typ
 record = roll <<< TypeRecord
 
-recordLiteral :: Type -> Type
+recordLiteral :: Typ -> Typ
 recordLiteral tail = record $ Row { labels: M.empty, tail: Just tail }
 
-recordLiteral' :: Fields Type -> Type -> Type
+recordLiteral' :: Fields Typ -> Typ -> Typ
 recordLiteral' fields tail = record $ Row { labels: fields, tail: Just tail }
 
-recordApply :: Type -> Type
+recordApply :: Typ -> Typ
 recordApply v =
   roll
     $ TypeApp
         (constructor "Record")
         [ v ]
 
-row :: Map RowLabel Type -> Maybe Type -> Row
+row :: Map RowLabel Typ -> Maybe Typ -> Row
 row labels tail = Row { labels, tail }
 
-string :: Type
+string :: Typ
 string = roll TypeString
 
-symbol :: String -> Type
+symbol :: String -> Typ
 symbol = roll <<< TypeSymbol
 
-typeRow :: Row -> Type
+typeRow :: Row -> Typ
 typeRow = roll <<< TypeRow
 
-typeRow' :: Map RowLabel Type -> Maybe Type -> Type
+typeRow' :: Map RowLabel Typ -> Maybe Typ -> Typ
 typeRow' fields = typeRow <<< row fields
 
-var :: Ident -> Type
+var :: Ident -> Typ
 var = roll <<< TypeVar

@@ -2,7 +2,7 @@ module Codegen.Component where
 
 import Prelude
 
-import Codegen.AST (Declaration, RowLabel, Type, TypeName, UnionMember)
+import Codegen.AST (Declaration, RowLabel, Typ, TypeName, UnionMember)
 import Codegen.AST.Sugar.Type (app, array, constructor, typeRow') as Type
 import Codegen.AST.Types (Fields) as AST.Types
 import Codegen.TS.Types (InstanceProps, InstantiationStrategy)
@@ -27,7 +27,7 @@ import ReadDTS.Instantiation (Type) as ReadDTS.Instantiation
 -- |
 type FieldDetails = { required :: Boolean }
 type PropsRow =
-  { base :: AST.Types.Fields { force :: Maybe FieldDetails, "type" :: Type }
+  { base :: AST.Types.Fields { force :: Maybe FieldDetails, "type" :: Typ }
   , generate :: Array RowLabel
   -- | An escape hatch for tweaking low level props extraction
   , ts ::
@@ -44,7 +44,7 @@ type PropsRow =
 -- | component.
 data Root
   = MUIComponent Component
-  | RBProps Type
+  | RBProps Typ
 
 propsRequiredName :: ComponentName -> String
 propsRequiredName cn = cn <> "ReqPropsRow"
@@ -71,7 +71,7 @@ type Props p =
   , required :: p
   }
 
-foldRoot :: { component :: Component, local :: Boolean } -> Props Type
+foldRoot :: { component :: Component, local :: Boolean } -> Props Typ
 foldRoot = case _ of
   c@{ component, local: false } -> go (MUIComponent component)
   { component: component@{ root: root }, local: true } ->
@@ -215,20 +215,20 @@ psImportPath modulePath = intercalate "." (Moldy identity modulePath)
 jsImportPath :: ModulePath -> String
 jsImportPath modulePath = intercalate "/" (Moldy identity modulePath)
 
-jsx :: Type
+jsx :: Typ
 jsx = Type.constructor "React.Basic.JSX"
 
-arrayJSX :: Type
+arrayJSX :: Typ
 arrayJSX = Type.array $ jsx
 
-reactComponentApply :: Type -> Type
+reactComponentApply :: Typ -> Typ
 reactComponentApply t = Type.app (Type.constructor "React.Basic.ReactComponent") [ t ]
 
-effectApply :: Type -> Type
+effectApply :: Typ -> Typ
 effectApply t = Type.app (Type.constructor "Effect.Effect") [ t ]
 
-nativeElementProps :: Type
+nativeElementProps :: Typ
 nativeElementProps = Type.constructor "MUI.Core.NativeElementProps"
 
-eventHandler :: Type
+eventHandler :: Typ
 eventHandler = Type.constructor "React.Basic.Events.EventHandler"

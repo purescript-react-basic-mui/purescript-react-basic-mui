@@ -3,4 +3,4 @@ module Codegen.AST
   ) where
 
 -- | This module defines purescript AST
-import Codegen.AST.Types (ClassName(..), Constraint, Declaration(..), Expr, ExprF(..), Ident(..), Import(..), ImportDecl(..), Imports(..), Module(..), ModuleName(..), QualifiedName, QualifiedTypeName, Row, RowF(..), RowLabel, Type, TypeF(..), TypeName(..), Union(..), UnionMember(..), ValueBindingFields, emptyRow, reservedNames) as Types
+import Codegen.AST.Types (ClassName(..), Constraint, Declaration(..), Expr, ExprF(..), Ident(..), Import(..), ImportDecl(..), Imports(..), Module(..), ModuleName(..), QualifiedName, QualifiedTypeName, Row, RowF(..), RowLabel, Typ, TypeF(..), TypeName(..), Union(..), UnionMember(..), ValueBindingFields, emptyRow, reservedNames) as Types

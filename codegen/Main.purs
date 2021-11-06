@@ -1,10 +1,11 @@
 module Codegen.Main where
 
 import Prelude
+
 import Codegen (Codegen(..), componentJSFile, componentPSFile, iconJSFile, iconPSFile, icons)
 import Codegen (component, icon, write) as Codegen
 import Codegen.AST (ModuleName(..), TypeName(..))
-import Codegen.AST (Type) as AST
+import Codegen.AST (Typ) as AST
 import Codegen.AST.Sugar.Type (boolean, int, number, string)
 import Codegen.AST.Sugar.Type (constructor) as Type
 import Codegen.AST.Types (TypeF(..))
@@ -13,6 +14,7 @@ import Codegen.Component (componentName) as Component
 import Codegen.TS.MUI (componentProps) as TS.MUI
 import Codegen.TS.Types (InstantiationStrategy(..))
 import Control.Alt ((<|>))
+import Control.Alternative (empty)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExceptT)
 import Control.Monad.Reader (runReader, runReaderT)
@@ -37,18 +39,18 @@ import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class.Console (log)
-import Simple.JSON (unsafeStringify)
 import Matryoshka (cata)
 import Node.Path (FilePath)
 import Options.Applicative (Parser, ReadM, command, eitherReader, execParser, flag', fullDesc, help, helper, info, long, metavar, option, progDesc, readerError, short, strOption, subparser, value, (<**>))
 import Options.Applicative.Types (readerAsk)
 import ReadDTS.Instantiation (TypeF(..)) as Instantiation
 import ReadDTS.Instantiation.Pretty (pprintTypeName)
+import Simple.JSON (unsafeStringify)
 
-checkedProp :: String -> AST.Type -> Tuple String { force :: Maybe FieldDetails, type :: AST.Type }
+checkedProp :: String -> AST.Typ -> Tuple String { force :: Maybe FieldDetails, type :: AST.Typ }
 checkedProp l t = Tuple l { force: Nothing, "type": t }
 
-forcedProp :: String -> AST.Type -> Boolean -> Tuple String { force :: Maybe FieldDetails, type :: AST.Type }
+forcedProp :: String -> AST.Typ -> Boolean -> Tuple String { force :: Maybe FieldDetails, type :: AST.Typ }
 forcedProp l t r = Tuple l { force: Just { required: r }, "type": t }
 
 components :: Array Component
@@ -589,7 +591,7 @@ components =
       simpleComponent
         { name: "Container"
         , propsRow:
-            { base: mempty
+            { base: empty
             , generate:
                 [ "classes"
                 , "disableGutters"
@@ -1065,7 +1067,7 @@ components =
         { root: rbProps.div
         , name: "Grow"
         , propsRow:
-            { base: mempty
+            { base: empty
             , generate: [ "in", "timeout" ]
             }
         }
@@ -2945,7 +2947,7 @@ main = do
           { props: c } <- TS.MUI.componentProps component
           s <- traverse (\s -> TS.MUI.componentProps s) skip <#> map _.props
           pure { component: c, skip: s }
-      runReaderT (runExceptT getProps) mempty
+      runReaderT (runExceptT getProps) empty
         >>= case _ of
             Right { component: cProps, skip: s } -> do
               let
