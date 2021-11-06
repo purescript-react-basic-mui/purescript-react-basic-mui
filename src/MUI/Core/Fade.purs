@@ -3,6 +3,7 @@ module MUI.Core.Fade where
 
 import Foreign (Foreign) as Foreign
 import MUI.Core (class Nub')
+import MUI.React.Basic (element) as MUI.React.Basic
 import MUI.React.TransitionGroup (Timeout) as MUI.React.TransitionGroup
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (JSX, ReactComponent, element)
@@ -42,6 +43,9 @@ fade ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 fade ps = element _Fade ps
+
+fade' :: FadeProps -> JSX
+fade' = MUI.React.Basic.element _Fade'
 
 _Fade' :: ReactComponent FadeProps
 _Fade' = unsafeCoerce _UnsafeFade

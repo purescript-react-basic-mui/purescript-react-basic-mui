@@ -4,6 +4,7 @@ module MUI.Core.SvgIcon where
 import Effect (Effect) as Effect
 import MUI.Core (JSS, class Nub')
 import MUI.Core.Styles (Theme, withStyles) as MUI.Core.Styles
+import MUI.React.Aria (Haspopup) as MUI.React.Aria
 import MUI.React.Basic (element) as MUI.React.Basic
 import Prelude
 import Prim.Row (class Union) as Prim.Row
@@ -11,19 +12,6 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM.SVG (Props_svg) as React.Basic.DOM.SVG
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
-
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
 
 foreign import data Color :: Type
 
@@ -53,9 +41,6 @@ instance eqFontSize :: Eq FontSize where
 instance eqColor :: Eq Color where
   eq = unsafeRefEq
 
-instance eqAriaHaspopup :: Eq AriaHaspopup where
-  eq = unsafeRefEq
-
 type SvgIconClassesGenericRow a
   = ( colorAction :: a
     , colorDisabled :: a
@@ -75,8 +60,7 @@ type SvgIconClassesJSS
   = SvgIconClassesGenericRow JSS
 
 type SvgIconOptPropsRow (r :: # Type)
-  = ( "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
+  = ( "aria-haspopup" :: MUI.React.Aria.Haspopup
     , children :: Array JSX
     , classes :: { | SvgIconClassesKey }
     , color :: Color

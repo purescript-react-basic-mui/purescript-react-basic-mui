@@ -5,6 +5,7 @@ import Effect (Effect) as Effect
 import Foreign (Foreign) as Foreign
 import MUI.Core (JSS, class Nub')
 import MUI.Core.Styles (Theme, withStyles) as MUI.Core.Styles
+import MUI.React.Aria (Haspopup) as MUI.React.Aria
 import MUI.React.Basic (element) as MUI.React.Basic
 import Prelude
 import Prim.Row (class Union) as Prim.Row
@@ -40,6 +41,8 @@ type ButtonBaseClassesJSS
 
 type ButtonBaseOptPropsRow (r :: # Type)
   = ( action :: Foreign.Foreign
+    , "aria-controls" :: String
+    , "aria-haspopup" :: MUI.React.Aria.Haspopup
     , buttonRef :: Foreign.Foreign
     , centerRipple :: Boolean
     , classes :: { | ButtonBaseClassesKey }

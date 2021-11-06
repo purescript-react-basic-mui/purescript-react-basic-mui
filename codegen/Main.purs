@@ -56,11 +56,6 @@ forcedProp l t r = Tuple l { force: Just { required: r }, "type": t }
 components :: Array Component
 components =
   let
-    aria =
-      [ "aria-haspopup"
-      , "aria-controls"
-      ]
-
     children = checkedProp "children" arrayJSX
 
     forcedChildren = forcedProp "children" arrayJSX true
@@ -82,6 +77,9 @@ components =
       , checkedProp "flexWrap" (Type.constructor "MUI.System.Flexbox.FlexWrap")
       , checkedProp "justifyContent" (Type.constructor "MUI.System.Flexbox.JustifyContent")
       ]
+
+    ariaHaspopup = Type.constructor "MUI.React.Aria.Haspopup"
+    ariaHaspopupProp = checkedProp "aria-haspopup" ariaHaspopup
 
     transitionTimeout = Type.constructor "MUI.React.TransitionGroup.Timeout"
 
@@ -109,11 +107,12 @@ components =
           }
       , propsRow:
           { base
-          , generate: generate <> aria
+          , generate: generate
           , ts: { instantiation: Nothing, unionName: \_ _ -> Nothing }
           }
       , root
       }
+
 
     touchRippleType =
       { path: (Path "Core" (Path "ButtonBase" (Name "TouchRipple")))
@@ -271,9 +270,7 @@ components =
                           "display"
                           (Type.constructor "MUI.System.Display.Display")
                       ]
-              , generate:
-                  [ "clone"
-                  ]
+              , generate: [ "clone" ]
               }
           , root: rbProps.div
           }
@@ -289,7 +286,13 @@ components =
                     , forcedProp "component" foreignType false
                     , checkedProp "separator" jsx
                     ]
-            , generate: [ "classes", "expandText", "itemsAfterCollapse", "itemsBeforeCollapse", "maxItems" ]
+            , generate:
+                [ "classes"
+                , "expandText"
+                , "itemsAfterCollapse"
+                , "itemsBeforeCollapse"
+                , "maxItems"
+                ]
             }
         , root: rbProps.nav
         }
@@ -310,7 +313,8 @@ components =
       , propsRow:
           { base:
               Map.fromFoldable
-                [ checkedProp "action" foreignType
+                [ ariaHaspopupProp
+                , checkedProp "action" foreignType
                 , checkedProp "buttonRef" foreignType
                 , eventHandlerProp "onFocusVisible"
                 -- | I'm not sure hot to handle this kind of props parameter
@@ -324,7 +328,8 @@ components =
                 --     (Array.fromFoldable touchRipple.inherits)
                 ]
           , generate:
-              [ "centerRipple"
+              [ "aria-controls"
+              , "centerRipple"
               , "classes"
               , "color"
               , "disabled"
@@ -1147,17 +1152,18 @@ components =
       simpleComponent
         { name: "IconButton"
         , propsRow:
-            { base: Map.fromFoldable [ children ]
+            { base: Map.fromFoldable
+              [ children
+              ]
             , generate:
-                aria
-                  <> [ "classes"
-                    , "color"
-                    , "disabled"
-                    , "disableFocusRipple"
-                    , "disableRipple"
-                    , "edge"
-                    , "size"
-                    ]
+                [ "classes"
+                , "color"
+                , "disabled"
+                , "disableFocusRipple"
+                , "disableRipple"
+                , "edge"
+                , "size"
+                ]
             }
         , root: MUIComponent buttonBase
         }
@@ -1383,9 +1389,7 @@ components =
     --          Map.fromFoldable
     --              [ children
     --              ]
-    --      , generate:
-    --        [ "classes"
-    --        ]
+    --      , generate: [ "classes" ]
     --      }
     --    }
     listItemText =
@@ -1831,9 +1835,7 @@ components =
     --              , eventHandlerProp "onChange"
     --              , checkedProp "value" foreignType
     --              ]
-    --      , generate:
-    --        [ "name"
-    --        ]
+    --      , generate: [ "name" ]
     --      }
     --    }
     --rootRef =
@@ -1845,8 +1847,7 @@ components =
     --          Map.fromFoldable
     --              [ checkedProp "rootRef" foreignType
     --              ]
-    --      , generate:
-    --        []
+    --      , generate: aria
     --      }
     --    }
     ---- | TODO: value
@@ -1896,9 +1897,7 @@ components =
     --      { base:
     --         Map.fromFoldable
     --          $ map eventHandlerProp [ "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting" ]
-    --      , generate:
-    --        [ "direction", "in", "timeout"
-    --        ]
+    --      , generate: [ "direction", "in", "timeout" ]
     --      }
     --    }
     ---- | TODO: ThumbComponent ValueLabelComponent
@@ -2126,7 +2125,8 @@ components =
         , propsRow:
             { base:
                 Map.fromFoldable
-                  [ children
+                  [ ariaHaspopupProp
+                  , children
                   ]
             , generate:
                 [ "classes"
@@ -2289,9 +2289,7 @@ components =
                   [ checkedProp "ref" foreignType
                   , children
                   ]
-            , generate:
-                [ "classes"
-                ]
+            , generate: [ "classes" ]
             }
         , root: rbProps.div
         }
@@ -2305,9 +2303,7 @@ components =
                   [ checkedProp "ref" foreignType
                   , children
                   ]
-            , generate:
-                [ "classes"
-                ]
+            , generate: [ "classes" ]
             }
         , root: rbProps.div
         }
@@ -2321,9 +2317,7 @@ components =
                   [ checkedProp "ref" foreignType
                   , children
                   ]
-            , generate:
-                [ "classes"
-                ]
+            , generate: [ "classes" ]
             }
         , root: rbProps.div
         }

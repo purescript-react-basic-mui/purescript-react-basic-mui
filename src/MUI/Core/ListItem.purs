@@ -20,22 +20,6 @@ alignItems ::
   }
 alignItems = { "FlexStart": unsafeCoerce "flex-start", center: unsafeCoerce "center" }
 
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
-instance eqAriaHaspopup :: Eq AriaHaspopup where
-  eq = unsafeRefEq
-
 instance eqAlignItems :: Eq AlignItems where
   eq = unsafeRefEq
 
@@ -61,8 +45,6 @@ type ListItemClassesJSS
 
 type ListItemOptPropsRow (r :: # Type)
   = ( alignItems :: AlignItems
-    , "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
     , autoFocus :: Boolean
     , button :: Boolean
     , children :: Array JSX

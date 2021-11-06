@@ -16,19 +16,6 @@ import React.Basic.Events (EventHandler) as React.Basic.Events
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
 foreign import data MaxWidth :: Type
 
 maxWidth ::
@@ -53,9 +40,6 @@ instance eqScroll :: Eq Scroll where
   eq = unsafeRefEq
 
 instance eqMaxWidth :: Eq MaxWidth where
-  eq = unsafeRefEq
-
-instance eqAriaHaspopup :: Eq AriaHaspopup where
   eq = unsafeRefEq
 
 type DialogClassesGenericRow a
@@ -87,9 +71,7 @@ type DialogOptPropsRow (r :: # Type)
     , "PaperProps" :: MUI.Core.Paper.PaperProps
     , "TransitionComponent" :: Foreign.Foreign
     , "TransitionProps" :: Foreign.Foreign
-    , "aria-controls" :: String
     , "aria-describedby" :: String
-    , "aria-haspopup" :: AriaHaspopup
     , "aria-labelledby" :: String
     , children :: Array JSX
     , classes :: { | DialogClassesKey }

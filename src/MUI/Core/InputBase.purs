@@ -14,19 +14,6 @@ import React.Basic.Events (EventHandler) as React.Basic.Events
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
 foreign import data Color :: Type
 
 color ::
@@ -65,9 +52,6 @@ instance eqMargin :: Eq Margin where
 instance eqColor :: Eq Color where
   eq = unsafeRefEq
 
-instance eqAriaHaspopup :: Eq AriaHaspopup where
-  eq = unsafeRefEq
-
 type InputBaseClassesGenericRow a
   = ( adornedEnd :: a
     , adornedStart :: a
@@ -96,9 +80,7 @@ type InputBaseClassesJSS
   = InputBaseClassesGenericRow JSS
 
 type InputBaseOptPropsRow (r :: # Type)
-  = ( "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
-    , autoComplete :: String
+  = ( autoComplete :: String
     , autoFocus :: Boolean
     , className :: String
     , classes :: { | InputBaseClassesKey }

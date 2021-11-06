@@ -12,19 +12,6 @@ import React.Basic.DOM (Props_label) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
 foreign import data Color :: Type
 
 color ::
@@ -34,9 +21,6 @@ color ::
 color = { primary: unsafeCoerce "primary", secondary: unsafeCoerce "secondary" }
 
 instance eqColor :: Eq Color where
-  eq = unsafeRefEq
-
-instance eqAriaHaspopup :: Eq AriaHaspopup where
   eq = unsafeRefEq
 
 type FormLabelClassesGenericRow a
@@ -57,9 +41,7 @@ type FormLabelClassesJSS
   = FormLabelClassesGenericRow JSS
 
 type FormLabelOptPropsRow (r :: # Type)
-  = ( "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
-    , children :: Array JSX
+  = ( children :: Array JSX
     , classes :: { | FormLabelClassesKey }
     , color :: Color
     , disabled :: Boolean

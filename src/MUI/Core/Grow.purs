@@ -2,6 +2,7 @@
 module MUI.Core.Grow where
 
 import MUI.Core (class Nub')
+import MUI.React.Basic (element) as MUI.React.Basic
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div) as React.Basic.DOM
@@ -48,6 +49,9 @@ grow ::
   Prim.Row.Union given optionalMissing props =>
   { | given } -> JSX
 grow ps = element _Grow ps
+
+grow' :: GrowProps -> JSX
+grow' = MUI.React.Basic.element _Grow'
 
 _Grow' :: ReactComponent GrowProps
 _Grow' = unsafeCoerce _UnsafeGrow

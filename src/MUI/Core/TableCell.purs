@@ -13,19 +13,6 @@ import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
 foreign import data Padding :: Type
 
 padding ::
@@ -73,9 +60,6 @@ instance eqSize :: Eq Size where
 instance eqPadding :: Eq Padding where
   eq = unsafeRefEq
 
-instance eqAriaHaspopup :: Eq AriaHaspopup where
-  eq = unsafeRefEq
-
 type TableCellClassesGenericRow a
   = ( alignCenter :: a
     , alignJustify :: a
@@ -98,9 +82,7 @@ type TableCellClassesJSS
   = TableCellClassesGenericRow JSS
 
 type TableCellOptPropsRow (r :: # Type)
-  = ( "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
-    , children :: Array JSX
+  = ( children :: Array JSX
     , classes :: { | TableCellClassesKey }
     , padding :: Padding
     , ref :: Foreign.Foreign

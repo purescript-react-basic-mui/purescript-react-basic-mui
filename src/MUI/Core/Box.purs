@@ -7,35 +7,15 @@ import MUI.React.Basic (element) as MUI.React.Basic
 import MUI.System (BoxSizing) as MUI.System
 import MUI.System.Display (Display)
 import MUI.System.Flexbox (AlignContent, AlignItems, AlignSelf, FlexDirection, FlexWrap, JustifyContent) as MUI.System.Flexbox
-import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
-import Unsafe.Reference (unsafeRefEq)
-
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
-instance eqAriaHaspopup :: Eq AriaHaspopup where
-  eq = unsafeRefEq
 
 type BoxOptPropsRow (r :: # Type)
   = ( alignContent :: MUI.System.Flexbox.AlignContent
     , alignItems :: MUI.System.Flexbox.AlignItems
     , alignSelf :: MUI.System.Flexbox.AlignSelf
-    , "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
     , border :: Foreign.Foreign
     , borderBottom :: Foreign.Foreign
     , borderColor :: Foreign.Foreign

@@ -12,23 +12,6 @@ import Prim.Row (class Union) as Prim.Row
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_li) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
-import Unsafe.Reference (unsafeRefEq)
-
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
-instance eqAriaHaspopup :: Eq AriaHaspopup where
-  eq = unsafeRefEq
 
 type MenuItemClassesGenericRow a
   = ( dense :: a
@@ -45,8 +28,6 @@ type MenuItemClassesJSS
 
 type MenuItemOptPropsRow (r :: # Type)
   = ( "ListItemClasses" :: Foreign.Foreign
-    , "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
     , children :: Array JSX
     , classes :: { | MenuItemClassesKey }
     , component :: Foreign.Foreign

@@ -4,35 +4,15 @@ module MUI.Core.Modal where
 import Foreign (Foreign) as Foreign
 import MUI.Core (class Nub')
 import MUI.React.Basic (element) as MUI.React.Basic
-import Prelude
 import Prim.Row (class Union) as Prim.Row
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_div) as React.Basic.DOM
 import React.Basic.Events (EventHandler) as React.Basic.Events
 import Unsafe.Coerce (unsafeCoerce)
-import Unsafe.Reference (unsafeRefEq)
-
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
-instance eqAriaHaspopup :: Eq AriaHaspopup where
-  eq = unsafeRefEq
 
 type ModalOptPropsRow (r :: # Type)
   = ( "BackdropComponent" :: Foreign.Foreign
     , "BackdropProps" :: Foreign.Foreign
-    , "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
     , closeAfterTransition :: Boolean
     , disableAutoFocus :: Boolean
     , disableBackdropClick :: Boolean

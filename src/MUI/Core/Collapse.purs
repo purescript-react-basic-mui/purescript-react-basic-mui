@@ -82,6 +82,9 @@ collapse ::
   { | given } -> JSX
 collapse ps = element _Collapse ps
 
+collapse' :: CollapseProps -> JSX
+collapse' = MUI.React.Basic.element _Collapse'
+
 _Collapse' :: ReactComponent CollapseProps
 _Collapse' = unsafeCoerce _UnsafeCollapse
 

@@ -12,19 +12,6 @@ import React.Basic.DOM (Props_a) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
 foreign import data Color :: Type
 
 color ::
@@ -77,9 +64,6 @@ instance eqUnderline :: Eq Underline where
 instance eqColor :: Eq Color where
   eq = unsafeRefEq
 
-instance eqAriaHaspopup :: Eq AriaHaspopup where
-  eq = unsafeRefEq
-
 type LinkClassesGenericRow a
   = ( alignCenter :: a
     , alignJustify :: a
@@ -124,9 +108,7 @@ type LinkClassesJSS
   = LinkClassesGenericRow JSS
 
 type LinkOptPropsRow (r :: # Type)
-  = ( "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
-    , children :: Array JSX
+  = ( children :: Array JSX
     , classes :: { | LinkClassesKey }
     , color :: Color
     , underline :: Underline

@@ -12,19 +12,6 @@ import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
 foreign import data MaxWidth :: Type
 
 maxWidth ::
@@ -38,9 +25,6 @@ maxWidth ::
 maxWidth = { "false": unsafeCoerce false, lg: unsafeCoerce "lg", md: unsafeCoerce "md", sm: unsafeCoerce "sm", xl: unsafeCoerce "xl", xs: unsafeCoerce "xs" }
 
 instance eqMaxWidth :: Eq MaxWidth where
-  eq = unsafeRefEq
-
-instance eqAriaHaspopup :: Eq AriaHaspopup where
   eq = unsafeRefEq
 
 type ContainerClassesGenericRow a
@@ -61,9 +45,7 @@ type ContainerClassesJSS
   = ContainerClassesGenericRow JSS
 
 type ContainerOptPropsRow (r :: # Type)
-  = ( "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
-    , classes :: { | ContainerClassesKey }
+  = ( classes :: { | ContainerClassesKey }
     , disableGutters :: Boolean
     , fixed :: Boolean
     , maxWidth :: MaxWidth

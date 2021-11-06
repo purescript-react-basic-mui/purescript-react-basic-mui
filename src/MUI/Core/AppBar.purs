@@ -13,19 +13,6 @@ import React.Basic.DOM (Props_div) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
 foreign import data Color :: Type
 
 color ::
@@ -54,9 +41,6 @@ instance eqPosition :: Eq Position where
 instance eqColor :: Eq Color where
   eq = unsafeRefEq
 
-instance eqAriaHaspopup :: Eq AriaHaspopup where
-  eq = unsafeRefEq
-
 type AppBarClassesGenericRow a
   = ( colorDefault :: a
     , colorPrimary :: a
@@ -76,9 +60,7 @@ type AppBarClassesJSS
   = AppBarClassesGenericRow JSS
 
 type AppBarOptPropsRow (r :: # Type)
-  = ( "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
-    , children :: Array JSX
+  = ( children :: Array JSX
     , classes :: { | AppBarClassesKey }
     , color :: Color
     , elevation :: Number

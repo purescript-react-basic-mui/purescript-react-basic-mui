@@ -55,6 +55,9 @@ listItemAvatar ::
   { | given } -> JSX
 listItemAvatar ps = element _ListItemAvatar ps
 
+listItemAvatar' :: ListItemAvatarProps -> JSX
+listItemAvatar' = MUI.React.Basic.element _ListItemAvatar'
+
 _ListItemAvatar' :: ReactComponent ListItemAvatarProps
 _ListItemAvatar' = unsafeCoerce _UnsafeListItemAvatar
 

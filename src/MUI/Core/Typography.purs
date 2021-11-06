@@ -23,19 +23,6 @@ align ::
   }
 align = { center: unsafeCoerce "center", inherit: unsafeCoerce "inherit", justify: unsafeCoerce "justify", left: unsafeCoerce "left", right: unsafeCoerce "right" }
 
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
 foreign import data Color :: Type
 
 color ::
@@ -88,9 +75,6 @@ instance eqDisplay :: Eq Display where
 instance eqColor :: Eq Color where
   eq = unsafeRefEq
 
-instance eqAriaHaspopup :: Eq AriaHaspopup where
-  eq = unsafeRefEq
-
 instance eqAlign :: Eq Align where
   eq = unsafeRefEq
 
@@ -135,8 +119,6 @@ type TypographyClassesJSS
 
 type TypographyOptPropsRow (r :: # Type)
   = ( align :: Align
-    , "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
     , children :: Array JSX
     , classes :: { | TypographyClassesKey }
     , color :: Color

@@ -26,19 +26,6 @@ anchor ::
   }
 anchor = { bottom: unsafeCoerce "bottom", left: unsafeCoerce "left", right: unsafeCoerce "right", top: unsafeCoerce "top" }
 
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
 foreign import data Variant :: Type
 
 variant ::
@@ -49,9 +36,6 @@ variant ::
 variant = { permanent: unsafeCoerce "permanent", persistent: unsafeCoerce "persistent", temporary: unsafeCoerce "temporary" }
 
 instance eqVariant :: Eq Variant where
-  eq = unsafeRefEq
-
-instance eqAriaHaspopup :: Eq AriaHaspopup where
   eq = unsafeRefEq
 
 instance eqAnchor :: Eq Anchor where
@@ -82,8 +66,6 @@ type DrawerOptPropsRow (r :: # Type)
   = ( "ModalProps" :: MUI.Core.Modal.ModalProps
     , "PaperProps" :: MUI.Core.Paper.PaperProps
     , anchor :: Anchor
-    , "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
     , children :: Array JSX
     , classes :: { | DrawerClassesKey }
     , elevation :: Number

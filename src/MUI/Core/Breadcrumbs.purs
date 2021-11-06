@@ -11,23 +11,6 @@ import Prim.Row (class Union) as Prim.Row
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.DOM (Props_nav) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
-import Unsafe.Reference (unsafeRefEq)
-
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
-instance eqAriaHaspopup :: Eq AriaHaspopup where
-  eq = unsafeRefEq
 
 type BreadcrumbsClassesGenericRow a
   = ( li :: a
@@ -43,9 +26,7 @@ type BreadcrumbsClassesJSS
   = BreadcrumbsClassesGenericRow JSS
 
 type BreadcrumbsOptPropsRow (r :: # Type)
-  = ( "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
-    , children :: Array JSX
+  = ( children :: Array JSX
     , classes :: { | BreadcrumbsClassesKey }
     , component :: Foreign.Foreign
     , expandText :: String

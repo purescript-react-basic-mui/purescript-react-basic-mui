@@ -13,19 +13,6 @@ import React.Basic.DOM (Props_button) as React.Basic.DOM
 import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (unsafeRefEq)
 
-foreign import data AriaHaspopup :: Type
-
-ariaHaspopup ::
-  { dialog :: AriaHaspopup
-  , "false" :: AriaHaspopup
-  , grid :: AriaHaspopup
-  , listbox :: AriaHaspopup
-  , menu :: AriaHaspopup
-  , tree :: AriaHaspopup
-  , "true" :: AriaHaspopup
-  }
-ariaHaspopup = { dialog: unsafeCoerce "dialog", "false": unsafeCoerce "false", grid: unsafeCoerce "grid", listbox: unsafeCoerce "listbox", menu: unsafeCoerce "menu", tree: unsafeCoerce "tree", "true": unsafeCoerce "true" }
-
 foreign import data Color :: Type
 
 color ::
@@ -61,9 +48,6 @@ instance eqSize :: Eq Size where
   eq = unsafeRefEq
 
 instance eqColor :: Eq Color where
-  eq = unsafeRefEq
-
-instance eqAriaHaspopup :: Eq AriaHaspopup where
   eq = unsafeRefEq
 
 type ButtonClassesGenericRow a
@@ -105,9 +89,7 @@ type ButtonClassesJSS
   = ButtonClassesGenericRow JSS
 
 type ButtonOptPropsRow (r :: # Type)
-  = ( "aria-controls" :: String
-    , "aria-haspopup" :: AriaHaspopup
-    , classes :: { | ButtonClassesKey }
+  = ( classes :: { | ButtonClassesKey }
     , color :: Color
     , disableFocusRipple :: Boolean
     , disableRipple :: Boolean
